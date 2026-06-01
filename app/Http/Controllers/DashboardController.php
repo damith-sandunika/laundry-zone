@@ -1,0 +1,262 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+
+class DashboardController extends Controller
+{
+    public function index()
+    {
+        $branchId = auth()->user()->branch_id ?? 1;
+        
+        $activeOrders = \App\Models\Order::whereNotIn('status', ['delivered', 'cancelled']);
+        $pendingDeliveries = \App\Models\Order::where('status', 'done');
+        $completedToday = \App\Models\Order::where('status', 'delivered')->whereDate('delivered_at', today());
+        $totalCustomers = \App\Models\Customer::query();
+
+        if ($branchId) {
+            $activeOrders->where('branch_id', $branchId);
+            $pendingDeliveries->where('branch_id', $branchId);
+            $completedToday->where('branch_id', $branchId);
+            $totalCustomers->where('branch_id', $branchId);
+        }
+
+        // Active register session details
+        $activeSession = \App\Models\RegisterSession::where('branch_id', $branchId)
+            ->where('status', 'open')
+            ->first();
+
+        $currentBalance = 0;
+        if ($activeSession) {
+            // Calculate sales revenue paid during shift
+            $salesCollected = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->sum('paid_amount');
+
+            // Calculate expenses logged during shift
+            $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->sum('amount');
+
+            $currentBalance = $activeSession->opening_cash + $salesCollected - $expensesLogged;
+        }
+
+        $stats = [
+            'active_orders' => $activeOrders->count(),
+            'pending_deliveries' => $pendingDeliveries->count(),
+            'completed_today' => $completedToday->count(),
+            'total_customers' => $totalCustomers->count(),
+            'current_balance' => $currentBalance,
+        ];
+
+        // Recent 5 active orders
+        $recentOrders = $activeOrders->with('customer')->latest()->take(5)->get();
+
+        // Low stock items
+        $lowStockItems = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'min_stock');
+        if ($branchId) {
+            $lowStockItems->where('branch_id', $branchId);
+        }
+        $lowStockItems = $lowStockItems->get();
+
+        // All inventory items for popup
+        $allInventoryQuery = \App\Models\InventoryItem::query();
+        if ($branchId) {
+            $allInventoryQuery->where('branch_id', $branchId);
+        }
+        $allInventory = $allInventoryQuery->get();
+
+        // Fetch Laundry/Branch Name
+        $branchName = \App\Models\Branch::find($branchId)->name ?? 'Smart Laundry';
+
+        // ── Chart Data ──
+        // Today: hourly breakdown (last 8 hours in 2h blocks)
+        $todayLabels = [];
+        $todayPending = [];
+        $todayDelivered = [];
+        for ($h = 0; $h < 8; $h++) {
+            $start = now()->startOfDay()->addHours($h * 3);
+            $end   = $start->copy()->addHours(3);
+            $todayLabels[]   = $start->format('H:i');
+            $q = \App\Models\Order::where('branch_id', $branchId)->whereBetween('created_at', [$start, $end]);
+            $todayPending[]   = (clone $q)->where('status', 'received')->count();
+            $todayDelivered[] = (clone $q)->where('status', 'delivered')->count();
+        }
+
+        // Weekly: last 7 days
+        $weeklyLabels = [];
+        $weeklyPending = [];
+        $weeklyDelivered = [];
+        for ($d = 6; $d >= 0; $d--) {
+            $day = now()->subDays($d);
+            $weeklyLabels[]   = $day->format('D');
+            $q = \App\Models\Order::where('branch_id', $branchId)->whereDate('created_at', $day->toDateString());
+            $weeklyPending[]   = (clone $q)->whereNotIn('status', ['delivered', 'cancelled'])->count();
+            $weeklyDelivered[] = (clone $q)->where('status', 'delivered')->count();
+        }
+
+        // Monthly: last 4 weeks
+        $monthlyLabels = [];
+        $monthlyPending = [];
+        $monthlyDelivered = [];
+        for ($w = 3; $w >= 0; $w--) {
+            $start = now()->startOfWeek()->subWeeks($w);
+            $end   = $start->copy()->endOfWeek();
+            $monthlyLabels[]   = 'Wk ' . $start->format('d/m');
+            $q = \App\Models\Order::where('branch_id', $branchId)->whereBetween('created_at', [$start, $end]);
+            $monthlyPending[]   = (clone $q)->whereNotIn('status', ['delivered', 'cancelled'])->count();
+            $monthlyDelivered[] = (clone $q)->where('status', 'delivered')->count();
+        }
+
+        $chartData = [
+            'today'   => ['labels' => $todayLabels,   'pending' => $todayPending,   'delivered' => $todayDelivered],
+            'weekly'  => ['labels' => $weeklyLabels,  'pending' => $weeklyPending,  'delivered' => $weeklyDelivered],
+            'monthly' => ['labels' => $monthlyLabels, 'pending' => $monthlyPending, 'delivered' => $monthlyDelivered],
+        ];
+
+        return view('dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'branchName', 'chartData'));
+    }
+
+    public function openShift(Request $request)
+    {
+        $request->validate([
+            'opening_cash' => 'required|numeric|min:0',
+        ]);
+
+        $branchId = auth()->user()->branch_id ?? 1;
+
+        // Check if there is already an open session
+        $existing = \App\Models\RegisterSession::where('branch_id', $branchId)
+            ->where('status', 'open')
+            ->first();
+
+        if ($existing) {
+            return redirect()->back()->with('error', 'Branch is already open.');
+        }
+
+        $newSession = \App\Models\RegisterSession::create([
+            'branch_id'    => $branchId,
+            'user_id'      => auth()->id(),
+            'opening_cash' => $request->opening_cash,
+            'opened_at'    => now(),
+            'status'       => 'open',
+        ]);
+
+        // ─── WhatsApp Shift Open Notification ───
+        $branch = \App\Models\Branch::find($branchId);
+        if ($branch && $branch->whatsapp_number) {
+            $openedBy = auth()->user()->name ?? 'Staff';
+            $openTime = now()->format('h:i A');
+            $openDate = now()->format('d M Y');
+
+            $msg  = "*" . ($branch->name ?? 'Smart Laundry') . " - Shift Opened* 🟢\n";
+            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $msg .= "📅 Date: {$openDate}\n";
+            $msg .= "🕐 Time: {$openTime}\n";
+            $msg .= "👤 Opened By: {$openedBy}\n";
+            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $msg .= "💵 *Opening Balance: Rs." . number_format($request->opening_cash, 2) . "*\n";
+            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $msg .= "_Have a great day! - SmartLaundry System_";
+
+            \App\Models\WhatsappLog::create([
+                'order_id'     => null,
+                'customer_id'  => null,
+                'phone'        => $branch->whatsapp_number,
+                'message_type' => 'shift_open',
+                'message'      => $msg,
+                'status'       => 'pending',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Branch shift opened successfully.');
+    }
+
+    public function closeShift(Request $request)
+    {
+        $branchId = auth()->user()->branch_id ?? 1;
+        $session = \App\Models\RegisterSession::where('branch_id', $branchId)
+            ->where('status', 'open')
+            ->first();
+
+        if (!$session) {
+            return redirect()->back()->with('error', 'No active branch shift found.');
+        }
+
+        // Calculate closing balance
+        $salesCollected = \App\Models\Order::where('branch_id', $branchId)
+            ->where('created_at', '>=', $session->opened_at)
+            ->sum('paid_amount');
+
+        $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
+            ->where('created_at', '>=', $session->opened_at)
+            ->sum('amount');
+
+        $finalCash = $session->opening_cash + $salesCollected - $expensesLogged;
+
+        $session->update([
+            'closing_cash' => $finalCash,
+            'closed_at' => now(),
+            'status' => 'closed',
+            'closed_by' => auth()->id(),
+        ]);
+
+        // ─── WhatsApp End-of-Day Summary ───
+        $branch = \App\Models\Branch::find($branchId);
+        if ($branch && $branch->whatsapp_number) {
+            $orderCount = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $session->opened_at)->count();
+            $deliveredCount = \App\Models\Order::where('branch_id', $branchId)
+                ->where('status', 'delivered')
+                ->where('created_at', '>=', $session->opened_at)->count();
+            $pendingCount  = \App\Models\Order::where('branch_id', $branchId)
+                ->whereNotIn('status', ['delivered', 'cancelled'])
+                ->where('created_at', '>=', $session->opened_at)->count();
+
+            $openedAt    = \Carbon\Carbon::parse($session->opened_at);
+            $shiftDate   = $openedAt->format('d M Y');
+            $openedTime  = $openedAt->format('h:i A');
+            $closedTime  = now()->format('h:i A');
+
+            // ─── Stock Summary for WhatsApp ───
+            $inventoryItems = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
+            $stockLines = '';
+            foreach ($inventoryItems as $inv) {
+                $stockLines .= "   • {$inv->name}: {$inv->current_stock} {$inv->unit} remaining\n";
+            }
+
+            $summary  = "*" . ($branch->name ?? 'SmartLaundry') . " - End of Day Report* 🔴\n";
+            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $summary .= "📅 Date: {$shiftDate}\n";
+            $summary .= "🕐 Shift: {$openedTime} → {$closedTime}\n";
+            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $summary .= "📦 Total Orders: {$orderCount}\n";
+            $summary .= "✅ Delivered: {$deliveredCount}\n";
+            $summary .= "⏳ Pending: {$pendingCount}\n";
+            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $summary .= "💰 Sales Collected: Rs." . number_format($salesCollected, 2) . "\n";
+            $summary .= "📤 Expenses: Rs." . number_format($expensesLogged, 2) . "\n";
+            $summary .= "🏦 Opening Balance: Rs." . number_format($session->opening_cash, 2) . "\n";
+            $summary .= "💵 *Final Cash Count: Rs." . number_format($finalCash, 2) . "*\n";
+            if ($stockLines) {
+                $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
+                $summary .= "📦 *Stock Remaining:*\n";
+                $summary .= $stockLines;
+            }
+            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $summary .= "_Powered by SmartLaundry System_";
+
+            \App\Models\WhatsappLog::create([
+                'order_id'     => null,
+                'customer_id'  => null,
+                'phone'        => $branch->whatsapp_number,
+                'message_type' => 'shift_close',
+                'message'      => $summary,
+                'status'       => 'pending',
+            ]);
+        }
+
+        return redirect()->back()->with('success', 'Shift closed. Final Cash: Rs.' . number_format($finalCash, 2) . '. WhatsApp summary queued.');
+    }
+}

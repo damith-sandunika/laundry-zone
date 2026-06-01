@@ -1,0 +1,43 @@
+=========================================================
+SMART LAUNDRY - WHATSAPP NODE.JS SERVICE DEPLOYMENT GUIDE
+=========================================================
+
+මෙම මඟපෙන්වීම භාවිතා කර ඔබගේ Live Server එකෙහි (VPS: DigitalOcean, AWS, Hostinger ආදියෙහි) අඛණ්ඩව WhatsApp සේවාව ක්‍රියාත්මක කළ හැක.
+
+1. Server එකට Node.js ස්ථාපනය කරන්න (අවශ්‍ය නම්):
+   Live Server එකෙහි Node.js සහ NPM ස්ථාපනය කර තිබිය යුතුය. (අවම වශයෙන් v18+)
+
+2. PM2 Process Manager ස්ථාපනය කිරීම:
+   PM2 මඟින් අපගේ WhatsApp Service එක පසුබිමේ අඛණ්ඩව Run කරවයි. Server එක Restart වුවද මෙය ස්වයංක්‍රීයව ක්‍රියාත්මක වේ.
+   
+   Command:
+   npm install -g pm2
+
+3. WhatsApp Service එක Start කිරීම:
+   ඔබගේ Project Folder එක ඇතුළත ඇති `whatsapp-service` ගොනුවට (folder) ගොස් එය Start කරන්න.
+
+   Commands:
+   cd /path/to/your/project/whatsapp-service
+   npm install
+   pm2 start index.js --name "whatsapp-service"
+
+4. Server Restart වලදී ස්වයංක්‍රීයව Start වීමට සැකසීම:
+   මෙම Commands දෙක අනිවාර්යයෙන් ලබා දෙන්න.
+
+   Commands:
+   pm2 save
+   pm2 startup
+
+---------------------------------------------------------
+ප්‍රධාන ප්‍රශ්න නිරාකරණය (Troubleshooting):
+---------------------------------------------------------
+- WhatsApp Disconnect වුවහොත්:
+  පද්ධතියේ Settings වලට ගොස් WhatsApp Tab එකෙන් අලුත් QR Code එක Scan කරන්න.
+  එසේ නැතිනම් පහත Command එක මඟින් Service එක Restart කරන්න:
+  pm2 restart whatsapp-service
+
+- Logs / Errors බැලීමට අවශ්‍ය නම්:
+  pm2 logs whatsapp-service
+
+=========================================================
+මෙම සැකසුම සම්පූර්ණ කිරීමෙන් පසු ඔබගේ Laundry පද්ධතිය කිසිදු බාධාවකින් තොරව WhatsApp පණිවිඩ සේවාව ක්‍රියාත්මක කරනු ඇත.

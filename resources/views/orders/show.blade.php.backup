@@ -1,0 +1,265 @@
+<x-app-layout>
+    <x-slot name="header">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
+            <div>
+                <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                    <a href="{{ route('orders.index') }}" style="font-size:12px;color:#94a3b8;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#1d4ed8'" onmouseout="this.style.color='#94a3b8'">← Orders</a>
+                    <span style="color:#cbd5e1;font-size:11px;">/</span>
+                    <span style="font-size:12px;color:#64748b;font-weight:700;">{{ $order->order_number }}</span>
+                </div>
+                <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Order Details</h2>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">
+                    Customer: <span style="font-weight:700;color:#334155;">{{ $order->customer->name }}</span> &bull; {{ $order->created_at->format('M d, Y h:i A') }}
+                </p>
+            </div>
+            <a href="{{ route('orders.print', $order->id) }}" target="_blank"
+                style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#334155;border:1.5px solid #e2e8f0;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
+                onmouseover="this.style.background='#f8fafc';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0'">
+                🖨 Print Bill
+            </a>
+        </div>
+    </x-slot>
+
+    @if(session('success'))
+        <div style="margin-bottom:16px;padding:12px 18px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;font-size:13px;font-weight:700;color:#16a34a;">
+            ✓ {{ session('success') }}
+        </div>
+    @endif
+
+    <div style="display:grid;grid-template-columns:2fr 1fr;gap:20px;align-items:start;">
+
+        <!-- ======= LEFT COLUMN: Status + Items ======= -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <!-- Status Progress -->
+            <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);padding:24px;">
+                <h3 style="font-size:14px;font-weight:800;color:#0f172a;margin:0 0 20px;text-transform:uppercase;letter-spacing:0.05em;">Order Status Flow</h3>
+                
+                @php
+                    $stages = [
+                        'received' => ['label' => 'Received', 'icon' => '📥'],
+                        'done'     => ['label' => 'Done', 'icon' => '✅'],
+                        'delivered'=> ['label' => 'Delivered', 'icon' => '🚚'],
+                    ];
+                    $statusOrder = ['received', 'done', 'delivered'];
+                    $currentIndex = array_search($order->status, $statusOrder);
+                @endphp
+
+                <div style="display:flex;justify-content:space-between;align-items:center;position:relative;margin-bottom:24px;padding:0 10px;">
+                    @foreach($stages as $key => $stage)
+                        @php
+                            $idx = array_search($key, $statusOrder);
+                            $isDone = $idx <= ($currentIndex ?? -1);
+                            $isCurrent = $key === $order->status;
+                        @endphp
+                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;">
+                            <div style="width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;transition:all 0.15s;
+                                {{ $isCurrent ? 'background:#1d4ed8;color:white;box-shadow:0 0 0 4px #dbeafe;' : ($isDone ? 'background:#16a34a;color:white;' : 'background:#f1f5f9;color:#94a3b8;') }}">
+                                {{ $stage['icon'] }}
+                            </div>
+                            <span style="font-size:12px;font-weight:800;margin-top:10px;
+                                {{ $isCurrent ? 'color:#1d4ed8;' : ($isDone ? 'color:#16a34a;' : 'color:#94a3b8;') }}">
+                                {{ $stage['label'] }}
+                            </span>
+                        </div>
+                    @endforeach
+
+                    <!-- Progress bar line behind steps -->
+                    <div style="position:absolute;left:15%;right:15%;top:20px;height:3px;background:#e2e8f0;z-index:1;">
+                        <div style="height:100%;background:#1d4ed8;transition:width 0.2s;
+                            width: {{ $currentIndex == 1 ? '50%' : ($currentIndex == 2 ? '100%' : '0%') }}"></div>
+                    </div>
+                </div>
+
+                <!-- Update Status Form -->
+                @if($order->status !== 'delivered' && $order->status !== 'cancelled')
+                    <div style="border-top:1px solid #f1f5f9;padding-top:20px;">
+                        <form action="{{ route('orders.updateStatus', $order->id) }}" method="POST" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px;margin:0;">
+                            @csrf
+                            <div style="display:flex;flex-direction:column;gap:6px;">
+                                <label style="font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Move to Next Status</label>
+                                <select name="status" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;color:#334155;">
+                                    <option value="done" {{ $order->status === 'received' ? '' : 'disabled' }}>✅ Done</option>
+                                    <option value="delivered" {{ $order->status === 'done' ? '' : 'disabled' }}>🚚 Mark as Delivered</option>
+                                    <option value="cancelled">❌ Cancel Order</option>
+                                </select>
+                            </div>
+
+                            @if($order->status === 'received' && $cubbies->count())
+                                <div style="display:flex;flex-direction:column;gap:6px;">
+                                    <label style="font-size:11px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Assign Cubbet (Location)</label>
+                                    <select name="cubby_id" style="padding:9px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;color:#334155;">
+                                        <option value="">— Select Cubbet —</option>
+                                        @foreach($cubbies as $cubby)
+                                            <option value="{{ $cubby->id }}">{{ $cubby->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            @endif
+
+                            <button type="submit" style="padding:10px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:background 0.15s;"
+                                onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
+                                Update Status
+                            </button>
+                        </form>
+                    </div>
+                @else
+                    <div style="border-top:1px solid #f1f5f9;padding-top:20px;text-align:center;">
+                        <span style="font-size:13px;font-weight:800;padding:6px 14px;border-radius:8px;text-transform:uppercase;letter-spacing:0.05em;
+                            {{ $order->status === 'delivered' ? 'background:#f0fdf4;color:#16a34a;border:1.5px solid #86efac;' : 'background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;' }}">
+                            Order is fully {{ $order->status }}
+                        </span>
+                    </div>
+                @endif
+            </div>
+
+            <!-- Laundry Items Card -->
+            <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);overflow:hidden;">
+                <div style="padding:14px 20px;background:#f8fafc;border-bottom:1px solid #f1f5f9;">
+                    <h3 style="font-size:13px;font-weight:800;color:#0f172a;margin:0;text-transform:uppercase;letter-spacing:0.05em;">Laundry Items</h3>
+                </div>
+                <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px;">
+                    <thead>
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <th style="padding:12px 20px;font-weight:800;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;">Service Type</th>
+                            <th style="padding:12px 20px;font-weight:800;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;text-align:center;">Qty / Weight</th>
+                            <th style="padding:12px 20px;font-weight:800;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;text-align:right;">Unit Price</th>
+                            <th style="padding:12px 20px;font-weight:800;color:#475569;font-size:11px;text-transform:uppercase;letter-spacing:0.04em;text-align:right;">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach($order->items as $item)
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:14px 20px;font-weight:700;color:#0f172a;">{{ $item->serviceType->name ?? $item->item_description }}</td>
+                            <td style="padding:14px 20px;text-align:center;font-weight:700;color:#334155;">{{ $item->quantity }}</td>
+                            <td style="padding:14px 20px;text-align:right;font-weight:600;color:#475569;">Rs.{{ number_format($item->unit_price, 2) }}</td>
+                            <td style="padding:14px 20px;text-align:right;font-weight:800;color:#0f172a;">Rs.{{ number_format($item->total_price, 2) }}</td>
+                        </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" style="padding:10px 20px;text-align:right;font-size:12px;font-weight:600;color:#64748b;">Subtotal</td>
+                            <td style="padding:10px 20px;text-align:right;font-weight:700;color:#334155;">Rs.{{ number_format($order->subtotal, 2) }}</td>
+                        </tr>
+                        @if($order->discount > 0)
+                        <tr>
+                            <td colspan="3" style="padding:10px 20px;text-align:right;font-size:12px;font-weight:600;color:#64748b;">Discount</td>
+                            <td style="padding:10px 20px;text-align:right;font-weight:700;color:#dc2626;">- Rs.{{ number_format($order->discount, 2) }}</td>
+                        </tr>
+                        @endif
+                        <tr style="background:#f8fafc;border-top:1.5px solid #e2e8f0;">
+                            <td colspan="3" style="padding:14px 20px;text-align:right;font-size:14px;font-weight:800;color:#0f172a;">Total</td>
+                            <td style="padding:14px 20px;text-align:right;font-size:17px;font-weight:900;color:#1d4ed8;">Rs.{{ number_format($order->total, 2) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+
+            <!-- Activity Log Card -->
+            <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);padding:20px;">
+                <h3 style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 16px;text-transform:uppercase;letter-spacing:0.05em;">Activity Log</h3>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    @foreach($order->statusHistory as $log)
+                        <div style="display:flex;align-items:flex-start;gap:12px;">
+                            <div style="width:8px;height:8px;border-radius:50%;background:#3b82f6;margin-top:6px;"></div>
+                            <div>
+                                <p style="font-size:13px;font-weight:700;color:#0f172a;margin:0;">Status changed to <span style="color:#1d4ed8;text-transform:uppercase;font-size:11.5px;">{{ $log->status }}</span></p>
+                                <p style="font-size:11px;color:#94a3b8;margin:2px 0 0;font-weight:600;">
+                                    By {{ $log->changedBy->name ?? 'System' }} &bull; {{ \Carbon\Carbon::parse($log->created_at)->format('M d, Y h:i A') }}
+                                </p>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        <!-- ======= RIGHT COLUMN: Customer & Payment Details ======= -->
+        <div style="display:flex;flex-direction:column;gap:20px;">
+
+            <!-- Customer Details Card -->
+            <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);padding:20px;">
+                <h3 style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 14px;text-transform:uppercase;letter-spacing:0.05em;">Customer Details</h3>
+                <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;">
+                    <div>
+                        <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Full Name</span>
+                        <p style="font-weight:700;color:#0f172a;margin:2px 0 0;">{{ $order->customer->name }}</p>
+                    </div>
+                    <div>
+                        <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Phone Number</span>
+                        <p style="font-weight:700;color:#0f172a;margin:2px 0 0;">{{ $order->customer->phone }}</p>
+                    </div>
+                    @if($order->customer->address)
+                    <div>
+                        <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Address</span>
+                        <p style="font-weight:600;color:#334155;margin:2px 0 0;line-height:1.4;">{{ $order->customer->address }}</p>
+                    </div>
+                    @endif
+                    <a href="{{ route('customers.show', $order->customer->id) }}" style="display:inline-block;font-size:11.5px;color:#1d4ed8;font-weight:700;text-decoration:none;margin-top:4px;"
+                        onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">
+                        View Customer Profile →
+                    </a>
+                </div>
+            </div>
+
+            <!-- Payment Details Card -->
+            <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);padding:20px;">
+                <h3 style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 14px;text-transform:uppercase;letter-spacing:0.05em;">Payment Information</h3>
+                <div style="display:flex;flex-direction:column;gap:10px;font-size:13px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#64748b;font-weight:600;">Total Bill</span>
+                        <span style="font-weight:800;color:#0f172a;">Rs.{{ number_format($order->total, 2) }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#64748b;font-weight:600;">Paid Amount</span>
+                        <span style="font-weight:800;color:#16a34a;">Rs.{{ number_format($order->paid_amount, 2) }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:10px;border-bottom:1px solid #f1f5f9;">
+                        <span style="color:#64748b;font-weight:600;">Balance Due</span>
+                        <span style="font-weight:900;color:#dc2626;">Rs.{{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+                        <span style="color:#64748b;font-weight:600;">Status</span>
+                        <span style="font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;
+                            {{ $order->payment_status === 'paid' ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;' }}">
+                            {{ $order->payment_status }}
+                        </span>
+                    </div>
+                    @if($order->payment_method)
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#64748b;font-weight:600;">Payment Method</span>
+                        <span style="font-weight:700;color:#334155;text-transform:capitalize;">{{ $order->payment_method }}</span>
+                    </div>
+                    @endif
+                </div>
+            </div>
+
+            <!-- Storage Location / Cubbet -->
+            @if($order->cubbies->count())
+            <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);padding:20px;">
+                <h3 style="font-size:13px;font-weight:800;color:#0f172a;margin:0 0 14px;text-transform:uppercase;letter-spacing:0.05em;">Storage Location</h3>
+                @foreach($order->cubbies as $oc)
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <div style="width:36px;height:36px;background:#eef2ff;color:#4f46e5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;">
+                            {{ $oc->cubby->name ?? '?' }}
+                        </div>
+                        <div>
+                            <p style="font-size:13px;font-weight:800;color:#0f172a;margin:0;">Cubbet {{ $oc->cubby->name ?? 'N/A' }}</p>
+                            <p style="font-size:11px;color:#94a3b8;margin:2px 0 0;font-weight:600;">Assigned {{ \Carbon\Carbon::parse($oc->assigned_at)->format('M d, h:i A') }}</p>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+            @endif
+
+            <!-- Order Notes Card -->
+            @if($order->notes)
+            <div style="background:#fffbeb;border:1.5px solid #fef3c7;border-radius:16px;padding:16px;">
+                <span style="font-size:10px;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:4px;">Order Notes</span>
+                <p style="font-size:13px;color:#b45309;margin:0;font-weight:600;line-height:1.4;">{{ $order->notes }}</p>
+            </div>
+            @endif
+        </div>
+    </div>
+</x-app-layout>
