@@ -37,6 +37,22 @@ class WhatsappTemplateSeeder extends Seeder
                 'available_tags' => json_encode(['[CustomerName]', '[OrderNumber]', '[TotalAmount]']),
                 'created_at' => now(),
                 'updated_at' => now(),
+            ],
+            [
+                'type' => 'shift_open',
+                'name' => 'Shift Open Notification',
+                'content' => "*[BranchName] - Shift Opened* 🟢\n━━━━━━━━━━━━━━━━━━━━\n📅 Date: [Date]\n🕐 Time: [Time]\n👤 Opened By: [OpenedBy]\n━━━━━━━━━━━━━━━━━━━━\n💵 *Opening Balance: Rs.[OpeningBalance]*\n━━━━━━━━━━━━━━━━━━━━\n_Have a great day! - SmartLaundry System_",
+                'available_tags' => json_encode(['[BranchName]', '[Date]', '[Time]', '[OpenedBy]', '[OpeningBalance]']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ],
+            [
+                'type' => 'shift_close',
+                'name' => 'End of Day Report',
+                'content' => "*[BranchName] - End of Day Report* 🔴\n━━━━━━━━━━━━━━━━━━━━\n📅 Date: [Date]\n🕐 Shift: [ShiftTime]\n━━━━━━━━━━━━━━━━━━━━\n📦 Total Orders: [TotalOrders]\n✅ Delivered: [DeliveredCount]\n⏳ Pending: [PendingCount]\n━━━━━━━━━━━━━━━━━━━━\n[ServiceBreakdown]\n💰 Sales Collected: Rs.[SalesCollected]\n📤 Expenses: Rs.[Expenses]\n🏦 Opening Balance: Rs.[OpeningBalance]\n💵 *Final Cash Count: Rs.[FinalCash]*\n[InventoryConsumed]\n[StockRemaining]\n━━━━━━━━━━━━━━━━━━━━\n_Powered by SmartLaundry System_",
+                'available_tags' => json_encode(['[BranchName]', '[Date]', '[ShiftTime]', '[TotalOrders]', '[DeliveredCount]', '[PendingCount]', '[ServiceBreakdown]', '[SalesCollected]', '[Expenses]', '[OpeningBalance]', '[FinalCash]', '[InventoryConsumed]', '[StockRemaining]']),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         ];
 

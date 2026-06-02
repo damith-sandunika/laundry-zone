@@ -19,7 +19,7 @@
     @endif
 
     <!-- Stats Row -->
-    <div class="grid grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-4 text-center">
             <p class="text-2xl font-bold text-blue-600">{{ $totalOrders }}</p>
             <p class="text-xs text-gray-500 mt-1">Total Orders</p>

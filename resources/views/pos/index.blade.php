@@ -63,35 +63,26 @@
                         :placeholder="selectedCustomer ? 'Change customer…' : 'Search by name or phone…'"
                         style="width:100%;padding:8px 32px 8px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;font-weight:600;color:#0f172a;outline:none;box-sizing:border-box;"
                         onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
-                </div>
-
-                <!-- Dropdown -->
-                <div x-show="showCustDropdown && filteredCustomers.length > 0" style="position:absolute;z-index:20;width:calc(100% - 40px);margin-top:4px;background:white;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.08);max-height:160px;overflow-y:auto;">
-                    <template x-for="cust in filteredCustomers" :key="cust.id">
-                        <div @click="selectCustomer(cust)" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.1s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='white'">
-                            <p style="font-size:12px;font-weight:800;color:#0f172a;margin:0;" x-text="cust.name"></p>
-                            <p style="font-size:10px;color:#64748b;margin:1px 0 0;font-weight:600;" x-text="cust.phone"></p>
-                        </div>
-                    </template>
+                    
+                    <!-- Dropdown -->
+                    <div x-show="showCustDropdown && filteredCustomers.length > 0" style="position:absolute;z-index:20;width:100%;top:100%;left:0;margin-top:4px;background:white;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.08);max-height:160px;overflow-y:auto;">
+                        <template x-for="cust in filteredCustomers" :key="cust.id">
+                            <div @click="selectCustomer(cust)" style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.1s;" onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='white'">
+                                <p style="font-size:12px;font-weight:800;color:#0f172a;margin:0;" x-text="cust.name"></p>
+                                <p style="font-size:10px;color:#64748b;margin:1px 0 0;font-weight:600;" x-text="cust.phone"></p>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
                 <!-- Selected Customer badge -->
-                <div x-show="selectedCustomer" style="margin-top:12px;padding:12px 16px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;display:flex;align-items:flex-start;justify-content:space-between;position:relative;">
-                    <div style="display:flex;flex-direction:column;gap:6px;">
-                        <span style="font-size:14px;font-weight:900;color:#1e40af;" x-text="selectedCustomer?.name"></span>
-                        <span style="font-size:12px;color:#3b82f6;font-weight:700;" x-text="selectedCustomer?.phone"></span>
-                        <span style="font-size:11px;color:#60a5fa;font-weight:600;" x-text="selectedCustomer?.address || 'No Address Provided'"></span>
-                    </div>
-                    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px;">
-                        <!-- Clear button top right -->
-                        <button @click="clearCustomer()" style="background:none;border:none;cursor:pointer;color:#94a3b8;padding:0;" title="Clear Customer" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
-                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </button>
-                        <!-- Selected Tick Icon at bottom right -->
-                        <div style="width:26px;height:26px;background:#2563eb;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 10px rgba(37,99,235,0.4);">
-                            <svg width="14" height="14" fill="none" stroke="white" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                        </div>
-                    </div>
+                <div x-show="selectedCustomer" style="margin-top:12px;padding:12px 16px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;display:flex;flex-direction:column;gap:6px;position:relative;">
+                    <button @click="clearCustomer()" style="position:absolute;top:10px;right:12px;background:none;border:none;cursor:pointer;color:#94a3b8;padding:0;" title="Clear Customer" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'">
+                        <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                    <span style="font-size:14px;font-weight:900;color:#1e40af;padding-right:24px;" x-text="selectedCustomer?.name"></span>
+                    <span style="font-size:12px;color:#3b82f6;font-weight:700;" x-text="selectedCustomer?.phone"></span>
+                    <span style="font-size:11px;color:#60a5fa;font-weight:600;" x-text="selectedCustomer?.address || 'No Address Provided'"></span>
                 </div>
 
                 <!-- Walk-in notice -->

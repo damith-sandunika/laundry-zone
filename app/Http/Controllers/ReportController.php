@@ -130,10 +130,28 @@ class ReportController extends Controller
         // Stock levels at end of day
         $inventoryItems = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
 
+        // Service Breakdown
+        $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price) as total_revenue'))
+            ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.branch_id', $branchId)
+            ->whereBetween('orders.created_at', [$startDate . ' 00:00:00', now()])
+            ->groupBy('service_types.name')
+            ->get();
+
+        // Inventory Consumed
+        $inventoryConsumed = \App\Models\InventoryTransaction::select('inventory_items.name', 'inventory_items.unit', \DB::raw('SUM(inventory_transactions.quantity) as total_used'))
+            ->join('inventory_items', 'inventory_items.id', '=', 'inventory_transactions.inventory_item_id')
+            ->where('inventory_items.branch_id', $branchId)
+            ->where('inventory_transactions.type', 'out')
+            ->whereBetween('inventory_transactions.created_at', [$startDate . ' 00:00:00', now()])
+            ->groupBy('inventory_items.name', 'inventory_items.unit')
+            ->get();
+
         return view('reports.close_shift', compact(
             'branch', 'session', 'orders', 'totalSales', 'totalCashIn',
             'expenses', 'totalExpenses', 'openingBalance', 'closingBalance',
-            'startDate', 'endDate', 'inventoryItems'
+            'startDate', 'endDate', 'inventoryItems', 'serviceBreakdown', 'inventoryConsumed'
         ));
     }
 }

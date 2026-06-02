@@ -54,20 +54,30 @@
     <!-- Reports Content Wrapper -->
     <div x-data="{ activeReport: 'sales' }" class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
         
-        <!-- Tab Headers -->
-        <div class="flex border-b border-gray-100 overflow-x-auto whitespace-nowrap bg-gray-50">
-            <button @click="activeReport = 'sales'" :class="activeReport === 'sales' ? 'border-blue-500 text-blue-600 font-semibold bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-6 py-3 border-b-2 text-sm font-medium focus:outline-none transition-colors">
-                Sales Log
-            </button>
-            <button @click="activeReport = 'services'" :class="activeReport === 'services' ? 'border-blue-500 text-blue-600 font-semibold bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-6 py-3 border-b-2 text-sm font-medium focus:outline-none transition-colors">
-                Service Breakdown
-            </button>
-            <button @click="activeReport = 'salaries'" :class="activeReport === 'salaries' ? 'border-blue-500 text-blue-600 font-semibold bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-6 py-3 border-b-2 text-sm font-medium focus:outline-none transition-colors">
-                Salaries Log
-            </button>
-            <button @click="activeReport = 'inventory'" :class="activeReport === 'inventory' ? 'border-blue-500 text-blue-600 font-semibold bg-white' : 'border-transparent text-gray-500 hover:text-gray-700'" class="px-6 py-3 border-b-2 text-sm font-medium focus:outline-none transition-colors">
-                Inventory Usage Log
-            </button>
+        <!-- Premium Horizontally Scrollable Tab Header -->
+        <div class="p-3 border-b border-gray-100 bg-gray-50/50 overflow-x-auto scrollbar-none">
+            <div class="flex gap-2 w-max bg-gray-200/50 p-1 rounded-xl">
+                <button @click="activeReport = 'sales'" 
+                    :class="activeReport === 'sales' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    Sales Log
+                </button>
+                <button @click="activeReport = 'services'" 
+                    :class="activeReport === 'services' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    Service Breakdown
+                </button>
+                <button @click="activeReport = 'salaries'" 
+                    :class="activeReport === 'salaries' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    Salaries Log
+                </button>
+                <button @click="activeReport = 'inventory'" 
+                    :class="activeReport === 'inventory' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    Inventory Usage Log
+                </button>
+            </div>
         </div>
 
         <div class="p-6">

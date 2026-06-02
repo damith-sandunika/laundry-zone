@@ -68,6 +68,7 @@ class StaffController extends Controller
     {
         $rules = [
             'name'      => 'required|string|max:255',
+            'email'     => 'required|string|email|max:255|unique:users,email,' . $staff->id,
             'phone'     => 'nullable|string|max:50',
             'role'      => 'required|in:admin,staff,super_admin',
             'is_active' => 'required|boolean',
@@ -77,7 +78,7 @@ class StaffController extends Controller
         }
         $request->validate($rules);
 
-        $data = $request->only(['name', 'phone', 'role', 'is_active']);
+        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active']);
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         }

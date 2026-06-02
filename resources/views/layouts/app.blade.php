@@ -136,7 +136,40 @@
         .page-content { flex: 1; overflow-y: auto; padding: 36px 40px; }
 
         /* ── Mobile overlay ── */
-        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.3); z-index: 40; backdrop-filter: blur(2px); }
+        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 9990 !important; backdrop-filter: blur(2px); }
+
+        @media (max-width: 900px) {
+            .topbar-quick-btns { display: none !important; }
+        }
+
+        /* ── Mobile Responsiveness ── */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed !important;
+                z-index: 9999 !important;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease-in-out;
+            }
+            .sidebar.mobile-open { transform: translateX(0); }
+            .mobile-menu-btn { display: flex !important; position: relative; z-index: 10; }
+            .topbar { padding: 0 16px; height: 60px; justify-content: flex-start; }
+            .topbar-left {
+                position: absolute;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .topbar-title { font-size: 15px; text-align: center; }
+            .topbar-tagline { display: none !important; }
+            .topbar-sub { text-align: center; }
+            .topbar-right { margin-left: auto; }
+            .topbar-right span { display: none; }
+            .page-content { padding: 20px 16px; }
+            table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+        }
     </style>
 </head>
 <body x-data="{ sidebarOpen: false, notifOpen: false, profileOpen: false }">
@@ -195,24 +228,24 @@
                     Expenses
                 </a>
 
-                @if(Route::has('services.index'))
-                <a href="{{ route('services.index') }}" class="nav-item {{ request()->routeIs('services.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    Services
-                </a>
-                @endif
-
-                <a href="{{ route('staff.index') }}" class="nav-item {{ request()->routeIs('staff.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                    Staff Manager
-                </a>
-
                 <a href="{{ route('inventory.index') }}" class="nav-item {{ request()->routeIs('inventory.*') ? 'active' : '' }}">
                     <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     Inventory
                 </a>
 
                 @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
+                    @if(Route::has('services.index'))
+                    <a href="{{ route('services.index') }}" class="nav-item {{ request()->routeIs('services.*') ? 'active' : '' }}">
+                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        Services
+                    </a>
+                    @endif
+
+                    <a href="{{ route('staff.index') }}" class="nav-item {{ request()->routeIs('staff.*') ? 'active' : '' }}">
+                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                        Staff Manager
+                    </a>
+
                     <a href="{{ route('reports.index') }}" class="nav-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
                         <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Reports
@@ -248,10 +281,10 @@
 
             <!-- Topbar (Search bar removed, tagline in desktop view, notification & profile dropdowns) -->
             <header class="topbar">
-                <div style="display:flex;align-items:center;gap:16px;">
+                <div style="display:flex;align-items:center;gap:16px;width:100%;">
                     <!-- Mobile menu btn -->
-                    <button @click="sidebarOpen=!sidebarOpen" style="display:none;width:36px;height:36px;border-radius:8px;background:#f1f5f9;border:none;cursor:pointer;align-items:center;justify-content:center;" class="mobile-menu-btn">
-                        <svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2"><path stroke-linecap="round" d="M3 6h18M3 12h18M3 18h18"/></svg>
+                    <button @click="sidebarOpen=!sidebarOpen" style="display:none;width:38px;height:38px;border-radius:10px;background:#eff6ff;border:none;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(29,78,216,0.1);" class="mobile-menu-btn">
+                        <svg width="22" height="22" fill="none" stroke="#1d4ed8" stroke-width="2.5"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h10"/></svg>
                     </button>
                     <div class="topbar-left">
                         @php 
@@ -269,11 +302,11 @@
                 </div>
 
                 <div style="display:flex;align-items:center;gap:12px;margin-left:auto;margin-right:24px;" class="topbar-quick-btns">
-                    <a href="{{ route('customers.index') }}" style="background:#ef4444;color:white;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;text-decoration:none;display:flex;align-items:center;gap:4px;box-shadow:0 4px 10px rgba(239,68,68,0.25);transition:all 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        New Customer +
+                    <a href="{{ route('customers.index') }}" style="background:#ef4444;color:white;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;text-decoration:none;display:flex;flex-direction:row;align-items:center;gap:4px;white-space:nowrap;box-shadow:0 4px 10px rgba(239,68,68,0.25);transition:all 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <span style="font-size:16px;line-height:1;margin-bottom:2px;">+</span> New Customer
                     </a>
-                    <a href="{{ route('pos.index') }}" style="background:#1d4ed8;color:white;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;text-decoration:none;display:flex;align-items:center;gap:4px;box-shadow:0 4px 10px rgba(29,78,216,0.25);transition:all 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        New Order +
+                    <a href="{{ route('pos.index') }}" style="background:#1d4ed8;color:white;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;text-decoration:none;display:flex;flex-direction:row;align-items:center;gap:4px;white-space:nowrap;box-shadow:0 4px 10px rgba(29,78,216,0.25);transition:all 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                        <span style="font-size:16px;line-height:1;margin-bottom:2px;">+</span> New Order
                     </a>
                 </div>
 

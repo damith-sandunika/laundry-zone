@@ -96,6 +96,32 @@
     </div>
     @endif
 
+    @if(isset($serviceBreakdown) && $serviceBreakdown->count() > 0)
+    <div class="divider"></div>
+    <div class="section-head">👕 Services Sold</div>
+    <table>
+        @foreach($serviceBreakdown as $sb)
+        <tr>
+            <td>{{ $sb->name }}</td>
+            <td style="text-align:right;">{{ $sb->total_qty }} (Rs.{{ number_format($sb->total_revenue, 2) }})</td>
+        </tr>
+        @endforeach
+    </table>
+    @endif
+
+    @if(isset($inventoryConsumed) && $inventoryConsumed->count() > 0)
+    <div class="divider"></div>
+    <div class="section-head">📦 Inventory Consumed</div>
+    <table>
+        @foreach($inventoryConsumed as $ic)
+        <tr>
+            <td>{{ $ic->name }}</td>
+            <td style="text-align:right;">{{ $ic->total_used }} {{ $ic->unit }}</td>
+        </tr>
+        @endforeach
+    </table>
+    @endif
+
     @if(isset($inventoryItems) && $inventoryItems->count() > 0)
     <div class="divider"></div>
     <div class="section-head">📦 Stock Remaining (End of Day)</div>

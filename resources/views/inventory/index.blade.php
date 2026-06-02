@@ -5,12 +5,20 @@
                 <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Inventory Management</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Track and manage your laundry supplies and stock levels</p>
             </div>
-            <button onclick="document.getElementById('add-inventory-modal').style.display='flex'"
-                style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:background 0.15s;"
-                onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
-                Add Inventory Item
-            </button>
+            <div style="display:flex;gap:10px;">
+                <button onclick="document.getElementById('bulk-restock-modal').style.display='flex'"
+                    style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:#f59e0b;color:white;font-size:13px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:background 0.15s;"
+                    onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    Bulk Restock
+                </button>
+                <button onclick="document.getElementById('add-inventory-modal').style.display='flex'"
+                    style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:background 0.15s;"
+                    onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                    Add Inventory Item
+                </button>
+            </div>
         </div>
     </x-slot>
 
@@ -57,10 +65,14 @@
                         <td style="padding:14px 24px;text-align:center;font-size:13px;font-weight:500;color:#64748b;">{{ $item->unit }}</td>
                         <td style="padding:14px 24px;font-size:12px;font-weight:500;color:#94a3b8;">{{ $item->updated_at->diffForHumans() }}</td>
                         <td style="padding:14px 24px;text-align:center;">
+                            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
                             <form method="POST" action="{{ route('inventory.destroy', $item) }}" onsubmit="return confirm('Delete this inventory item?')" style="margin:0;">
                                 @csrf @method('DELETE')
                                 <button type="submit" style="font-size:11px;font-weight:700;padding:5px 12px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:7px;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">Delete</button>
                             </form>
+                            @else
+                                <span style="font-size:11px;color:#94a3b8;font-weight:600;">-</span>
+                            @endif
                         </td>
                     </tr>
                     @empty
@@ -130,4 +142,56 @@
             </form>
         </div>
     </div>
+    <!-- ── Bulk Restock Modal ── -->
+    <div id="bulk-restock-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:600px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Bulk Restock Inventory</h3>
+                    <p style="font-size:12px;color:#94a3b8;margin:0;font-weight:500;">Enter the amounts you are adding to stock</p>
+                </div>
+                <button onclick="document.getElementById('bulk-restock-modal').style.display='none'"
+                    style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            
+            <form method="POST" action="{{ route('inventory.bulkStockIn') }}" style="display:flex;flex-direction:column;min-height:0;flex:1;">
+                @csrf
+                <div style="flex:1;overflow-y:auto;padding:24px 28px;">
+                    <div style="display:flex;flex-direction:column;gap:12px;">
+                        @foreach($items as $index => $item)
+                            <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;">
+                                <div>
+                                    <div style="font-size:13px;font-weight:800;color:#0f172a;">{{ $item->name }}</div>
+                                    <div style="font-size:11px;font-weight:600;color:#64748b;">Current: <span style="{{ $item->current_stock <= ($item->low_stock_threshold ?? 0) ? 'color:#dc2626;' : 'color:#16a34a;' }}">{{ $item->current_stock }} {{ $item->unit }}</span></div>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:8px;">
+                                    <input type="hidden" name="items[{{ $index }}][id]" value="{{ $item->id }}">
+                                    <span style="font-size:12px;font-weight:700;color:#475569;">+</span>
+                                    <input type="number" name="items[{{ $index }}][quantity]" placeholder="0" min="0" step="0.01"
+                                        style="width:80px;padding:8px 10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:700;outline:none;text-align:center;">
+                                    <span style="font-size:11px;font-weight:600;color:#64748b;width:30px;">{{ $item->unit }}</span>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                    <div style="margin-top:20px;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Notes (Optional)</label>
+                        <input type="text" name="notes" placeholder="e.g. Monthly restock from Supplier X"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <div style="padding:16px 28px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:10px;">
+                    <button type="button" onclick="document.getElementById('bulk-restock-modal').style.display='none'"
+                        style="flex:1;padding:11px;background:white;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:1;padding:11px;background:#f59e0b;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;"
+                        onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">Confirm Restock</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </x-app-layout>

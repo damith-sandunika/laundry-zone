@@ -150,15 +150,14 @@ class DashboardController extends Controller
             $openTime = now()->format('h:i A');
             $openDate = now()->format('d M Y');
 
-            $msg  = "*" . ($branch->name ?? 'Smart Laundry') . " - Shift Opened* 🟢\n";
-            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
-            $msg .= "📅 Date: {$openDate}\n";
-            $msg .= "🕐 Time: {$openTime}\n";
-            $msg .= "👤 Opened By: {$openedBy}\n";
-            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
-            $msg .= "💵 *Opening Balance: Rs." . number_format($request->opening_cash, 2) . "*\n";
-            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
-            $msg .= "_Have a great day! - SmartLaundry System_";
+            $template = \App\Models\WhatsappTemplate::where('type', 'shift_open')->first();
+            $msg = $template ? $template->content : "*[BranchName] - Shift Opened* 🟢\n━━━━━━━━━━━━━━━━━━━━\n📅 Date: [Date]\n🕐 Time: [Time]\n👤 Opened By: [OpenedBy]\n━━━━━━━━━━━━━━━━━━━━\n💵 *Opening Balance: Rs.[OpeningBalance]*\n━━━━━━━━━━━━━━━━━━━━\n_Have a great day! - SmartLaundry System_";
+            
+            $msg = str_replace('[BranchName]', $branch->name ?? 'Smart Laundry', $msg);
+            $msg = str_replace('[Date]', $openDate, $msg);
+            $msg = str_replace('[Time]', $openTime, $msg);
+            $msg = str_replace('[OpenedBy]', $openedBy, $msg);
+            $msg = str_replace('[OpeningBalance]', number_format($request->opening_cash, 2), $msg);
 
             \App\Models\WhatsappLog::create([
                 'order_id'     => null,
@@ -226,26 +225,66 @@ class DashboardController extends Controller
                 $stockLines .= "   • {$inv->name}: {$inv->current_stock} {$inv->unit} remaining\n";
             }
 
-            $summary  = "*" . ($branch->name ?? 'SmartLaundry') . " - End of Day Report* 🔴\n";
-            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
-            $summary .= "📅 Date: {$shiftDate}\n";
-            $summary .= "🕐 Shift: {$openedTime} → {$closedTime}\n";
-            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
-            $summary .= "📦 Total Orders: {$orderCount}\n";
-            $summary .= "✅ Delivered: {$deliveredCount}\n";
-            $summary .= "⏳ Pending: {$pendingCount}\n";
-            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
-            $summary .= "💰 Sales Collected: Rs." . number_format($salesCollected, 2) . "\n";
-            $summary .= "📤 Expenses: Rs." . number_format($expensesLogged, 2) . "\n";
-            $summary .= "🏦 Opening Balance: Rs." . number_format($session->opening_cash, 2) . "\n";
-            $summary .= "💵 *Final Cash Count: Rs." . number_format($finalCash, 2) . "*\n";
-            if ($stockLines) {
-                $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
-                $summary .= "📦 *Stock Remaining:*\n";
-                $summary .= $stockLines;
+            // ─── Service Breakdown ───
+            $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price) as total_revenue'))
+                ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
+                ->join('orders', 'orders.id', '=', 'order_items.order_id')
+                ->where('orders.branch_id', $branchId)
+                ->where('orders.created_at', '>=', $session->opened_at)
+                ->groupBy('service_types.name')
+                ->get();
+                
+            $sbText = "";
+            if ($serviceBreakdown->count() > 0) {
+                $sbText .= "👕 *Services Sold:*\n";
+                foreach ($serviceBreakdown as $sb) {
+                    $sbText .= "   • {$sb->name}: {$sb->total_qty} (Rs." . number_format($sb->total_revenue, 2) . ")\n";
+                }
+                $sbText .= "━━━━━━━━━━━━━━━━━━━━";
             }
-            $summary .= "━━━━━━━━━━━━━━━━━━━━\n";
-            $summary .= "_Powered by SmartLaundry System_";
+
+            // ─── Inventory Consumed ───
+            $inventoryConsumed = \App\Models\InventoryTransaction::select('inventory_items.name', 'inventory_items.unit', \DB::raw('SUM(inventory_transactions.quantity) as total_used'))
+                ->join('inventory_items', 'inventory_items.id', '=', 'inventory_transactions.inventory_item_id')
+                ->where('inventory_items.branch_id', $branchId)
+                ->where('inventory_transactions.type', 'out')
+                ->where('inventory_transactions.created_at', '>=', $session->opened_at)
+                ->groupBy('inventory_items.name', 'inventory_items.unit')
+                ->get();
+
+            $icText = "";
+            if ($inventoryConsumed->count() > 0) {
+                $icText .= "📦 *Inventory Consumed:*\n";
+                foreach ($inventoryConsumed as $ic) {
+                    $icText .= "   • {$ic->name}: {$ic->total_used} {$ic->unit}\n";
+                }
+                $icText .= "━━━━━━━━━━━━━━━━━━━━";
+            }
+
+            $srText = "";
+            if ($stockLines) {
+                $srText .= "📊 *Stock Remaining:*\n";
+                $srText .= $stockLines;
+            }
+
+            $template = \App\Models\WhatsappTemplate::where('type', 'shift_close')->first();
+            $summary = $template ? $template->content : "*[BranchName] - End of Day Report* 🔴\n━━━━━━━━━━━━━━━━━━━━\n📅 Date: [Date]\n🕐 Shift: [ShiftTime]\n━━━━━━━━━━━━━━━━━━━━\n📦 Total Orders: [TotalOrders]\n✅ Delivered: [DeliveredCount]\n⏳ Pending: [PendingCount]\n━━━━━━━━━━━━━━━━━━━━\n[ServiceBreakdown]\n💰 Sales Collected: Rs.[SalesCollected]\n📤 Expenses: Rs.[Expenses]\n🏦 Opening Balance: Rs.[OpeningBalance]\n💵 *Final Cash Count: Rs.[FinalCash]*\n[InventoryConsumed]\n[StockRemaining]\n━━━━━━━━━━━━━━━━━━━━\n_Powered by SmartLaundry System_";
+
+            $summary = str_replace('[BranchName]', $branch->name ?? 'SmartLaundry', $summary);
+            $summary = str_replace('[Date]', $shiftDate, $summary);
+            $summary = str_replace('[ShiftTime]', "{$openedTime} → {$closedTime}", $summary);
+            $summary = str_replace('[TotalOrders]', $orderCount, $summary);
+            $summary = str_replace('[DeliveredCount]', $deliveredCount, $summary);
+            $summary = str_replace('[PendingCount]', $pendingCount, $summary);
+            $summary = str_replace('[ServiceBreakdown]', $sbText, $summary);
+            $summary = str_replace('[SalesCollected]', number_format($salesCollected, 2), $summary);
+            $summary = str_replace('[Expenses]', number_format($expensesLogged, 2), $summary);
+            $summary = str_replace('[OpeningBalance]', number_format($session->opening_cash, 2), $summary);
+            $summary = str_replace('[FinalCash]', number_format($finalCash, 2), $summary);
+            $summary = str_replace('[InventoryConsumed]', $icText, $summary);
+            $summary = str_replace('[StockRemaining]', $srText, $summary);
+            
+            $summary = preg_replace("/\n\s*\n/", "\n", $summary);
 
             \App\Models\WhatsappLog::create([
                 'order_id'     => null,

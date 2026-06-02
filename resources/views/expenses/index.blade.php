@@ -77,8 +77,8 @@
         </div>
 
         <!-- Add Expense Modal -->
-        <div x-show="addModalOpen" style="display:none;position:fixed;inset:0;z-index:999;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(3px);padding:20px;">
-            <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;width:100%;max-width:480px;box-shadow:0 10px 30px rgba(0,0,0,0.1);overflow:hidden;" @click.away="addModalOpen = false">
+        <div x-show="addModalOpen" x-transition.opacity class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display:none;">
+            <div class="bg-white rounded-[20px] border border-slate-200 w-full max-w-[480px] shadow-2xl overflow-hidden relative" @click.away="addModalOpen = false">
                 <form action="{{ route('expenses.store') }}" method="POST" style="margin:0;">
                     @csrf
                     <div style="padding:24px 30px;">

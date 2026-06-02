@@ -14,6 +14,17 @@
             margin-bottom: 16px;
         }
 
+        .dash-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         @media(max-width:1280px) {
             .stat-grid {
                 grid-template-columns: repeat(2, 1fr);
@@ -23,8 +34,30 @@
         @media(max-width:900px) {
 
             .stat-grid,
-            .half-grid {
-                grid-template-columns: 1fr;
+            .half-grid,
+            .main-grid,
+            .bottom-grid {
+                grid-template-columns: 1fr !important;
+            }
+            
+            .hide-on-mobile { display: none !important; }
+            
+            .dash-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .header-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .open-shift-form, .close-shift-form {
+                width: 100%;
+                flex-direction: column;
+            }
+            .open-shift-form input, .open-shift-form button, .close-shift-form button, .shift-active-indicator {
+                width: 100% !important;
+                justify-content: center !important;
             }
         }
 
@@ -38,7 +71,7 @@
         }
     </style>
     <x-slot name="header">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="dash-header">
             <div>
                 <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px 0;">
                     Dashboard</h2>
@@ -46,14 +79,15 @@
                     <strong style="color:#64748b;">{{ $branchName }}</strong></p>
             </div>
             @if($activeSession)
-                <div style="display:flex;gap:10px;align-items:center;">
-                    <div
-                        style="display:flex;align-items:center;gap:8px;padding:8px 14px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;">
+                <div class="header-actions">
+                    <div class="shift-active-indicator"
+                        style="display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;background:#f0fdf4;border:1.5px solid #bbf7d0;border-radius:10px;height:38px;box-sizing:border-box;">
                         <span
                             style="width:8px;height:8px;border-radius:50%;background:#22c55e;display:inline-block;animation:ping 1.5s infinite;"></span>
                         <span style="font-size:12px;font-weight:700;color:#16a34a;">Shift Active</span>
                     </div>
                     <a href="{{ route('pos.index') }}"
+                        class="hide-on-mobile"
                         style="display:flex;align-items:center;gap:7px;padding:10px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;transition:all 0.2s;box-shadow:0 2px 10px rgba(29,78,216,0.3);"
                         onmouseover="this.style.background='#1e40af';this.style.transform='translateY(-1px)'"
                         onmouseout="this.style.background='#1d4ed8';this.style.transform='translateY(0)'">
@@ -63,10 +97,10 @@
                         New Order
                     </a>
                     <form action="{{ route('shifts.close') }}" method="POST"
-                        onsubmit="return confirm('Close today\'s shift?')">
+                        onsubmit="return confirm('Close today\'s shift?')" class="close-shift-form">
                         @csrf
                         <button type="submit"
-                            style="padding:10px 16px;background:white;color:#64748b;font-size:13px;font-weight:600;border-radius:10px;border:1.5px solid #e2e8f0;cursor:pointer;transition:all 0.15s;"
+                            style="padding:10px 16px;background:white;color:#64748b;font-size:13px;font-weight:600;border-radius:10px;border:1.5px solid #e2e8f0;cursor:pointer;transition:all 0.15s;height:38px;box-sizing:border-box;display:flex;align-items:center;justify-content:center;"
                             onmouseover="this.style.borderColor='#cbd5e1';this.style.color='#374151'"
                             onmouseout="this.style.borderColor='#e2e8f0';this.style.color='#64748b'">
                             Close Shift
@@ -113,7 +147,7 @@
                 <h3 style="font-size:20px;font-weight:800;color:#0f172a;margin:0 0 8px;">Shift is Closed</h3>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0 0 28px;line-height:1.6;">Open the branch
                     shift register with your starting cash to begin processing orders today.</p>
-                <form action="{{ route('shifts.open') }}" method="POST">
+                <form action="{{ route('shifts.open') }}" method="POST" class="open-shift-form">
                     @csrf
                     <div style="text-align:left;margin-bottom:14px;">
                         <label
@@ -170,13 +204,13 @@
         </div>
 
         {{-- ── MAIN GRID ── --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+        <div class="main-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
 
             {{-- Recent Orders --}}
             <div
                 style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;">
                 <div
-                    style="padding:20px 24px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+                    style="padding:16px 20px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
                     <div>
                         <h3 style="font-size:15px;font-weight:800;color:#0f172a;margin:0 0 2px;letter-spacing:-0.01em;">
                             Recent Orders</h3>
@@ -235,25 +269,20 @@
             </div>
 
             {{-- Chart --}}
-            <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);padding:18px 20px;"
-                x-data="{tab:'weekly'}">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+            <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);padding:18px 20px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:12px;">
                     <div>
                         <h3 style="font-size:15px;font-weight:800;color:#0f172a;margin:0 0 2px;letter-spacing:-0.01em;">
                             Order Performance</h3>
                         <p style="font-size:12px;color:#94a3b8;font-weight:500;margin:0;">Pending vs Delivered</p>
                     </div>
-                    <div
-                        style="display:flex;background:#e8eef7;border:1px solid #c8d7ec;border-radius:9px;padding:3px;gap:2px;box-shadow:inset 0 1px 3px rgba(0,0,0,0.1);">
-                        <button data-chart-tab="today" @click="tab='today'"
-                            :style="tab==='today' ? 'background:linear-gradient(180deg,#fff 0%,#e8eef7 100%);color:#1d4ed8;box-shadow:0 2px 4px rgba(0,0,0,0.15),0 1px 0 rgba(255,255,255,0.8) inset;transform:translateY(0);' : 'background:transparent;color:#94a3b8;box-shadow:none;'"
-                            style="padding:6px 6px;font-size:6px;font-weight:800;border:none;border-radius:6px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;text-transform:uppercase;">Today</button>
-                        <button data-chart-tab="weekly" @click="tab='weekly'"
-                            :style="tab==='weekly' ? 'background:linear-gradient(180deg,#fff 0%,#e8eef7 100%);color:#1d4ed8;box-shadow:0 2px 4px rgba(0,0,0,0.15),0 1px 0 rgba(255,255,255,0.8) inset;' : 'background:transparent;color:#94a3b8;box-shadow:none;'"
-                            style="padding:6px 6px;font-size:6px;font-weight:800;border:none;border-radius:6px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;text-transform:uppercase;">Weekly</button>
-                        <button data-chart-tab="monthly" @click="tab='monthly'"
-                            :style="tab==='monthly' ? 'background:linear-gradient(180deg,#fff 0%,#e8eef7 100%);color:#1d4ed8;box-shadow:0 2px 4px rgba(0,0,0,0.15),0 1px 0 rgba(255,255,255,0.8) inset;' : 'background:transparent;color:#94a3b8;box-shadow:none;'"
-                            style="padding:6px 6px;font-size:6px;font-weight:800;border:none;border-radius:6px;cursor:pointer;transition:all 0.15s;letter-spacing:0.04em;text-transform:uppercase;">Monthly</button>
+                    <div style="display:flex;background:#f1f5f9;border-radius:14px;padding:4px;gap:3px;">
+                        <button data-chart-tab="today" class="chart-tab-btn active-tab"
+                            style="padding:8px 22px;font-size:12px;font-weight:700;border:none;border-radius:11px;cursor:pointer;transition:all 0.2s ease;letter-spacing:0.01em;background:#1d4ed8;color:white;box-shadow:0 2px 8px rgba(29,78,216,0.4);">Today</button>
+                        <button data-chart-tab="weekly" class="chart-tab-btn"
+                            style="padding:8px 22px;font-size:12px;font-weight:700;border:none;border-radius:11px;cursor:pointer;transition:all 0.2s ease;letter-spacing:0.01em;background:transparent;color:#64748b;">Weekly</button>
+                        <button data-chart-tab="monthly" class="chart-tab-btn"
+                            style="padding:8px 22px;font-size:12px;font-weight:700;border:none;border-radius:11px;cursor:pointer;transition:all 0.2s ease;letter-spacing:0.01em;background:transparent;color:#64748b;">Monthly</button>
                     </div>
                 </div>
                 <div style="position:relative;height:220px;"><canvas id="orderChart"></canvas></div>
@@ -272,7 +301,7 @@
         </div>
 
         {{-- ── BOTTOM GRID ── --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="bottom-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
 
             {{-- Inventory Alerts --}}
             <div x-data="{ showInvModal: false }"
@@ -468,8 +497,24 @@
             if (ctx) renderChart('weekly');
 
             // Tab click wiring
-            document.querySelectorAll('[data-chart-tab]').forEach(btn => {
-                btn.addEventListener('click', () => renderChart(btn.dataset.chartTab));
+            const tabBtns = document.querySelectorAll('.chart-tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    // Update active styles
+                    tabBtns.forEach(b => {
+                        b.style.background = 'transparent';
+                        b.style.color = '#64748b';
+                        b.style.boxShadow = 'none';
+                        b.classList.remove('active-tab');
+                    });
+                    btn.style.background = '#1d4ed8';
+                    btn.style.color = 'white';
+                    btn.style.boxShadow = '0 2px 8px rgba(29,78,216,0.4)';
+                    btn.classList.add('active-tab');
+                    
+                    // Render chart
+                    renderChart(btn.dataset.chartTab);
+                });
             });
         </script>
     </x-slot>

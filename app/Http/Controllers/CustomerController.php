@@ -81,6 +81,9 @@ class CustomerController extends Controller
 
     public function destroy(\App\Models\Customer $customer)
     {
+        if (!in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+            abort(403, 'Unauthorized action.');
+        }
         $customer->delete();
         return redirect()->route('customers.index')->with('success', 'Customer deleted.');
     }

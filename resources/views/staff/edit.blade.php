@@ -6,65 +6,84 @@
         </div>
     </x-slot>
 
-    <div class="max-w-lg">
-        <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-6">
-            <form action="{{ route('staff.update', $staff) }}" method="POST" class="space-y-4">
+    <div class="max-w-2xl mx-auto">
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div class="p-6 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="text-lg font-bold text-gray-800">Account Details</h3>
+                <p class="text-sm text-gray-500">Update the staff member's profile and permissions.</p>
+            </div>
+            
+            <form action="{{ route('staff.update', $staff) }}" method="POST" class="p-6 space-y-6">
                 @csrf @method('PUT')
 
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Full Name *</label>
-                    <input type="text" name="name" value="{{ old('name', $staff->name) }}" required
-                        class="w-full text-sm border-gray-200 rounded focus:border-blue-500 focus:ring-blue-500">
-                    @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Full Name <span class="text-red-500">*</span></label>
+                        <input type="text" name="name" value="{{ old('name', $staff->name) }}" required
+                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email Address <span class="text-red-500">*</span></label>
+                        <input type="email" name="email" value="{{ old('email', $staff->email) }}" required
+                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Phone Number</label>
+                        <input type="text" name="phone" value="{{ old('phone', $staff->phone) }}"
+                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Account Role <span class="text-red-500">*</span></label>
+                        <select name="role" class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                            <option value="staff" {{ $staff->role === 'staff' ? 'selected' : '' }}>Staff</option>
+                            <option value="admin" {{ $staff->role === 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="super_admin" {{ $staff->role === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Phone</label>
-                    <input type="text" name="phone" value="{{ old('phone', $staff->phone) }}"
-                        class="w-full text-sm border-gray-200 rounded focus:border-blue-500 focus:ring-blue-500">
-                </div>
-
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Role *</label>
-                    <select name="role" class="w-full text-sm border-gray-200 rounded focus:border-blue-500 focus:ring-blue-500">
-                        <option value="staff" {{ $staff->role === 'staff' ? 'selected' : '' }}>Staff</option>
-                        <option value="admin" {{ $staff->role === 'admin' ? 'selected' : '' }}>Admin</option>
-                        <option value="super_admin" {{ $staff->role === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Account Status <span class="text-red-500">*</span></label>
+                    <select name="is_active" class="w-full md:w-1/2 text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        <option value="1" {{ $staff->is_active ? 'selected' : '' }}>✅ Active - Can Login</option>
+                        <option value="0" {{ !$staff->is_active ? 'selected' : '' }}>🚫 Suspended - Cannot Login</option>
                     </select>
                 </div>
 
-                <div>
-                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Status *</label>
-                    <select name="is_active" class="w-full text-sm border-gray-200 rounded focus:border-blue-500 focus:ring-blue-500">
-                        <option value="1" {{ $staff->is_active ? 'selected' : '' }}>✅ Active</option>
-                        <option value="0" {{ !$staff->is_active ? 'selected' : '' }}>🚫 Inactive / Suspended</option>
-                    </select>
-                </div>
-
-                <div class="divider border-t border-gray-100 pt-4">
-                    <p class="text-xs font-semibold text-gray-500 uppercase mb-3">Change Password (optional)</p>
-                    <div class="space-y-3">
+                <div class="mt-8 pt-6 border-t border-gray-100">
+                    <div class="flex items-center gap-2 mb-4">
+                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                        <h4 class="text-sm font-bold text-gray-700">Change Password (Optional)</h4>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">New Password</label>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">New Password</label>
                             <input type="password" name="password"
-                                class="w-full text-sm border-gray-200 rounded focus:border-blue-500 focus:ring-blue-500"
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
                                 placeholder="Leave blank to keep current">
                         </div>
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Confirm Password</label>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Confirm Password</label>
                             <input type="password" name="password_confirmation"
-                                class="w-full text-sm border-gray-200 rounded focus:border-blue-500 focus:ring-blue-500">
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
+                                placeholder="Re-type new password">
                         </div>
                     </div>
                 </div>
 
-                <div class="flex gap-3 pt-2">
-                    <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded transition-colors">
-                        Save Changes
-                    </button>
-                    <a href="{{ route('staff.index') }}" class="px-4 py-2 bg-gray-100 text-gray-700 text-xs font-semibold rounded hover:bg-gray-200 transition-colors">
+                <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
+                    <a href="{{ route('staff.index') }}" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-50 hover:text-gray-900 transition-all shadow-sm">
                         Cancel
                     </a>
+                    <button type="submit" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold rounded-lg transition-all shadow-sm shadow-blue-600/30">
+                        Save Changes
+                    </button>
                 </div>
             </form>
         </div>

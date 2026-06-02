@@ -169,58 +169,58 @@
     }">
 
         <!-- STAT CARDS -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
+        <div class="grid grid-cols-4 md:grid-cols-2 xl:grid-cols-4 gap-2 md:gap-4 mb-6">
             
             <!-- All Orders -->
             <div @click="currentTab = 'all'" 
-                :class="currentTab === 'all' ? 'border-blue-500 bg-blue-50 shadow-[0_8px_20px_rgba(59,130,246,0.25)] scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex items-center justify-between px-6 py-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-4">
-                    <div :class="currentTab === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-100 text-blue-600'" class="w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
+                :class="currentTab === 'all' ? 'border-blue-500 bg-blue-50 md:shadow-[0_8px_20px_rgba(59,130,246,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
+                <div class="flex items-center gap-1 md:gap-4">
+                    <div :class="currentTab === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-100 text-blue-600'" class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                     </div>
-                    <span class="text-sm font-bold text-gray-700 uppercase tracking-wider">All Orders</span>
+                    <span class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">All Orders</span>
                 </div>
-                <span class="text-3xl font-black" :class="currentTab === 'all' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.all"></span>
+                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0" :class="currentTab === 'all' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.all"></span>
             </div>
 
             <!-- Received -->
             <div @click="currentTab = 'received'" 
-                :class="currentTab === 'received' ? 'border-orange-500 bg-orange-50 shadow-[0_8px_20px_rgba(249,115,22,0.25)] scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex items-center justify-between px-6 py-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-4">
-                    <div :class="currentTab === 'received' ? 'bg-orange-600 text-white shadow-md' : 'bg-orange-100 text-orange-600'" class="w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                :class="currentTab === 'received' ? 'border-orange-500 bg-orange-50 md:shadow-[0_8px_20px_rgba(249,115,22,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
+                <div class="flex items-center gap-1 md:gap-4">
+                    <div :class="currentTab === 'received' ? 'bg-orange-600 text-white shadow-md' : 'bg-orange-100 text-orange-600'" class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     </div>
-                    <span class="text-sm font-bold text-gray-700 uppercase tracking-wider">Received</span>
+                    <span class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">Received</span>
                 </div>
-                <span class="text-3xl font-black" :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.received"></span>
+                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0" :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.received"></span>
             </div>
 
             <!-- Ready / Done -->
             <div @click="currentTab = 'done'" 
-                :class="currentTab === 'done' ? 'border-green-500 bg-green-50 shadow-[0_8px_20px_rgba(34,197,94,0.25)] scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex items-center justify-between px-6 py-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-4">
-                    <div :class="currentTab === 'done' ? 'bg-green-600 text-white shadow-md' : 'bg-green-100 text-green-600'" class="w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                :class="currentTab === 'done' ? 'border-green-500 bg-green-50 md:shadow-[0_8px_20px_rgba(34,197,94,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
+                <div class="flex items-center gap-1 md:gap-4">
+                    <div :class="currentTab === 'done' ? 'bg-green-600 text-white shadow-md' : 'bg-green-100 text-green-600'" class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                     </div>
-                    <span class="text-sm font-bold text-gray-700 uppercase tracking-wider">Ready / Done</span>
+                    <span class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">Ready / Done</span>
                 </div>
-                <span class="text-3xl font-black" :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
+                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0" :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
             </div>
 
             <!-- Delivered -->
             <div @click="currentTab = 'delivered'" 
-                :class="currentTab === 'delivered' ? 'border-gray-500 bg-gray-100 shadow-[0_8px_20px_rgba(100,116,139,0.25)] scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex items-center justify-between px-6 py-4 rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-4">
-                    <div :class="currentTab === 'delivered' ? 'bg-gray-600 text-white shadow-md' : 'bg-gray-200 text-gray-600'" class="w-10 h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                :class="currentTab === 'delivered' ? 'border-gray-500 bg-gray-100 md:shadow-[0_8px_20px_rgba(100,116,139,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
+                <div class="flex items-center gap-1 md:gap-4">
+                    <div :class="currentTab === 'delivered' ? 'bg-gray-600 text-white shadow-md' : 'bg-gray-200 text-gray-600'" class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
+                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
                     </div>
-                    <span class="text-sm font-bold text-gray-700 uppercase tracking-wider">Delivered</span>
+                    <span class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">Delivered</span>
                 </div>
-                <span class="text-3xl font-black" :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'" x-text="counts.delivered"></span>
+                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0" :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'" x-text="counts.delivered"></span>
             </div>
         </div>
 
@@ -348,7 +348,7 @@
         </div>
 
         <!-- ── Bulk Status Update Modal ── -->
-        <div x-show="showBulkModal" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);display:none;">
+        <div x-cloak x-show="showBulkModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[4px] p-4">
             <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" @click.away="showBulkModal = false">
                 <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
                     <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;">Bulk Update Orders</h3>
@@ -373,7 +373,7 @@
         </div>
 
         <!-- ── Reverse Authorization Modal ── -->
-        <div x-show="showReverseModal" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);display:none;">
+        <div x-cloak x-show="showReverseModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[4px] p-4">
             <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" @click.away="showReverseModal = false">
                 <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
                     <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;">Reverse Bill Authorization</h3>
@@ -397,7 +397,7 @@
         </div>
 
         <!-- ── Mark as Done (Cubbet Assign) Modal ── -->
-        <div x-show="showCubbetModal" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.6);backdrop-filter:blur(6px);display:none;">
+        <div x-cloak x-show="showCubbetModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
             <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:440px;overflow:hidden;" @click.away="showCubbetModal = false">
                 <div style="padding:24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#f0fdf4;">
                     <div>
@@ -427,7 +427,7 @@
         </div>
 
         <!-- ── Delivery & Payment Modal ── -->
-        <div x-show="showDeliverModal" style="position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:rgba(15,23,42,0.6);backdrop-filter:blur(6px);display:none;">
+        <div x-cloak x-show="showDeliverModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
             <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:440px;overflow:hidden;" @click.away="showDeliverModal = false">
                 <div style="padding:24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#eef2ff;">
                     <div>

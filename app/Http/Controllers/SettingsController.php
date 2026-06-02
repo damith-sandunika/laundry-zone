@@ -114,14 +114,21 @@ class SettingsController extends Controller
 
     public function storeCubby(Request $request)
     {
-        $request->validate(['label' => 'required|string|max:50']);
+        $request->validate(['name' => 'required|string|max:50']);
         $branchId = auth()->user()->branch_id ?? 1;
         \App\Models\Cubby::create([
             'branch_id' => $branchId,
-            'label'     => $request->label,
+            'name'      => $request->name,
             'status'    => 'empty',
         ]);
         return redirect()->back()->with('success', 'Storage location added.');
+    }
+
+    public function updateCubby(Request $request, \App\Models\Cubby $cubby)
+    {
+        $request->validate(['name' => 'required|string|max:50']);
+        $cubby->update(['name' => $request->name]);
+        return redirect()->back()->with('success', 'Storage location updated.');
     }
 
     public function destroyCubby(\App\Models\Cubby $cubby)
