@@ -81,13 +81,16 @@
     <div class="divider"></div>
 
     <!-- Final Balance -->
-    <div class="section-head">Cash Drawer Balance</div>
+    <div class="section-head">System Total Balance</div>
     <div class="row"><span>Opening Balance</span><span>Rs.{{ number_format($openingBalance, 2) }}</span></div>
-    <div class="row"><span>+ Cash Collected</span><span>Rs.{{ number_format($totalCashIn, 2) }}</span></div>
+    <div class="row"><span>+ Total Collected (Cash & Card)</span><span>Rs.{{ number_format($totalCashIn, 2) }}</span></div>
     <div class="row"><span>- Expenses Paid</span><span>Rs.{{ number_format($totalExpenses, 2) }}</span></div>
 
     <div class="net">
-        CLOSING BALANCE: Rs.{{ number_format($closingBalance, 2) }}
+        SYSTEM FULL TOTAL: Rs.{{ number_format($closingBalance, 2) }}
+    </div>
+    <div style="text-align:center; font-size:12px; font-weight:bold; color:#16a34a; margin-top:5px;">
+        (Cash in Drawer Only: Rs.{{ number_format($openingBalance + $cashPaymentOnly - $totalExpenses, 2) }})
     </div>
 
     @if($totalSales > $totalCashIn)

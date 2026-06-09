@@ -26,6 +26,14 @@
         </div>
     @endif
 
+    @if(session('print_bill_id'))
+        <script>
+            window.onload = function() {
+                window.open("{{ route('orders.print', session('print_bill_id')) }}", "_blank");
+            };
+        </script>
+    @endif
+
     <!-- Status Banner -->
     <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;
         {{ $order->status === 'received' ? 'background:#fffbeb;color:#d97706;border:1.5px solid #fde68a;' : 
@@ -82,34 +90,63 @@
                 <!-- Update Status Form -->
                 @if($order->status !== 'delivered' && $order->status !== 'cancelled')
                     <div style="border-top:1px solid #f1f5f9;padding-top:12px;">
-                        <form action="{{ route('orders.updateStatus', $order->id) }}" method="POST" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:0;">
+                        <form id="statusForm" action="{{ route('orders.updateStatus', $order->id) }}" method="POST" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:0;">
                             @csrf
                             <div style="display:flex;flex-direction:column;gap:4px;">
                                 <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">New Status</label>
-                                <select name="status" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
-                                    <option value="done" {{ $order->status === 'received' ? '' : 'disabled' }}>✅ Done</option>
-                                    <option value="delivered" {{ $order->status === 'done' ? '' : 'disabled' }}>🚚 Delivered</option>
-                                    <option value="cancelled">❌ Cancel</option>
+                                <select id="statusSelect" name="status" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
+                                    @if($order->status === 'received')
+                                        <option value="done">✅ Done</option>
+                                        <option value="cancelled">❌ Cancel</option>
+                                    @elseif($order->status === 'done')
+                                        <option value="delivered">🚚 Delivered</option>
+                                        <option value="cancelled">❌ Cancel</option>
+                                    @endif
                                 </select>
                             </div>
 
-                            @if($order->status === 'received' && $cubbies->count())
-                                <div style="display:flex;flex-direction:column;gap:4px;">
-                                    <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Cubbet</label>
-                                    <select name="cubby_id" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
-                                        <option value="">— Select —</option>
-                                        @foreach($cubbies as $cubby)
-                                            <option value="{{ $cubby->id }}">{{ $cubby->name }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                            @if($cubbies->count())
+                            <div id="cubby-wrapper" style="display:none;flex-direction:column;gap:4px;">
+                                <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Cubbet</label>
+                                <select name="cubby_id" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
+                                    <option value="">— Select —</option>
+                                    @foreach($cubbies as $cubby)
+                                        <option value="{{ $cubby->id }}">{{ $cubby->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                             @endif
+
+                            <div id="payment-method-wrapper" style="display:none;flex-direction:column;gap:4px;">
+                                <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Payment</label>
+                                <select name="payment_method" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
+                                    <option value="cash">💵 Cash</option>
+                                    <option value="card">💳 Card / Transfer</option>
+                                    <option value="credit">⏳ Credit</option>
+                                </select>
+                            </div>
 
                             <button type="submit" style="padding:7px 14px;background:#1d4ed8;color:white;font-size:12px;font-weight:700;border:none;border-radius:8px;cursor:pointer;transition:background 0.15s;"
                                 onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
                                 Update
                             </button>
                         </form>
+                        <script>
+                            (function() {
+                                var sel = document.getElementById('statusSelect');
+                                var cubbyWrap = document.getElementById('cubby-wrapper');
+                                var payWrap = document.getElementById('payment-method-wrapper');
+                                function updateVisibility() {
+                                    var val = sel ? sel.value : '';
+                                    if (cubbyWrap) cubbyWrap.style.display = val === 'done' ? 'flex' : 'none';
+                                    if (payWrap) payWrap.style.display = val === 'delivered' ? 'flex' : 'none';
+                                }
+                                if (sel) {
+                                    sel.addEventListener('change', updateVisibility);
+                                    updateVisibility(); // run on load
+                                }
+                            })();
+                        </script>
                     </div>
                 @endif
             </div>

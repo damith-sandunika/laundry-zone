@@ -174,7 +174,7 @@
                     ['label' => 'Active Orders', 'value' => $stats['active_orders'], 'sub' => 'Processing now', 'color' => '#3b82f6', 'bg' => '#eff6ff', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
                     ['label' => 'Pending Pickup', 'value' => $stats['pending_deliveries'], 'sub' => 'Awaiting customer', 'color' => '#f59e0b', 'bg' => '#fffbeb', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                     ['label' => 'Completed Today', 'value' => $stats['completed_today'], 'sub' => 'Delivered orders', 'color' => '#10b981', 'bg' => '#ecfdf5', 'icon' => 'M5 13l4 4L19 7'],
-                    ['label' => 'Cash Balance', 'value' => 'Rs.' . number_format($stats['current_balance'], 0), 'sub' => 'In drawer', 'color' => '#8b5cf6', 'bg' => '#f5f3ff', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                    ['label' => 'Total Balance', 'value' => 'Rs.' . number_format($stats['current_balance'], 0), 'sub' => 'System total', 'color' => '#8b5cf6', 'bg' => '#f5f3ff', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ];
             @endphp
             @foreach($cards as $card)
@@ -188,6 +188,11 @@
                         <p
                             style="font-size:28px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 6px;line-height:1;">
                             {{ $card['value'] }}</p>
+                        @if($card['label'] === 'Total Balance')
+                            <p style="font-size:12px;font-weight:700;color:#16a34a;margin:0 0 6px;">
+                                Cash In Drawer: Rs.{{ number_format($stats['cash_balance'], 0) }}
+                            </p>
+                        @endif
                         <p
                             style="font-size:11px;font-weight:600;color:{{ $card['color'] }};background:{{ $card['bg'] }};display:inline-block;padding:3px 8px;border-radius:6px;margin:0;">
                             {{ $card['sub'] }}</p>
@@ -229,14 +234,20 @@
                     <thead>
                         <tr style="background:#f8fafc;">
                             <th
-                                style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">
+                                style="padding:10px 16px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">
                                 Order</th>
                             <th
-                                style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">
+                                style="padding:10px 16px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">
                                 Customer</th>
                             <th
-                                style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:right;">
+                                style="padding:10px 16px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">
+                                Due Date</th>
+                            <th
+                                style="padding:10px 16px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:center;">
                                 Status</th>
+                            <th
+                                style="padding:10px 16px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:right;">
+                                </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -247,19 +258,30 @@
                             @endphp
                             <tr style="border-top:1px solid #f8fafc;transition:background 0.1s;"
                                 onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                                <td style="padding:14px 24px;"><a href="{{ route('orders.show', $order) }}"
-                                        style="font-size:13px;font-weight:700;color:#2563eb;text-decoration:none;">{{ $order->order_number }}</a>
+                                <td style="padding:14px 16px;"><a href="{{ route('orders.show', $order) }}"
+                                        style="font-size:13px;font-weight:800;color:#2563eb;text-decoration:none;">{{ $order->order_number }}</a>
                                 </td>
-                                <td style="padding:14px 24px;font-size:13px;font-weight:600;color:#374151;">
+                                <td style="padding:14px 16px;font-size:13px;font-weight:600;color:#374151;">
                                     {{ $order->customer->name }}</td>
-                                <td style="padding:14px 24px;text-align:right;">
+                                <td style="padding:14px 16px;">
+                                    @if($order->due_date)
+                                        <div style="font-size:12px;font-weight:700;color:#0f172a;">{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y') }}</div>
+                                        <div style="font-size:11px;font-weight:600;color:#64748b;margin-top:2px;">{{ \Carbon\Carbon::parse($order->due_date)->format('h:i A') }}</div>
+                                    @else
+                                        <span style="font-size:12px;font-weight:600;color:#94a3b8;">N/A</span>
+                                    @endif
+                                </td>
+                                <td style="padding:14px 16px;text-align:center;">
                                     <span
-                                        style="font-size:11px;font-weight:700;color:{{ $c[0] }};background:{{ $c[1] }};padding:4px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.06em;">{{ $order->status }}</span>
+                                        style="font-size:10px;font-weight:800;color:{{ $c[0] }};background:{{ $c[1] }};padding:4px 10px;border-radius:6px;text-transform:uppercase;letter-spacing:0.06em;">{{ $order->status }}</span>
+                                </td>
+                                <td style="padding:14px 16px;text-align:right;">
+                                    <a href="{{ route('orders.show', $order) }}" style="padding:6px 12px;background:#f8fafc;color:#2563eb;border-radius:8px;font-size:11px;font-weight:800;text-decoration:none;border:1px solid #e2e8f0;transition:all 0.15s;" onmouseover="this.style.background='#eff6ff';this.style.borderColor='#bfdbfe';" onmouseout="this.style.background='#f8fafc';this.style.borderColor='#e2e8f0';">View</a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="3"
+                                <td colspan="5"
                                     style="padding:32px;text-align:center;font-size:13px;color:#94a3b8;font-weight:500;">No
                                     active orders</td>
                             </tr>

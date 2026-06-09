@@ -270,8 +270,8 @@
     </div>
 
     <!-- ===================== Order Success Modal ===================== -->
-    <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '' }"
-         x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode"
+    <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
+         x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate"
          x-show="show" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm z-10 text-center p-8" @click.stop>
@@ -293,6 +293,10 @@
                 <div class="flex justify-between items-center border-b border-gray-200 pb-2">
                     <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Total:</span>
                     <span class="font-black text-green-700 text-base" x-text="'Rs. ' + total"></span>
+                </div>
+                <div class="flex justify-between items-center pt-1" x-show="dueDate">
+                    <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Pickup Date:</span>
+                    <span class="font-black text-orange-600 text-xs" x-text="dueDate ? new Date(dueDate).toLocaleDateString('en-US', {day:'2-digit', month:'short', year:'numeric'}) : ''"></span>
                 </div>
                 <div class="flex justify-between items-center pt-1">
                     <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Payment:</span>
@@ -433,8 +437,11 @@
                                 orderNumber: data.order_number,
                                 customerName: data.customer_name,
                                 total: this.total.toFixed(2),
-                                paymentMode: this.paymentMode
+                                paymentMode: this.paymentMode,
+                                dueDate: data.due_date,
+                                cart: data.cart
                             }}));
+                            printOrderChit(data.order_id);
                             this.cart = [];
                             this.selectedCustomer = null;
                             this.discountValue = 0;
@@ -479,5 +486,9 @@
                 alert('Failed to save customer.');
             }
         });
+
+        function printOrderChit(orderId) {
+            window.open('/orders/' + orderId + '/chit', '_blank', 'width=300,height=400');
+        }
     </script>
 </x-app-layout>

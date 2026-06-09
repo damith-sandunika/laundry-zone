@@ -18,11 +18,42 @@ class ReportController extends Controller
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
         }
-        $orders = $salesQuery->with('customer')->orderBy('created_at', 'desc')->get();
+        $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->get();
         $totalSales = $orders->sum('total');
+        
+        $paymentsQuery = \App\Models\PaymentTransaction::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        if ($branchId) {
+            $paymentsQuery->whereHas('order', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
+        }
+        $payments = $paymentsQuery->get();
+        
+        $totalCollected = $payments->sum('amount');
+        $collectedCash = $payments->where('payment_method', 'cash')->sum('amount');
+        $collectedCard = $payments->where('payment_method', 'card')->sum('amount');
+        
+        $totalCredit = $orders->where('payment_method', 'credit')->sum(function($q) { return max(0, $q->total - $q->paid_amount); });
+        $totalPending = $orders->where('payment_method', '!=', 'credit')->sum(function($q) { return max(0, $q->total - $q->paid_amount); });
+
+        // Credit Customers
+        $creditOrdersQuery = \App\Models\Order::with('customer')
+            ->whereColumn('paid_amount', '<', 'total')
+            ->where('payment_method', 'credit');
+        if ($branchId) {
+            $creditOrdersQuery->where('branch_id', $branchId);
+        }
+        $creditOrders = $creditOrdersQuery->orderBy('created_at', 'asc')->get();
 
         // 2. Service-wise breakdown
-        $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price) as total_revenue'))
+        $serviceBreakdown = \App\Models\OrderItem::select(
+            'service_types.name', 
+            \DB::raw('SUM(order_items.quantity) as total_qty'), 
+            \DB::raw('SUM(order_items.total_price) as total_revenue'),
+            \DB::raw('SUM(order_items.total_price * (orders.paid_amount / NULLIF(orders.total, 0))) as done_payment'),
+            \DB::raw('SUM(CASE WHEN orders.payment_method = "credit" THEN order_items.total_price - (order_items.total_price * (orders.paid_amount / NULLIF(orders.total, 0))) ELSE 0 END) as credit_payment'),
+            \DB::raw('SUM(CASE WHEN orders.payment_method != "credit" THEN order_items.total_price - (order_items.total_price * (orders.paid_amount / NULLIF(orders.total, 0))) ELSE 0 END) as pending_payment')
+        )
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->whereBetween('orders.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
@@ -51,7 +82,7 @@ class ReportController extends Controller
         $inventoryLogs = $inventoryQuery->latest()->get();
 
         return view('reports.index', compact(
-            'orders', 'totalSales', 'services', 'salaries', 'totalSalaries', 'inventoryLogs', 'startDate', 'endDate'
+            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'totalCredit', 'totalPending', 'services', 'salaries', 'totalSalaries', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders'
         ));
     }
 
@@ -118,6 +149,8 @@ class ReportController extends Controller
             ->get();
         $totalSales    = $orders->sum('total');
         $totalCashIn   = $orders->sum('paid_amount');
+        
+        $cashPaymentOnly = $orders->where('payment_method', 'cash')->sum('paid_amount');
 
         $expenses = \App\Models\Expense::where('branch_id', $branchId)
             ->whereBetween('expense_date', [$startDate, $endDate])
@@ -149,7 +182,7 @@ class ReportController extends Controller
             ->get();
 
         return view('reports.close_shift', compact(
-            'branch', 'session', 'orders', 'totalSales', 'totalCashIn',
+            'branch', 'session', 'orders', 'totalSales', 'totalCashIn', 'cashPaymentOnly',
             'expenses', 'totalExpenses', 'openingBalance', 'closingBalance',
             'startDate', 'endDate', 'inventoryItems', 'serviceBreakdown', 'inventoryConsumed'
         ));

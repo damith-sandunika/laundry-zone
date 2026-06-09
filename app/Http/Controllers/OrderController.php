@@ -48,6 +48,12 @@ class OrderController extends Controller
         $branch = \App\Models\Branch::find($order->branch_id);
         return view('orders.print', compact('order', 'branch'));
     }
+
+    public function printChit(\App\Models\Order $order)
+    {
+        $order->load(['customer', 'items']);
+        return view('orders.chit', compact('order'));
+    }
     public function updateStatus(Request $request, \App\Models\Order $order)
     {
         $request->validate([
@@ -87,10 +93,24 @@ class OrderController extends Controller
 
                 if ($request->status === 'delivered') {
                     $order->delivered_at = now();
-                    $order->payment_status = 'paid';
-                    $order->paid_amount = $order->total;
                     if ($request->has('payment_method')) {
                         $order->payment_method = $request->payment_method;
+                    }
+                    if ($order->payment_method === 'credit') {
+                        $order->payment_status = 'pending';
+                    } else {
+                        // Check if it's already paid, otherwise create payment transaction
+                        $amountToPay = $order->total - $order->paid_amount;
+                        if ($amountToPay > 0) {
+                            \App\Models\PaymentTransaction::create([
+                                'order_id' => $order->id,
+                                'amount' => $amountToPay,
+                                'payment_method' => $order->payment_method ?? 'cash',
+                                'created_by' => auth()->id(),
+                            ]);
+                        }
+                        $order->payment_status = 'paid';
+                        $order->paid_amount = $order->total;
                     }
                     
                     // Release cubby
@@ -124,6 +144,12 @@ class OrderController extends Controller
                     'changed_by' => auth()->id(),
                 ]);
             });
+
+            if ($request->status === 'delivered') {
+                return redirect()->back()
+                    ->with('success', 'Order delivered successfully!')
+                    ->with('print_bill_id', $order->id);
+            }
 
             return redirect()->back()->with('success', 'Status updated successfully!');
 
@@ -184,16 +210,74 @@ class OrderController extends Controller
             'order_ids' => 'required|array',
             'order_ids.*' => 'exists:orders,id',
             'status' => 'required|in:received,done,delivered,cancelled',
+            'cubby_id' => 'nullable|exists:cubbies,id'
         ]);
 
+        $stateOrder = ['received' => 1, 'done' => 2, 'delivered' => 3, 'cancelled' => 4];
+
         foreach ($request->order_ids as $id) {
-            $order = \App\Models\Order::find($id);
+            $order = \App\Models\Order::with('customer')->find($id);
+            
+            if ($request->status !== 'cancelled') {
+                if (($stateOrder[$request->status] ?? 0) <= ($stateOrder[$order->status] ?? 0)) {
+                    continue; // Skip backward or same state updates
+                }
+            }
+
             $order->status = $request->status;
+            
+            if ($request->status === 'done' && $request->cubby_id) {
+                // Release old active cubby if any
+                $oldCubby = $order->cubbies()->whereNull('released_at')->first();
+                if ($oldCubby && $oldCubby->cubby_id != $request->cubby_id) {
+                    $oldCubby->update(['released_at' => now()]);
+                    \App\Models\Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
+                }
+
+                if (!$oldCubby || $oldCubby->cubby_id != $request->cubby_id) {
+                    \App\Models\OrderCubby::create([
+                        'order_id' => $order->id,
+                        'cubby_id' => $request->cubby_id,
+                        'assigned_at' => now(),
+                    ]);
+                }
+                
+                \App\Models\Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
+                
+                // WhatsApp MSG
+                $customer = $order->customer;
+                $cubby = \App\Models\Cubby::find($request->cubby_id);
+                $msgContent = \App\Models\WhatsappTemplate::generateMessage('order_ready', $order, $customer, $cubby ? $cubby->name : '');
+                
+                if (!empty($msgContent)) {
+                    \App\Models\WhatsappLog::create([
+                        'order_id' => $order->id,
+                        'customer_id' => $customer->id,
+                        'phone' => $customer->phone,
+                        'message_type' => 'order_ready',
+                        'message' => $msgContent,
+                        'status' => 'pending',
+                    ]);
+                }
+            }
             
             if ($request->status === 'delivered') {
                 $order->delivered_at = now();
-                $order->payment_status = 'paid';
-                $order->paid_amount = $order->total;
+                if ($order->payment_method === 'credit') {
+                    $order->payment_status = 'pending';
+                } else {
+                    $amountToPay = $order->total - $order->paid_amount;
+                    if ($amountToPay > 0) {
+                        \App\Models\PaymentTransaction::create([
+                            'order_id' => $order->id,
+                            'amount' => $amountToPay,
+                            'payment_method' => $order->payment_method ?? 'cash',
+                            'created_by' => auth()->id(),
+                        ]);
+                    }
+                    $order->payment_status = 'paid';
+                    $order->paid_amount = $order->total;
+                }
 
                 $orderCubby = $order->cubbies()->whereNull('released_at')->first();
                 if ($orderCubby) {
@@ -215,5 +299,44 @@ class OrderController extends Controller
             'success' => true,
             'message' => 'Bulk status updated successfully.'
         ]);
+    }
+
+    public function collectCreditPayment(Request $request, $id)
+    {
+        $request->validate([
+            'payment_method' => 'required|in:cash,card',
+            'amount' => 'required|numeric|min:0.01'
+        ]);
+
+        $order = \App\Models\Order::findOrFail($id);
+
+        if ($order->payment_status === 'paid' || $order->total <= $order->paid_amount) {
+            return redirect()->back()->with('error', 'Order is already fully paid.');
+        }
+
+        // Amount cannot be more than due
+        $due = $order->total - $order->paid_amount;
+        $payAmount = min($request->amount, $due);
+
+        \DB::transaction(function () use ($order, $payAmount, $request) {
+            \App\Models\PaymentTransaction::create([
+                'order_id' => $order->id,
+                'amount' => $payAmount,
+                'payment_method' => $request->payment_method,
+                'created_by' => auth()->id(),
+            ]);
+
+            $order->paid_amount += $payAmount;
+            
+            // If fully paid, change method from credit and mark paid
+            if ($order->paid_amount >= $order->total) {
+                $order->payment_status = 'paid';
+                $order->payment_method = $request->payment_method;
+            }
+
+            $order->save();
+        });
+
+        return redirect()->back()->with('success', 'Credit payment collected successfully!');
     }
 }

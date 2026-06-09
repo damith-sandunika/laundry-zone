@@ -89,6 +89,15 @@ class POSController extends Controller
                     'due_date' => $request->due_date ? date('Y-m-d H:i:s', strtotime($request->due_date)) : null,
                 ]);
 
+                if ($paidAmount > 0 && $paymentMode === 'pay_now') {
+                    \App\Models\PaymentTransaction::create([
+                        'order_id' => $order->id,
+                        'amount' => $paidAmount,
+                        'payment_method' => $request->payment_method ?? 'cash',
+                        'created_by' => auth()->id(),
+                    ]);
+                }
+
                 // Status History
                 \App\Models\OrderStatusHistory::create([
                     'order_id' => $order->id,
@@ -168,9 +177,14 @@ class POSController extends Controller
                 }
 
                 return [
-                    'order_id' => $order->id,
-                    'order_number' => $order->order_number,
+                    'order_id'      => $order->id,
+                    'order_number'  => $order->order_number,
                     'customer_name' => $customerObj->name,
+                    'due_date'      => $order->due_date ? $order->due_date->format('d M Y') : '-',
+                    'cart'          => collect($request->cart)->map(fn($i) => [
+                        'name' => $i['name'],
+                        'qty'  => $i['qty'],
+                    ])->values(),
                 ];
             });
 
@@ -180,6 +194,8 @@ class POSController extends Controller
                 'order_id' => $result['order_id'],
                 'order_number' => $result['order_number'],
                 'customer_name' => $result['customer_name'],
+                'due_date' => $result['due_date'],
+                'cart' => $result['cart'],
             ]);
 
         } catch (\Exception $e) {

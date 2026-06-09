@@ -28,10 +28,17 @@ class DashboardController extends Controller
             ->first();
 
         $currentBalance = 0;
+        $cashBalance = 0;
         if ($activeSession) {
-            // Calculate sales revenue paid during shift
+            // Calculate total sales revenue paid during shift
             $salesCollected = \App\Models\Order::where('branch_id', $branchId)
                 ->where('created_at', '>=', $activeSession->opened_at)
+                ->sum('paid_amount');
+
+            // Calculate only cash payments
+            $cashCollected = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'cash')
                 ->sum('paid_amount');
 
             // Calculate expenses logged during shift
@@ -40,6 +47,7 @@ class DashboardController extends Controller
                 ->sum('amount');
 
             $currentBalance = $activeSession->opening_cash + $salesCollected - $expensesLogged;
+            $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
         }
 
         $stats = [
@@ -48,10 +56,15 @@ class DashboardController extends Controller
             'completed_today' => $completedToday->count(),
             'total_customers' => $totalCustomers->count(),
             'current_balance' => $currentBalance,
+            'cash_balance' => $cashBalance,
         ];
 
-        // Recent 5 active orders
-        $recentOrders = $activeOrders->with('customer')->latest()->take(5)->get();
+        // Active orders sorted by nearest due_date first
+        $recentOrders = (clone $activeOrders)->with('customer')
+            ->orderByRaw('due_date IS NULL') // Put null due dates at the end
+            ->orderBy('due_date', 'asc')
+            ->take(8)
+            ->get();
 
         // Low stock items
         $lowStockItems = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'min_stock');

@@ -37,8 +37,10 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
     Route::get('/orders/{order}/print', [OrderController::class, 'printBill'])->name('orders.print');
+    Route::get('/orders/{order}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
+    Route::post('/orders/{order}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');

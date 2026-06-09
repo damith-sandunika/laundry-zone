@@ -87,12 +87,10 @@ class Order extends Model
         return $this->hasMany(WhatsappLog::class);
     }
 
-    // Generate unique order number
+    // Generate unique order number: U0001, U0002, ...
     public static function generateOrderNumber(): string
     {
-        $prefix = 'LDY';
-        $date   = now()->format('ymd');
-        $last   = self::whereDate('created_at', today())->count() + 1;
-        return $prefix . $date . str_pad($last, 3, '0', STR_PAD_LEFT);
+        $last = self::max('id') ?? 0;
+        return 'U' . str_pad($last + 1, 4, '0', STR_PAD_LEFT);
     }
 }

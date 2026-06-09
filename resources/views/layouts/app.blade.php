@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        [x-cloak] { display: none !important; }
         * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         body { background: #f8fafc; color: #334155; }
         h1, h2, h3, h4, h5, h6, .sidebar-brand-name, .topbar-title {

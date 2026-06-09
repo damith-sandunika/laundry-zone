@@ -179,71 +179,115 @@
 
             <!-- WHATSAPP API TAB -->
             <div x-show="activeTab === 'whatsapp'" style="display: none;" x-data="whatsappAPI()" x-init="fetchStatus(); startPolling()">
-                <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
-                    <h3 class="text-sm font-semibold text-gray-800">WhatsApp Background Service</h3>
+
+                <!-- Status Header Bar -->
+                <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
+                    <div>
+                        <h3 class="text-base font-bold text-gray-800">WhatsApp Notification Service</h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Automatically sends order ready & delivery notifications to customers.</p>
+                    </div>
                     <div class="flex gap-2">
-                        <button @click="openQRTab()" x-show="qrCode && !connected"
-                            class="px-3 py-1 bg-green-600 text-white text-xs font-semibold rounded hover:bg-green-700 flex items-center gap-1">
-                            🖥️ Open QR Full Screen
+                        <button @click="resetQR()"
+                            class="px-3 py-1.5 bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Reset & New QR
                         </button>
-                        <button @click="fetchStatus()" class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded hover:bg-gray-200">
-                            🔄 Refresh Status
+                        <button @click="fetchStatus()"
+                            class="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                            Refresh
                         </button>
                     </div>
                 </div>
 
-                <div class="flex flex-col items-center justify-center p-8 bg-gray-50 border border-gray-200 rounded-md shadow-inner text-center">
-                    
-                    <div x-show="loading" class="text-gray-500 text-sm">
-                        <svg class="animate-spin h-8 w-8 text-blue-500 mx-auto mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <!-- Service not running -->
+                <div x-show="error" class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+                    <svg class="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    <div>
+                        <p class="text-sm font-bold text-red-700">WhatsApp Service Not Running</p>
+                        <p class="text-xs text-red-600 mt-1">Run <code class="bg-red-100 px-1.5 py-0.5 rounded font-mono">start_all.bat</code> or manually run <code class="bg-red-100 px-1.5 py-0.5 rounded font-mono">cd whatsapp-service && node index.js</code></p>
+                    </div>
+                </div>
+
+                <!-- Main Panel -->
+                <div class="rounded-2xl border border-gray-200 overflow-hidden">
+
+                    <!-- Loading -->
+                    <div x-show="loading" class="p-12 flex flex-col items-center justify-center bg-gray-50">
+                        <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Connecting to local background service...
+                        <p class="text-sm font-semibold text-gray-600">Checking service status...</p>
                     </div>
 
-                    <div x-show="!loading && error" class="text-red-500 text-sm font-semibold mb-4" x-text="error"></div>
+                    <!-- Disconnected: waiting for QR -->
+                    <div x-show="!loading && !error && !connected" class="p-8 bg-gray-50 flex flex-col items-center text-center">
 
-                    <!-- Not Connected -> Show QR -->
-                    <div x-show="!loading && !error && !connected">
-                        <div class="mb-4">
-                            <div class="inline-block p-1 bg-red-100 text-red-700 text-xs font-bold px-3 py-1 rounded-full mb-3">Disconnected</div>
-                            <p class="text-sm text-gray-600 font-medium">Scan the QR code below using WhatsApp (Linked Devices) to connect.</p>
+                        <div class="mb-5">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-red-100 text-red-700 text-xs font-bold rounded-full">
+                                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                Disconnected
+                            </span>
                         </div>
-                        
-                        <div x-show="qrCode" class="bg-white p-4 border-2 border-blue-200 rounded-2xl shadow-md mx-auto mb-4 w-fit">
-                            <img :src="qrCode" alt="WhatsApp QR Code" class="w-64 h-64 object-contain">
-                            <p class="text-xs text-gray-400 mt-2 font-medium">QR refreshes automatically every 5s</p>
-                        </div>
-                        
-                        <div x-show="qrCode" class="flex gap-3 justify-center mt-2">
+
+                        <!-- QR Code display -->
+                        <div x-show="qrCode" class="mb-6">
+                            <div class="bg-white p-4 border-2 border-green-300 rounded-2xl shadow-lg inline-block mb-3">
+                                <img :src="qrCode" alt="WhatsApp QR Code" class="w-56 h-56 object-contain">
+                            </div>
+                            <p class="text-xs text-gray-500 font-medium mb-4">Open WhatsApp → <strong>Linked Devices</strong> → <strong>Link a Device</strong> → Scan</p>
                             <button @click="openQRTab()"
-                                class="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 shadow-md transition-all flex items-center gap-2">
-                                🖥️ Open QR in New Tab
+                                class="px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white text-sm font-bold rounded-xl shadow-md transition-all flex items-center gap-2 mx-auto">
+                                🖥️ Open QR Full Screen
                             </button>
                         </div>
-                        
-                        <div x-show="!qrCode" class="p-4 border border-yellow-200 bg-yellow-50 text-yellow-700 rounded-md text-sm w-full max-w-md mx-auto">
-                            ⏳ Waiting for QR Code generation... (Auto-refreshing)
+
+                        <!-- Waiting for QR -->
+                        <div x-show="!qrCode" class="py-8">
+                            <div class="w-16 h-16 bg-yellow-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                                <svg class="w-8 h-8 text-yellow-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            </div>
+                            <p class="text-sm font-bold text-gray-700 mb-2">Waiting for QR Code...</p>
+                            <p class="text-xs text-gray-500 mb-5">Service is starting up. QR will appear automatically. If it doesn't show, click <strong>Reset & New QR</strong>.</p>
+                            <button @click="resetQR()"
+                                class="px-5 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-md transition-all mx-auto">
+                                🔄 Generate New QR
+                            </button>
                         </div>
+
                     </div>
 
                     <!-- Connected -->
-                    <div x-show="!loading && !error && connected">
-                        <div class="mb-6">
-                            <div class="inline-block p-1 bg-green-100 text-green-700 text-xs font-bold px-3 py-1 rounded-full mb-3 flex items-center justify-center">
-                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                                Connected & Running
-                            </div>
-                            <p class="text-sm text-gray-600 font-medium">The background worker is active and will automatically send WhatsApp messages for Ready and Delivered orders.</p>
+                    <div x-show="!loading && !error && connected" class="p-8 bg-gray-50 flex flex-col items-center text-center">
+                        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-5 shadow-inner">
+                            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
                         </div>
-
-                        <button @click="logout()" class="px-6 py-2 bg-red-600 text-white text-sm font-semibold rounded hover:bg-red-700 shadow-sm transition-colors">
-                            Disconnect / Logout
+                        <span class="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full mb-4">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            Connected & Sending Messages
+                        </span>
+                        <p class="text-sm text-gray-600 font-medium max-w-sm mb-6">
+                            The background service is active. WhatsApp notifications will be sent automatically when orders are marked Ready or Delivered.
+                        </p>
+                        <button @click="logout()"
+                            class="px-5 py-2.5 bg-red-600 hover:bg-red-700 text-white text-sm font-bold rounded-xl shadow-sm transition-all">
+                            🔌 Disconnect / Logout
                         </button>
                     </div>
 
                 </div>
+
+                <!-- How to start info box -->
+                <div class="mt-5 p-4 bg-blue-50 border border-blue-100 rounded-xl">
+                    <p class="text-xs font-bold text-blue-800 mb-2">💡 How to start the WhatsApp service:</p>
+                    <ol class="text-xs text-blue-700 space-y-1 list-decimal list-inside">
+                        <li>Double-click <strong>start_all.bat</strong> in the project folder, OR</li>
+                        <li>Open a terminal → go to <code class="bg-blue-100 px-1 rounded">whatsapp-service</code> folder → run <code class="bg-blue-100 px-1 rounded">node index.js</code></li>
+                        <li>Come back here and scan the QR code with WhatsApp</li>
+                    </ol>
+                </div>
+
             </div>
 
             <script>
@@ -264,47 +308,58 @@
                                     this.loading = false;
                                     this.error = null;
                                 })
-                                .catch(err => {
-                                    this.error = "Background service is not running. Please start the Node.js WhatsApp Service.";
+                                .catch(() => {
+                                    this.error = true;
                                     this.loading = false;
                                     this.qrCode = null;
+                                    this.connected = false;
                                 });
                         },
 
                         startPolling() {
                             if (this.pollInterval) clearInterval(this.pollInterval);
-                            this.pollInterval = setInterval(() => this.fetchStatus(), 5000);
+                            this.pollInterval = setInterval(() => this.fetchStatus(), 4000);
+                        },
+
+                        resetQR() {
+                            this.loading = true;
+                            this.qrCode = null;
+                            fetch('/settings/whatsapp/reset', {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                            })
+                            .then(() => setTimeout(() => this.fetchStatus(), 3000))
+                            .catch(() => { this.loading = false; this.error = true; });
                         },
 
                         openQRTab() {
                             if (!this.qrCode) return;
                             const win = window.open('', '_blank');
                             win.document.write(`
-                                <html><head><title>WhatsApp QR Code - Scan Now</title>
+                                <html><head><title>WhatsApp QR - Scan Now</title>
                                 <style>body{margin:0;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:#f0fdf4;font-family:sans-serif;}
-                                img{width:320px;height:320px;border:4px solid #22c55e;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.1);}
+                                img{width:300px;height:300px;border:4px solid #22c55e;border-radius:16px;box-shadow:0 8px 32px rgba(0,0,0,0.1);}
                                 h2{color:#15803d;margin-bottom:16px;}p{color:#6b7280;font-size:14px;}</style></head>
-                                <body><h2>📱 Scan with WhatsApp</h2><img src="${this.qrCode}" alt="QR"><p style="margin-top:16px;">Open WhatsApp → Linked Devices → Link a Device</p></body></html>
+                                <body><h2>📱 Scan with WhatsApp</h2><img src="${this.qrCode}" alt="QR"><p style="margin-top:16px;">WhatsApp → Linked Devices → Link a Device</p></body></html>
                             `);
                             win.document.close();
                         },
 
                         logout() {
-                            if(!confirm('Are you sure you want to log out the WhatsApp service?')) return;
+                            if (!confirm('Disconnect WhatsApp? You will need to scan QR again.')) return;
                             this.loading = true;
-                            fetch("{{ route('whatsapp.logout') }}", { 
+                            fetch("{{ route('whatsapp.logout') }}", {
                                 method: 'POST',
-                                headers: {
-                                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                                }
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
                             })
-                                .then(() => this.fetchStatus())
-                                .catch(() => this.fetchStatus());
+                            .then(() => setTimeout(() => this.fetchStatus(), 2000))
+                            .catch(() => this.fetchStatus());
                         }
                     }
                 }
             </script>
         </div>
+
 
         <!-- Add Service Modal -->
         <div x-show="serviceModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
