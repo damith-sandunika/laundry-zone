@@ -44,10 +44,10 @@
         <span style="font-size:16px;font-weight:900;">{{ $order->status }}</span>
     </div>
 
-    <div style="display:grid;grid-template-columns:2fr 1fr;gap:16px;align-items:start;">
+    <div class="flex flex-col md:flex-row gap-4 items-start">
 
         <!-- ======= LEFT COLUMN: Status + Items ======= -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
+        <div class="w-full md:w-2/3 flex flex-col gap-4">
 
             <!-- Status Progress -->
             <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
@@ -213,8 +213,8 @@
             </div>
         </div>
 
-        <!-- ======= RIGHT COLUMN: Customer & Payment Details ======= -->
-        <div style="display:flex;flex-direction:column;gap:16px;">
+        <!-- ======= RIGHT COLUMN: Payment & Customer ======= -->
+        <div class="w-full md:w-1/3 flex flex-col gap-4">
 
             <!-- Dates Card -->
             <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">

@@ -37,9 +37,11 @@
             .half-grid,
             .main-grid,
             .bottom-grid {
-                grid-template-columns: 1fr !important;
+                display: flex !important;
+                flex-direction: column !important;
+                width: 100% !important;
+                gap: 16px !important;
             }
-            
             .hide-on-mobile { display: none !important; }
             
             .dash-header {

@@ -1,20 +1,18 @@
 <x-app-layout>
     <x-slot name="header">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
             <div>
                 <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Inventory Management</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Track and manage your laundry supplies and stock levels</p>
             </div>
-            <div style="display:flex;gap:10px;">
+            <div class="flex flex-wrap gap-2">
                 <button onclick="document.getElementById('bulk-restock-modal').style.display='flex'"
-                    style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:#f59e0b;color:white;font-size:13px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:background 0.15s;"
-                    onmouseover="this.style.background='#d97706'" onmouseout="this.style.background='#f59e0b'">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                    class="px-4 py-2 bg-amber-500 text-white text-xs font-semibold rounded hover:bg-amber-600 transition-colors flex items-center gap-2">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                     Bulk Restock
                 </button>
                 <button onclick="document.getElementById('add-inventory-modal').style.display='flex'"
-                    style="display:flex;align-items:center;gap:8px;padding:10px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border:none;border-radius:10px;cursor:pointer;transition:background 0.15s;"
-                    onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
+                    class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                     Add Inventory Item
                 </button>

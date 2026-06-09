@@ -124,16 +124,16 @@
             </div>
 
             <!-- Fixed Checkout Bar -->
-            <div style="padding:16px 20px;background:white;border-top:1.5px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;box-shadow:0 -4px 12px rgba(0,0,0,0.03);">
-                <div style="display:flex;flex-direction:column;gap:2px;">
+            <div class="flex flex-col md:flex-row items-center justify-between gap-4" style="padding:16px 20px;background:white;border-top:1.5px solid #e2e8f0;box-shadow:0 -4px 12px rgba(0,0,0,0.03);">
+                <div style="display:flex;flex-direction:column;gap:2px;width:100%;" class="md:w-auto text-center md:text-left">
                     <span style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Total Amount</span>
                     <span style="font-size:22px;font-weight:900;color:#0f172a;letter-spacing:-0.02em;" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                 </div>
                 <button @click="showCheckoutModal = true" :disabled="cart.length === 0"
                     :class="cart.length === 0 ? 'bg-green-500 cursor-not-allowed text-white shadow-none opacity-80' : 'bg-gradient-to-br from-blue-600 to-blue-700 shadow-[0_8px_20px_rgba(29,78,216,0.3)] hover:-translate-y-0.5 text-white cursor-pointer'"
-                    class="px-9 py-4 text-[15px] font-black rounded-[40px] flex items-center gap-3 transition-all duration-300 tracking-wide outline-none border-none">
+                    class="w-full md:w-auto px-5 py-3 md:px-9 md:py-4 text-sm md:text-[15px] font-black rounded-2xl md:rounded-[40px] flex justify-center items-center gap-2 md:gap-3 transition-all duration-300 tracking-wide outline-none border-none">
                     Proceed to Checkout
-                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
+                    <svg width="18" height="18" class="md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </button>
             </div>
             </div>

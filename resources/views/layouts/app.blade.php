@@ -153,23 +153,34 @@
             }
             .sidebar.mobile-open { transform: translateX(0); }
             .mobile-menu-btn { display: flex !important; position: relative; z-index: 10; }
-            .topbar { padding: 0 16px; height: 60px; justify-content: flex-start; }
-            .topbar-left {
-                position: absolute;
-                left: 50%;
-                transform: translateX(-50%);
-                text-align: center;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-            }
-            .topbar-title { font-size: 15px; text-align: center; }
+            .topbar { padding: 0 16px; height: 60px; justify-content: space-between !important; display: flex !important; }
+            .topbar > div:first-child { width: auto !important; flex: 1; }
+            .topbar-left { display: none !important; } /* Hide title on very small screens to save space */
             .topbar-tagline { display: none !important; }
             .topbar-sub { text-align: center; }
-            .topbar-right { margin-left: auto; }
-            .topbar-right span { display: none; }
-            .page-content { padding: 20px 16px; }
+            .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px !important; }
+            .topbar-right span.user-name { display: none; }
+            .topbar-right svg.dropdown-arrow { display: none; }
+            .notif-btn { background: transparent !important; border: none !important; width: 32px; height: 32px; }
+            .page-content { padding: 16px 12px; }
             table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+            
+            /* Global font size reductions for mobile */
+            h1.text-2xl, h2.text-2xl { font-size: 1.15rem !important; line-height: 1.5 !important; }
+            h1.text-3xl, h2.text-3xl { font-size: 1.25rem !important; line-height: 1.5 !important; }
+            h3.text-xl { font-size: 1rem !important; }
+            
+            /* Global card padding and gap reductions for mobile */
+            .p-6, .p-8 { padding: 1rem !important; }
+            .gap-6 { gap: 1rem !important; }
+            .grid-cols-2, .grid-cols-3, .grid-cols-4 { grid-template-columns: 1fr !important; }
+            
+            /* Dashboard specific fixes */
+            .dashboard-main-grid { display: flex !important; flex-direction: column !important; }
+            .dashboard-sidebar { width: 100% !important; max-width: 100% !important; margin-top: 1rem !important; }
+            
+            /* Button global mobile fixes */
+            button, .btn { padding-left: 12px !important; padding-right: 12px !important; font-size: 11px !important; }
         }
     </style>
 </head>
@@ -380,14 +391,12 @@
 
                     <!-- Profile Dropdown (Profile Settings & Sign Out) -->
                     <div style="position:relative;">
-                        <div @click="profileOpen = !profileOpen; notifOpen = false" @click.away="profileOpen = false" style="display:flex; align-items:center; gap:8px; padding-left:16px; border-left:1px solid #e2e8f0; cursor:pointer;">
-                            <div class="topbar-avatar">{{ substr(auth()->user()->name ?? 'A', 0, 2) }}</div>
-                            <div style="text-align:left; line-height:1.1;" class="topbar-user-info">
-                                <div class="topbar-user-name" style="font-size:12px; font-weight:700; color:#0f172a;">{{ auth()->user()->name ?? 'Administrator' }}</div>
-                                <div class="topbar-user-role" style="font-size:9.5px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.04em;">{{ ucfirst(str_replace('_', ' ', auth()->user()->role ?? 'admin')) }}</div>
+                        <button @click="profileOpen = !profileOpen; notifOpen = false" @click.away="profileOpen = false" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:4px;border-radius:10px;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
+                            <div class="topbar-avatar" style="width:32px; height:32px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#475569;">
+                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                             </div>
-                            <svg width="10" height="10" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24" style="margin-left:2px; transition:transform 0.15s;" :style="profileOpen ? 'transform:rotate(180deg)' : ''"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-                        </div>
+                            <span class="topbar-user-info" style="font-size:13px;font-weight:700;color:#334155;white-space:nowrap;">{{ auth()->user()->name ?? 'User' }}</span>
+                        </button>
                         <!-- Profile Dropdown Menu -->
                         <div x-show="profileOpen" style="display:none; position:absolute; right:0; top:46px; width:170px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); z-index:100; overflow:hidden;">
                             <a href="{{ route('profile.edit') }}" style="display:flex; align-items:center; gap:8px; padding:12px 16px; font-size:12.5px; font-weight:700; color:#334155; text-decoration:none; border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
