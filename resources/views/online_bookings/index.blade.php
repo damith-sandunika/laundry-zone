@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
-                <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Online Bookings</h2>
+                <h2 class="ph-title">Online Bookings</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage customer pickup & delivery requests</p>
             </div>
         </div>

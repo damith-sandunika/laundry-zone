@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
-                <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Order
+                <h2 class="ph-title">Order
                     Management</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage and track customer laundry
                     states</p>
@@ -174,89 +174,63 @@
             } catch (err) { alert('Error updating status'); }
         }
 
-    }">
-
-        <!-- STAT CARDS -->
-        <div class="grid grid-cols-4 md:grid-cols-2 xl:grid-cols-4 gap-2 md:gap-4 mb-6">
+    }">        <!-- STAT CARDS -->
+        <div class="grid grid-cols-4 gap-2 md:gap-4 mb-6">
 
             <!-- All Orders -->
             <div @click="currentTab = 'all'"
-                :class="currentTab === 'all' ? 'border-blue-500 bg-blue-50 md:shadow-[0_8px_20px_rgba(59,130,246,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-1 md:gap-4">
-                    <div :class="currentTab === 'all' ? 'bg-blue-600 text-white shadow-md' : 'bg-blue-100 text-blue-600'"
-                        class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                        </svg>
-                    </div>
-                    <span class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">All
-                        Orders</span>
+                :class="currentTab === 'all' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <div :class="currentTab === 'all' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'"
+                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+                    </svg>
                 </div>
-                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0"
-                    :class="currentTab === 'all' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.all"></span>
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'all' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.all"></span>
+                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">All</span>
             </div>
 
             <!-- Received -->
             <div @click="currentTab = 'received'"
-                :class="currentTab === 'received' ? 'border-orange-500 bg-orange-50 md:shadow-[0_8px_20px_rgba(249,115,22,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-1 md:gap-4">
-                    <div :class="currentTab === 'received' ? 'bg-orange-600 text-white shadow-md' : 'bg-orange-100 text-orange-600'"
-                        class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                    </div>
-                    <span
-                        class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">Received</span>
+                :class="currentTab === 'received' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <div :class="currentTab === 'received' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-600'"
+                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    </svg>
                 </div>
-                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0"
-                    :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'"
-                    x-text="counts.received"></span>
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.received"></span>
+                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Received</span>
             </div>
 
             <!-- Ready / Done -->
             <div @click="currentTab = 'done'"
-                :class="currentTab === 'done' ? 'border-green-500 bg-green-50 md:shadow-[0_8px_20px_rgba(34,197,94,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-1 md:gap-4">
-                    <div :class="currentTab === 'done' ? 'bg-green-600 text-white shadow-md' : 'bg-green-100 text-green-600'"
-                        class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                    <span class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">Ready /
-                        Done</span>
+                :class="currentTab === 'done' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <div :class="currentTab === 'done' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-600'"
+                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
                 </div>
-                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0"
-                    :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
+                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Done</span>
             </div>
 
             <!-- Delivered -->
             <div @click="currentTab = 'delivered'"
-                :class="currentTab === 'delivered' ? 'border-gray-500 bg-gray-100 md:shadow-[0_8px_20px_rgba(100,116,139,0.25)] md:scale-[1.02]' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col md:flex-row items-center justify-center md:justify-between p-2 md:px-6 md:py-4 rounded-xl md:rounded-2xl border-2 cursor-pointer transition-all duration-300 ease-out">
-                <div class="flex items-center gap-1 md:gap-4">
-                    <div :class="currentTab === 'delivered' ? 'bg-gray-600 text-white shadow-md' : 'bg-gray-200 text-gray-600'"
-                        class="w-7 h-7 md:w-10 md:h-10 rounded-full flex items-center justify-center transition-colors">
-                        <svg class="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" stroke-width="2.5"
-                            viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round"
-                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                        </svg>
-                    </div>
-                    <span
-                        class="hidden md:block text-sm font-bold text-gray-700 uppercase tracking-wider">Delivered</span>
+                :class="currentTab === 'delivered' ? 'border-gray-500 bg-gray-100' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <div :class="currentTab === 'delivered' ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-600'"
+                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    </svg>
                 </div>
-                <span class="text-lg md:text-3xl font-black mt-1 md:mt-0"
-                    :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'"
-                    x-text="counts.delivered"></span>
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'" x-text="counts.delivered"></span>
+                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Delivered</span>
             </div>
         </div>
 

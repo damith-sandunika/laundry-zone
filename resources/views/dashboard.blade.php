@@ -75,7 +75,7 @@
     <x-slot name="header">
         <div class="dash-header">
             <div>
-                <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px 0;">
+                <h2 class="ph-title">
                     Dashboard</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Today's updates and key metrics for
                     <strong style="color:#64748b;">{{ $branchName }}</strong></p>

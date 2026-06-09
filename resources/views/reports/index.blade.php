@@ -2,14 +2,14 @@
     <x-slot name="header">
         <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
-                <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Business Reports</h2>
+                <h2 class="ph-title">Business Reports</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Analyze sales, revenue, stock deductions and payroll</p>
             </div>
         </div>
     </x-slot>
 
-    <div class="bg-white p-4 rounded-md border border-gray-100 shadow-sm mb-6 flex flex-wrap items-end gap-4 bg-gray-50">
-        <form action="{{ route('reports.index') }}" method="GET" class="w-full flex flex-wrap items-end gap-4">
+    <div class="bg-white p-4 rounded-md border border-gray-100 shadow-sm mb-6 bg-gray-50">
+        <form action="{{ route('reports.index') }}" method="GET" class="flex flex-wrap items-end gap-3">
             <div>
                 <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Start Date</label>
                 <input type="date" name="start_date" value="{{ $startDate }}" class="text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">

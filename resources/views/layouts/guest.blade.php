@@ -6,10 +6,12 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ config('app.name', 'Smart Laundry') }} — Sign In</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700;1,900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="manifest" href="/manifest.json">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        body { font-family: 'Merriweather', Georgia, serif; }
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background:#f8fafc; }
+        h1, h2, h3, h4, h5, h6 { font-family: 'Inter', system-ui, -apple-system, sans-serif !important; font-weight: 800 !important; }
         .gradient-text {
             background: linear-gradient(135deg, #60a5fa, #a78bfa);
             -webkit-background-clip: text;
@@ -138,13 +140,18 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
                     </svg>
                 </div>
-                <span style="font-weight:800;font-size:17px;color:#111827;letter-spacing:-0.01em;">SmartLaundry</span>
+                <span style="font-weight:900;font-size:17px;color:#111827;letter-spacing:-0.01em;">SmartLaundry</span>
             </div>
 
             <!-- Heading -->
             <div style="margin-bottom:36px;">
                 <h1 style="font-size:32px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 8px 0;">Welcome back</h1>
                 <p style="font-size:14px;color:#6b7280;font-weight:500;margin:0;">Sign in to access your management dashboard</p>
+                
+                <button id="installPwaBtn" style="display:none;margin-top:16px;width:100%;padding:12px;background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;border-radius:12px;font-weight:800;font-size:14px;cursor:pointer;align-items:center;justify-content:center;gap:8px;transition:all 0.2s;" onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Install SmartLaundry App
+                </button>
             </div>
 
             {{ $slot }}
@@ -162,5 +169,31 @@
             .mobile-brand { display: none !important; }
         }
     </style>
+    
+    <script>
+        let deferredPrompt;
+        const installBtn = document.getElementById('installPwaBtn');
+        
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.style.display = 'flex';
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    installBtn.style.display = 'none';
+                }
+                deferredPrompt = null;
+            }
+        });
+        
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(err => console.error(err));
+        }
+    </script>
 </body>
 </html>

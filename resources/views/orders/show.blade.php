@@ -7,7 +7,7 @@
                     <span style="color:#cbd5e1;font-size:11px;">/</span>
                     <span style="font-size:12px;color:#64748b;font-weight:700;">{{ $order->order_number }}</span>
                 </div>
-                <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Order Details</h2>
+                <h2 class="ph-title">Order Details</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">
                     Customer: <span style="font-weight:700;color:#334155;">{{ $order->customer->name }}</span> &bull; {{ $order->created_at->format('M d, Y h:i A') }}
                 </p>

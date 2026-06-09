@@ -1,10 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center mb-2">
+        <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
-                <h2 class="text-2xl font-bold text-gray-900">
-                    System Settings
-                </h2>
+                <h2 class="ph-title">System Settings</h2>
                 <p class="text-sm text-gray-500 mt-1">Configure laundry details, services, and stock locations.</p>
             </div>
         </div>
@@ -80,9 +78,9 @@
 
             <!-- SERVICES TAB -->
             <div x-show="activeTab === 'services'" style="display: none;">
-                <div class="flex justify-between items-center mb-4">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Available Services</h3>
-                    <button @click="serviceModalOpen = true" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
+                    <button @click="serviceModalOpen = true" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
                         + Add New Service
                     </button>
                 </div>

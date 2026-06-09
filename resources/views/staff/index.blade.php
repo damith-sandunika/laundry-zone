@@ -1,12 +1,11 @@
 <x-app-layout>
     <x-slot name="header">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
-                <h2 style="font-size:24px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 4px;">Staff Management</h2>
+                <h2 class="ph-title">Staff Management</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage employees, permissions and salary payments</p>
             </div>
-            <button @click="$dispatch('open-add-staff')" style="display:flex;align-items:center;gap:7px;padding:10px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border-radius:10px;border:none;cursor:pointer;box-shadow:0 2px 10px rgba(29,78,216,0.3);transition:all 0.15s;"
-                onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
+            <button @click="$dispatch('open-add-staff')" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                 Add Staff
             </button>

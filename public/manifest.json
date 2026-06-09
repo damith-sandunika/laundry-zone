@@ -1,0 +1,16 @@
+{
+    "name": "Urban Wash Laundry",
+    "short_name": "Urban Wash",
+    "description": "Smart Laundry Management System",
+    "start_url": "/login",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1d4ed8",
+    "icons": [
+        {
+            "src": "/images/admin_logo.png",
+            "sizes": "192x192 512x512",
+            "type": "image/png"
+        }
+    ]
+}

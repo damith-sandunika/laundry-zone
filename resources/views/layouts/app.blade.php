@@ -16,6 +16,13 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
             font-weight: 800 !important;
         }
+        /* Page header titles - globally overridable on mobile */
+        .ph-title { font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.03em; margin: 0 0 4px; }
+        .ph-sub { font-size: 13px; color: #94a3b8; font-weight: 500; margin: 0; }
+        @media (max-width: 768px) {
+            .ph-title { font-size: 16px !important; letter-spacing: -0.01em !important; }
+            .ph-sub { font-size: 11px !important; }
+        }
 
         /* ── Sidebar (Premium Light Theme) ── */
         .sidebar {
@@ -153,34 +160,29 @@
             }
             .sidebar.mobile-open { transform: translateX(0); }
             .mobile-menu-btn { display: flex !important; position: relative; z-index: 10; }
-            .topbar { padding: 0 16px; height: 60px; justify-content: space-between !important; display: flex !important; }
-            .topbar > div:first-child { width: auto !important; flex: 1; }
-            .topbar-left { display: none !important; } /* Hide title on very small screens to save space */
+            .topbar { padding: 0 12px; height: 56px; display: flex !important; align-items: center; justify-content: space-between !important; gap: 8px; }
+            /* Center brand on mobile */
+            .topbar-left { position: absolute !important; left: 50%; transform: translateX(-50%) !important; display: flex !important; flex-direction: column; align-items: center; pointer-events: none; }
+            .topbar-left .topbar-title { font-size: 13px !important; }
+            .topbar-left .topbar-sub { font-size: 9px !important; margin-top: 1px !important; }
             .topbar-tagline { display: none !important; }
-            .topbar-sub { text-align: center; }
-            .topbar-right { margin-left: auto; display: flex; align-items: center; gap: 10px !important; }
-            .topbar-right span.user-name { display: none; }
-            .topbar-right svg.dropdown-arrow { display: none; }
-            .notif-btn { background: transparent !important; border: none !important; width: 32px; height: 32px; }
-            .page-content { padding: 16px 12px; }
+            /* Hide name, show only avatar on mobile */
+            .topbar-right { display: flex; align-items: center; gap: 6px !important; }
+            .topbar-right .topbar-user-info { display: none !important; }
+            .topbar-right .dropdown-arrow { display: none !important; }
+            .notif-btn { background: transparent !important; border: none !important; width: 40px; height: 40px; padding: 0 !important; }
+            .page-content { padding: 14px 10px; }
             table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
             
-            /* Global font size reductions for mobile */
-            h1.text-2xl, h2.text-2xl { font-size: 1.15rem !important; line-height: 1.5 !important; }
-            h1.text-3xl, h2.text-3xl { font-size: 1.25rem !important; line-height: 1.5 !important; }
-            h3.text-xl { font-size: 1rem !important; }
-            
-            /* Global card padding and gap reductions for mobile */
-            .p-6, .p-8 { padding: 1rem !important; }
-            .gap-6 { gap: 1rem !important; }
-            .grid-cols-2, .grid-cols-3, .grid-cols-4 { grid-template-columns: 1fr !important; }
+            /* Page title reductions */
+            .page-content [style*="font-size:24px"],
+            .page-content h2[style*="font-size:24px"],
+            div[style*="margin-bottom:28px"] h2[style*="font-size:24px"] { font-size: 16px !important; letter-spacing: -0.01em !important; }
+            div[style*="margin-bottom:28px"] p[style*="font-size:13px"] { font-size: 11px !important; }
             
             /* Dashboard specific fixes */
             .dashboard-main-grid { display: flex !important; flex-direction: column !important; }
             .dashboard-sidebar { width: 100% !important; max-width: 100% !important; margin-top: 1rem !important; }
-            
-            /* Button global mobile fixes */
-            button, .btn { padding-left: 12px !important; padding-right: 12px !important; font-size: 11px !important; }
         }
     </style>
 </head>
@@ -293,24 +295,19 @@
 
             <!-- Topbar (Search bar removed, tagline in desktop view, notification & profile dropdowns) -->
             <header class="topbar">
-                <div style="display:flex;align-items:center;gap:16px;width:100%;">
-                    <!-- Mobile menu btn -->
-                    <button @click="sidebarOpen=!sidebarOpen" style="display:none;width:38px;height:38px;border-radius:10px;background:#eff6ff;border:none;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 5px rgba(29,78,216,0.1);" class="mobile-menu-btn">
-                        <svg width="22" height="22" fill="none" stroke="#1d4ed8" stroke-width="2.5"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h10"/></svg>
-                    </button>
-                    <div class="topbar-left">
-                        @php 
-                            $branchId = auth()->user()->branch_id ?? 1; 
-                            $branch = \App\Models\Branch::find($branchId); 
-                        @endphp
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <div class="topbar-title">{{ $branch->name ?? 'Smart Laundry' }}</div>
-                            <span class="topbar-tagline" style="font-size:11.5px; font-weight:700; color:#1d4ed8; background:#eff6ff; border:1px solid #dbeafe; padding:3px 8px; border-radius:6px; letter-spacing:0.02em;">
-                                {{ $branch->tagline ?? 'Bespoke Premium Care' }}
-                            </span>
-                        </div>
-                        <div class="topbar-sub">Management System</div>
-                    </div>
+                <!-- LEFT: Hamburger -->
+                <button @click="sidebarOpen=!sidebarOpen" style="display:none;width:40px;height:40px;background:transparent;border:none;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;" class="mobile-menu-btn">
+                    <svg width="26" height="26" fill="none" stroke="#0f172a" stroke-width="2.5"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+
+                <!-- CENTER: Brand (desktop: topbar-left, mobile: absolute center) -->
+                <div class="topbar-left" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                    @php 
+                        $branchId = auth()->user()->branch_id ?? 1; 
+                        $branch = \App\Models\Branch::find($branchId); 
+                    @endphp
+                    <div class="topbar-title" style="font-size:15px;font-weight:900;color:#0f172a;letter-spacing:-0.02em;line-height:1;">{{ $branch->name ?? 'Urban Wash' }}</div>
+                    <div class="topbar-sub" style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;">Laundry Management</div>
                 </div>
 
                 <div style="display:flex;align-items:center;gap:12px;margin-left:auto;margin-right:24px;" class="topbar-quick-btns">
@@ -355,11 +352,11 @@
                         }
                     @endphp
                     <div style="position:relative;">
-                        <button @click="notifOpen = !notifOpen; profileOpen = false" @click.away="notifOpen = false" class="notif-btn">
+                        <button @click="notifOpen = !notifOpen; profileOpen = false" @click.away="notifOpen = false" class="notif-btn" style="display:flex;align-items:center;justify-content:center;">
                             @if(count($notifsList) > 0)
-                                <div class="notif-dot"></div>
+                                <div class="notif-dot" style="top:4px; right:4px;"></div>
                             @endif
-                            <svg width="17" height="17" fill="none" viewBox="0 0 24 24" stroke="#64748b" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#64748b" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                         </button>
                         <!-- Notifications Dropdown Menu -->
                         <div x-show="notifOpen" style="display:none; position:absolute; right:0; top:46px; width:300px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); z-index:100; overflow:hidden;">
@@ -389,13 +386,17 @@
                         </div>
                     </div>
 
-                    <!-- Profile Dropdown (Profile Settings & Sign Out) -->
+                    <!-- Profile Dropdown -->
                     <div style="position:relative;">
-                        <button @click="profileOpen = !profileOpen; notifOpen = false" @click.away="profileOpen = false" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:4px;border-radius:10px;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='transparent'">
-                            <div class="topbar-avatar" style="width:32px; height:32px; border-radius:50%; background:#e2e8f0; display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:#475569;">
-                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                        <button @click="profileOpen = !profileOpen; notifOpen = false" @click.away="profileOpen = false" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;padding:4px;border-radius:50%;transition:all 0.15s;">
+                            <!-- Desktop: avatar + name -->
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div class="topbar-avatar" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;">
+                                    {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                                </div>
+                                <span class="topbar-user-info" style="font-size:13px;font-weight:700;color:#334155;white-space:nowrap;">{{ auth()->user()->name ?? 'User' }}</span>
+                                <svg class="dropdown-arrow" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             </div>
-                            <span class="topbar-user-info" style="font-size:13px;font-weight:700;color:#334155;white-space:nowrap;">{{ auth()->user()->name ?? 'User' }}</span>
                         </button>
                         <!-- Profile Dropdown Menu -->
                         <div x-show="profileOpen" style="display:none; position:absolute; right:0; top:46px; width:170px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); z-index:100; overflow:hidden;">
