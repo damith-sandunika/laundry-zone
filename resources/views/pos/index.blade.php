@@ -129,7 +129,7 @@
                     <span style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Total Amount</span>
                     <span style="font-size:22px;font-weight:900;color:#0f172a;letter-spacing:-0.02em;" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                 </div>
-                <button @click="showCheckoutModal = true" :disabled="cart.length === 0"
+                <button @click="if(!showCheckoutModal){ showCheckoutModal = true; }" :disabled="cart.length === 0"
                     :class="cart.length === 0 ? 'bg-green-500 cursor-not-allowed text-white shadow-none opacity-80' : 'bg-gradient-to-br from-blue-600 to-blue-700 shadow-[0_8px_20px_rgba(29,78,216,0.3)] hover:-translate-y-0.5 text-white cursor-pointer'"
                     class="w-full md:w-auto px-5 py-3 md:px-9 md:py-4 text-sm md:text-[15px] font-black rounded-2xl md:rounded-[40px] flex justify-center items-center gap-2 md:gap-3 transition-all duration-300 tracking-wide outline-none border-none">
                     Proceed to Checkout
@@ -175,7 +175,7 @@
                     <!-- Pickup Date -->
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Pickup Date</span>
-                        <input type="datetime-local" x-model="dueDate" class="text-sm border-gray-200 rounded-xl p-2 focus:border-blue-500 focus:ring-blue-500 font-bold outline-none text-gray-800">
+                        <input type="datetime-local" x-model="dueDate" @change="$el.blur()" class="text-sm border-gray-200 rounded-xl p-2 focus:border-blue-500 focus:ring-blue-500 font-bold outline-none text-gray-800">
                     </div>
 
                     <div class="border-t border-gray-100 my-2"></div>
@@ -218,10 +218,16 @@
 
                     <!-- Confirm Order Button -->
                     <div class="pt-4">
-                        <button @click="placeOrder" 
-                            class="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-lg font-black rounded-2xl shadow-xl hover:shadow-2xl transition-all flex items-center justify-center gap-3 transform hover:-translate-y-1">
-                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                            Confirm Order
+                        <button @click="placeOrder" :disabled="isPlacingOrder"
+                            :class="isPlacingOrder ? 'opacity-60 cursor-not-allowed' : 'hover:from-blue-700 hover:to-blue-800 hover:shadow-2xl transform hover:-translate-y-1'"
+                            class="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-lg font-black rounded-2xl shadow-xl transition-all flex items-center justify-center gap-3">
+                            <template x-if="!isPlacingOrder">
+                                <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </template>
+                            <template x-if="isPlacingOrder">
+                                <svg class="animate-spin" width="22" height="22" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                            </template>
+                            <span x-text="isPlacingOrder ? 'Placing Order...' : 'Confirm Order'"></span>
                         </button>
                     </div>
                 </div>
@@ -331,6 +337,7 @@
                 cart: [],
                 
                 showCheckoutModal: false,
+                isPlacingOrder: false,
                 discountType: 'fixed',
                 discountValue: 0,
                 paymentMode: 'pay_now',
@@ -408,6 +415,8 @@
                         alert('Please select a Pickup Date for this order.');
                         return;
                     }
+                    if (this.isPlacingOrder) return; // prevent double submit
+                    this.isPlacingOrder = true;
 
                     const payload = {
                         customer_id: this.selectedCustomer ? this.selectedCustomer.id : null,
@@ -452,6 +461,7 @@
                             alert('Order failed: ' + (data.error || 'Unknown error'));
                         }
                     } catch (err) { console.error(err); alert('Network error. Please try again.'); }
+                    finally { this.isPlacingOrder = false; }
                 },
 
                 init() {

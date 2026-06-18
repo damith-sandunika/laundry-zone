@@ -301,6 +301,7 @@
                                         <div class="flex items-center gap-2">
                                             <a :href="'/orders/' + order.id" target="_blank" style="font-weight:800;color:#2563eb;text-decoration:none;" x-text="order.order_number"></a>
                                             <span x-show="order.payment_method === 'credit'" class="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded">CREDIT</span>
+                                            <span x-show="order.payment_method === 'pay_on_pickup'" class="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded">PAY ON PICKUP</span>
                                         </div>
                                         <div style="font-size:11px;color:#94a3b8;font-weight:500;margin-top:2px;" x-text="new Date(order.created_at).toLocaleDateString()"></div>
                                     </td>
@@ -341,11 +342,18 @@
                         const total = parseFloat(order.total) || 0;
                         const paid = parseFloat(order.paid_amount) || 0;
                         if (total <= paid) return false;
-                        
+
+                        if (serviceName === '__all__') return true;
+
                         if (order.items && order.items.length > 0) {
-                            return order.items.some(item => item.service_type && item.service_type.name === serviceName);
+                            return order.items.some(item => {
+                                const svc = item.service_type || item.serviceType || item.service_type_id;
+                                if (!svc) return true;
+                                const name = typeof svc === 'object' ? (svc.name || '') : '';
+                                return name === serviceName || serviceName === '';
+                            });
                         }
-                        return false;
+                        return true;
                     });
                     this.pendingModalOpen = true;
                 }
