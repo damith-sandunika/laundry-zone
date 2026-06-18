@@ -8,7 +8,7 @@ class Order extends Model
 {
     protected $fillable = [
         'order_number', 'branch_id', 'customer_id', 'created_by',
-        'status', 'subtotal', 'discount', 'total', 'paid_amount',
+        'status', 'subtotal', 'discount', 'additional', 'total', 'paid_amount',
         'payment_status', 'payment_method', 'loyalty_points_used',
         'loyalty_points_earned', 'due_date', 'notes', 'is_online_booking',
         'ready_at', 'delivered_at'

@@ -33,13 +33,14 @@ class POSController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'customer_id' => 'nullable|exists:customers,id',
-            'new_customer_name' => 'nullable|string|max:255',
-            'new_customer_phone' => 'nullable|string|max:255',
-            'cart' => 'required|array|min:1',
-            'discount' => 'nullable|numeric|min:0',
-            'payment_mode' => 'nullable|in:pay_now,pay_on_pickup',
-            'due_date' => 'required|string',
+            'customer_id'      => 'nullable|exists:customers,id',
+            'new_customer_name'=> 'nullable|string|max:255',
+            'new_customer_phone'=> 'nullable|string|max:255',
+            'cart'             => 'required|array|min:1',
+            'discount'         => 'nullable|numeric|min:0',
+            'additional'       => 'nullable|numeric|min:0',
+            'payment_mode'     => 'nullable|in:pay_now,pay_on_pickup',
+            'due_date'         => 'required|string',
         ]);
 
         $branchId = auth()->user()->branch_id ?? 1;
@@ -56,14 +57,15 @@ class POSController extends Controller
         }
 
         // Calculate Totals
-        $subtotal = collect($request->cart)->sum(fn($item) => $item['base_price'] * $item['qty']);
-        $discount = $request->discount ?? 0;
-        $total = max(0, $subtotal - $discount);
+        $subtotal   = collect($request->cart)->sum(fn($item) => $item['base_price'] * $item['qty']);
+        $discount   = $request->discount ?? 0;
+        $additional = $request->additional ?? 0;
+        $total      = max(0, $subtotal - $discount + $additional);
         $paymentMode = $request->payment_mode ?? 'pay_on_pickup';
-        $paidAmount = $paymentMode === 'pay_now' ? $total : 0;
+        $paidAmount  = $paymentMode === 'pay_now' ? $total : 0;
 
         try {
-            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId, $subtotal, $discount, $total, $paidAmount, $paymentMode) {
+            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId, $subtotal, $discount, $additional, $total, $paidAmount, $paymentMode) {
                 // 1. Resolve Customer
                 $customerId = $request->customer_id;
                 if (!$customerId) {
@@ -77,16 +79,17 @@ class POSController extends Controller
                 // 2. Create Order
                 $order = \App\Models\Order::create([
                     'order_number' => \App\Models\Order::generateOrderNumber(),
-                    'branch_id' => $branchId,
-                    'customer_id' => $customerId,
-                    'created_by' => auth()->id(),
-                    'status' => 'received',
-                    'subtotal' => $subtotal,
-                    'discount' => $discount,
-                    'total' => $total,
-                    'paid_amount' => $paidAmount,
+                    'branch_id'    => $branchId,
+                    'customer_id'  => $customerId,
+                    'created_by'   => auth()->id(),
+                    'status'       => 'received',
+                    'subtotal'     => $subtotal,
+                    'discount'     => $discount,
+                    'additional'   => $additional,
+                    'total'        => $total,
+                    'paid_amount'  => $paidAmount,
                     'payment_method' => $paymentMode === 'pay_now' ? ($request->payment_method ?? 'cash') : null,
-                    'due_date' => $request->due_date ? date('Y-m-d H:i:s', strtotime($request->due_date)) : null,
+                    'due_date'     => $request->due_date ? date('Y-m-d H:i:s', strtotime($request->due_date)) : null,
                 ]);
 
                 if ($paidAmount > 0 && $paymentMode === 'pay_now') {
