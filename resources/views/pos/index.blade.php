@@ -175,7 +175,10 @@
                     <!-- Pickup Date -->
                     <div class="flex items-center justify-between">
                         <span class="text-xs font-bold text-gray-500 uppercase tracking-wide">Pickup Date</span>
-                        <input type="datetime-local" x-model="dueDate" @change="$el.blur()" class="text-sm border-gray-200 rounded-xl p-2 focus:border-blue-500 focus:ring-blue-500 font-bold outline-none text-gray-800">
+                        <input type="datetime-local" x-model="dueDate"
+                            @input="setTimeout(() => $el.blur(), 100)"
+                            @change="setTimeout(() => $el.blur(), 100)"
+                            class="text-sm border-gray-200 rounded-xl p-2 focus:border-blue-500 focus:ring-blue-500 font-bold outline-none text-gray-800">
                     </div>
 
                     <div class="border-t border-gray-100 my-2"></div>

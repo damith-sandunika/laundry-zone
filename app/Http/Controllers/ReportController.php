@@ -52,7 +52,7 @@ class ReportController extends Controller
             \DB::raw('SUM(order_items.total_price) as total_revenue'),
             \DB::raw('SUM(order_items.total_price * (orders.paid_amount / NULLIF(orders.total, 0))) as done_payment'),
             \DB::raw('SUM(CASE WHEN orders.payment_method = "credit" THEN order_items.total_price - (order_items.total_price * (orders.paid_amount / NULLIF(orders.total, 0))) ELSE 0 END) as credit_payment'),
-            \DB::raw('SUM(CASE WHEN orders.payment_method != "credit" THEN order_items.total_price - (order_items.total_price * (orders.paid_amount / NULLIF(orders.total, 0))) ELSE 0 END) as pending_payment')
+            \DB::raw('SUM(CASE WHEN (orders.payment_method IS NULL OR orders.payment_method != "credit") THEN order_items.total_price - (order_items.total_price * (orders.paid_amount / NULLIF(orders.total, 0))) ELSE 0 END) as pending_payment')
         )
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
