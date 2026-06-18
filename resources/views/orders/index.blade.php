@@ -589,23 +589,32 @@
 
                         <template
                             x-if="deliverOrder && parseFloat(deliverOrder.total) > parseFloat(deliverOrder.paid_amount)">
-                            <div style="padding:16px;background:#fffbeb;border:1.5px solid #fde68a;border-radius:12px;">
+                            <div style="padding:20px;background:#fffbeb;border:2px solid #fde68a;border-radius:20px;">
                                 <label
-                                    style="display:block;font-size:12px;font-weight:800;color:#b45309;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Payment
+                                    style="display:block;font-size:12px;font-weight:800;color:#b45309;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.05em;">Payment
                                     Collection</label>
-                                <div style="display:flex;gap:8px;">
+                                <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
                                     <button type="button" @click="deliveryPaymentMethod = 'cash'"
-                                        :style="deliveryPaymentMethod === 'cash' ? 'background:#16a34a;color:white;border-color:#16a34a;' : 'background:white;color:#334155;border-color:#cbd5e1;'"
-                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">💵
-                                        CASH</button>
+                                        :style="deliveryPaymentMethod === 'cash'
+                                            ? 'background:#f0fdf4;color:#15803d;border-color:#16a34a;border-width:3px;box-shadow:0 4px 14px rgba(22,163,74,0.2);'
+                                            : 'background:white;color:#475569;border-color:#cbd5e1;border-width:2px;'"
+                                        style="width:80%;padding:14px 16px;font-size:14px;font-weight:800;border-style:solid;border-radius:50px;cursor:pointer;transition:all 0.15s;text-align:center;">
+                                        💵 Cash Payment
+                                    </button>
                                     <button type="button" @click="deliveryPaymentMethod = 'card'"
-                                        :style="deliveryPaymentMethod === 'card' ? 'background:#2563eb;color:white;border-color:#2563eb;' : 'background:white;color:#334155;border-color:#cbd5e1;'"
-                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">💳
-                                        CARD</button>
+                                        :style="deliveryPaymentMethod === 'card'
+                                            ? 'background:#eff6ff;color:#1d4ed8;border-color:#2563eb;border-width:3px;box-shadow:0 4px 14px rgba(37,99,235,0.2);'
+                                            : 'background:white;color:#475569;border-color:#cbd5e1;border-width:2px;'"
+                                        style="width:80%;padding:14px 16px;font-size:14px;font-weight:800;border-style:solid;border-radius:50px;cursor:pointer;transition:all 0.15s;text-align:center;">
+                                        💳 Card Payment
+                                    </button>
                                     <button type="button" @click="deliveryPaymentMethod = 'credit'"
-                                        :style="deliveryPaymentMethod === 'credit' ? 'background:#f97316;color:white;border-color:#f97316;' : 'background:white;color:#334155;border-color:#cbd5e1;'"
-                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">⏳
-                                        CREDIT</button>
+                                        :style="deliveryPaymentMethod === 'credit'
+                                            ? 'background:#fff7ed;color:#c2410c;border-color:#f97316;border-width:3px;box-shadow:0 4px 14px rgba(249,115,22,0.2);'
+                                            : 'background:white;color:#475569;border-color:#cbd5e1;border-width:2px;'"
+                                        style="width:80%;padding:14px 16px;font-size:14px;font-weight:800;border-style:solid;border-radius:50px;cursor:pointer;transition:all 0.15s;text-align:center;">
+                                        ⏳ Credit (Pay Later)
+                                    </button>
                                 </div>
                             </div>
                         </template>
