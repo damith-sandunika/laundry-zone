@@ -174,7 +174,7 @@
             } catch (err) { alert('Error updating status'); }
         }
 
-    }">        <!-- STAT CARDS -->
+    }"> <!-- STAT CARDS -->
         <div class="grid grid-cols-4 gap-2 md:gap-4 mb-6">
 
             <!-- All Orders -->
@@ -183,11 +183,13 @@
                 class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
                 <div :class="currentTab === 'all' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'"
                     class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
                     </svg>
                 </div>
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'all' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.all"></span>
+                <span class="text-xs md:text-sm font-black mt-1"
+                    :class="currentTab === 'all' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.all"></span>
                 <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">All</span>
             </div>
 
@@ -197,12 +199,17 @@
                 class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
                 <div :class="currentTab === 'received' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-600'"
                     class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                     </svg>
                 </div>
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.received"></span>
-                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Received</span>
+                <span class="text-xs md:text-sm font-black mt-1"
+                    :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'"
+                    x-text="counts.received"></span>
+                <span
+                    class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Received</span>
             </div>
 
             <!-- Ready / Done -->
@@ -211,11 +218,13 @@
                 class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
                 <div :class="currentTab === 'done' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-600'"
                     class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
                     </svg>
                 </div>
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
+                <span class="text-xs md:text-sm font-black mt-1"
+                    :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
                 <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Done</span>
             </div>
 
@@ -225,12 +234,17 @@
                 class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
                 <div :class="currentTab === 'delivered' ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-600'"
                     class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round"
+                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
                     </svg>
                 </div>
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'" x-text="counts.delivered"></span>
-                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Delivered</span>
+                <span class="text-xs md:text-sm font-black mt-1"
+                    :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'"
+                    x-text="counts.delivered"></span>
+                <span
+                    class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Delivered</span>
             </div>
         </div>
 
@@ -252,7 +266,8 @@
                             style="padding:8px 14px;background:white;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:700;color:#334155;cursor:pointer;">Search</button>
                     </form>
 
-                    <button x-show="selectedOrders.length > 0 && currentTab !== 'delivered'" @click="showBulkModal = true"
+                    <button x-show="selectedOrders.length > 0 && currentTab !== 'delivered'"
+                        @click="showBulkModal = true"
                         style="padding:8.5px 16px;background:#16a34a;color:white;font-size:13px;font-weight:800;border:none;border-radius:9px;cursor:pointer;display:flex;align-items:center;gap:6px;">
                         Bulk Update (<span x-text="selectedOrders.length"></span>)
                     </button>
@@ -393,8 +408,7 @@
                                         <button @click="openReverse(order.id)"
                                             style="padding:5px 7px;background:white;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
                                             onmouseover="this.style.background='#fef2f2'"
-                                            onmouseout="this.style.background='white'"
-                                            title="Reverse Order">
+                                            onmouseout="this.style.background='white'" title="Reverse Order">
                                             ↩
                                         </button>
                                     </div>
@@ -434,10 +448,13 @@
                                 <option value="cancelled">❌ Cancelled</option>
                             </select>
                         </div>
-                        
+
                         <div x-show="bulkStatus === 'done'" x-cloak>
-                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Assign to Cubbet</label>
-                            <select x-model="bulkCubbyId" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;">
+                            <label
+                                style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Assign
+                                to Cubbet</label>
+                            <select x-model="bulkCubbyId"
+                                style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;">
                                 <option value="">-- Select Empty Cubbet --</option>
                                 @foreach($cubbies as $cubby)
                                     <option value="{{ $cubby->id }}">{{ $cubby->name }}</option>
@@ -579,13 +596,16 @@
                                 <div style="display:flex;gap:8px;">
                                     <button type="button" @click="deliveryPaymentMethod = 'cash'"
                                         :style="deliveryPaymentMethod === 'cash' ? 'background:#16a34a;color:white;border-color:#16a34a;' : 'background:white;color:#334155;border-color:#cbd5e1;'"
-                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">💵 CASH</button>
+                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">💵
+                                        CASH</button>
                                     <button type="button" @click="deliveryPaymentMethod = 'card'"
                                         :style="deliveryPaymentMethod === 'card' ? 'background:#2563eb;color:white;border-color:#2563eb;' : 'background:white;color:#334155;border-color:#cbd5e1;'"
-                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">💳 CARD</button>
+                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">💳
+                                        CARD</button>
                                     <button type="button" @click="deliveryPaymentMethod = 'credit'"
                                         :style="deliveryPaymentMethod === 'credit' ? 'background:#f97316;color:white;border-color:#f97316;' : 'background:white;color:#334155;border-color:#cbd5e1;'"
-                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">⏳ CREDIT</button>
+                                        style="flex:1;padding:8px 6px;font-size:12px;font-weight:800;border:1.5px solid;border-radius:20px;cursor:pointer;transition:all 0.15s;">⏳
+                                        CREDIT</button>
                                 </div>
                             </div>
                         </template>
