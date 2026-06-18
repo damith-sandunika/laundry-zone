@@ -29,7 +29,7 @@ class OrderController extends Controller
         }
 
         $orders = $query->get();
-        $cubbies = \App\Models\Cubby::where('branch_id', $branchId ?? 1)->where('status', 'empty')->get();
+        $cubbies = \App\Models\Cubby::where('branch_id', $branchId ?? 1)->orderBy('name')->get();
 
         return view('orders.index', compact('orders', 'cubbies'));
     }
@@ -38,7 +38,7 @@ class OrderController extends Controller
     {
         $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby']);
         $branchId = auth()->user()->branch_id ?? 1;
-        $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->where('status', 'empty')->get();
+        $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->orderBy('name')->get();
         return view('orders.show', compact('order', 'cubbies'));
     }
 
