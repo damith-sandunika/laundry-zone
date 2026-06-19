@@ -23,7 +23,7 @@
                 <div style="flex:1;overflow-y:auto;padding:8px 10px;">
                     <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;">
                         <!-- Special Service Card -->
-                        <div style="display:flex;flex-direction:column;padding:12px;border-radius:16px;background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border:2px dashed #c084fc;box-shadow:0 2px 8px rgba(168,85,247,0.08);">
+                        <div style="display:flex;flex-direction:column;padding:16px;border-radius:20px;background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border:2px dashed #c084fc;box-shadow:0 2px 8px rgba(168,85,247,0.08);">
                             <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                                 <div style="width:42px;height:42px;flex-shrink:0;border-radius:50%;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:18px;">✨</div>
                                 <div>
@@ -80,7 +80,7 @@
 
             <!-- ===================== Right: Order Panel ===================== -->
             <div
-                class="flex-1 lg:flex-[1.4] bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+                class="flex-1 lg:flex-[1] bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
 
                 <!-- Customer Section -->
                 <div style="padding:10px 14px;border-bottom:2px solid #f1f5f9;">
