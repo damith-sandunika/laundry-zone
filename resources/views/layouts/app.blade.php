@@ -26,8 +26,8 @@
 
         /* ── Sidebar (Premium Light Theme) ── */
         .sidebar {
-            width: 260px;
-            min-width: 260px;
+            width: 220px;
+            min-width: 220px;
             height: 100vh;
             background: #ffffff;
             border-right: 1px solid #e2e8f0;
@@ -60,22 +60,22 @@
         /* Sidebar nav */
         .sidebar-nav {
             flex: 1;
-            padding: 16px 12px;
+            padding: 10px 8px;
             overflow-y: auto;
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
+            -ms-overflow-style: none;
+            scrollbar-width: none;
         }
         .sidebar-nav::-webkit-scrollbar {
             display: none; /* Chrome, Safari, Opera */
         }
         .nav-item {
-            display: flex; align-items: center; gap: 11px;
-            padding: 10px 12px; border-radius: 10px;
-            margin-bottom: 4px; cursor: pointer;
+            display: flex; align-items: center; gap: 9px;
+            padding: 8px 10px; border-radius: 10px;
+            margin-bottom: 2px; cursor: pointer;
             transition: all 0.15s;
             text-decoration: none;
             color: #64748b;
-            font-size: 13.5px; font-weight: 600;
+            font-size: 13px; font-weight: 600;
         }
         .nav-item:hover {
             background: #f1f5f9;

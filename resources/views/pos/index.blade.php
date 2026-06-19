@@ -1,45 +1,44 @@
 <x-app-layout>
 
     <div x-data="posSystem()">
-        <div class="flex flex-col lg:flex-row gap-4 p-2 lg:p-4 lg:h-[calc(100vh-65px)] min-h-fit">
+        <div class="flex flex-col lg:flex-row gap-2 p-1 lg:p-2 lg:h-[calc(100vh-65px)] min-h-fit">
 
             <!-- ===================== Left: Services ===================== -->
             <div
                 class="flex-1 lg:flex-[1.1] bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
                 <!-- Search bar -->
-                <div style="padding:16px 20px;border-bottom:1px solid #f1f5f9;background:#f8fafc;">
+                <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;background:#f8fafc;">
                     <div style="position:relative;">
-                        <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);" width="15"
-                            height="15" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
+                        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);" width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
                             <circle cx="11" cy="11" r="8" />
                             <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
                         </svg>
                         <input type="text" x-model="searchQuery" placeholder="Search laundry services…"
-                            style="width:100%;padding:10px 14px 10px 38px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:600;color:#0f172a;background:white;outline:none;box-sizing:border-box;"
+                            style="width:100%;padding:8px 14px 8px 34px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:white;outline:none;box-sizing:border-box;"
                             onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                     </div>
                 </div>
 
                 <!-- Services Grid -->
-                <div style="flex:1;overflow-y:auto;padding:12px 16px;">
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:12px;">
+                <div style="flex:1;overflow-y:auto;padding:8px 10px;">
+                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;">
                         <!-- Special Service Card -->
-                        <div style="display:flex;flex-direction:column;padding:16px;border-radius:20px;background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border:2px dashed #c084fc;box-shadow:0 2px 8px rgba(168,85,247,0.08);min-height:100%;">
-                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
-                                <div style="width:48px;height:48px;flex-shrink:0;border-radius:50%;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:20px;">✨</div>
+                        <div style="display:flex;flex-direction:column;padding:12px;border-radius:16px;background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border:2px dashed #c084fc;box-shadow:0 2px 8px rgba(168,85,247,0.08);">
+                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                                <div style="width:42px;height:42px;flex-shrink:0;border-radius:50%;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:18px;">✨</div>
                                 <div>
-                                    <span style="font-size:14px;font-weight:900;color:#7e22ce;line-height:1.2;letter-spacing:-0.01em;">Special Service</span>
-                                    <p style="font-size:10px;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:0.04em;margin:2px 0 0;">CUSTOM CHARGE</p>
+                                    <span style="font-size:13px;font-weight:900;color:#7e22ce;line-height:1.2;letter-spacing:-0.01em;">Special Service</span>
+                                    <p style="font-size:9px;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:0.04em;margin:1px 0 0;">CUSTOM</p>
                                 </div>
                             </div>
                             <input type="text" x-model="specialName" placeholder="Service name…"
                                 @click.stop @keydown.enter.prevent="$el.nextElementSibling.focus()"
-                                style="width:100%;padding:7px 10px;border:1.5px solid #d8b4fe;border-radius:10px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:6px;">
+                                style="width:100%;padding:6px 8px;border:1.5px solid #d8b4fe;border-radius:8px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:5px;">
                             <input type="number" x-model.number="specialPrice" placeholder="Price (Rs.)"
                                 @click.stop @keydown.enter.prevent="addSpecialToCart()"
-                                style="width:100%;padding:7px 10px;border:1.5px solid #d8b4fe;border-radius:10px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:10px;" min="0">
+                                style="width:100%;padding:6px 8px;border:1.5px solid #d8b4fe;border-radius:8px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:8px;" min="0">
                             <button @click="addSpecialToCart()"
-                                style="width:100%;padding:9px;background:#7e22ce;color:white;border:none;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;transition:all 0.15s;margin-top:auto;"
+                                style="width:100%;padding:7px;background:#7e22ce;color:white;border:none;border-radius:10px;font-size:12px;font-weight:900;cursor:pointer;transition:all 0.15s;"
                                 onmouseover="this.style.background='#6b21a8'" onmouseout="this.style.background='#7e22ce'">
                                 + Add to Cart
                             </button>
@@ -84,8 +83,8 @@
                 class="flex-1 lg:flex-[1.4] bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
 
                 <!-- Customer Section -->
-                <div style="padding:16px 20px;border-bottom:2px solid #f1f5f9;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <div style="padding:10px 14px;border-bottom:2px solid #f1f5f9;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                         <span
                             style="font-size:11px;font-weight:900;color:#0f172a;text-transform:uppercase;letter-spacing:0.08em;">Order</span>
                         <button @click="$dispatch('open-customer-modal')"
@@ -169,7 +168,7 @@
 
                     <template x-for="(item, index) in cart" :key="index">
                         <div
-                            style="position:relative;background:white;padding:12px 14px;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:8px;">
+                            style="position:relative;background:white;padding:8px 10px;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:6px;">
                             <button @click="removeFromCart(index)"
                                 style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:#fca5a5;padding:3px;border-radius:6px;transition:all 0.15s;"
                                 onmouseover="this.style.color='#ef4444';this.style.background='#fee2e2'"
@@ -211,8 +210,8 @@
                 </div>
 
                 <!-- Fixed Checkout Bar -->
-                <div class="flex flex-col md:flex-row items-center justify-between gap-4"
-                    style="padding:16px 20px;background:white;border-top:1.5px solid #e2e8f0;box-shadow:0 -4px 12px rgba(0,0,0,0.03);">
+                <div class="flex flex-col md:flex-row items-center justify-between gap-3"
+                    style="padding:10px 14px;background:white;border-top:1.5px solid #e2e8f0;box-shadow:0 -4px 12px rgba(0,0,0,0.03);">
                     <div style="display:flex;flex-direction:column;gap:2px;width:100%;"
                         class="md:w-auto text-center md:text-left">
                         <span
