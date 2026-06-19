@@ -33,14 +33,12 @@ class POSController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'customer_id'      => 'nullable|exists:customers,id',
-            'new_customer_name'=> 'nullable|string|max:255',
+            'customer_id'       => 'nullable|exists:customers,id',
+            'new_customer_name' => 'nullable|string|max:255',
             'new_customer_phone'=> 'nullable|string|max:255',
-            'cart'             => 'required|array|min:1',
-            'discount'         => 'nullable|numeric|min:0',
-            'additional'       => 'nullable|numeric|min:0',
-            'payment_mode'     => 'nullable|in:pay_now,pay_on_pickup',
-            'due_date'         => 'required|string',
+            'cart'              => 'required|array|min:1',
+            'payment_mode'      => 'nullable|in:pay_now,pay_on_pickup',
+            'due_date'          => 'required|string',
         ]);
 
         $branchId = auth()->user()->branch_id ?? 1;
@@ -57,15 +55,13 @@ class POSController extends Controller
         }
 
         // Calculate Totals
-        $subtotal   = collect($request->cart)->sum(fn($item) => $item['base_price'] * $item['qty']);
-        $discount   = $request->discount ?? 0;
-        $additional = $request->additional ?? 0;
-        $total      = max(0, $subtotal - $discount + $additional);
+        $subtotal    = collect($request->cart)->sum(fn($item) => $item['base_price'] * $item['qty']);
+        $total       = $subtotal;
         $paymentMode = $request->payment_mode ?? 'pay_on_pickup';
         $paidAmount  = $paymentMode === 'pay_now' ? $total : 0;
 
         try {
-            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId, $subtotal, $discount, $additional, $total, $paidAmount, $paymentMode) {
+            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId, $subtotal, $total, $paidAmount, $paymentMode) {
                 // 1. Resolve Customer
                 $customerId = $request->customer_id;
                 if (!$customerId) {
@@ -84,8 +80,8 @@ class POSController extends Controller
                     'created_by'   => auth()->id(),
                     'status'       => 'received',
                     'subtotal'     => $subtotal,
-                    'discount'     => $discount,
-                    'additional'   => $additional,
+                    'discount'     => 0,
+                    'additional'   => 0,
                     'total'        => $total,
                     'paid_amount'  => $paidAmount,
                     'payment_method' => $paymentMode === 'pay_now' ? ($request->payment_method ?? 'cash') : null,
@@ -110,16 +106,23 @@ class POSController extends Controller
 
                 // 3. Create Items & Deduct Inventory
                 foreach ($request->cart as $item) {
+                    // Special service uses service_type_id=9, others use item id
+                    $serviceTypeId = isset($item['service_type_id']) ? $item['service_type_id'] : $item['id'];
+
                     \App\Models\OrderItem::create([
-                        'order_id' => $order->id,
-                        'service_type_id' => $item['id'],
-                        'item_description' => $item['name'],
-                        'quantity' => $item['qty'],
-                        'unit_price' => $item['base_price'],
-                        'total_price' => $item['base_price'] * $item['qty'],
+                        'order_id'        => $order->id,
+                        'service_type_id' => $serviceTypeId,
+                        'item_description'=> $item['name'],
+                        'quantity'        => $item['qty'],
+                        'unit_price'      => $item['base_price'],
+                        'total_price'     => $item['base_price'] * $item['qty'],
                     ]);
 
-                    $service = \App\Models\ServiceType::with('inventoryItems')->find($item['id']);
+                    // Skip inventory deduction for special service
+                    if (!empty($item['is_special'])) continue;
+
+                    $service = \App\Models\ServiceType::with('inventoryItems')->find($serviceTypeId);
+                    if (!$service) continue;
                     foreach ($service->inventoryItems as $invItem) {
                         if ($invItem->pivot->deduct_at_stage === 'washing' || $invItem->pivot->deduct_at_stage === 'received' || $invItem->pivot->deduct_at_stage === 'done') {
                             $qtyToDeduct = $invItem->pivot->qty_per_use * $item['qty'];

@@ -23,6 +23,28 @@
                 <!-- Services Grid -->
                 <div style="flex:1;overflow-y:auto;padding:12px 16px;">
                     <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(200px, 1fr));gap:12px;">
+                        <!-- Special Service Card -->
+                        <div style="display:flex;flex-direction:column;padding:16px;border-radius:20px;background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border:2px dashed #c084fc;box-shadow:0 2px 8px rgba(168,85,247,0.08);min-height:100%;">
+                            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
+                                <div style="width:48px;height:48px;flex-shrink:0;border-radius:50%;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:20px;">✨</div>
+                                <div>
+                                    <span style="font-size:14px;font-weight:900;color:#7e22ce;line-height:1.2;letter-spacing:-0.01em;">Special Service</span>
+                                    <p style="font-size:10px;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:0.04em;margin:2px 0 0;">CUSTOM CHARGE</p>
+                                </div>
+                            </div>
+                            <input type="text" x-model="specialName" placeholder="Service name…"
+                                @click.stop @keydown.enter.prevent="$el.nextElementSibling.focus()"
+                                style="width:100%;padding:7px 10px;border:1.5px solid #d8b4fe;border-radius:10px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:6px;">
+                            <input type="number" x-model.number="specialPrice" placeholder="Price (Rs.)"
+                                @click.stop @keydown.enter.prevent="addSpecialToCart()"
+                                style="width:100%;padding:7px 10px;border:1.5px solid #d8b4fe;border-radius:10px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:10px;" min="0">
+                            <button @click="addSpecialToCart()"
+                                style="width:100%;padding:9px;background:#7e22ce;color:white;border:none;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;transition:all 0.15s;margin-top:auto;"
+                                onmouseover="this.style.background='#6b21a8'" onmouseout="this.style.background='#7e22ce'">
+                                + Add to Cart
+                            </button>
+                        </div>
+
                         <template x-for="service in filteredServices" :key="service.id">
                             <button @click="addToCart(service)"
                                 style="display:flex;align-items:center;padding:16px;border-radius:20px;cursor:pointer;transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);text-align:left;overflow:hidden;background:white;border:1.5px solid #e2e8f0;box-shadow:0 2px 5px rgba(0,0,0,0.02);"
@@ -213,7 +235,9 @@
         </div>
 
         <!-- ===================== Checkout Modal ===================== -->
-        <div x-show="showCheckoutModal" class="fixed inset-0 z-50 flex items-center justify-center p-4"
+        <div x-show="showCheckoutModal"
+            x-effect="if(showCheckoutModal) $nextTick(() => { const dp = document.getElementById('due-date-input'); if(dp) { try { dp.showPicker(); } catch(e) { dp.focus(); dp.click(); } } })"
+            class="fixed inset-0 z-50 flex items-center justify-center p-4"
             style="display: none;">
             <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" @click="showCheckoutModal = false">
             </div>
@@ -230,52 +254,14 @@
                 </div>
 
                 <div class="p-4 space-y-3 overflow-y-auto max-h-[80vh]">
-                    <!-- Subtotal & Discount & Additional row -->
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wide">Subtotal</p>
-                            <p class="text-sm font-black text-gray-800" x-text="'Rs. ' + subtotal.toFixed(2)"></p>
-                        </div>
 
-                        <div class="text-right">
-                            <p class="text-[10px] font-bold text-gray-400 mb-1 uppercase tracking-wide">Discount</p>
-                            <div class="flex items-center gap-1">
-                                <select x-model="discountType"
-                                    class="text-xs border-gray-200 rounded-lg p-1.5 font-bold outline-none bg-gray-50">
-                                    <option value="fixed">Rs.</option>
-                                    <option value="percent">%</option>
-                                </select>
-                                <input type="number" x-model.number="discountValue"
-                                    class="w-16 text-right text-sm border-gray-200 rounded-lg p-1.5 font-black outline-none"
-                                    min="0">
-                            </div>
-                        </div>
-                    </div>
 
-                    <!-- Additional Charge -->
-                    <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
-                        <div>
-                            <p class="text-[10px] font-bold text-amber-700 uppercase tracking-wide">➕ Additional</p>
-                            <p class="text-[10px] text-amber-500 font-medium">Adds to total</p>
-                        </div>
-                        <div class="flex items-center gap-1">
-                            <select x-model="additionalType"
-                                class="text-xs border-amber-200 rounded-lg p-1.5 font-bold outline-none bg-white">
-                                <option value="fixed">Rs.</option>
-                                <option value="percent">%</option>
-                            </select>
-                            <input type="number" x-model.number="additionalValue"
-                                class="w-16 text-right text-sm border-amber-200 rounded-lg p-1.5 font-black outline-none"
-                                min="0">
-                        </div>
-                    </div>
-
-                    <div class="border-t border-gray-100 my-2"></div>
+                    <div class="border-t border-gray-100"></div>
 
                     <!-- Pickup Date -->
                     <div class="flex items-center justify-between">
                         <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Pickup Date</span>
-                        <input type="datetime-local" x-model="dueDate" @input="setTimeout(() => $el.blur(), 100)"
+                        <input type="datetime-local" id="due-date-input" x-model="dueDate" @input="setTimeout(() => $el.blur(), 100)"
                             @change="setTimeout(() => $el.blur(), 100)"
                             class="text-xs border-gray-200 rounded-lg p-1.5 font-bold outline-none text-gray-800">
                     </div>
@@ -479,13 +465,11 @@
 
                 showCheckoutModal: false,
                 isPlacingOrder: false,
-                discountType: 'fixed',
-                discountValue: 0,
-                additionalType: 'fixed',
-                additionalValue: 0,
                 paymentMode: 'pay_now',
                 paymentMethod: 'cash',
                 dueDate: '',
+                specialName: '',
+                specialPrice: 0,
 
                 get filteredServices() {
                     if (!this.searchQuery) return this.allServices;
@@ -538,23 +522,25 @@
 
                 get subtotal() { return this.cart.reduce((s, i) => s + (i.base_price * i.qty), 0); },
 
-                get calculatedDiscount() {
-                    let val = parseFloat(this.discountValue) || 0;
-                    if (this.discountType === 'percent') {
-                        return this.subtotal * (val / 100);
-                    }
-                    return val;
-                },
+                get total() { return this.subtotal; },
 
-                get calculatedAdditional() {
-                    let val = parseFloat(this.additionalValue) || 0;
-                    if (this.additionalType === 'percent') {
-                        return this.subtotal * (val / 100);
+                addSpecialToCart() {
+                    if (!this.specialName || !this.specialPrice || this.specialPrice <= 0) {
+                        alert('Please enter a service name and price.');
+                        return;
                     }
-                    return val;
+                    this.cart.push({
+                        id: 'special_' + Date.now(),
+                        service_type_id: 9,
+                        name: this.specialName,
+                        base_price: parseFloat(this.specialPrice),
+                        price_type: 'per_item',
+                        qty: 1,
+                        is_special: true
+                    });
+                    this.specialName = '';
+                    this.specialPrice = 0;
                 },
-
-                get total() { return Math.max(0, this.subtotal - this.calculatedDiscount + this.calculatedAdditional); },
 
                 async placeOrder() {
                     if (this.cart.length === 0) return;
@@ -574,8 +560,6 @@
                         new_customer_name: this.selectedCustomer ? null : 'Walk-in',
                         new_customer_phone: this.selectedCustomer ? null : '0000000000',
                         cart: this.cart,
-                        discount: this.calculatedDiscount,
-                        additional: this.calculatedAdditional,
                         payment_mode: this.paymentMode,
                         payment_method: this.paymentMethod,
                         due_date: this.dueDate
