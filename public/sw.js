@@ -1,26 +1,19 @@
-const CACHE_NAME = 'smartlaundry-cache-v1';
-const urlsToCache = [
-  '/',
-  '/login'
-];
+const CACHE_NAME = 'smartlaundry-cache-disabled';
 
 self.addEventListener('install', event => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => {
-        return cache.addAll(urlsToCache);
-      })
+    caches.keys().then(cacheNames => {
+      return Promise.all(
+        cacheNames.map(cache => caches.delete(cache))
+      );
+    }).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-        return fetch(event.request);
-      })
-  );
+  event.respondWith(fetch(event.request));
 });
