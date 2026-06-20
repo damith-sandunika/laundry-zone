@@ -1,7 +1,7 @@
 <x-app-layout>
 
     <div x-data="posSystem()">
-        <div class="flex flex-col lg:flex-row gap-2 p-1 lg:p-2 lg:h-[calc(100vh-65px)] min-h-fit">
+        <div class="flex flex-col lg:flex-row gap-2 p-1 lg:p-2 h-[calc(100vh-65px)] overflow-hidden">
 
             <!-- ===================== Left: Services ===================== -->
             <div
@@ -24,13 +24,7 @@
                     <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;">
                         <!-- Special Service Card -->
                         <div style="display:flex;flex-direction:column;padding:16px;border-radius:20px;background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border:2px dashed #c084fc;box-shadow:0 2px 8px rgba(168,85,247,0.08);">
-                            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-                                <div style="width:42px;height:42px;flex-shrink:0;border-radius:50%;background:#f3e8ff;display:flex;align-items:center;justify-content:center;font-size:18px;">✨</div>
-                                <div>
-                                    <span style="font-size:13px;font-weight:900;color:#7e22ce;line-height:1.2;letter-spacing:-0.01em;">Special Service</span>
-                                    <p style="font-size:9px;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:0.04em;margin:1px 0 0;">CUSTOM</p>
-                                </div>
-                            </div>
+
                             <input type="text" x-model="specialName" placeholder="Service name…"
                                 @click.stop @keydown.enter.prevent="$el.nextElementSibling.focus()"
                                 style="width:100%;padding:6px 8px;border:1.5px solid #d8b4fe;border-radius:8px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:5px;">
