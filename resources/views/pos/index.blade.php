@@ -210,7 +210,7 @@
                 </div>
 
                 <!-- Fixed Checkout Bar -->
-                <div x-data="posSystem" x-on:customer-created.window="allCustomers.unshift($event.detail); filterCustomers(); selectCustomer($event.detail);" class="flex flex-col md:flex-row items-center justify-between gap-3"
+                <div class="flex flex-col md:flex-row items-center justify-between gap-3"
                     style="padding:10px 14px;background:white;border-top:1.5px solid #e2e8f0;box-shadow:0 -4px 12px rgba(0,0,0,0.03);">
                     <div style="display:flex;flex-direction:column;gap:2px;width:100%;"
                         class="md:w-auto text-center md:text-left">
