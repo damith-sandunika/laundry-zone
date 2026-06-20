@@ -392,7 +392,7 @@
 
     <!-- ===================== Order Success Modal ===================== -->
     <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
-        x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate"
+        x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderId);"
         x-show="show" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
         <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm z-10 text-center p-8" @click.stop>
@@ -431,7 +431,7 @@
             </div>
 
             <div class="flex flex-col gap-3">
-                <button @click="window.open('/orders/' + orderId + '/print', '_blank'); show = false"
+                <button @click="printReceipt(orderId)"
                     class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white text-base font-black rounded-xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
                     <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         stroke-width="2.5">
@@ -635,8 +635,23 @@
             }
         });
 
+        function printSilent(url) {
+            let iframe = document.getElementById('print-iframe');
+            if (!iframe) {
+                iframe = document.createElement('iframe');
+                iframe.id = 'print-iframe';
+                iframe.style.display = 'none';
+                document.body.appendChild(iframe);
+            }
+            iframe.src = url;
+        }
+
         function printOrderChit(orderId) {
-            window.open('/orders/' + orderId + '/chit', '_blank', 'width=300,height=400');
+            printSilent('/orders/' + orderId + '/chit');
+        }
+
+        function printReceipt(orderId) {
+            printSilent('/orders/' + orderId + '/print');
         }
     </script>
 </x-app-layout>

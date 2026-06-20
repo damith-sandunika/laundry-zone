@@ -63,14 +63,12 @@
     <div class="row" style="font-size: 12px;"><span>Phone:</span><span class="bold">{{ $order->customer->phone }}</span></div>
 
     <div class="divider"></div>
-
-    <div class="bold uppercase" style="margin-bottom:6px; color:#475569;">Order Items</div>
     @foreach($order->items as $item)
     <div class="row" style="margin-bottom: 2px;">
         <span class="item-name">{{ $item->serviceType->name ?? $item->item_description }}</span>
         <span class="bold">Rs.{{ number_format($item->total_price, 2) }}</span>
     </div>
-    <div class="item-details" style="margin-bottom: 6px;">
+    <div style="font-size: 12px; margin-bottom: 6px;">
         {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
     </div>
     @endforeach
@@ -108,11 +106,9 @@
 
     <div class="divider"></div>
     <div class="center bold" style="font-size:13px; margin-top:8px;">Thank you! Come again</div>
-    @if($branch && $branch->whatsapp_number)
-        <div class="center" style="font-size:11px; margin-top:2px; color:#475569;">WhatsApp: {{ $branch->whatsapp_number }}</div>
-    @endif
+
     
-    <div class="center" style="font-size:10px; margin-top:8px; color:#9ca3af;">
+    <div class="center" style="font-size:12px; margin-top:8px;">
         Software by DSRZone
     </div>
 
