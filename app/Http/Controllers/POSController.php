@@ -106,8 +106,15 @@ class POSController extends Controller
 
                 // 3. Create Items & Deduct Inventory
                 foreach ($request->cart as $item) {
-                    // Special service uses service_type_id=9, others use item id
                     $serviceTypeId = isset($item['service_type_id']) ? $item['service_type_id'] : $item['id'];
+
+                    if (!empty($item['is_special'])) {
+                        $specialService = \App\Models\ServiceType::firstOrCreate(
+                            ['name' => 'Special Service'],
+                            ['color' => 'purple', 'price_type' => 'per_item', 'base_price' => 0, 'loyalty_points_earn' => 0, 'is_active' => 1, 'description' => 'Custom one-time service']
+                        );
+                        $serviceTypeId = $specialService->id;
+                    }
 
                     \App\Models\OrderItem::create([
                         'order_id'        => $order->id,
