@@ -20,7 +20,7 @@
         .center { text-align: center; }
         .bold { font-weight: 800; }
         .uppercase { text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
-        .divider { border-top: 1.5px dashed #cbd5e1; margin: 8px 0; }
+        .divider { border-top: 1.5px dashed #000; margin: 8px 0; }
         .row { display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; }
         .row span:first-child { flex: 1; text-align: left; word-break: break-word; }
         .row span:last-child { text-align: right; white-space: nowrap; }
