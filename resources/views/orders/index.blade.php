@@ -151,7 +151,7 @@
             this.showDeliverModal = true;
         },
 
-        async confirmDelivery() {
+        async confirmDelivery(shouldPrint = true) {
             try {
                 // Submit delivery request
                 const res = await fetch(`/orders/${this.deliverOrder.id}/status`, {
@@ -166,8 +166,10 @@
                     })
                 });
                 
-                // Open print window automatically
-                window.open(`/orders/${this.deliverOrder.id}/print`, '_blank');
+                // Open print window automatically if requested
+                if (shouldPrint) {
+                    window.open(`/orders/${this.deliverOrder.id}/print`, '_blank');
+                }
                 
                 // Reload page to reflect changes
                 window.location.reload();
@@ -613,9 +615,9 @@
                         </template>
 
                         <div style="display:flex;gap:12px;margin-top:4px;">
-                            <button type="button" @click="showDeliverModal = false"
-                                style="flex:1;padding:14px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;">Cancel</button>
-                            <button type="button" @click="confirmDelivery()"
+                            <button type="button" @click="confirmDelivery(false)"
+                                style="flex:1;padding:14px;background:white;color:#16a34a;font-size:14px;font-weight:800;border:2px solid #16a34a;border-radius:12px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.background='#f0fdf4'" onmouseout="this.style.background='white'">✓ Complete</button>
+                            <button type="button" @click="confirmDelivery(true)"
                                 style="flex:1;padding:14px;background:#4f46e5;color:white;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(79,70,229,0.3);">🖨
                                 Print & Deliver</button>
                         </div>
