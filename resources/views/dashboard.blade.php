@@ -176,7 +176,7 @@
                     ['label' => 'Active Orders', 'value' => $stats['active_orders'], 'sub' => 'Processing now', 'color' => '#3b82f6', 'bg' => '#eff6ff', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
                     ['label' => 'Pending Pickup', 'value' => $stats['pending_deliveries'], 'sub' => 'Awaiting customer', 'color' => '#f59e0b', 'bg' => '#fffbeb', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                     ['label' => 'Completed Today', 'value' => $stats['completed_today'], 'sub' => 'Delivered orders', 'color' => '#10b981', 'bg' => '#ecfdf5', 'icon' => 'M5 13l4 4L19 7'],
-                    ['label' => 'Total Balance', 'value' => 'Rs.' . number_format($stats['current_balance'], 0), 'sub' => 'System total', 'color' => '#8b5cf6', 'bg' => '#f5f3ff', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                    ['label' => 'Total Balance', 'value' => 'Rs.' . number_format($stats['current_balance'], 0), 'sub' => null, 'color' => '#8b5cf6', 'bg' => '#f5f3ff', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ];
             @endphp
             @foreach($cards as $card)
@@ -191,13 +191,18 @@
                             style="font-size:28px;font-weight:900;color:#0f172a;letter-spacing:-0.03em;margin:0 0 6px;line-height:1;">
                             {{ $card['value'] }}</p>
                         @if($card['label'] === 'Total Balance')
-                            <p style="font-size:12px;font-weight:700;color:#16a34a;margin:0 0 6px;">
+                            <p style="font-size:12px;font-weight:700;color:#16a34a;margin:0 0 4px;">
                                 Cash In Drawer: Rs.{{ number_format($stats['cash_balance'], 0) }}
                             </p>
+                            <p style="font-size:12px;font-weight:700;color:#2563eb;margin:0 0 6px;">
+                                Card Payments: {{ $stats['card_payments'] }} (Rs.{{ number_format($stats['card_payments_amount'], 0) }})
+                            </p>
                         @endif
+                        @if($card['sub'])
                         <p
                             style="font-size:11px;font-weight:600;color:{{ $card['color'] }};background:{{ $card['bg'] }};display:inline-block;padding:3px 8px;border-radius:6px;margin:0;">
                             {{ $card['sub'] }}</p>
+                        @endif
                     </div>
                     <div
                         style="width:46px;height:46px;border-radius:12px;background:{{ $card['bg'] }};display:flex;align-items:center;justify-content:center;flex-shrink:0;">

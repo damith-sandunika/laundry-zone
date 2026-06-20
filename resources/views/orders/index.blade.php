@@ -26,7 +26,7 @@
     @endif
 
     <div x-data="{
-        currentTab: 'all',
+        currentTab: 'received',
         selectedOrders: [],
         showBulkModal: false,
         bulkStatus: 'done',
@@ -175,23 +175,7 @@
         }
 
     }"> <!-- STAT CARDS -->
-        <div class="grid grid-cols-4 gap-2 md:gap-4 mb-6">
-
-            <!-- All Orders -->
-            <div @click="currentTab = 'all'"
-                :class="currentTab === 'all' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <div :class="currentTab === 'all' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'"
-                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
-                    </svg>
-                </div>
-                <span class="text-xs md:text-sm font-black mt-1"
-                    :class="currentTab === 'all' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.all"></span>
-                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">All</span>
-            </div>
+        <div class="grid grid-cols-3 gap-2 md:gap-4 mb-6">
 
             <!-- Received -->
             <div @click="currentTab = 'received'"

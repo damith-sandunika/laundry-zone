@@ -29,6 +29,8 @@ class DashboardController extends Controller
 
         $currentBalance = 0;
         $cashBalance = 0;
+        $cardPayments = 0;
+        $cardPaymentsAmount = 0;
         if ($activeSession) {
             // Calculate total sales revenue paid during shift
             $salesCollected = \App\Models\Order::where('branch_id', $branchId)
@@ -40,6 +42,13 @@ class DashboardController extends Controller
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->where('payment_method', 'cash')
                 ->sum('paid_amount');
+                
+            // Card payments
+            $cardPaymentsQuery = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'card');
+            $cardPayments = $cardPaymentsQuery->count();
+            $cardPaymentsAmount = $cardPaymentsQuery->sum('paid_amount');
 
             // Calculate expenses logged during shift
             $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
@@ -57,6 +66,8 @@ class DashboardController extends Controller
             'total_customers' => $totalCustomers->count(),
             'current_balance' => $currentBalance,
             'cash_balance' => $cashBalance,
+            'card_payments' => $cardPayments,
+            'card_payments_amount' => $cardPaymentsAmount,
         ];
 
         // Active orders sorted by nearest due_date first
