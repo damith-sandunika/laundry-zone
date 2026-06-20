@@ -1,7 +1,13 @@
 <x-app-layout>
 
-    <div x-data="posSystem()">
-        <div class="flex flex-col lg:flex-row gap-2 p-1 lg:p-2 h-[calc(100vh-65px)] overflow-hidden">
+    <style>
+        .pos-wrapper { margin: -36px -40px; height: calc(100vh - 64px); background: #e2e8f0; padding: 12px; }
+        @media (max-width: 768px) {
+            .pos-wrapper { margin: -24px -20px; padding: 8px; }
+        }
+    </style>
+    <div x-data="posSystem()" class="pos-wrapper">
+        <div class="flex flex-col lg:flex-row gap-3 h-full overflow-hidden">
 
             <!-- ===================== Left: Services ===================== -->
             <div
