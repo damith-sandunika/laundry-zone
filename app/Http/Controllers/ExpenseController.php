@@ -10,13 +10,24 @@ class ExpenseController extends Controller
     {
         $branchId = auth()->user()->branch_id;
         
+        $activeSession = \App\Models\RegisterSession::where('branch_id', $branchId ?? 1)
+            ->where('status', 'open')
+            ->first();
+
         $query = \App\Models\Expense::query();
         if ($branchId) {
             $query->where('branch_id', $branchId);
         }
+        
+        if ($activeSession) {
+            $query->where('created_at', '>=', $activeSession->opened_at);
+        } else {
+            $query->where('id', -1); // Show no expenses if shift is closed
+        }
+
         $expenses = $query->orderBy('expense_date', 'desc')->get();
 
-        return view('expenses.index', compact('expenses'));
+        return view('expenses.index', compact('expenses', 'activeSession'));
     }
 
     public function store(Request $request)

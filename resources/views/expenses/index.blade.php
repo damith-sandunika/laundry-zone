@@ -24,7 +24,7 @@
         <!-- Expenses Table Card -->
         <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;">
             <div style="padding:18px 24px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:14px;font-weight:700;color:#0f172a;">All Recorded Expenditures</span>
+                <span style="font-size:14px;font-weight:700;color:#0f172a;">{{ $activeSession ? 'Current Shift Expenditures' : 'No Open Shift' }}</span>
             </div>
             <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;">
