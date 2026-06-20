@@ -596,9 +596,13 @@
                             this.paymentMethod = 'cash';
                             this.dueDate = '';
                         } else {
-                            alert('Order failed: ' + (data.error || 'Unknown error'));
+                            console.error('Backend Error Response:', data);
+                            alert('Order failed: ' + (data.message || data.error || 'Unknown error'));
                         }
-                    } catch (err) { console.error(err); alert('Network error. Please try again.'); }
+                    } catch (err) { 
+                        console.error('Fetch exception:', err); 
+                        alert('Network error. Please try again.'); 
+                    }
                     finally { this.isPlacingOrder = false; }
                 },
 
