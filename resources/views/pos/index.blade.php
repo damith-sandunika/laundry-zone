@@ -2,10 +2,22 @@
 
     <style>
         .pos-wrapper { margin: -36px -40px; height: calc(100vh - 64px); background: #e2e8f0; padding: 12px; }
+        .mobile-pos-warning { display: none; }
         @media (max-width: 768px) {
-            .pos-wrapper { margin: -24px -20px; padding: 8px; }
+            .pos-wrapper { display: none !important; }
+            .mobile-pos-warning { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; padding: 20px; }
         }
     </style>
+    
+    <div class="mobile-pos-warning">
+        <svg width="64" height="64" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 16px;">
+            <rect x="2" y="4" width="20" height="16" rx="2" />
+            <path stroke-linecap="round" d="M10 20v-2m4 2v-2" />
+        </svg>
+        <h2 style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">Desktop View Required</h2>
+        <p style="font-size: 14px; color: #64748b; font-weight: 500;">The POS System is designed for wider screens. Please use a tablet or desktop computer to process orders.</p>
+    </div>
+
     <div x-data="posSystem()" class="pos-wrapper" @customer-created.window="allCustomers.unshift($event.detail); filterCustomers(); selectCustomer($event.detail);">
         <div class="flex flex-col lg:flex-row gap-3 h-full overflow-hidden">
 
