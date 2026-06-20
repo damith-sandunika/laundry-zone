@@ -25,6 +25,14 @@ class CustomerController extends Controller
             'phone' => 'required|string|max:50',
         ]);
 
+        $exists = \App\Models\Customer::where('phone', $request->phone)->first();
+        if ($exists) {
+            if ($request->expectsJson() || $request->input('source') === 'pos') {
+                return response()->json(['success' => false, 'message' => 'You are already in our system. Please search and add!']);
+            }
+            return redirect()->back()->withErrors(['phone' => 'You are already in our system. Please search and add!'])->withInput();
+        }
+
         $branchId = auth()->user()->branch_id ?? 1;
 
         $customer = \App\Models\Customer::create([

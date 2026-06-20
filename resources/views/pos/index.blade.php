@@ -6,7 +6,7 @@
             .pos-wrapper { margin: -24px -20px; padding: 8px; }
         }
     </style>
-    <div x-data="posSystem()" class="pos-wrapper">
+    <div x-data="posSystem()" class="pos-wrapper" @customer-created.window="allCustomers.unshift($event.detail); filterCustomers(); selectCustomer($event.detail);">
         <div class="flex flex-col lg:flex-row gap-3 h-full overflow-hidden">
 
             <!-- ===================== Left: Services ===================== -->
@@ -210,7 +210,7 @@
                 </div>
 
                 <!-- Fixed Checkout Bar -->
-                <div class="flex flex-col md:flex-row items-center justify-between gap-3"
+                <div x-data="posSystem" x-on:customer-created.window="allCustomers.unshift($event.detail); filterCustomers(); selectCustomer($event.detail);" class="flex flex-col md:flex-row items-center justify-between gap-3"
                     style="padding:10px 14px;background:white;border-top:1.5px solid #e2e8f0;box-shadow:0 -4px 12px rgba(0,0,0,0.03);">
                     <div style="display:flex;flex-direction:column;gap:2px;width:100%;"
                         class="md:w-auto text-center md:text-left">
@@ -346,7 +346,41 @@
     </div>
 
     <!-- ===================== Add New Customer Modal ===================== -->
-    <div x-data="{ open: false }" x-on:open-customer-modal.window="open = true"
+    <div x-data="{ 
+        open: false, 
+        isSaving: false,
+        async createAndSelectCustomer() {
+            let name = document.getElementById('nc-name').value;
+            let phone = document.getElementById('nc-phone').value;
+            let address = document.getElementById('nc-address').value;
+            if(!name || !phone) return alert('Name and phone are required.');
+            
+            this.isSaving = true;
+            try {
+                let res = await fetch('/customers', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ name, phone, address, source: 'pos' })
+                });
+                let data = await res.json();
+                if(data.success) {
+                    window.dispatchEvent(new CustomEvent('customer-created', { detail: data.customer }));
+                    this.open = false;
+                    document.getElementById('new-customer-form').reset();
+                } else {
+                    alert('Error: ' + (data.message || 'Validation failed.'));
+                }
+            } catch(e) {
+                alert('Network error.');
+            } finally {
+                this.isSaving = false;
+            }
+        }
+    }" x-on:open-customer-modal.window="open = true"
         x-on:close-customer-modal.window="open = false" x-show="open"
         class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
         <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm" @click="open = false"></div>
@@ -382,9 +416,9 @@
             <div class="flex gap-3 p-5 pt-0 bg-white rounded-b-3xl">
                 <button @click="open = false"
                     class="flex-1 py-3 border-2 border-gray-200 text-gray-600 font-black rounded-xl hover:bg-gray-50 transition-colors text-base">Cancel</button>
-                <button @click="createAndSelectCustomer(open)" id="save-customer-btn"
-                    class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl shadow-lg hover:shadow-xl transition-all text-base transform hover:-translate-y-0.5">
-                    Save Customer
+                <button @click="createAndSelectCustomer()" id="save-customer-btn" :disabled="isSaving"
+                    class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl shadow-lg hover:shadow-xl transition-all text-base transform hover:-translate-y-0.5"
+                    x-text="isSaving ? 'Saving...' : 'Save Customer'">
                 </button>
             </div>
         </div>
