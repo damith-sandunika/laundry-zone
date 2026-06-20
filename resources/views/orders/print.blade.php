@@ -65,7 +65,7 @@
     <div class="divider"></div>
     @foreach($order->items as $item)
     <div class="row" style="margin-bottom: 2px;">
-        <span class="item-name">{{ $item->serviceType->name ?? $item->item_description }}</span>
+        <span class="item-name">{{ ($item->serviceType && $item->serviceType->name !== 'Special Service') ? $item->serviceType->name : $item->item_description }}</span>
         <span class="bold">Rs.{{ number_format($item->total_price, 2) }}</span>
     </div>
     <div style="font-size: 12px; margin-bottom: 6px;">
