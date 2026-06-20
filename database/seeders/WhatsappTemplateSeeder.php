@@ -53,6 +53,14 @@ class WhatsappTemplateSeeder extends Seeder
                 'available_tags' => json_encode(['[BranchName]', '[Date]', '[ShiftTime]', '[TotalOrders]', '[DeliveredCount]', '[PendingCount]', '[ServiceBreakdown]', '[SalesCollected]', '[Expenses]', '[OpeningBalance]', '[FinalCash]', '[InventoryConsumed]', '[StockRemaining]']),
                 'created_at' => now(),
                 'updated_at' => now(),
+            ],
+            [
+                'type' => 'low_stock_alert',
+                'name' => 'Low Stock Alert',
+                'content' => "⚠️ *LOW STOCK ALERT*\n━━━━━━━━━━━━━━━━━━━━\n🏢 Branch: [BranchName]\n📦 Item: [ItemName]\n📉 Current Stock: [CurrentStock]\n━━━━━━━━━━━━━━━━━━━━\nPlease restock immediately.",
+                'available_tags' => json_encode(['[BranchName]', '[ItemName]', '[CurrentStock]']),
+                'created_at' => now(),
+                'updated_at' => now(),
             ]
         ];
 
