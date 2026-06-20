@@ -10,8 +10,14 @@
     <title>{{ config('app.name', 'SmartLaundry') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
+        #nprogress .bar { background: #ef4444 !important; height: 3px !important; }
+        #nprogress .peg { box-shadow: 0 0 10px #ef4444, 0 0 5px #ef4444 !important; }
+        #nprogress .spinner { display: none !important; }
+
         [x-cloak] { display: none !important; }
         * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
         body { background: #f8fafc; color: #334155; }
@@ -445,5 +451,40 @@
             .topbar { padding: 0 20px; }
         }
     </style>
+    
+    <script>
+        NProgress.configure({ showSpinner: false, speed: 400, minimum: 0.1 });
+        
+        // Start loader when clicking regular links
+        document.addEventListener('click', function(e) {
+            let target = e.target.closest('a');
+            if (target && target.href && !target.href.startsWith('javascript:') && !target.href.includes('#') && target.target !== '_blank') {
+                NProgress.start();
+            }
+        });
+
+        // Start loader on form submit
+        document.addEventListener('submit', function(e) {
+            NProgress.start();
+        });
+
+        // Intercept fetch requests
+        const originalFetch = window.fetch;
+        window.fetch = async function(...args) {
+            NProgress.start();
+            try {
+                const response = await originalFetch.apply(this, args);
+                return response;
+            } finally {
+                NProgress.done();
+            }
+        };
+
+        // Stop loader when page fully loaded or back button used
+        window.addEventListener('load', () => NProgress.done());
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) NProgress.done();
+        });
+    </script>
 </body>
 </html>
