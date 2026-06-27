@@ -254,7 +254,7 @@
                         <span style="font-size:22px;font-weight:900;color:#0f172a;letter-spacing:-0.02em;"
                             x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                     </div>
-                    <button @click="if(!showCheckoutModal){ showCheckoutModal = true; }" :disabled="cart.length === 0"
+                    <button @click="if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }" :disabled="cart.length === 0"
                         :class="cart.length === 0 ? 'bg-green-500 cursor-not-allowed text-white shadow-none opacity-80' : 'bg-gradient-to-br from-blue-600 to-blue-700 shadow-[0_8px_20px_rgba(29,78,216,0.3)] hover:-translate-y-0.5 text-white cursor-pointer'"
                         class="w-full md:w-auto px-5 py-3 md:px-9 md:py-4 text-sm md:text-[15px] font-black rounded-2xl md:rounded-[40px] flex justify-center items-center gap-2 md:gap-3 transition-all duration-300 tracking-wide outline-none border-none">
                         Checkout
@@ -532,7 +532,7 @@
 
                 showCheckoutModal: false,
                 isPlacingOrder: false,
-                paymentMode: 'pay_now',
+                paymentMode: 'pay_on_pickup',
                 paymentMethod: 'cash',
                 dueDate: '',
                 specialName: '',

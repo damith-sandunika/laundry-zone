@@ -406,7 +406,7 @@
                                         @foreach($inventoryItems as $item)
                                             <div class="flex items-center justify-between">
                                                 <span class="text-xs text-gray-600">{{ $item->name }} ({{ $item->unit }})</span>
-                                                <input type="number" name="inventory[{{ $item->id }}]" placeholder="0" class="w-20 text-xs border-gray-300 rounded p-1 text-right">
+                                                <input type="number" step="any" name="inventory[{{ $item->id }}]" placeholder="0" class="w-20 text-xs border-gray-300 rounded p-1 text-right">
                                             </div>
                                         @endforeach
                                     </div>

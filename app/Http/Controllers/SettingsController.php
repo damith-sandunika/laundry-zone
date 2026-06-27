@@ -97,7 +97,7 @@ class SettingsController extends Controller
             $syncData = [];
             foreach ($request->inventory as $itemId => $qty) {
                 if ($qty > 0) {
-                    $syncData[$itemId] = ['qty_per_use' => $qty, 'deduct_at_stage' => 'received'];
+                    $syncData[$itemId] = ['qty_per_use' => $qty, 'deduct_at_stage' => 'washing'];
                 }
             }
             $service->inventoryItems()->sync($syncData);
