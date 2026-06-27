@@ -19,6 +19,28 @@
     </div>
 
     <div x-data="posSystem()" class="pos-wrapper" @customer-created.window="allCustomers.unshift($event.detail); filterCustomers(); selectCustomer($event.detail);">
+        
+        <!-- WhatsApp Alert Modal -->
+        <div x-cloak x-show="!whatsappConnected" style="display:none;" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
+            <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:400px;overflow:hidden;text-align:center;padding:32px 24px;">
+                <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
+                    <span style="font-size:32px;">⚠️</span>
+                </div>
+                <h3 style="font-size:18px;font-weight:900;color:#0f172a;margin-bottom:8px;">WhatsApp Disconnected</h3>
+                <p style="font-size:13px;color:#64748b;font-weight:500;margin-bottom:24px;line-height:1.5;">
+                    Your WhatsApp session has expired or dropped. Please re-scan the QR code to keep sending automated messages.
+                </p>
+                <button @click="localStorage.setItem('settingsActiveTab', 'whatsapp'); window.location.href='{{ route('settings.index') }}';"
+                    style="width:100%;padding:14px;background:#22c55e;color:white;font-size:14px;font-weight:800;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;gap:8px;">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 19h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
+                    Scan QR Code Now
+                </button>
+                <button @click="whatsappConnected = true" style="margin-top:12px;background:none;border:none;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;">
+                    Dismiss for now
+                </button>
+            </div>
+        </div>
+
         <div class="flex flex-col lg:flex-row gap-3 h-full overflow-hidden">
 
             <!-- ===================== Left: Services ===================== -->
@@ -515,6 +537,31 @@
                 dueDate: '',
                 specialName: '',
                 specialPrice: 0,
+                
+                whatsappConnected: true,
+                whatsappPollInterval: null,
+
+                init() {
+                    this.startWhatsappPolling();
+                },
+
+                startWhatsappPolling() {
+                    this.fetchWhatsappStatus();
+                    this.whatsappPollInterval = setInterval(() => {
+                        this.fetchWhatsappStatus();
+                    }, 15000);
+                },
+
+                fetchWhatsappStatus() {
+                    fetch("{{ route('whatsapp.status') }}")
+                        .then(res => res.json())
+                        .then(data => {
+                            this.whatsappConnected = data.connected;
+                        })
+                        .catch(() => {
+                            this.whatsappConnected = false;
+                        });
+                },
 
                 get filteredServices() {
                     if (!this.searchQuery) return this.allServices;
