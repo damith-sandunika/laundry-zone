@@ -1,5 +1,5 @@
 require('dotenv').config({ path: '../.env' });
-const { makeWASocket, useMultiFileAuthState, DisconnectReason } = require('@whiskeysockets/baileys');
+const { default: makeWASocket, useMultiFileAuthState, DisconnectReason, fetchLatestBaileysVersion } = require('@whiskeysockets/baileys');
 const pino = require('pino');
 const mysql = require('mysql2/promise');
 const express = require('express');
@@ -67,11 +67,17 @@ async function startWhatsAppService() {
     try {
         const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
 
+        const { version, isLatest } = await fetchLatestBaileysVersion();
+        console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
+
         sock = makeWASocket({
+            version,
             auth: state,
             printQRInTerminal: true,
             logger: pino({ level: 'silent' }),
             browser: ['SmartLaundry', 'Chrome', '1.0.0'],
+            generateHighQualityLinkPreview: true,
+            syncFullHistory: false
         });
 
         sock.ev.on('creds.update', saveCreds);
