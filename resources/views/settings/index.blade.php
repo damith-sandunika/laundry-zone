@@ -301,22 +301,31 @@
                             fetch("{{ route('whatsapp.status') }}")
                                 .then(res => res.json())
                                 .then(data => {
+                                    const wasConnected = this.connected;
                                     this.connected = data.connected;
                                     this.qrCode = data.qr || null;
                                     this.loading = false;
                                     this.error = null;
+                                    
+                                    // If state changed to connected, slow down polling to save resources
+                                    if (!wasConnected && this.connected) {
+                                        this.startPolling(30000); // 30 seconds when connected
+                                    } else if (wasConnected && !this.connected) {
+                                        this.startPolling(4000); // 4 seconds when disconnected/scanning
+                                    }
                                 })
                                 .catch(() => {
                                     this.error = true;
                                     this.loading = false;
                                     this.qrCode = null;
                                     this.connected = false;
+                                    this.startPolling(10000); // 10 seconds if error (server down)
                                 });
                         },
 
-                        startPolling() {
+                        startPolling(interval = 4000) {
                             if (this.pollInterval) clearInterval(this.pollInterval);
-                            this.pollInterval = setInterval(() => this.fetchStatus(), 4000);
+                            this.pollInterval = setInterval(() => this.fetchStatus(), interval);
                         },
 
                         resetQR() {
