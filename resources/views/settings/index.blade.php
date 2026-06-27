@@ -307,11 +307,11 @@
                                     this.loading = false;
                                     this.error = null;
                                     
-                                    // If state changed to connected, slow down polling to save resources
-                                    if (!wasConnected && this.connected) {
-                                        this.startPolling(30000); // 30 seconds when connected
+                                    // If connected, stop polling entirely as per user request
+                                    if (this.connected) {
+                                        if (this.pollInterval) clearInterval(this.pollInterval);
                                     } else if (wasConnected && !this.connected) {
-                                        this.startPolling(4000); // 4 seconds when disconnected/scanning
+                                        this.startPolling(4000); // Resume polling if it drops
                                     }
                                 })
                                 .catch(() => {
