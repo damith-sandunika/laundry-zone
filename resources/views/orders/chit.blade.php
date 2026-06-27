@@ -71,7 +71,7 @@
         <div class="text-bold text-center">{{ strtoupper($order->customer->name ?? 'Walk-in') }}</div>
     </div>
 
-    <div class="date">{{ $order->due_date ? $order->due_date->format('d M Y') : 'N/A' }}</div>
+    <div class="date">{{ $order->due_date ? $order->due_date->format('d M Y h:i A') : 'N/A' }}</div>
 
     <div class="items">
         @foreach($order->items as $item)
