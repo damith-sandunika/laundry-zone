@@ -21,7 +21,8 @@ class WhatsappTemplate extends Model
         $msg = str_replace('[CustomerName]', $customer->name ?? '', $msg);
         $msg = str_replace('[OrderNumber]', $order->order_number ?? '', $msg);
         $msg = str_replace('[TotalAmount]', 'Rs.' . number_format($order->total ?? 0, 2), $msg);
-        $msg = str_replace('[PickupDate]', $order->due_date ? date('Y-m-d h:i A', strtotime($order->due_date)) : 'N/A', $msg);
+        $msg = str_replace('[PickupDate]', $order->due_date ? \Carbon\Carbon::parse($order->due_date)->format('d M Y g:i A') : 'N/A', $msg);
+        $msg = str_replace('[PickupTime]', $order->due_date ? \Carbon\Carbon::parse($order->due_date)->format('g:i A') : 'N/A', $msg);
         
         $orderDetailsStr = '';
         if ($order && $order->items) {

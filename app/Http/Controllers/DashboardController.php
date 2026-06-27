@@ -37,25 +37,33 @@ class DashboardController extends Controller
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('paid_amount');
 
-            // Calculate only cash payments
-            $cashCollected = \App\Models\Order::where('branch_id', $branchId)
+            // Calculate only cash payments (include credit orders paid in cash too)
+            $cashCollected = \App\Models\PaymentTransaction::whereHas('order', fn($q) => $q->where('branch_id', $branchId))
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->where('payment_method', 'cash')
-                ->sum('paid_amount');
+                ->sum('amount');
                 
-            // Card payments
-            $cardPaymentsQuery = \App\Models\Order::where('branch_id', $branchId)
+            // Card payments via PaymentTransaction
+            $cardTransactionsQuery = \App\Models\PaymentTransaction::whereHas('order', fn($q) => $q->where('branch_id', $branchId))
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->where('payment_method', 'card');
-            $cardPayments = $cardPaymentsQuery->count();
-            $cardPaymentsAmount = $cardPaymentsQuery->sum('paid_amount');
+            $cardPayments = $cardTransactionsQuery->count();
+            $cardPaymentsAmount = $cardTransactionsQuery->sum('amount');
+
+            // Also count orders paid by cash (not via credit route) for backward compat
+            $directCashOrders = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'cash')
+                ->whereDoesntHave('paymentTransactions')
+                ->sum('paid_amount');
+            $cashCollected += $directCashOrders;
 
             // Calculate expenses logged during shift
             $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
-            $currentBalance = $activeSession->opening_cash + $salesCollected - $expensesLogged;
+            $currentBalance = $activeSession->opening_cash + $cashCollected + $cardPaymentsAmount - $expensesLogged;
             $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
         }
 

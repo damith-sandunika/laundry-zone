@@ -87,6 +87,11 @@ class Order extends Model
         return $this->hasMany(WhatsappLog::class);
     }
 
+    public function paymentTransactions()
+    {
+        return $this->hasMany(PaymentTransaction::class);
+    }
+
     // Generate unique order number: U0001, U0002, ...
     public static function generateOrderNumber(): string
     {

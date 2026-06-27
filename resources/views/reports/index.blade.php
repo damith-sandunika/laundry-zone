@@ -253,14 +253,14 @@
                                     <td class="px-4 py-3 text-right font-semibold">Rs.{{ number_format($order->total, 2) }}</td>
                                     <td class="px-4 py-3 text-right font-bold text-orange-600">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
                                     <td class="px-4 py-3 text-center">
-                                        <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center">
+                                        <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center flex-wrap">
                                             @csrf
                                             <input type="number" name="amount" value="{{ $order->total - $order->paid_amount }}" step="0.01" max="{{ $order->total - $order->paid_amount }}" class="w-24 px-2 py-1 border border-gray-300 rounded text-xs" required>
-                                            <select name="payment_method" class="px-2 py-1 border border-gray-300 rounded text-xs">
-                                                <option value="cash">Cash</option>
-                                                <option value="card">Card</option>
+                                            <select name="payment_method" class="w-24 px-2 py-1 pr-6 border border-gray-300 rounded text-xs bg-white appearance-auto" style="min-width:80px;">
+                                                <option value="cash">💵 Cash</option>
+                                                <option value="card">💳 Card</option>
                                             </select>
-                                            <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700">Pay</button>
+                                            <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 whitespace-nowrap">✓ Pay</button>
                                         </form>
                                     </td>
                                 </tr>

@@ -17,8 +17,8 @@ class WhatsappTemplateSeeder extends Seeder
             [
                 'type' => 'order_confirmation',
                 'name' => 'Order Confirmation Message',
-                'content' => "Hello [CustomerName],\n\nYour laundry order #[OrderNumber] has been received successfully. Your total bill is [TotalAmount].\nExpected Pickup: [PickupDate]\n\nThank you for choosing us!",
-                'available_tags' => json_encode(['[CustomerName]', '[OrderNumber]', '[TotalAmount]', '[PickupDate]']),
+                'content' => "🧺 *Order Received!*\nHello [CustomerName], your laundry order *#[OrderNumber]* has been placed.\n\n📋 *Items:*\n[OrderDetails]\n\n💰 Total: *[TotalAmount]*\n📅 Pickup: *[PickupDate]*\n\nThank you! We'll notify you when ready. 😊",
+                'available_tags' => json_encode(['[CustomerName]', '[OrderNumber]', '[TotalAmount]', '[PickupDate]', '[PickupTime]', '[OrderDetails]']),
                 'created_at' => now(),
                 'updated_at' => now(),
             ],
