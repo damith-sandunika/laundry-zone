@@ -100,9 +100,11 @@ async function startWhatsAppService() {
                 if (statusCode === DisconnectReason.loggedOut) {
                     console.log('Logged out - clearing auth');
                     clearAuth();
-                } else if (statusCode === 428 || statusCode === 500 || statusCode === 401 || statusCode === 408 || statusCode === 515) {
-                    console.log('Session corrupted or expired - clearing auth to prevent loop');
+                } else if (statusCode === 500 || statusCode === 401) {
+                    console.log('Session corrupted (Bad Session) - clearing auth');
                     clearAuth();
+                } else if (statusCode === 515) {
+                    console.log('Restart required - restarting without clearing auth');
                 }
                 setTimeout(startWhatsAppService, 3000);
 
