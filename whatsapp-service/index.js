@@ -6,26 +6,22 @@ const express = require('express');
 const cors = require('cors');
 const qrcode = require('qrcode');
 const fs = require('fs');
+const path = require('path');
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// State
-let currentQR = null;
-let isConnected = false;
-let isStarting = false;
-let sock = null;
-let queueInterval = null;
+// State for multi-sessions
+const sessions = new Map(); // branch_id => { sock, qr, isConnected, isStarting }
+let dbConnection;
 
-// DB Config
 const dbConfig = {
     host: process.env.DB_HOST || '127.0.0.1',
     user: process.env.DB_USERNAME || 'root',
     password: process.env.DB_PASSWORD || '',
-    database: process.env.DB_DATABASE || 'laudry_db'
+    database: process.env.DB_DATABASE || 'laundry_saas_db'
 };
-let dbConnection;
 
 async function initDB() {
     try {
@@ -39,7 +35,6 @@ async function initDB() {
 function formatPhone(phone) {
     let clean = phone.replace(/\D/g, '');
     if (clean.startsWith('94') && clean.length === 11) {
-        // ok
     } else if (clean.startsWith('0') && clean.length === 10) {
         clean = '94' + clean.substring(1);
     } else if (clean.length === 9) {
@@ -48,37 +43,48 @@ function formatPhone(phone) {
     return `${clean}@s.whatsapp.net`;
 }
 
-function clearAuth() {
+function getAuthDir(branchId) {
+    return path.join(__dirname, 'auth_info', `branch_${branchId}`);
+}
+
+function clearAuth(branchId) {
     try {
-        if (fs.existsSync('auth_info_baileys')) {
-            fs.rmSync('auth_info_baileys', { recursive: true, force: true });
-            console.log('🗑️ Auth cleared');
+        const dir = getAuthDir(branchId);
+        if (fs.existsSync(dir)) {
+            fs.rmSync(dir, { recursive: true, force: true });
+            console.log(`🗑️ Auth cleared for branch ${branchId}`);
         }
     } catch (e) {
-        console.error('Failed to clear auth:', e.message);
+        console.error(`Failed to clear auth for branch ${branchId}:`, e.message);
     }
 }
 
-async function startWhatsAppService() {
-    if (isStarting) return;
-    isStarting = true;
-    currentQR = null;
+async function startWhatsAppService(branchId) {
+    let session = sessions.get(branchId) || { sock: null, qr: null, isConnected: false, isStarting: false };
+    if (session.isStarting) return;
+    
+    session.isStarting = true;
+    session.qr = null;
+    sessions.set(branchId, session);
 
     try {
-        const { state, saveCreds } = await useMultiFileAuthState('auth_info_baileys');
+        const authDir = getAuthDir(branchId);
+        if (!fs.existsSync(authDir)) {
+            fs.mkdirSync(authDir, { recursive: true });
+        }
 
-        const { version, isLatest } = await fetchLatestBaileysVersion();
-        console.log(`Using WA v${version.join('.')}, isLatest: ${isLatest}`);
+        const { state, saveCreds } = await useMultiFileAuthState(authDir);
+        const { version } = await fetchLatestBaileysVersion();
 
-        sock = makeWASocket({
+        const sock = makeWASocket({
             version,
             auth: state,
-            printQRInTerminal: true,
+            printQRInTerminal: false,
             logger: pino({ level: 'silent' }),
-            browser: ['SmartLaundry', 'Chrome', '1.0.0'],
-            generateHighQualityLinkPreview: true,
-            syncFullHistory: false
+            browser: [`Branch ${branchId}`, 'Chrome', '1.0.0'],
         });
+
+        session.sock = sock;
 
         sock.ev.on('creds.update', saveCreds);
 
@@ -86,122 +92,115 @@ async function startWhatsAppService() {
             const { connection, lastDisconnect, qr } = update;
 
             if (qr) {
-                console.log('📱 QR Generated - scan now!');
-                currentQR = await qrcode.toDataURL(qr);
-                isConnected = false;
+                console.log(`📱 QR Generated for branch ${branchId}`);
+                session.qr = await qrcode.toDataURL(qr);
+                session.isConnected = false;
             }
 
             if (connection === 'close') {
-                isConnected = false;
-                isStarting = false;
+                session.isConnected = false;
+                session.isStarting = false;
                 const statusCode = lastDisconnect?.error?.output?.statusCode;
-                console.log('🔴 Connection closed. Code:', statusCode);
-
-                if (statusCode === DisconnectReason.loggedOut) {
-                    console.log('Logged out - clearing auth');
-                    clearAuth();
-                } else if (statusCode === 500 || statusCode === 401) {
-                    console.log('Session corrupted (Bad Session) - clearing auth');
-                    clearAuth();
-                } else if (statusCode === 515) {
-                    console.log('Restart required - restarting without clearing auth');
+                
+                if (statusCode === DisconnectReason.loggedOut || statusCode === 500 || statusCode === 401) {
+                    clearAuth(branchId);
                 }
-                setTimeout(startWhatsAppService, 3000);
-
+                
+                setTimeout(() => startWhatsAppService(branchId), 3000);
             } else if (connection === 'open') {
-                console.log('🟢 WhatsApp Connected!');
-                currentQR = null;
-                isConnected = true;
-                isStarting = false;
-                startQueueProcessor();
+                console.log(`🟢 WhatsApp Connected for branch ${branchId}!`);
+                session.qr = null;
+                session.isConnected = true;
+                session.isStarting = false;
             }
         });
 
     } catch (err) {
-        console.error('Startup error:', err.message);
-        isStarting = false;
-        setTimeout(startWhatsAppService, 5000);
+        console.error(`Startup error branch ${branchId}:`, err.message);
+        session.isStarting = false;
+        setTimeout(() => startWhatsAppService(branchId), 5000);
     }
 }
 
-function startQueueProcessor() {
-    if (queueInterval) clearInterval(queueInterval);
-    console.log('⏳ Queue processor started');
-
-    queueInterval = setInterval(async () => {
-        if (!dbConnection || !isConnected || !sock) return;
-        try {
-            const [rows] = await dbConnection.execute(
-                "SELECT * FROM whatsapp_logs WHERE status = 'pending' LIMIT 5"
-            );
-            for (const log of rows) {
-                if (!log.phone || !log.message) {
-                    await markAs(log.id, 'failed', 'Missing phone or message');
-                    continue;
-                }
-                const jid = formatPhone(log.phone);
-                try {
-                    await sock.sendMessage(jid, { text: log.message });
-                    console.log(`✅ Sent to ${log.phone}`);
-                    await markAs(log.id, 'sent', null);
-                } catch (error) {
-                    console.error(`❌ Failed ${log.phone}:`, error.message);
-                    await markAs(log.id, 'failed', error.message);
-                }
-                await new Promise(r => setTimeout(r, 1500));
-            }
-        } catch (e) {
-            console.error('Queue error:', e.message);
-        }
-    }, 10000);
-}
-
-async function markAs(id, status, errorMsg) {
+// Queue processor
+setInterval(async () => {
+    if (!dbConnection) return;
     try {
-        await dbConnection.execute(
-            "UPDATE whatsapp_logs SET status = ?, error_message = ?, sent_at = NOW() WHERE id = ?",
-            [status, errorMsg, id]
+        // Group messages by branch_id, send 1 per branch per 5 seconds to prevent rate limiting
+        const [rows] = await dbConnection.execute(
+            "SELECT id, branch_id, phone, message FROM whatsapp_logs WHERE status = 'pending' AND branch_id IS NOT NULL ORDER BY id ASC LIMIT 50"
         );
+        
+        if (rows.length === 0) return;
+        
+        // Group by branch
+        const byBranch = {};
+        for (const row of rows) {
+            if (!byBranch[row.branch_id]) byBranch[row.branch_id] = [];
+            byBranch[row.branch_id].push(row);
+        }
+
+        for (const branchId of Object.keys(byBranch)) {
+            const session = sessions.get(Number(branchId));
+            if (!session || !session.isConnected || !session.sock) {
+                // Try to start session if not started
+                if (!session || (!session.isStarting && !session.isConnected && !session.qr)) {
+                    startWhatsAppService(Number(branchId));
+                }
+                continue;
+            }
+            
+            // Send only ONE message per branch per tick to enforce delay
+            const log = byBranch[branchId][0];
+            const jid = formatPhone(log.phone);
+            try {
+                await session.sock.sendMessage(jid, { text: log.message });
+                console.log(`✅ Sent to ${log.phone} (Branch ${branchId})`);
+                await dbConnection.execute("UPDATE whatsapp_logs SET status = 'sent', sent_at = NOW() WHERE id = ?", [log.id]);
+            } catch (error) {
+                console.error(`❌ Failed ${log.phone} (Branch ${branchId}):`, error.message);
+                await dbConnection.execute("UPDATE whatsapp_logs SET status = 'failed', error_message = ? WHERE id = ?", [error.message, log.id]);
+            }
+        }
     } catch (e) {
-        console.error('markAs error:', e.message);
+        console.error('Queue error:', e.message);
     }
-}
+}, 5000); // 5 second delay tick
 
 // ─── API Routes ───────────────────────────────────────────
 
-app.get('/api/whatsapp/status', (req, res) => {
+app.get('/api/whatsapp/status/:branch_id', (req, res) => {
+    const branchId = Number(req.params.branch_id);
+    const session = sessions.get(branchId);
+    
+    if (!session) {
+        return res.json({ connected: false, qr: null, starting: false });
+    }
+    
     res.json({
-        connected: isConnected,
-        qr: currentQR,
-        starting: isStarting
+        connected: session.isConnected,
+        qr: session.qr,
+        starting: session.isStarting
     });
 });
 
-app.post('/api/whatsapp/logout', async (req, res) => {
-    try {
-        if (sock) { try { await sock.logout(); } catch (e) {} }
-        isConnected = false;
-        currentQR = null;
-        isStarting = false;
-        if (queueInterval) clearInterval(queueInterval);
-        clearAuth();
-        res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false, error: err.message });
-    }
+app.post('/api/whatsapp/start/:branch_id', (req, res) => {
+    const branchId = Number(req.params.branch_id);
+    startWhatsAppService(branchId);
+    res.json({ success: true, message: 'Starting session' });
 });
 
-// NEW: Reset endpoint - clears auth and regenerates QR
-app.post('/api/whatsapp/reset', async (req, res) => {
+app.post('/api/whatsapp/logout/:branch_id', async (req, res) => {
+    const branchId = Number(req.params.branch_id);
+    const session = sessions.get(branchId);
+    
     try {
-        if (sock) { try { sock.end(); } catch (e) {} }
-        isConnected = false;
-        currentQR = null;
-        isStarting = false;
-        if (queueInterval) clearInterval(queueInterval);
-        clearAuth();
-        setTimeout(startWhatsAppService, 1500);
-        res.json({ success: true, message: 'Reset done. QR will appear in ~5 seconds.' });
+        if (session && session.sock) {
+            try { await session.sock.logout(); } catch(e) {}
+        }
+        clearAuth(branchId);
+        sessions.delete(branchId);
+        res.json({ success: true });
     } catch (err) {
         res.status(500).json({ success: false, error: err.message });
     }
@@ -209,7 +208,6 @@ app.post('/api/whatsapp/reset', async (req, res) => {
 
 const PORT = 3001;
 app.listen(PORT, async () => {
-    console.log(`🚀 WhatsApp Service running on http://localhost:${PORT}`);
+    console.log(`🚀 Multi-Session WhatsApp Service running on http://localhost:${PORT}`);
     await initDB();
-    await startWhatsAppService();
 });

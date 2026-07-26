@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToBranch;
 
 class WhatsappLog extends Model
 {
+    use BelongsToBranch;
     protected $fillable = [
-        'order_id', 'customer_id', 'phone', 'message_type', 'message', 'status', 'sent_at', 'error_message'
+        'branch_id', 'order_id', 'customer_id', 'phone', 'message_type', 'message', 'status', 'sent_at', 'error_message'
     ];
 
     protected $casts = [

@@ -3,17 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToBranch;
 
 class InventoryItem extends Model
 {
+    use BelongsToBranch;
+
     protected $fillable = [
         'branch_id', 'name', 'unit', 'current_stock', 'min_stock', 'cost_per_unit', 'is_active', 'low_stock_threshold', 'location'
     ];
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
 
     public function transactions()
     {

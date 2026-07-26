@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToBranch;
 
 class RegisterSession extends Model
 {
+    use BelongsToBranch;
+
     protected $fillable = [
         'branch_id', 'user_id', 'opening_cash', 'closing_cash', 'opened_at', 'closed_at', 'status', 'closed_by'
     ];
@@ -18,10 +21,5 @@ class RegisterSession extends Model
     public function closedBy()
     {
         return $this->belongsTo(User::class, 'closed_by');
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
     }
 }

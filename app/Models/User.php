@@ -4,10 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Traits\BelongsToBranch;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    use BelongsToBranch;
+
     use HasFactory, Notifiable;
 
     protected $fillable = [
@@ -25,11 +28,6 @@ class User extends Authenticatable
             'password'          => 'hashed',
             'is_active'         => 'boolean',
         ];
-    }
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
     }
 
     public function orders()

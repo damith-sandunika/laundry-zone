@@ -3,17 +3,15 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToBranch;
 
 class Cubby extends Model
 {
+    use BelongsToBranch;
+
     protected $fillable = [
         'branch_id', 'name', 'status', 'is_active'
     ];
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
 
     public function orderCubbies()
     {

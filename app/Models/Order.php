@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\BelongsToBranch;
 
 class Order extends Model
 {
+    use BelongsToBranch;
+
     protected $fillable = [
         'order_number', 'branch_id', 'customer_id', 'created_by',
         'status', 'subtotal', 'discount', 'additional', 'total', 'paid_amount',
@@ -36,11 +39,6 @@ class Order extends Model
         'delivered' => 'secondary',
         'cancelled' => 'danger',
     ];
-
-    public function branch()
-    {
-        return $this->belongsTo(Branch::class);
-    }
 
     public function customer()
     {
