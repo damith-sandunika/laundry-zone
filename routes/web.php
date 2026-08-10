@@ -68,6 +68,7 @@ Route::middleware(['auth'])->group(function () {
         // WhatsApp Proxy Routes (Server-ready)
         Route::get('/settings/whatsapp/status', [SettingsController::class, 'whatsappStatus'])->name('whatsapp.status');
         Route::post('/settings/whatsapp/logout', [SettingsController::class, 'whatsappLogout'])->name('whatsapp.logout');
+        Route::post('/settings/whatsapp/reset', [SettingsController::class, 'whatsappReset'])->name('whatsapp.reset');
 
         Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
         Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');

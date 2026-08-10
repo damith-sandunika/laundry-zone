@@ -181,7 +181,8 @@ class SettingsController extends Controller
     public function whatsappStatus()
     {
         try {
-            $response = Http::timeout(3)->get('http://127.0.0.1:3001/api/whatsapp/status');
+            $branchId = auth()->user()->branch_id ?? 1;
+            $response = Http::timeout(3)->get("http://127.0.0.1:3001/api/whatsapp/status/{$branchId}");
             return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json(['connected' => false, 'error' => true], 500);
@@ -191,7 +192,21 @@ class SettingsController extends Controller
     public function whatsappLogout()
     {
         try {
-            $response = Http::timeout(3)->post('http://127.0.0.1:3001/api/whatsapp/logout');
+            $branchId = auth()->user()->branch_id ?? 1;
+            $response = Http::timeout(3)->post("http://127.0.0.1:3001/api/whatsapp/logout/{$branchId}");
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'error' => true], 500);
+        }
+    }
+
+    public function whatsappReset()
+    {
+        try {
+            $branchId = auth()->user()->branch_id ?? 1;
+            // The node script requires POST to start a new session (or reset)
+            // It has /api/whatsapp/start/:branch_id for generating a new QR
+            $response = Http::timeout(3)->post("http://127.0.0.1:3001/api/whatsapp/start/{$branchId}");
             return response()->json($response->json());
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => true], 500);

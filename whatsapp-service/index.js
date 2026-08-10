@@ -165,7 +165,7 @@ setInterval(async () => {
     } catch (e) {
         console.error('Queue error:', e.message);
     }
-}, 5000); // 5 second delay tick
+}, 10000); // 10 second delay tick
 
 // ─── API Routes ───────────────────────────────────────────
 

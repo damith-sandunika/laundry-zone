@@ -8,14 +8,15 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id;
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
         
         $activeOrders = \App\Models\Order::whereNotIn('status', ['delivered', 'cancelled']);
         $pendingDeliveries = \App\Models\Order::where('status', 'done');
         $completedToday = \App\Models\Order::where('status', 'delivered')->whereDate('delivered_at', today());
         $totalCustomers = \App\Models\Customer::query();
 
-        if ($branchId) {
+        if (!$isSuperAdmin && $branchId) {
             $activeOrders->where('branch_id', $branchId);
             $pendingDeliveries->where('branch_id', $branchId);
             $completedToday->where('branch_id', $branchId);
@@ -146,6 +147,27 @@ class DashboardController extends Controller
             'weekly'  => ['labels' => $weeklyLabels,  'pending' => $weeklyPending,  'delivered' => $weeklyDelivered],
             'monthly' => ['labels' => $monthlyLabels, 'pending' => $monthlyPending, 'delivered' => $monthlyDelivered],
         ];
+
+        // ── Super Admin Global Stats ──
+        $superAdminStats = [];
+        if ($isSuperAdmin) {
+            $superAdminStats = [
+                'total_branches' => \App\Models\Branch::count(),
+                'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
+                'total_staff' => \App\Models\User::count(),
+                'total_customers' => \App\Models\Customer::count(),
+                'global_orders' => \App\Models\Order::count(),
+                'global_revenue' => \App\Models\Order::sum('paid_amount'),
+            ];
+            
+            // Get recent global activity
+            $recentGlobalOrders = \App\Models\Order::with(['customer', 'branch'])
+                ->latest()
+                ->take(10)
+                ->get();
+                
+            return view('dashboard_superadmin', compact('superAdminStats', 'recentGlobalOrders', 'branchName'));
+        }
 
         return view('dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'branchName', 'chartData'));
     }
