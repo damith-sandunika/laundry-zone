@@ -93,7 +93,7 @@ class Order extends Model
     // Generate unique order number: U0001, U0002, ...
     public static function generateOrderNumber(): string
     {
-        $last = self::max('id') ?? 0;
+        $last = self::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->max('id') ?? 0;
         return 'U' . str_pad($last + 1, 4, '0', STR_PAD_LEFT);
     }
 }
