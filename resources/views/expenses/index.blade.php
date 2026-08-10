@@ -21,10 +21,64 @@
 
     <div x-data="{ addModalOpen: false }" @open-add-modal.window="addModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
 
+        <!-- Filter Bar -->
+        <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);padding:16px 24px;">
+            <form x-data="{ selectedPeriod: '{{ $period }}' }" action="{{ route('expenses.index') }}" method="GET" style="display:flex;gap:16px;align-items:flex-end;margin:0;flex-wrap:wrap;">
+                <div style="flex:1;min-width:200px;">
+                    <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Time Period</label>
+                    <select name="period" x-model="selectedPeriod" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
+                        <option value="shift">Current Open Shift</option>
+                        <option value="today">Today</option>
+                        <option value="this_week">This Week</option>
+                        <option value="this_month">This Month</option>
+                        <option value="custom">Custom Date Range</option>
+                        <option value="all_time">All Time</option>
+                    </select>
+                </div>
+                
+                <div x-show="selectedPeriod === 'custom'" x-transition style="display:flex;gap:16px;flex:1;min-width:280px;" x-cloak>
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Date From</label>
+                        <input type="date" name="start_date" value="{{ $startDate }}" style="width:100%;padding:9px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
+                    </div>
+                    <div style="flex:1;">
+                        <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Date To</label>
+                        <input type="date" name="end_date" value="{{ $endDate }}" style="width:100%;padding:9px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
+                    </div>
+                </div>
+
+                <div style="flex:1;min-width:200px;">
+                    <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Category</label>
+                    <select name="category" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
+                        <option value="">All Categories</option>
+                        <option value="salary" {{ $category === 'salary' ? 'selected' : '' }}>Salary</option>
+                        <option value="utilities" {{ $category === 'utilities' ? 'selected' : '' }}>Utilities (Water, Electricity)</option>
+                        <option value="supplies" {{ $category === 'supplies' ? 'selected' : '' }}>Laundry Supplies (Detergent etc)</option>
+                        <option value="rent" {{ $category === 'rent' ? 'selected' : '' }}>Shop Rent</option>
+                        <option value="other" {{ $category === 'other' ? 'selected' : '' }}>Other Miscellaneous</option>
+                    </select>
+                </div>
+                <div>
+                    <button type="submit" style="padding:10px 20px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border-radius:10px;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(29,78,216,0.25);">
+                        Apply Filter
+                    </button>
+                    @if($period !== 'shift' || $category !== '')
+                        <a href="{{ route('expenses.index') }}" style="display:inline-block;padding:10px 20px;background:#f1f5f9;color:#475569;font-size:13px;font-weight:700;border-radius:10px;border:none;text-decoration:none;margin-left:8px;">Clear</a>
+                    @endif
+                </div>
+            </form>
+        </div>
+
         <!-- Expenses Table Card -->
         <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;">
             <div style="padding:18px 24px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
-                <span style="font-size:14px;font-weight:700;color:#0f172a;">{{ $activeSession ? 'Current Shift Expenditures' : 'No Open Shift' }}</span>
+                <span style="font-size:14px;font-weight:700;color:#0f172a;">
+                    @if($period === 'shift')
+                        {{ $activeSession ? 'Current Shift Expenditures' : 'No Open Shift' }}
+                    @else
+                        Filtered Expenditures
+                    @endif
+                </span>
             </div>
             <div style="overflow-x:auto;">
                 <table style="width:100%;border-collapse:collapse;">

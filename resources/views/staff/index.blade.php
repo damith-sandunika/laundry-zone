@@ -81,7 +81,7 @@
                     @forelse($salaries as $salary)
                         <div class="p-3 border border-gray-100 rounded-md bg-gray-50 flex justify-between items-center">
                             <div>
-                                <p class="text-xs font-semibold text-gray-800">{{ $salary->notes }}</p>
+                                <p class="text-xs font-semibold text-gray-800">{{ $salary->description }}</p>
                                 <p class="text-[10px] text-gray-400">{{ $salary->created_at->format('M d, Y') }}</p>
                             </div>
                             <span class="text-sm font-bold text-green-600">Rs.{{ number_format($salary->amount, 2) }}</span>
@@ -123,7 +123,9 @@
                                         <label class="block text-xs font-medium text-gray-700 mb-1">System Role</label>
                                         <select name="role" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                             <option value="staff">Staff (Cashier / Washer)</option>
+                                            @if(auth()->user()->role === 'super_admin')
                                             <option value="admin">Admin</option>
+                                            @endif
                                         </select>
                                     </div>
                                     <div>

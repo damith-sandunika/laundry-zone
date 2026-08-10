@@ -37,12 +37,19 @@ class StaffController extends Controller
         ]);
 
         $branchId = auth()->user()->branch_id ?? 1;
+        $currentUserRole = auth()->user()->role;
+        
+        $role = $request->role;
+        // Only super_admin can create admin users. Others default to staff.
+        if ($role === 'admin' && $currentUserRole !== 'super_admin') {
+            $role = 'staff';
+        }
 
         \App\Models\User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
-            'role' => $request->role,
+            'role' => $role,
             'branch_id' => $branchId,
             'password' => bcrypt($request->password),
             'is_active' => true,
@@ -54,7 +61,7 @@ class StaffController extends Controller
     public function show(\App\Models\User $staff)
     {
         $salaries = \App\Models\Expense::where('category', 'salary')
-            ->where('notes', 'like', "%{$staff->name}%")
+            ->where('description', 'like', "%{$staff->name}%")
             ->latest()->get();
         return view('staff.show', compact('staff', 'salaries'));
     }
@@ -79,6 +86,12 @@ class StaffController extends Controller
         $request->validate($rules);
 
         $data = $request->only(['name', 'email', 'phone', 'role', 'is_active']);
+        
+        // Only super_admin can set role to admin
+        if (isset($data['role']) && $data['role'] === 'admin' && auth()->user()->role !== 'super_admin') {
+            unset($data['role']); // Keep existing role
+        }
+
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         }
@@ -108,7 +121,7 @@ class StaffController extends Controller
             'branch_id' => $branchId,
             'category' => 'salary',
             'amount' => $request->amount,
-            'notes' => "Salary payment for {$user->name} ({$request->month})",
+            'description' => "Salary payment for {$user->name} ({$request->month})",
             'expense_date' => now(),
             'created_by' => auth()->id(),
         ]);
