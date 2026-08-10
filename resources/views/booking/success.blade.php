@@ -3,49 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Confirmed — {{ $branch->name ?? 'SmartLaundry' }}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box;}
-        body{font-family:'Inter',sans-serif;background:linear-gradient(135deg,#0f172a 0%,#1e3a5f 50%,#1d4ed8 100%);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
-        .card{background:white;border-radius:24px;box-shadow:0 30px 60px rgba(0,0,0,0.3);width:100%;max-width:480px;text-align:center;padding:48px 32px;}
-        .icon-box{width:80px;height:80px;border-radius:50%;background:#dcfce7;color:#16a34a;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 0 0 10px rgba(22,163,74,0.1);}
-        h1{font-size:32px;font-weight:900;color:#0f172a;margin-bottom:8px;letter-spacing:-0.03em;}
-        p{font-size:15px;color:#64748b;font-weight:500;margin-bottom:32px;line-height:1.5;}
-        .details{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:16px;padding:24px;margin-bottom:32px;text-align:left;}
-        .detail-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
-        .detail-row:last-child{margin-bottom:0;}
-        .detail-label{font-size:12px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.06em;}
-        .detail-val{font-size:14px;font-weight:800;color:#0f172a;}
-        .btn{display:inline-block;padding:16px 32px;background:linear-gradient(135deg,#1d4ed8,#4f46e5);color:white;text-decoration:none;font-weight:800;border-radius:14px;box-shadow:0 4px 16px rgba(29,78,216,0.35);transition:all 0.2s;}
-        .btn:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(29,78,216,0.45);}
-    </style>
+    <title>Booking Confirmed — {{ $branch->name ?? 'Laundry Zone' }}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body>
-    <div class="card">
-        <div class="icon-box">
-            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-        </div>
-        <h1>Booking Received!</h1>
-        <p>Thank you, <strong>{{ $booking->customer_name }}</strong>. Your laundry pickup has been scheduled successfully.</p>
+<body class="font-sans antialiased bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+    
+    <!-- Background Details -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:32px_32px]"></div>
+        <div class="absolute -top-[10%] -right-[5%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.35)_0%,transparent_70%)] animate-pulse"></div>
+    </div>
+
+    <div class="w-full max-w-[480px] bg-white rounded-3xl shadow-2xl p-10 text-center relative z-10 animate-slide-up">
         
-        <div class="details">
-            <div class="detail-row">
-                <span class="detail-label">Booking ID</span>
-                <span class="detail-val text-blue-600">#{{ str_pad($booking->id, 4, '0', STR_PAD_LEFT) }}</span>
+        <div class="w-24 h-24 rounded-full bg-green-50 text-green-500 mx-auto mb-6 flex items-center justify-center shadow-[0_0_0_12px_rgba(22,163,74,0.05)] border-2 border-green-100 animate-bounce">
+            <svg class="w-12 h-12" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+        </div>
+
+        <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-3">Booking Received!</h1>
+        <p class="text-slate-500 font-semibold mb-8 leading-relaxed">Thank you, <strong class="text-slate-800">{{ $booking->customer_name }}</strong>. Your laundry pickup has been scheduled successfully.</p>
+        
+        <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-8 text-left space-y-4 shadow-inner">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-200">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Booking ID</span>
+                <span class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">#{{ str_pad($booking->id, 4, '0', STR_PAD_LEFT) }}</span>
             </div>
-            <div class="detail-row">
-                <span class="detail-label">Date</span>
-                <span class="detail-val">{{ $booking->preferred_date->format('d M Y') }}</span>
+            <div class="flex justify-between items-center pb-4 border-b border-slate-200">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Date</span>
+                <span class="text-sm font-black text-slate-700">{{ $booking->preferred_date->format('d M Y') }}</span>
             </div>
-            <div class="detail-row">
-                <span class="detail-label">Status</span>
-                <span class="detail-val" style="color:#eab308;">Pending Confirmation</span>
+            <div class="flex justify-between items-center">
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Status</span>
+                <span class="text-xs font-black text-amber-600 bg-amber-50 px-3 py-1.5 rounded-lg border border-amber-100 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    PENDING CONFIRMATION
+                </span>
             </div>
         </div>
 
-        <a href="{{ route('booking.page') }}" class="btn">Book Another Order</a>
-        <p style="margin-top:24px;font-size:13px;color:#94a3b8;margin-bottom:0;">You will receive a WhatsApp message shortly.</p>
+        <a href="{{ route('booking.page') }}" class="inline-flex w-full justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300">
+            Book Another Order
+        </a>
+        
+        <p class="mt-6 text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
+            <span>📞</span> You will receive a WhatsApp message shortly.
+        </p>
     </div>
 </body>
 </html>

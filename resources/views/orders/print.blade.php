@@ -37,8 +37,12 @@
 </head>
 <body>
     <div class="center" style="margin-bottom: 12px;">
-        <!-- PRINT LOGO: Replace the file public/images/print_logo.png with your thermal printer logo -->
-        <img src="{{ asset('images/print_logo.png') }}" alt="Logo" style="max-width: 140px; height: auto;" onerror="this.style.display='none'">
+        @if($branch && $branch->logo_path)
+            <img src="{{ asset($branch->logo_path) }}" alt="Logo" style="max-width: {{ $branch->logo_size ?? 140 }}px; height: auto; filter: grayscale(100%) contrast(1.2);" onerror="this.style.display='none'">
+        @else
+            <!-- PRINT LOGO: Replace the file public/images/print_logo.png with your thermal printer logo -->
+            <img src="{{ asset('images/print_logo.png') }}" alt="Logo" style="max-width: {{ $branch->logo_size ?? 140 }}px; height: auto;" onerror="this.style.display='none'">
+        @endif
     </div>
     
     <div class="center bold" style="font-size:18px; letter-spacing:-0.03em; margin-bottom: 2px;">{{ $branch->name ?? 'SMART LAUNDRY' }}</div>

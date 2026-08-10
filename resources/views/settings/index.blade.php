@@ -45,21 +45,29 @@
 
         <div class="p-6">
             <!-- GENERAL SETTINGS TAB -->
-            <div x-show="activeTab === 'general'">
-                <form action="{{ route('settings.updateGeneral') }}" method="POST" class="max-w-xl space-y-4">
-                    @csrf
+            <div x-show="activeTab === 'general'" x-data="{ 
+                formName: '{{ addslashes($branch->name ?? 'SMART LAUNDRY') }}',
+                formAddress: '{{ addslashes($branch->address) }}',
+                formPhone: '{{ addslashes($branch->phone) }}',
+                formTagline: '{{ addslashes($branch->tagline ?? 'Fast & Clean Laundry Service') }}',
+                formLogoSize: {{ $branch->logo_size ?? 140 }},
+                previewUrl: '{{ $branch->logo_path ? asset($branch->logo_path) : '' }}'
+            }">
+                <form action="{{ route('settings.updateGeneral') }}" method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-6">
+                    <div class="flex-1 space-y-4 max-w-xl">
+                        @csrf
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Laundry Shop Name</label>
-                        <input type="text" name="name" value="{{ $branch->name }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                        <input type="text" name="name" x-model="formName" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Address</label>
-                        <input type="text" name="address" value="{{ $branch->address }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                        <input type="text" name="address" x-model="formAddress" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Telephone Number</label>
-                            <input type="text" name="phone" value="{{ $branch->phone }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                            <input type="text" name="phone" x-model="formPhone" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">WhatsApp Number</label>
@@ -68,11 +76,164 @@
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tagline (Will appear on print bills)</label>
-                        <input type="text" name="tagline" value="{{ $branch->tagline ?? 'Fast & Clean Laundry Service' }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                        <input type="text" name="tagline" x-model="formTagline" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                     </div>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
-                        Save Settings
-                    </button>
+                    <div x-data="{ 
+                        dragOver: false, 
+                        fileName: '', 
+                        handleDrop(e) {
+                            this.dragOver = false;
+                            if(e.dataTransfer.files.length > 0) {
+                                this.$refs.fileInput.files = e.dataTransfer.files;
+                                this.updatePreview();
+                            }
+                        },
+                        updatePreview() {
+                            if(this.$refs.fileInput.files.length > 0) {
+                                let file = this.$refs.fileInput.files[0];
+                                this.fileName = file.name;
+                                let reader = new FileReader();
+                                reader.onload = e => previewUrl = e.target.result;
+                                reader.readAsDataURL(file);
+                            }
+                        }
+                    }">
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-2">Thermal Bill Logo</label>
+                        
+                        <div @dragover.prevent="dragOver = true" 
+                             @dragleave.prevent="dragOver = false" 
+                             @drop.prevent="handleDrop($event)"
+                             @click="$refs.fileInput.click()"
+                             :class="dragOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100'"
+                             class="relative flex flex-col items-center justify-center w-full h-36 border-2 rounded-xl cursor-pointer transition-colors group mb-4">
+                             
+                            <input x-ref="fileInput" type="file" name="logo" accept="image/png, image/jpeg, image/jpg" class="hidden" @change="updatePreview">
+                            
+                            <div x-show="!previewUrl" class="flex flex-col items-center justify-center pt-5 pb-6">
+                                <svg class="w-8 h-8 mb-3 text-gray-400 group-hover:text-blue-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                                </svg>
+                                <p class="mb-1 text-sm text-gray-500"><span class="font-bold text-gray-700">Click to upload</span> or drag and drop</p>
+                                <p class="text-xs text-gray-400">PNG, JPG (Recommended: Black & White)</p>
+                            </div>
+
+                            <div x-show="previewUrl" style="display: none;" class="flex flex-col items-center justify-center p-2 h-full w-full">
+                                <img :src="previewUrl" class="h-20 object-contain mb-2" style="filter: grayscale(100%) contrast(1.2);">
+                                <p class="text-xs font-bold text-blue-600 truncate max-w-[80%]" x-text="fileName ? fileName : 'Current Active Logo'"></p>
+                                <p class="text-[10px] text-gray-400 mt-0.5 group-hover:text-gray-500">Click or drag to replace</p>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <label class="block text-xs font-semibold text-gray-700 uppercase">Logo Size</label>
+                                <span class="text-xs font-bold text-blue-600" x-text="formLogoSize + 'px'"></span>
+                            </div>
+                            <input type="range" name="logo_size" x-model="formLogoSize" min="20" max="300" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                            <p class="text-[10px] text-gray-400 mt-1">Adjust to scale the logo appropriately on the thermal bill.</p>
+                        </div>
+                    </div>
+                        <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
+                            Save Settings
+                        </button>
+                    </div>
+
+                    <!-- Thermal Bill Preview -->
+                    <div class="flex-1 max-w-sm">
+                        <h4 class="text-xs font-bold text-gray-700 uppercase mb-3">Live Thermal Bill Preview</h4>
+                        
+                        <!-- Thermal Bill Actual Mockup -->
+                        <div class="bg-white mx-auto shadow-[0_10px_30px_rgba(0,0,0,0.1)] relative" style="width: 74mm; padding: 4mm 3mm; font-family: 'Inter', system-ui, -apple-system, sans-serif; font-size: 12px; color: #000; min-height: 400px;">
+                            
+                            <!-- Jagged top edge effect -->
+                            <div class="absolute top-0 left-0 right-0 h-2" style="background-image: linear-gradient(135deg, transparent 50%, #fff 50%), linear-gradient(45deg, #fff 50%, transparent 50%); background-size: 8px 8px; background-position: 0 -4px; transform: rotate(180deg); margin-top: -8px;"></div>
+                            
+                            <!-- Header -->
+                            <div class="text-center" style="margin-bottom: 12px;">
+                                <template x-if="previewUrl">
+                                    <img :src="previewUrl" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; filter: grayscale(100%) contrast(1.2); display: inline-block;`">
+                                </template>
+                                <template x-if="!previewUrl">
+                                    <img src="{{ asset('images/print_logo.png') }}" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; display: inline-block;`">
+                                </template>
+                            </div>
+                            
+                            <div class="text-center" style="font-size:18px; letter-spacing:-0.03em; font-weight: 800; margin-bottom: 2px;" x-text="formName || 'SMART LAUNDRY'"></div>
+                            
+                            <template x-if="formTagline">
+                                <div class="text-center" style="font-size:10px; margin-bottom:2px;" x-text="formTagline"></div>
+                            </template>
+                            
+                            <template x-if="formPhone">
+                                <div class="text-center" style="font-size:10px;">📞 <span x-text="formPhone"></span></div>
+                            </template>
+                            
+                            <template x-if="formAddress">
+                                <div class="text-center" style="font-size:10px;" x-text="formAddress"></div>
+                            </template>
+
+                            <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
+
+                            <!-- Details -->
+                            <div style="display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; font-size: 12px;">
+                                <span style="flex: 1; text-align: left;">Bill No:</span>
+                                <span style="font-weight: 800; text-align: right;">ORD-9999</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; font-size: 12px;">
+                                <span style="flex: 1; text-align: left;">Date:</span>
+                                <span style="font-weight: 800; text-align: right;">{{ now()->format('d M Y h:i A') }}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; font-size: 12px;">
+                                <span style="flex: 1; text-align: left;">Customer:</span>
+                                <span style="font-weight: 800; text-align: right;">John Doe</span>
+                            </div>
+
+                            <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
+
+                            <!-- Sample Items -->
+                            <div style="display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; margin-bottom: 2px;">
+                                <span style="font-weight: 700; font-size: 12px; display: block; word-break: break-word;">Wash & Fold</span>
+                                <span style="font-weight: 800;">Rs.1,200.00</span>
+                            </div>
+                            <div style="font-size: 12px; margin-bottom: 6px;">
+                                2 x Rs.600.00
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; margin-bottom: 2px;">
+                                <span style="font-weight: 700; font-size: 12px; display: block; word-break: break-word;">Ironing</span>
+                                <span style="font-weight: 800;">Rs.450.00</span>
+                            </div>
+                            <div style="font-size: 12px; margin-bottom: 6px;">
+                                3 x Rs.150.00
+                            </div>
+
+                            <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
+
+                            <!-- Totals -->
+                            <div style="display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; font-weight: 900; font-size: 15px; border-top: 2px solid #000; padding-top: 6px; margin-top: 6px;">
+                                <span>TOTAL</span>
+                                <span>Rs.1,650.00</span>
+                            </div>
+
+                            <div style="text-align: center; margin: 8px 0;">
+                                <span style="display: inline-block; border: 1.5px solid #000; padding: 4px 10px; margin-top: 6px; font-size: 12px; font-weight: 800; border-radius: 6px;">
+                                    🕒 PAY ON PICKUP
+                                </span>
+                            </div>
+
+                            <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
+                            
+                            <div style="text-align: center; font-weight: 800; font-size: 13px; margin-top: 8px;">
+                                Thank you! Come again
+                            </div>
+                            <div style="text-align: center; font-size: 12px; margin-top: 8px;">
+                                Software by DSRZone
+                            </div>
+
+                            <!-- Jagged bottom edge effect -->
+                            <div class="absolute bottom-0 left-0 right-0 h-2" style="background-image: linear-gradient(135deg, transparent 50%, #fff 50%), linear-gradient(45deg, #fff 50%, transparent 50%); background-size: 8px 8px; margin-bottom: -8px;"></div>
+                        </div>
+                    </div>
                 </form>
             </div>
 

@@ -1,7 +1,7 @@
 <x-app-layout>
 
     <style>
-        .pos-wrapper { margin: -36px -40px; height: calc(100vh - 64px); background: #e2e8f0; padding: 12px; }
+        /* Mobile warning */
         .mobile-pos-warning { display: none; }
         @media (max-width: 768px) {
             .pos-wrapper { display: none !important; }
@@ -10,257 +10,200 @@
     </style>
     
     <div class="mobile-pos-warning">
-        <svg width="64" height="64" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin-bottom: 16px;">
+        <svg class="w-16 h-16 text-slate-400 mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
             <rect x="2" y="4" width="20" height="16" rx="2" />
             <path stroke-linecap="round" d="M10 20v-2m4 2v-2" />
         </svg>
-        <h2 style="font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 8px;">Desktop View Required</h2>
-        <p style="font-size: 14px; color: #64748b; font-weight: 500;">The POS System is designed for wider screens. Please use a tablet or desktop computer to process orders.</p>
+        <h2 class="text-xl font-black text-slate-800 mb-2 tracking-tight">Desktop View Required</h2>
+        <p class="text-sm font-semibold text-slate-500">The POS System is designed for wider screens. Please use a tablet or desktop computer to process orders.</p>
     </div>
 
-    <div x-data="posSystem()" class="pos-wrapper" @customer-created.window="allCustomers.unshift($event.detail); filterCustomers(); selectCustomer($event.detail);">
+    <!-- Wrapping to override default app layout padding for a full height POS -->
+    <div class="pos-wrapper -mt-6 -mx-4 lg:-mx-8 h-[calc(100vh-64px)] bg-slate-100 p-3 lg:p-4" x-data="posSystem()" @customer-created.window="allCustomers.unshift($event.detail); filterCustomers(); selectCustomer($event.detail);">
         
-        <!-- WhatsApp Alert Modal -->
-        <div x-cloak x-show="!whatsappConnected" style="display:none;" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
-            <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:400px;overflow:hidden;text-align:center;padding:32px 24px;">
-                <div style="width:64px;height:64px;background:#fef2f2;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 20px;">
-                    <span style="font-size:32px;">⚠️</span>
-                </div>
-                <h3 style="font-size:18px;font-weight:900;color:#0f172a;margin-bottom:8px;">WhatsApp Disconnected</h3>
-                <p style="font-size:13px;color:#64748b;font-weight:500;margin-bottom:24px;line-height:1.5;">
-                    Your WhatsApp session has expired or dropped. Please re-scan the QR code to keep sending automated messages.
-                </p>
-                <button @click="localStorage.setItem('settingsActiveTab', 'whatsapp'); window.location.href='{{ route('settings.index') }}';"
-                    style="width:100%;padding:14px;background:#22c55e;color:white;font-size:14px;font-weight:800;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(34,197,94,0.3);display:flex;align-items:center;justify-content:center;gap:8px;">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm14 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 19h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z" /></svg>
-                    Scan QR Code Now
-                </button>
-                <button @click="whatsappConnected = true" style="margin-top:12px;background:none;border:none;font-size:13px;font-weight:700;color:#94a3b8;cursor:pointer;">
-                    Dismiss for now
-                </button>
-            </div>
-        </div>
-
-        <div class="flex flex-col lg:flex-row gap-3 h-full overflow-hidden">
+        <div class="flex flex-col lg:flex-row gap-3 lg:gap-4 h-full overflow-hidden">
 
             <!-- ===================== Left: Services ===================== -->
-            <div
-                class="flex-1 lg:flex-[1.1] bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+            <div class="flex-1 lg:flex-[1.2] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
+                
+                <!-- Background Decoration -->
+                <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+
                 <!-- Search bar -->
-                <div style="padding:10px 14px;border-bottom:1px solid #f1f5f9;background:#f8fafc;">
-                    <div style="position:relative;">
-                        <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);" width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="11" cy="11" r="8" />
-                            <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
+                <div class="px-5 py-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10">
+                    <div class="relative">
+                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
                         <input type="text" x-model="searchQuery" placeholder="Search laundry services…"
-                            style="width:100%;padding:8px 14px 8px 34px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:white;outline:none;box-sizing:border-box;"
-                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                            class="w-full pl-11 pr-4 py-3 bg-slate-50 hover:bg-white border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
                     </div>
                 </div>
 
                 <!-- Services Grid -->
-                <div style="flex:1;overflow-y:auto;padding:8px 10px;">
-                    <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));gap:8px;">
+                <div class="flex-1 overflow-y-auto p-4 custom-scrollbar z-10">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+                        
                         <!-- Special Service Card -->
-                        <div style="display:flex;flex-direction:column;padding:16px;border-radius:20px;background:linear-gradient(135deg,#fdf4ff,#f3e8ff);border:2px dashed #c084fc;box-shadow:0 2px 8px rgba(168,85,247,0.08);">
-
-                            <input type="text" x-model="specialName" placeholder="Service name…"
+                        <div class="flex flex-col p-4 rounded-[20px] bg-gradient-to-br from-fuchsia-50 to-purple-50 border-2 border-dashed border-purple-300 shadow-sm hover:shadow-md transition-shadow group">
+                            <input type="text" x-model="specialName" placeholder="Custom Service…"
                                 @click.stop @keydown.enter.prevent="$el.nextElementSibling.focus()"
-                                style="width:100%;padding:6px 8px;border:1.5px solid #d8b4fe;border-radius:8px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:5px;">
+                                class="w-full px-3 py-2 bg-white/80 border-2 border-purple-200 focus:border-purple-500 rounded-xl text-[13px] font-bold text-purple-900 mb-2 outline-none placeholder:text-purple-300 transition-colors">
                             <input type="number" x-model.number="specialPrice" placeholder="Price (Rs.)"
                                 @click.stop @keydown.enter.prevent="addSpecialToCart()"
-                                style="width:100%;padding:6px 8px;border:1.5px solid #d8b4fe;border-radius:8px;font-size:12px;font-weight:700;color:#3b0764;background:white;outline:none;box-sizing:border-box;margin-bottom:8px;" min="0">
+                                class="w-full px-3 py-2 bg-white/80 border-2 border-purple-200 focus:border-purple-500 rounded-xl text-[13px] font-bold text-purple-900 mb-3 outline-none placeholder:text-purple-300 transition-colors" min="0">
                             <button @click="addSpecialToCart()"
-                                style="width:100%;padding:7px;background:#7e22ce;color:white;border:none;border-radius:10px;font-size:12px;font-weight:900;cursor:pointer;transition:all 0.15s;"
-                                onmouseover="this.style.background='#6b21a8'" onmouseout="this.style.background='#7e22ce'">
-                                + Add to Cart
+                                class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-[13px] font-black rounded-xl shadow-md shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all hover:-translate-y-0.5">
+                                + Add Custom
                             </button>
                         </div>
 
+                        <!-- Service Cards -->
                         <template x-for="service in filteredServices" :key="service.id">
                             <button @click="addToCart(service)"
-                                style="display:flex;align-items:center;padding:16px;border-radius:20px;cursor:pointer;transition:all 0.2s cubic-bezier(0.4, 0, 0.2, 1);text-align:left;overflow:hidden;background:white;border:1.5px solid #e2e8f0;box-shadow:0 2px 5px rgba(0,0,0,0.02);"
-                                @mouseover="$el.style.transform='translateY(-3px)';$el.style.boxShadow='0 12px 24px rgba(0,0,0,0.06)';$el.style.borderColor=getColorStyle(service.color).border"
-                                @mouseout="$el.style.transform='translateY(0)';$el.style.boxShadow='0 2px 5px rgba(0,0,0,0.02)';$el.style.borderColor='#e2e8f0'">
-
-                                <div
-                                    :style="`width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin-right:16px;background:${getColorStyle(service.color).bg};color:${getColorStyle(service.color).text};`">
-                                    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.5"
-                                        viewBox="0 0 24 24">
+                                class="flex flex-col p-4 rounded-[20px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 text-left group overflow-hidden relative"
+                                :class="{'border-blue-200': service.color === 'blue', 'border-green-200': service.color === 'green', 'border-purple-200': service.color === 'purple', 'border-orange-200': service.color === 'orange', 'border-teal-200': service.color === 'teal', 'border-red-200': service.color === 'red'}">
+                                
+                                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110"
+                                    :class="getColorStyle(service.color).bg + ' ' + getColorStyle(service.color).text">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                     </svg>
                                 </div>
 
-                                <div style="display:flex;flex-direction:column;gap:2px;">
-                                    <span
-                                        style="font-size:14px;font-weight:900;color:#0f172a;line-height:1.2;letter-spacing:-0.01em;"
-                                        x-text="service.name"></span>
-                                    <span
-                                        style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.04em;"
-                                        x-text="service.price_type === 'per_kg' ? 'PER KG' : 'PER ITEM'"></span>
-                                    <span style="font-size:15px;font-weight:900;color:#1d4ed8;margin-top:2px;"
-                                        x-text="'Rs. ' + parseFloat(service.base_price).toFixed(2)"></span>
+                                <div class="flex flex-col gap-1 mt-auto">
+                                    <span class="text-[14px] font-black text-slate-800 leading-tight tracking-tight" x-text="service.name"></span>
+                                    <div class="flex items-end justify-between mt-1">
+                                        <span class="text-[15px] font-black text-blue-600" x-text="'Rs. ' + parseFloat(service.base_price).toFixed(0)"></span>
+                                        <span class="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest" x-text="service.price_type === 'per_kg' ? '/KG' : '/ITEM'"></span>
+                                    </div>
                                 </div>
                             </button>
                         </template>
-                        <div x-show="filteredServices.length === 0"
-                            style="grid-column:1/-1;padding:40px;text-align:center;font-size:13px;color:#94a3b8;font-weight:500;">
-                            No services matched your search.
+
+                        <!-- Empty State -->
+                        <div x-show="filteredServices.length === 0" class="col-span-full py-16 flex flex-col items-center justify-center text-center opacity-70">
+                            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            </div>
+                            <p class="text-sm font-bold text-slate-500">No services found</p>
                         </div>
                     </div>
                 </div>
             </div>
 
             <!-- ===================== Right: Order Panel ===================== -->
-            <div
-                class="flex-1 lg:flex-[1] bg-white rounded-2xl border border-gray-200 shadow-sm flex flex-col overflow-hidden">
-
+            <div class="flex-1 lg:flex-[0.8] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
+                
                 <!-- Customer Section -->
-                <div style="padding:10px 14px;border-bottom:2px solid #f1f5f9;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                        <span
-                            style="font-size:11px;font-weight:900;color:#0f172a;text-transform:uppercase;letter-spacing:0.08em;">Order</span>
+                <div class="p-5 border-b-2 border-slate-100 bg-white z-20">
+                    <div class="flex justify-between items-center mb-3">
+                        <span class="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Customer Details</span>
                         <button @click="$dispatch('open-customer-modal')"
-                            style="font-size:11px;font-weight:800;padding:5px 10px;background:#f0fdf4;border:1.5px solid #86efac;color:#16a34a;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                            onmouseover="this.style.background='#dcfce7'" onmouseout="this.style.background='#f0fdf4'">
-                            + New Customer
+                            class="text-[11px] font-bold px-3 py-1.5 bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 rounded-lg transition-colors flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            New Customer
                         </button>
                     </div>
 
                     <!-- Search customers -->
-                    <div style="position:relative;">
-                        <svg style="position:absolute;left:11px;top:50%;transform:translateY(-50%);" width="13"
-                            height="13" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
-                            <circle cx="11" cy="11" r="8" />
-                            <path stroke-linecap="round" d="M21 21l-4.35-4.35" />
+                    <div class="relative">
+                        <svg class="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                         </svg>
                         <input type="text" x-model="customerSearch" @input="filterCustomers"
                             @focus="showCustDropdown = true" @click.away="showCustDropdown = false"
                             :placeholder="selectedCustomer ? 'Change customer…' : 'Search by name or phone…'"
-                            style="width:100%;padding:8px 32px 8px 32px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:12px;font-weight:600;color:#0f172a;outline:none;box-sizing:border-box;"
-                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                            class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
 
                         <!-- Dropdown -->
-                        <div x-show="showCustDropdown && filteredCustomers.length > 0"
-                            style="position:absolute;z-index:20;width:100%;top:100%;left:0;margin-top:4px;background:white;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.08);max-height:160px;overflow-y:auto;">
+                        <div x-show="showCustDropdown && filteredCustomers.length > 0" x-transition
+                            class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl max-h-[220px] overflow-y-auto custom-scrollbar">
                             <template x-for="cust in filteredCustomers" :key="cust.id">
                                 <div @click="selectCustomer(cust)"
-                                    style="padding:10px 14px;cursor:pointer;border-bottom:1px solid #f8fafc;transition:background 0.1s;"
-                                    onmouseover="this.style.background='#eff6ff'"
-                                    onmouseout="this.style.background='white'">
-                                    <p style="font-size:12px;font-weight:800;color:#0f172a;margin:0;"
-                                        x-text="cust.name"></p>
-                                    <p style="font-size:10px;color:#64748b;margin:1px 0 0;font-weight:600;"
-                                        x-text="cust.phone"></p>
+                                    class="px-4 py-3 cursor-pointer border-b border-slate-50 hover:bg-blue-50 transition-colors flex items-center justify-between group">
+                                    <div>
+                                        <p class="text-[13px] font-black text-slate-800 group-hover:text-blue-700 transition-colors" x-text="cust.name"></p>
+                                        <p class="text-[11px] font-bold text-slate-500 mt-0.5" x-text="cust.phone"></p>
+                                    </div>
+                                    <svg class="w-4 h-4 text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                                 </div>
                             </template>
                         </div>
                     </div>
 
                     <!-- Selected Customer badge -->
-                    <div x-show="selectedCustomer"
-                        style="margin-top:12px;padding:12px 16px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:12px;display:flex;flex-direction:column;gap:6px;position:relative;">
-                        <button @click="clearCustomer()"
-                            style="position:absolute;top:10px;right:12px;background:none;border:none;cursor:pointer;color:#94a3b8;padding:0;"
-                            title="Clear Customer" onmouseover="this.style.color='#ef4444'"
-                            onmouseout="this.style.color='#94a3b8'">
-                            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                stroke-width="2.5">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                        <span style="font-size:14px;font-weight:900;color:#1e40af;padding-right:24px;"
-                            x-text="selectedCustomer?.name"></span>
-                        <span style="font-size:12px;color:#3b82f6;font-weight:700;"
-                            x-text="selectedCustomer?.phone"></span>
-                        <span style="font-size:11px;color:#60a5fa;font-weight:600;"
-                            x-text="selectedCustomer?.address || 'No Address Provided'"></span>
+                    <div x-show="selectedCustomer" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0"
+                        class="mt-3 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-2xl relative flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-sm shadow-md shrink-0">
+                            <span x-text="selectedCustomer?.name?.charAt(0).toUpperCase()"></span>
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <div class="flex justify-between items-start">
+                                <span class="text-[14px] font-black text-blue-900 truncate pr-6" x-text="selectedCustomer?.name"></span>
+                                <button @click="clearCustomer()" class="absolute top-3 right-3 p-1.5 text-blue-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                            <span class="text-[11px] font-bold text-blue-600 block" x-text="selectedCustomer?.phone"></span>
+                        </div>
                     </div>
 
-                    <!-- Walk-in notice -->
-                    <div x-show="!selectedCustomer"
-                        style="margin-top:10px;font-size:11px;color:#d97706;font-weight:700;">
-                        Walk-in customer. Search or create a new one above.
-                    </div>
                 </div>
 
-                <!-- Cart (Scrollable) -->
-                <div
-                    style="flex:1;overflow-y:auto;padding:12px;background:#f8fafc;display:flex;flex-direction:column;gap:8px;">
+                <!-- Cart Items (Scrollable) -->
+                <div class="flex-1 overflow-y-auto p-4 bg-slate-50/50 flex flex-col gap-3 custom-scrollbar">
                     <template x-if="cart.length === 0">
-                        <div
-                            style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#94a3b8;padding:40px 0;">
-                            <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                style="opacity:0.3;margin-bottom:8px;">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                            <p style="font-size:11px;font-weight:800;margin:0;">No items added</p>
+                        <div class="flex-1 flex flex-col items-center justify-center opacity-60">
+                            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </div>
+                            <p class="text-[13px] font-black text-slate-500">Cart is empty</p>
+                            <p class="text-[11px] font-semibold text-slate-400 mt-1">Add items from the left to begin</p>
                         </div>
                     </template>
 
                     <template x-for="(item, index) in cart" :key="index">
-                        <div
-                            style="position:relative;background:white;padding:8px 10px;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.03);display:flex;flex-direction:column;gap:6px;">
-                            <button @click="removeFromCart(index)"
-                                style="position:absolute;top:8px;right:8px;background:none;border:none;cursor:pointer;color:#fca5a5;padding:3px;border-radius:6px;transition:all 0.15s;"
-                                onmouseover="this.style.color='#ef4444';this.style.background='#fee2e2'"
-                                onmouseout="this.style.color='#fca5a5';this.style.background='transparent'">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="2.5">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-
-                            <div style="display:flex;flex-direction:column;gap:2px;padding-right:24px;">
-                                <h4 style="font-size:13px;font-weight:900;color:#0f172a;margin:0;letter-spacing:-0.01em;"
-                                    x-text="item.name"></h4>
-                                <span style="font-size:10px;color:#64748b;font-weight:700;"
-                                    x-text="'Rs. ' + parseFloat(item.base_price).toFixed(2) + (item.price_type === 'per_kg' ? ' /kg' : ' /item')"></span>
+                        <div class="group relative bg-white p-2.5 rounded-[12px] border border-slate-200 flex items-center justify-between gap-3 shadow-sm hover:border-blue-200 transition-all">
+                            <!-- Left: Name & Base Price -->
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-[13px] font-black text-slate-800 truncate" x-text="item.name"></h4>
+                                <span class="text-[10.5px] font-bold text-slate-400" x-text="'Rs. ' + parseFloat(item.base_price).toFixed(2) + (item.price_type === 'per_kg' ? ' /KG' : '')"></span>
+                            </div>
+                            
+                            <!-- Middle: Qty Editor -->
+                            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+                                <button @click="updateQty(index,-1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors font-black text-sm">−</button>
+                                <input type="number" x-model="item.qty" class="w-12 text-center text-[12px] font-black text-slate-800 bg-transparent border-none outline-none p-0 focus:ring-0" min="0.01" step="any">
+                                <button @click="updateQty(index,1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors font-black text-sm">+</button>
                             </div>
 
-                            <div
-                                style="display:flex;align-items:center;justify-content:space-between;border-top:1px solid #f1f5f9;padding-top:8px;">
-                                <div
-                                    style="display:flex;align-items:center;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden;">
-                                    <button @click="updateQty(index,-1)"
-                                        style="padding:4px 10px;background:none;border:none;cursor:pointer;font-size:15px;font-weight:900;color:#64748b;transition:background 0.1s;"
-                                        onmouseover="this.style.background='#e2e8f0'"
-                                        onmouseout="this.style.background='transparent'">−</button>
-                                    <input type="number" x-model.number="item.qty"
-                                        style="width:36px;text-align:center;font-size:12px;font-weight:900;border:none;outline:none;padding:4px 0;background:white;color:#0f172a;"
-                                        min="0.5" step="0.5">
-                                    <button @click="updateQty(index,1)"
-                                        style="padding:4px 10px;background:none;border:none;cursor:pointer;font-size:15px;font-weight:900;color:#64748b;transition:background 0.1s;"
-                                        onmouseover="this.style.background='#e2e8f0'"
-                                        onmouseout="this.style.background='transparent'">+</button>
-                                </div>
-                                <span style="font-size:14px;font-weight:900;color:#1d4ed8;"
-                                    x-text="'Rs. ' + (item.base_price * item.qty).toFixed(2)"></span>
+                            <!-- Right: Total Price & Remove -->
+                            <div class="flex items-center gap-2">
+                                <span class="text-[13px] font-black text-blue-700 whitespace-nowrap" x-text="'Rs. ' + (item.base_price * (parseFloat(item.qty) || 0)).toFixed(2)"></span>
+                                <button @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
                             </div>
                         </div>
                     </template>
                 </div>
 
                 <!-- Fixed Checkout Bar -->
-                <div class="flex flex-col md:flex-row items-center justify-between gap-3"
-                    style="padding:10px 14px;background:white;border-top:1.5px solid #e2e8f0;box-shadow:0 -4px 12px rgba(0,0,0,0.03);">
-                    <div style="display:flex;flex-direction:column;gap:2px;width:100%;"
-                        class="md:w-auto text-center md:text-left">
-                        <span
-                            style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.04em;">Total
-                            Amount</span>
-                        <span style="font-size:22px;font-weight:900;color:#0f172a;letter-spacing:-0.02em;"
-                            x-text="'Rs. ' + subtotal.toFixed(2)"></span>
+                <div class="p-5 bg-white border-t border-slate-100 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.04)]">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <span class="text-[12px] font-extrabold text-slate-500 uppercase tracking-widest">Total Amount</span>
+                        <span class="text-3xl font-black text-slate-900 tracking-tight" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                     </div>
-                    <button @click="if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }" :disabled="cart.length === 0"
-                        :class="cart.length === 0 ? 'bg-green-500 cursor-not-allowed text-white shadow-none opacity-80' : 'bg-gradient-to-br from-blue-600 to-blue-700 shadow-[0_8px_20px_rgba(29,78,216,0.3)] hover:-translate-y-0.5 text-white cursor-pointer'"
-                        class="w-full md:w-auto px-5 py-3 md:px-9 md:py-4 text-sm md:text-[15px] font-black rounded-2xl md:rounded-[40px] flex justify-center items-center gap-2 md:gap-3 transition-all duration-300 tracking-wide outline-none border-none">
-                        Checkout
-                        <svg width="18" height="18" class="md:w-5 md:h-5" fill="none" viewBox="0 0 24 24"
-                            stroke="currentColor" stroke-width="3">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14M12 5l7 7-7 7" />
+                    <button @click="if(!selectedCustomer) { alert('Please add the customer'); return; } if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }" 
+                        :disabled="cart.length === 0"
+                        :class="cart.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5'"
+                        class="w-full py-4 rounded-2xl text-[15px] font-black flex justify-center items-center gap-3 transition-all duration-300">
+                        Proceed to Checkout
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
                     </button>
                 </div>
@@ -268,254 +211,232 @@
         </div>
 
         <!-- ===================== Checkout Modal ===================== -->
-        <div x-show="showCheckoutModal"
+        <div x-show="showCheckoutModal" x-cloak
             x-effect="if(showCheckoutModal) $nextTick(() => { const dp = document.getElementById('due-date-input'); if(dp) { try { dp.showPicker(); } catch(e) { dp.focus(); dp.click(); } } })"
-            class="fixed inset-0 z-50 flex items-center justify-center p-4"
-            style="display: none;">
-            <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm" @click="showCheckoutModal = false">
-            </div>
-            <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md z-10 flex flex-col overflow-hidden"
-                @click.stop>
-                <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                    <h3 class="font-black text-base text-gray-800">🛒 Checkout</h3>
-                    <button @click="showCheckoutModal = false" class="text-gray-400 hover:text-gray-600">
-                        <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                            stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
+            class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="showCheckoutModal = false"></div>
+            
+            <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-md z-10 flex flex-col overflow-hidden animate-slide-up" @click.stop>
+                
+                <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <h3 class="font-black text-lg text-slate-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                        Checkout Order
+                    </h3>
+                    <button @click="showCheckoutModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <div class="p-4 space-y-3 overflow-y-auto max-h-[80vh]">
-
-
-                    <div class="border-t border-gray-100"></div>
-
+                <div class="p-6 space-y-6 overflow-y-auto max-h-[75vh] custom-scrollbar">
+                    
                     <!-- Pickup Date -->
-                    <div class="flex items-center justify-between">
-                        <span class="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Pickup Date</span>
-                        <input type="datetime-local" id="due-date-input" x-model="dueDate" @input="setTimeout(() => $el.blur(), 100)"
-                            @change="setTimeout(() => $el.blur(), 100)"
-                            class="text-xs border-gray-200 rounded-lg p-1.5 font-bold outline-none text-gray-800">
-                    </div>
-
-                    <div class="border-t border-gray-100 my-2"></div>
-
-                    <!-- Total -->
-                    <div class="flex justify-between items-center py-2 bg-blue-50 rounded-xl px-3">
-                        <span class="text-sm font-black text-gray-700">Total</span>
-                        <span class="text-lg font-black text-blue-700" x-text="'Rs. ' + total.toFixed(2)"></span>
-                    </div>
-
-                    <!-- Payment Methods (Side by Side) -->
-                    <div class="pt-1">
-                        <p class="text-[10px] font-bold text-gray-400 mb-2 uppercase tracking-wide">Payment Method</p>
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Estimated Pickup Date</label>
                         <div class="flex gap-2">
+                            <input type="datetime-local" id="due-date-input" x-model="dueDate"
+                                class="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
+                            <button @click="document.getElementById('due-date-input').blur()" type="button" class="px-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl text-sm transition-colors shadow-sm">
+                                Done
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Payment Method -->
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Payment Timing</label>
+                        <div class="grid grid-cols-2 gap-3">
                             <button @click="paymentMode = 'pay_now'"
-                                :class="paymentMode === 'pay_now' ? 'border-green-500 bg-green-50 ring-2 ring-green-100' : 'border-gray-200 bg-white hover:bg-gray-50'"
-                                class="flex-1 flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer">
-                                <div :class="paymentMode === 'pay_now' ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'"
-                                    class="w-6 h-6 rounded-full flex items-center justify-center transition-all mb-1">
-                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                :class="paymentMode === 'pay_now' ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-500/20' : 'bg-white border-slate-200 hover:bg-slate-50'"
+                                class="flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all cursor-pointer">
+                                <div :class="paymentMode === 'pay_now' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-400'"
+                                    class="w-8 h-8 rounded-full flex items-center justify-center transition-colors mb-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 </div>
-                                <span class="font-black text-gray-800 text-xs">Pay Now</span>
+                                <span class="font-black text-slate-800 text-[13px]">Pay Now</span>
                             </button>
 
                             <button @click="paymentMode = 'pay_on_pickup'"
-                                :class="paymentMode === 'pay_on_pickup' ? 'border-orange-500 bg-orange-50 ring-2 ring-orange-100' : 'border-gray-200 bg-white hover:bg-gray-50'"
-                                class="flex-1 flex flex-col items-center justify-center p-3 border-2 rounded-xl transition-all cursor-pointer">
-                                <div :class="paymentMode === 'pay_on_pickup' ? 'bg-orange-500 text-white' : 'bg-gray-200 text-gray-500'"
-                                    class="w-6 h-6 rounded-full flex items-center justify-center transition-all mb-1">
-                                    <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                        stroke-width="2.5">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
+                                :class="paymentMode === 'pay_on_pickup' ? 'bg-amber-50 border-amber-200 ring-2 ring-amber-500/20' : 'bg-white border-slate-200 hover:bg-slate-50'"
+                                class="flex flex-col items-center justify-center p-4 border-2 rounded-xl transition-all cursor-pointer">
+                                <div :class="paymentMode === 'pay_on_pickup' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-400'"
+                                    class="w-8 h-8 rounded-full flex items-center justify-center transition-colors mb-2">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                 </div>
-                                <span class="font-black text-gray-800 text-xs">Pay on Pickup</span>
+                                <span class="font-black text-slate-800 text-[13px]">Pay on Pickup</span>
                             </button>
                         </div>
-
-                        <!-- Sub options for Pay Now -->
-                        <div x-show="paymentMode === 'pay_now'"
-                            class="flex gap-2 mt-2 bg-gray-50 p-2 rounded-xl border border-gray-200">
-                            <button @click.stop="paymentMethod = 'cash'"
-                                :class="paymentMethod === 'cash' ? 'bg-green-600 text-white shadow-md scale-105' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
-                                class="flex-1 px-3 py-2 rounded-xl text-xs font-black transition-all">💵 CASH</button>
-                            <button @click.stop="paymentMethod = 'card'"
-                                :class="paymentMethod === 'card' ? 'bg-blue-600 text-white shadow-md scale-105' : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
-                                class="flex-1 px-3 py-2 rounded-xl text-xs font-black transition-all">💳 CARD</button>
-                        </div>
                     </div>
 
-                    <!-- Confirm Order Button -->
-                    <div class="pt-2">
-                        <button @click="placeOrder" :disabled="isPlacingOrder"
-                            :class="isPlacingOrder ? 'opacity-60 cursor-not-allowed' : 'hover:from-blue-700 hover:to-blue-800 hover:shadow-2xl transform hover:-translate-y-0.5'"
-                            class="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-700 text-white text-sm font-black rounded-xl shadow-lg transition-all flex items-center justify-center gap-2">
-                            <template x-if="!isPlacingOrder">
-                                <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                                    stroke-width="3">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                                </svg>
-                            </template>
-                            <template x-if="isPlacingOrder">
-                                <svg class="animate-spin" width="16" height="16" fill="none" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                        stroke-width="4"></circle>
-                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-                                </svg>
-                            </template>
-                            <span x-text="isPlacingOrder ? 'Placing Order...' : 'Confirm Order'"></span>
+                    <!-- Sub options for Pay Now -->
+                    <div x-show="paymentMode === 'pay_now'" x-transition.opacity
+                        class="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        <button @click.stop="paymentMethod = 'cash'"
+                            :class="paymentMethod === 'cash' ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
+                            class="px-4 py-3 rounded-lg text-[13px] font-black transition-all flex items-center justify-center gap-2">
+                            💵 CASH
+                        </button>
+                        <button @click.stop="paymentMethod = 'card'"
+                            :class="paymentMethod === 'card' ? 'bg-violet-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
+                            class="px-4 py-3 rounded-lg text-[13px] font-black transition-all flex items-center justify-center gap-2">
+                            💳 CARD
                         </button>
                     </div>
+
+                    <!-- Total -->
+                    <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
+                        <span class="text-[13px] font-black text-blue-900 uppercase tracking-widest">Final Total</span>
+                        <span class="text-2xl font-black text-blue-700" x-text="'Rs. ' + total.toFixed(2)"></span>
+                    </div>
+
+                </div>
+
+                <div class="p-6 pt-2 bg-white border-t border-slate-100">
+                    <button @click="placeOrder" :disabled="isPlacingOrder"
+                        :class="isPlacingOrder ? 'opacity-60 cursor-not-allowed' : 'hover:shadow-blue-500/40 hover:-translate-y-0.5'"
+                        class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[15px] font-black rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2">
+                        <template x-if="!isPlacingOrder">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </template>
+                        <template x-if="isPlacingOrder">
+                            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                        </template>
+                        <span x-text="isPlacingOrder ? 'Processing...' : 'OK'"></span>
+                    </button>
                 </div>
             </div>
         </div>
 
-    </div>
-
-    <!-- ===================== Add New Customer Modal ===================== -->
-    <div x-data="{ 
-        open: false, 
-        isSaving: false,
-        async createAndSelectCustomer() {
-            let name = document.getElementById('nc-name').value;
-            let phone = document.getElementById('nc-phone').value;
-            let address = document.getElementById('nc-address').value;
-            if(!name || !phone) return alert('Name and phone are required.');
-            
-            this.isSaving = true;
-            try {
-                let res = await fetch('/customers', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({ name, phone, address, source: 'pos' })
-                });
-                let data = await res.json();
-                if(data.success) {
-                    window.dispatchEvent(new CustomEvent('customer-created', { detail: data.customer }));
-                    this.open = false;
-                    document.getElementById('new-customer-form').reset();
-                } else {
-                    alert('Error: ' + (data.message || 'Validation failed.'));
+        <!-- ===================== Add New Customer Modal ===================== -->
+        <div x-data="{ 
+            open: false, 
+            isSaving: false,
+            async createAndSelectCustomer() {
+                let name = document.getElementById('nc-name').value;
+                let phone = document.getElementById('nc-phone').value;
+                let address = document.getElementById('nc-address').value;
+                if(!name || !phone) return alert('Name and phone are required.');
+                
+                this.isSaving = true;
+                try {
+                    let res = await fetch('/customers', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ name, phone, address, source: 'pos' })
+                    });
+                    let data = await res.json();
+                    if(data.success) {
+                        window.dispatchEvent(new CustomEvent('customer-created', { detail: data.customer }));
+                        this.open = false;
+                        document.getElementById('new-customer-form').reset();
+                    } else {
+                        alert('Error: ' + (data.message || 'Validation failed.'));
+                    }
+                } catch(e) {
+                    alert('Network error.');
+                } finally {
+                    this.isSaving = false;
                 }
-            } catch(e) {
-                alert('Network error.');
-            } finally {
-                this.isSaving = false;
             }
-        }
-    }" x-on:open-customer-modal.window="open = true"
-        x-on:close-customer-modal.window="open = false" x-show="open"
-        class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
-        <div class="absolute inset-0 bg-black bg-opacity-40 backdrop-blur-sm" @click="open = false"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-md z-10" @click.stop>
-            <div class="p-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                <div>
-                    <h3 class="font-black text-gray-800 text-lg">Add New Customer</h3>
+        }" x-on:open-customer-modal.window="open = true" x-on:close-customer-modal.window="open = false" x-show="open" x-cloak
+            class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="open = false"></div>
+            
+            <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-md z-10 animate-slide-up" @click.stop>
+                <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
+                    <h3 class="font-black text-lg text-slate-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                        New Customer
+                    </h3>
+                    <button @click="open = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
                 </div>
-                <button @click="open = false" class="text-gray-400 hover:text-gray-600">
-                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <form id="new-customer-form" class="p-6 space-y-4">
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
-                    <input type="text" id="nc-name" required placeholder="e.g. Kamal Perera"
-                        class="w-full text-base border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 font-black transition-colors outline-none">
+                <form id="new-customer-form" class="p-6 space-y-4">
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Full Name</label>
+                        <input type="text" id="nc-name" required placeholder="e.g. Kamal Perera"
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all placeholder:text-slate-400">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Phone Number</label>
+                        <input type="text" id="nc-phone" required placeholder="e.g. 077 123 4567"
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all placeholder:text-slate-400">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Address (Optional)</label>
+                        <input type="text" id="nc-address" placeholder="Home address"
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all placeholder:text-slate-400">
+                    </div>
+                </form>
+                <div class="px-6 py-5 bg-white border-t border-slate-100 flex gap-3">
+                    <button @click="open = false" class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[14px] font-black rounded-xl transition-colors">
+                        Cancel
+                    </button>
+                    <button @click="createAndSelectCustomer()" id="save-customer-btn" :disabled="isSaving"
+                        class="flex-1 py-3.5 bg-green-600 hover:bg-green-700 text-white text-[14px] font-black rounded-xl shadow-lg shadow-green-500/30 transition-all transform hover:-translate-y-0.5"
+                        x-text="isSaving ? 'Saving...' : 'Save Customer'">
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Phone Number</label>
-                    <input type="text" id="nc-phone" required placeholder="e.g. 077 123 4567"
-                        class="w-full text-base border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 font-black transition-colors outline-none">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 mb-1">Address (Optional)</label>
-                    <input type="text" id="nc-address" placeholder="Home address"
-                        class="w-full text-base border-2 border-gray-200 rounded-xl p-3 focus:border-blue-500 focus:ring-blue-500 bg-gray-50 font-black transition-colors outline-none">
-                </div>
-            </form>
-            <div class="flex gap-3 p-5 pt-0 bg-white rounded-b-3xl">
-                <button @click="open = false"
-                    class="flex-1 py-3 border-2 border-gray-200 text-gray-600 font-black rounded-xl hover:bg-gray-50 transition-colors text-base">Cancel</button>
-                <button @click="createAndSelectCustomer()" id="save-customer-btn" :disabled="isSaving"
-                    class="flex-1 py-3 bg-green-600 hover:bg-green-700 text-white font-black rounded-xl shadow-lg hover:shadow-xl transition-all text-base transform hover:-translate-y-0.5"
-                    x-text="isSaving ? 'Saving...' : 'Save Customer'">
-                </button>
             </div>
         </div>
-    </div>
 
-    <!-- ===================== Order Success Modal ===================== -->
-    <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
-        x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderId);"
-        x-show="show" class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display: none;">
-        <div class="absolute inset-0 bg-black bg-opacity-60 backdrop-blur-sm"></div>
-        <div class="relative bg-white rounded-3xl shadow-2xl w-full max-w-sm z-10 text-center p-8" @click.stop>
-            <div
-                class="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner">
-                <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
-                </svg>
-            </div>
-            <h3 class="text-2xl font-black text-gray-900 mb-2">Order Placed!</h3>
-            <p class="text-sm text-gray-500 mb-6 font-bold">The laundry order has been registered successfully.</p>
+        <!-- ===================== Order Success Modal ===================== -->
+        <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
+            x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderId);"
+            x-show="show" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity></div>
+            
+            <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-sm z-10 text-center p-8 animate-slide-up" @click.stop>
+                <div class="w-20 h-20 bg-green-100 text-green-500 rounded-full flex items-center justify-center mx-auto mb-5 border-4 border-white shadow-[0_0_0_4px_rgba(220,252,231,1)]">
+                    <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <h3 class="text-2xl font-black text-slate-900 mb-2 tracking-tight">Order Placed!</h3>
+                <p class="text-[13px] font-bold text-slate-500 mb-6">The laundry order has been registered successfully.</p>
 
-            <div class="bg-gray-50 border-2 border-gray-100 rounded-2xl p-5 text-left space-y-3 mb-6 shadow-sm">
-                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
-                    <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Order #:</span>
-                    <span class="font-black text-blue-700 text-base" x-text="orderNum"></span>
+                <div class="bg-slate-50 border border-slate-100 rounded-2xl p-5 text-left space-y-3.5 mb-6 shadow-inner">
+                    <div class="flex justify-between items-center border-b border-slate-200/60 pb-2">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Order #:</span>
+                        <span class="font-black text-blue-600 text-[14px]" x-text="orderNum"></span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-200/60 pb-2">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Customer:</span>
+                        <span class="font-black text-slate-800 text-[14px]" x-text="custName"></span>
+                    </div>
+                    <div class="flex justify-between items-center border-b border-slate-200/60 pb-2">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Total:</span>
+                        <span class="font-black text-emerald-600 text-[15px]" x-text="'Rs. ' + total"></span>
+                    </div>
+                    <div class="flex justify-between items-center pb-2 border-b border-slate-200/60" x-show="dueDate">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Pickup Date:</span>
+                        <span class="font-black text-orange-600 text-[13px]"
+                            x-text="dueDate ? new Date(dueDate).toLocaleDateString('en-US', {day:'2-digit', month:'short', year:'numeric'}) : ''"></span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Payment:</span>
+                        <span class="font-black text-slate-700 text-[13px]"
+                            x-text="payMode === 'pay_now' ? 'Paid (Cash/Card)' : 'Pay on Pickup'"></span>
+                    </div>
                 </div>
-                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
-                    <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Customer:</span>
-                    <span class="font-black text-gray-800 text-sm" x-text="custName"></span>
-                </div>
-                <div class="flex justify-between items-center border-b border-gray-200 pb-2">
-                    <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Total:</span>
-                    <span class="font-black text-green-700 text-base" x-text="'Rs. ' + total"></span>
-                </div>
-                <div class="flex justify-between items-center pt-1" x-show="dueDate">
-                    <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Pickup Date:</span>
-                    <span class="font-black text-orange-600 text-xs"
-                        x-text="dueDate ? new Date(dueDate).toLocaleDateString('en-US', {day:'2-digit', month:'short', year:'numeric'}) : ''"></span>
-                </div>
-                <div class="flex justify-between items-center pt-1">
-                    <span class="text-gray-500 font-bold text-xs uppercase tracking-wide">Payment:</span>
-                    <span class="font-black text-gray-800 text-xs"
-                        x-text="payMode === 'pay_now' ? 'Paid (Cash/Card)' : 'Pay on Pickup'"></span>
-                </div>
-            </div>
 
-            <div class="flex flex-col gap-3">
-                <button @click="printReceipt(orderId)"
-                    class="w-full py-4 bg-blue-600 hover:bg-blue-700 text-white text-base font-black rounded-xl shadow-xl hover:shadow-2xl transition-all transform hover:-translate-y-1 flex items-center justify-center gap-2">
-                    <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="currentColor"
-                        stroke-width="2.5">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    Print Thermal Bill
-                </button>
+                <div class="flex flex-col gap-3">
+                    <button @click="printReceipt(orderId)"
+                        class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[14px] font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                        Print Thermal Bill
+                    </button>
 
-                <button @click="show = false"
-                    class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-bold rounded-xl transition-all">
-                    Skip & Create New Order
-                </button>
+                    <button @click="show = false"
+                        class="w-full py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 text-[13px] font-bold rounded-xl transition-colors">
+                        Skip & Create New Order
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
     </div>
 
     <script>
@@ -538,29 +459,11 @@
                 specialName: '',
                 specialPrice: 0,
                 
-                whatsappConnected: true,
-                whatsappPollInterval: null,
-
                 init() {
-                    this.startWhatsappPolling();
-                },
-
-                startWhatsappPolling() {
-                    this.fetchWhatsappStatus();
-                    this.whatsappPollInterval = setInterval(() => {
-                        this.fetchWhatsappStatus();
-                    }, 15000);
-                },
-
-                fetchWhatsappStatus() {
-                    fetch("{{ route('whatsapp.status') }}")
-                        .then(res => res.json())
-                        .then(data => {
-                            this.whatsappConnected = data.connected;
-                        })
-                        .catch(() => {
-                            this.whatsappConnected = false;
-                        });
+                    window.posAddCustomer = (customer) => {
+                        this.allCustomers.push(customer);
+                        this.selectCustomer(customer);
+                    };
                 },
 
                 get filteredServices() {
@@ -570,12 +473,12 @@
 
                 getColorStyle(colorName) {
                     const styles = {
-                        'blue': { bg: '#eff6ff', border: '#bfdbfe', text: '#1d4ed8' },
-                        'green': { bg: '#f0fdf4', border: '#bbf7d0', text: '#15803d' },
-                        'purple': { bg: '#fdf4ff', border: '#e9d5ff', text: '#7e22ce' },
-                        'orange': { bg: '#fff7ed', border: '#fed7aa', text: '#c2410c' },
-                        'teal': { bg: '#f0fdfa', border: '#99f6e4', text: '#0f766e' },
-                        'red': { bg: '#fef2f2', border: '#fecaca', text: '#b91c1c' }
+                        'blue': { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-600' },
+                        'green': { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-600' },
+                        'purple': { bg: 'bg-purple-50', border: 'border-purple-200', text: 'text-purple-600' },
+                        'orange': { bg: 'bg-orange-50', border: 'border-orange-200', text: 'text-orange-600' },
+                        'teal': { bg: 'bg-teal-50', border: 'border-teal-200', text: 'text-teal-600' },
+                        'red': { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-600' }
                     };
                     return styles[colorName] || styles['blue'];
                 },
@@ -607,12 +510,13 @@
                 removeFromCart(index) { this.cart.splice(index, 1); },
 
                 updateQty(index, change) {
-                    let newQty = parseFloat(this.cart[index].qty) + change;
-                    if (newQty > 0) this.cart[index].qty = Math.round(newQty * 10) / 10;
+                    let currentQty = parseFloat(this.cart[index].qty) || 0;
+                    let newQty = currentQty + change;
+                    if (newQty > 0) this.cart[index].qty = Math.round(newQty * 100) / 100;
                     else this.removeFromCart(index);
                 },
 
-                get subtotal() { return this.cart.reduce((s, i) => s + (i.base_price * i.qty), 0); },
+                get subtotal() { return this.cart.reduce((s, i) => s + (i.base_price * (parseFloat(i.qty) || 0)), 0); },
 
                 get total() { return this.subtotal; },
 
@@ -683,9 +587,7 @@
                             printOrderChit(data.order_id);
                             this.cart = [];
                             this.selectedCustomer = null;
-                            this.discountValue = 0;
-                            this.additionalValue = 0;
-                            this.paymentMode = 'pay_now';
+                            this.paymentMode = 'pay_on_pickup';
                             this.paymentMethod = 'cash';
                             this.dueDate = '';
                         } else {
@@ -697,40 +599,12 @@
                         alert('Network error. Please try again.'); 
                     }
                     finally { this.isPlacingOrder = false; }
-                },
-
-                init() {
-                    window.posAddCustomer = (customer) => {
-                        this.allCustomers.push(customer);
-                        this.selectCustomer(customer);
-                    };
                 }
             }));
         });
 
-        document.getElementById('save-customer-btn').addEventListener('click', async function () {
-            const name = document.getElementById('nc-name').value.trim();
-            const phone = document.getElementById('nc-phone').value.trim();
-            const address = document.getElementById('nc-address').value.trim();
-
-            if (!name || !phone) { alert('Name and phone are required.'); return; }
-
-            const res = await fetch("{{ route('customers.store.pos') }}", {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content },
-                body: JSON.stringify({ name, phone, address, source: 'pos' })
-            });
-            const data = await res.json();
-            if (data.success) {
-                window.posAddCustomer(data.customer);
-                document.getElementById('nc-name').value = '';
-                document.getElementById('nc-phone').value = '';
-                document.getElementById('nc-address').value = '';
-                window.dispatchEvent(new Event('close-customer-modal'));
-            } else {
-                alert('Failed to save customer.');
-            }
-        });
+        // The save-customer-btn listener is mostly handled by Alpine now, but we keep this just in case or we can rely fully on alpine
+        // Wait, the new customer modal Alpine scope already handles it. So we can remove the vanilla JS listener to prevent duplication.
 
         function printSilent(url) {
             let iframe = document.getElementById('print-iframe');

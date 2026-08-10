@@ -35,14 +35,17 @@ class SettingsController extends Controller
             'phone'            => 'nullable|string|max:50',
             'whatsapp_number'  => 'nullable|string|max:50',
             'tagline'          => 'nullable|string|max:255',
+            'logo_size'        => 'nullable|integer|min:20|max:300',
             'logo'             => 'nullable|image|max:2048',
         ]);
 
-        $data = $request->only(['name', 'address', 'phone', 'whatsapp_number', 'tagline']);
+        $data = $request->only(['name', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size']);
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('logos', 'public');
-            $data['logo_path'] = $path;
+            $file = $request->file('logo');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('logos'), $filename);
+            $data['logo_path'] = 'logos/' . $filename;
         }
 
         $branch->update($data);

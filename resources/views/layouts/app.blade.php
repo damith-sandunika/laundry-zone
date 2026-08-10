@@ -7,329 +7,175 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ config('app.name', 'SmartLaundry') }}</title>
+    <title>{{ config('app.name', 'Laundry Zone') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/admin_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
-        #nprogress .bar { background: #ef4444 !important; height: 3px !important; }
-        #nprogress .peg { box-shadow: 0 0 10px #ef4444, 0 0 5px #ef4444 !important; }
+        #nprogress .bar { background: #3b82f6 !important; height: 3px !important; }
+        #nprogress .peg { box-shadow: 0 0 10px #3b82f6, 0 0 5px #3b82f6 !important; }
         #nprogress .spinner { display: none !important; }
-
         [x-cloak] { display: none !important; }
-        * { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
-        body { background: #f8fafc; color: #334155; }
-        h1, h2, h3, h4, h5, h6, .sidebar-brand-name, .topbar-title {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
-            font-weight: 800 !important;
-        }
-        /* Page header titles - globally overridable on mobile */
-        .ph-title { font-size: 24px; font-weight: 900; color: #0f172a; letter-spacing: -0.03em; margin: 0 0 4px; }
-        .ph-sub { font-size: 13px; color: #94a3b8; font-weight: 500; margin: 0; }
-        @media (max-width: 768px) {
-            .ph-title { font-size: 16px !important; letter-spacing: -0.01em !important; }
-            .ph-sub { font-size: 11px !important; }
-        }
-
-        /* ── Sidebar (Premium Light Theme) ── */
-        .sidebar {
-            width: 220px;
-            min-width: 220px;
-            height: 100vh;
-            background: #ffffff;
-            border-right: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            position: sticky;
-            top: 0;
-            overflow: hidden;
-        }
-        .sidebar-brand {
-            padding: 14px 16px 12px;
-            border-bottom: 1px solid #f1f5f9;
-        }
-        .sidebar-brand-inner {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .sidebar-icon {
-            width: 38px; height: 38px;
-            border-radius: 10px;
-            background: linear-gradient(135deg, #1e40af, #3b82f6);
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 4px 12px rgba(30,64,175,0.15);
-        }
-        .sidebar-brand-name { font-size: 17px; font-weight: 900; color: #1e3a8a; letter-spacing: -0.02em; }
-        .sidebar-brand-sub { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 1px; }
-
-        /* Sidebar nav */
-        .sidebar-nav {
-            flex: 1;
-            padding: 10px 8px;
-            overflow-y: auto;
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-        .sidebar-nav::-webkit-scrollbar {
-            display: none; /* Chrome, Safari, Opera */
-        }
-        .nav-item {
-            display: flex; align-items: center; gap: 9px;
-            padding: 8px 10px; border-radius: 10px;
-            margin-bottom: 2px; cursor: pointer;
-            transition: all 0.15s;
-            text-decoration: none;
-            color: #64748b;
-            font-size: 13px; font-weight: 600;
-        }
-        .nav-item:hover {
-            background: #f1f5f9;
-            color: #0f172a;
-        }
-        .nav-item.active {
-            background: #eff6ff;
-            color: #1d4ed8;
-            font-weight: 700;
-        }
-        .nav-item.active .nav-icon { color: #1d4ed8; }
-        .nav-icon { width: 18px; height: 18px; flex-shrink: 0; opacity: 0.85; }
-        .nav-item.active .nav-icon { opacity: 1; }
-
-        /* Sidebar footer */
-        .sidebar-footer {
-            padding: 16px 20px;
-            border-top: 1px solid #f1f5f9;
-            text-align: center;
-        }
-        .logout-btn {
-            display: flex; align-items: center; justify-content: center; gap: 8px;
-            width: 100%; padding: 10px; border-radius: 10px;
-            background: #fef2f2; border: 1px solid #fee2e2;
-            color: #991b1b; font-size: 12px; font-weight: 700;
-            cursor: pointer; transition: all 0.15s; letter-spacing: 0.03em;
-            margin-bottom: 10px;
-        }
-        .logout-btn:hover { background: #fee2e2; color: #7f1d1d; }
-
-        /* ── Topbar ── */
-        .topbar {
-            padding: 0 40px;
-            height: 64px;
-            background: #ffffff;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 50;
-        }
-        .topbar-left { display: flex; flex-direction: column; }
-        .topbar-title { font-size: 16px; font-weight: 900; color: #0f172a; letter-spacing: -0.02em; line-height: 1; }
-        .topbar-sub { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 2px; }
-        .topbar-right { display: flex; align-items: center; gap: 20px; }
-
-        .notif-btn {
-            width: 38px; height: 38px; border-radius: 10px;
-            background: #f8fafc; border: 1.5px solid #e2e8f0;
-            display: flex; align-items: center; justify-content: center;
-            cursor: pointer; position: relative; transition: all 0.15s;
-        }
-        .notif-btn:hover { background: #f1f5f9; border-color: #cbd5e1; }
-        .notif-dot {
-            position: absolute; top: 7px; right: 7px;
-            width: 8px; height: 8px; border-radius: 50%;
-            background: #3b82f6; border: 2px solid #ffffff;
-        }
-        .topbar-avatar {
-            width: 30px; height: 30px; border-radius: 8px;
-            background: linear-gradient(135deg, #1d4ed8, #3b82f6);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 11.5px; font-weight: 800; color: white;
-            cursor: pointer;
-        }
-
-        /* ── Page Content ── */
-        .page-content { flex: 1; overflow-y: auto; padding: 36px 40px; }
-
-        /* ── Mobile overlay ── */
-        .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(15,23,42,0.5); z-index: 9990 !important; backdrop-filter: blur(2px); }
-
-        @media (max-width: 900px) {
-            .topbar-quick-btns { display: none !important; }
-        }
-
-        /* ── Mobile Responsiveness ── */
-        @media (max-width: 768px) {
-            .sidebar {
-                position: fixed !important;
-                z-index: 9999 !important;
-                transform: translateX(-100%);
-                transition: transform 0.3s ease-in-out;
-            }
-            .sidebar.mobile-open { transform: translateX(0); }
-            .mobile-menu-btn { display: flex !important; position: relative; z-index: 10; }
-            .topbar { padding: 0 12px; height: 56px; display: flex !important; align-items: center; justify-content: space-between !important; gap: 8px; }
-            /* Center brand on mobile */
-            .topbar-left { position: absolute !important; left: 50%; transform: translateX(-50%) !important; display: flex !important; flex-direction: column; align-items: center; pointer-events: none; }
-            .topbar-left .topbar-title { font-size: 13px !important; }
-            .topbar-left .topbar-sub { font-size: 9px !important; margin-top: 1px !important; }
-            .topbar-tagline { display: none !important; }
-            /* Hide name, show only avatar on mobile */
-            .topbar-right { display: flex; align-items: center; gap: 6px !important; }
-            .topbar-right .topbar-user-info { display: none !important; }
-            .topbar-right .dropdown-arrow { display: none !important; }
-            .notif-btn { background: transparent !important; border: none !important; width: 40px; height: 40px; padding: 0 !important; }
-            .page-content { padding: 14px 10px; }
-            table { display: block; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-            
-            /* Page title reductions */
-            .page-content [style*="font-size:24px"],
-            .page-content h2[style*="font-size:24px"],
-            div[style*="margin-bottom:28px"] h2[style*="font-size:24px"] { font-size: 16px !important; letter-spacing: -0.01em !important; }
-            div[style*="margin-bottom:28px"] p[style*="font-size:13px"] { font-size: 11px !important; }
-            
-            /* Dashboard specific fixes */
-            .dashboard-main-grid { display: flex !important; flex-direction: column !important; }
-            .dashboard-sidebar { width: 100% !important; max-width: 100% !important; margin-top: 1rem !important; }
-        }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body x-data="{ sidebarOpen: false, notifOpen: false, profileOpen: false }">
-    <div style="display:flex;height:100vh;overflow:hidden;">
+<body class="font-sans antialiased bg-slate-50 text-slate-800 selection:bg-blue-100 selection:text-blue-900" x-data="{ sidebarOpen: false, notifOpen: false, profileOpen: false }">
+    <div class="flex h-screen overflow-hidden bg-slate-50/50">
 
         <!-- Mobile overlay -->
-        <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen=false" class="mobile-overlay"></div>
+        <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen=false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" x-cloak></div>
 
         <!-- ══════════ SIDEBAR ══════════ -->
-        <aside class="sidebar" :class="sidebarOpen ? 'mobile-open' : ''" style="flex-shrink:0;">
-
-            <!-- Brand, Logo & User Info at Top -->
-            <div class="sidebar-brand" style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px;">
-                
-                <!-- ADMIN DASHBOARD LOGO: Replace public/images/admin_logo.png with your file -->
-                <div style="width:100%; display:flex; justify-content:center; padding: 4px 0 6px;">
-                    <img src="{{ asset('images/admin_logo.png') }}" alt="Admin Logo" style="max-height: 90px; max-width: 190px; object-fit: contain;" onerror="this.style.display='none'">
+        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 transition-transform duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/60 lg:static lg:translate-x-0">
+            
+            <!-- Brand & Logo -->
+            <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50">
+                <div class="w-20 h-20 rounded-[1.25rem] bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 mb-3 ring-4 ring-white transition-transform hover:scale-105 duration-300">
+                    <img src="{{ asset('images/admin_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
-
                 <div>
-                    <div class="sidebar-brand-name">Smart Laundry</div>
-                    <div class="sidebar-user-name" style="font-size:13.5px; font-weight:700; color:#0f172a; margin-top:3px; line-height:1.2;">{{ auth()->user()->name ?? 'Administrator' }}</div>
-                    <div class="sidebar-user-role" style="font-size:10px; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; margin-top:2px;">{{ ucfirst(str_replace('_', ' ', auth()->user()->role ?? 'admin')) }}</div>
+                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">Laundry Zone</div>
+                    <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
             </div>
 
-            <!-- Nav (Tabs one after another cleanly, section labels removed) -->
-            <nav class="sidebar-nav">
-                <a href="{{ route('dashboard') }}" class="nav-item {{ request()->routeIs('dashboard') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+            <!-- Nav Links -->
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto scrollbar-hide">
+                <a href="{{ route('dashboard') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                    <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('dashboard') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
                     Dashboard
                 </a>
 
-                <a href="{{ route('pos.index') }}" class="nav-item {{ request()->routeIs('pos.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                    <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('pos.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     POS System
                 </a>
 
-                <a href="{{ route('orders.index') }}" class="nav-item {{ request()->routeIs('orders.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
+                <a href="{{ route('orders.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('orders.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                    <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('orders.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/></svg>
                     Orders
                 </a>
 
-                <a href="{{ route('online_bookings.index') }}" class="nav-item {{ request()->routeIs('online_bookings.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                <a href="{{ route('online_bookings.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('online_bookings.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                    <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('online_bookings.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
                     Online Bookings
                 </a>
 
-                <a href="{{ route('customers.index') }}" class="nav-item {{ request()->routeIs('customers.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <a href="{{ route('customers.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('customers.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                    <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('customers.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                     Customers
                 </a>
 
-                <a href="{{ route('expenses.index') }}" class="nav-item {{ request()->routeIs('expenses.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <a href="{{ route('expenses.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('expenses.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                    <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('expenses.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     Expenses
                 </a>
 
-                <a href="{{ route('inventory.index') }}" class="nav-item {{ request()->routeIs('inventory.*') ? 'active' : '' }}">
-                    <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                <a href="{{ route('inventory.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('inventory.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                    <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('inventory.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
                     Inventory
                 </a>
 
                 @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
                     @if(Route::has('services.index'))
-                    <a href="{{ route('services.index') }}" class="nav-item {{ request()->routeIs('services.*') ? 'active' : '' }}">
-                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    <a href="{{ route('services.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('services.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('services.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
                         Services
                     </a>
                     @endif
 
-                    <a href="{{ route('staff.index') }}" class="nav-item {{ request()->routeIs('staff.*') ? 'active' : '' }}">
-                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    <a href="{{ route('staff.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('staff.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('staff.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         Staff Manager
                     </a>
 
-                    <a href="{{ route('reports.index') }}" class="nav-item {{ request()->routeIs('reports.*') ? 'active' : '' }}">
-                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <a href="{{ route('reports.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('reports.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('reports.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                         Reports
                     </a>
 
-                    <a href="{{ route('whatsapp_templates.index') }}" class="nav-item {{ request()->routeIs('whatsapp_templates.*') ? 'active' : '' }}">
-                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    <a href="{{ route('whatsapp_templates.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('whatsapp_templates.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('whatsapp_templates.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
                         WhatsApp Msgs
                     </a>
 
-                    <a href="{{ route('settings.index') }}" class="nav-item {{ request()->routeIs('settings.*') ? 'active' : '' }}">
-                        <svg class="nav-icon" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                    <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <svg class="w-[18px] h-[18px] opacity-80 {{ request()->routeIs('settings.*') ? 'opacity-100' : '' }}" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         Settings
                     </a>
                 @endif
             </nav>
 
-            <!-- Footer (Sign Out & Software by DSRZone) -->
-            <div class="sidebar-footer">
+            <!-- Footer -->
+            <div class="p-5 border-t border-slate-100/80 text-center bg-white/40">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="logout-btn">
-                        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    <button type="submit" class="flex items-center justify-center gap-2 w-full p-2.5 rounded-xl bg-red-50/50 border border-red-100 text-red-600 hover:text-red-700 hover:bg-red-100 hover:border-red-200 transition-all duration-200 text-xs font-bold tracking-wide shadow-sm">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         Sign Out
                     </button>
                 </form>
-                <div style="font-size:10px; font-weight:700; color:#94a3b8; letter-spacing:0.02em; padding-bottom:8px;">Software by DSRZone</div>
+                <div class="text-[10px] font-extrabold text-slate-400/80 tracking-widest mt-4 uppercase">Software by DSRZone</div>
             </div>
         </aside>
 
         <!-- ══════════ MAIN AREA ══════════ -->
-        <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-width:0;">
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
-            <!-- Topbar (Search bar removed, tagline in desktop view, notification & profile dropdowns) -->
-            <header class="topbar">
-                <!-- LEFT: Hamburger -->
-                <button @click="sidebarOpen=!sidebarOpen" style="display:none;width:40px;height:40px;background:transparent;border:none;cursor:pointer;align-items:center;justify-content:center;flex-shrink:0;" class="mobile-menu-btn">
-                    <svg width="26" height="26" fill="none" stroke="#0f172a" stroke-width="2.5"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <!-- Topbar -->
+            <header class="h-16 px-4 lg:px-8 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+                
+                <!-- Mobile Toggle -->
+                <button @click="sidebarOpen=!sidebarOpen" class="p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
 
-                <!-- CENTER: Brand (desktop: topbar-left, mobile: absolute center) -->
-                <div class="topbar-left" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+                <!-- Center Title (Mobile) / Left Title (Desktop) -->
+                <div class="absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none lg:flex flex-col text-center lg:text-left pointer-events-none lg:pointer-events-auto">
                     @php 
                         $branchId = auth()->user()->branch_id ?? 1; 
                         $branch = \App\Models\Branch::find($branchId); 
                     @endphp
-                    <div class="topbar-title" style="font-size:15px;font-weight:900;color:#0f172a;letter-spacing:-0.02em;line-height:1;">{{ $branch->name ?? 'Urban Wash' }}</div>
-                    <div class="topbar-sub" style="font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.1em;margin-top:2px;">Laundry Management</div>
+                    <div class="flex items-center justify-center lg:justify-start gap-2">
+                        <div class="text-[14px] lg:text-[15px] font-black text-slate-900 tracking-tight leading-none">{{ $branch->name ?? 'Laundry Zone' }}</div>
+                        
+                        <!-- Global WhatsApp Status Indicator -->
+                        <div x-data="{ waStatus: 'checking' }" 
+                             x-init="fetch('{{ route('whatsapp.status') }}').then(r=>r.json()).then(d=>{ waStatus = d.connected ? 'connected' : 'disconnected' }).catch(()=>{ waStatus='disconnected' })"
+                             class="pointer-events-auto cursor-help"
+                             :title="waStatus === 'connected' ? 'WhatsApp Connected' : 'WhatsApp Disconnected'">
+                            
+                            <!-- Connected Icon -->
+                            <svg x-show="waStatus === 'connected'" x-cloak class="w-[18px] h-[18px] text-green-500 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                            </svg>
+                            
+                            <!-- Disconnected Icon -->
+                            <svg x-show="waStatus === 'disconnected'" x-cloak class="w-[18px] h-[18px] text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">Laundry Management</div>
                 </div>
 
-                <div style="display:flex;align-items:center;gap:12px;margin-left:auto;margin-right:24px;" class="topbar-quick-btns">
-                    <a href="{{ route('customers.index') }}" style="background:#ef4444;color:white;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;text-decoration:none;display:flex;flex-direction:row;align-items:center;gap:4px;white-space:nowrap;box-shadow:0 4px 10px rgba(239,68,68,0.25);transition:all 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <span style="font-size:16px;line-height:1;margin-bottom:2px;">+</span> New Customer
-                    </a>
-                    <a href="{{ route('pos.index') }}" style="background:#1d4ed8;color:white;padding:8px 16px;border-radius:20px;font-size:12.5px;font-weight:800;text-decoration:none;display:flex;flex-direction:row;align-items:center;gap:4px;white-space:nowrap;box-shadow:0 4px 10px rgba(29,78,216,0.25);transition:all 0.15s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                        <span style="font-size:16px;line-height:1;margin-bottom:2px;">+</span> New Order
-                    </a>
-                </div>
+                <!-- Right Side Actions -->
+                <div class="flex items-center gap-3 lg:gap-6 ml-auto">
+                    <!-- Quick Action Buttons (Desktop only) -->
+                    <div class="hidden lg:flex items-center gap-3">
+                        <a href="{{ route('customers.index') }}" class="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full text-xs font-extrabold shadow-lg shadow-red-500/30 hover:-translate-y-0.5 hover:shadow-red-500/40 transition-all duration-300">
+                            <span class="text-base leading-none mb-0.5">+</span> New Customer
+                        </a>
+                        <a href="{{ route('pos.index') }}" class="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-xs font-extrabold shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 hover:shadow-blue-500/40 transition-all duration-300">
+                            <span class="text-base leading-none mb-0.5">+</span> New Order
+                        </a>
+                    </div>
 
-                <div class="topbar-right">
-                    <!-- Notification Button with Dropdown (Low Stock & New Orders Alert) -->
+                    <!-- Notifications Dropdown -->
                     @php
                         $notifsList = [];
                         $lowStockAlerts = \App\Models\InventoryItem::whereRaw('current_stock <= min_stock')->get();
@@ -337,7 +183,6 @@
                             $notifsList[] = [
                                 'title' => 'Low Stock: ' . $item->name . ' is low (' . $item->current_stock . ' ' . $item->unit . ' left)',
                                 'time' => 'System Alert',
-                                'unread' => true,
                                 'type' => 'alert'
                             ];
                         }
@@ -346,7 +191,6 @@
                             $notifsList[] = [
                                 'title' => 'New booking request from ' . $b->customer_name,
                                 'time' => $b->created_at->diffForHumans(),
-                                'unread' => true,
                                 'type' => 'booking'
                             ];
                         }
@@ -355,68 +199,68 @@
                             $notifsList[] = [
                                 'title' => $recentOrdersCount . ' new orders placed recently',
                                 'time' => 'Just now',
-                                'unread' => true,
                                 'type' => 'order'
                             ];
                         }
                     @endphp
-                    <div style="position:relative;">
-                        <button @click="notifOpen = !notifOpen; profileOpen = false" @click.away="notifOpen = false" class="notif-btn" style="display:flex;align-items:center;justify-content:center;">
+                    <div class="relative">
+                        <button @click="notifOpen = !notifOpen; profileOpen = false" @click.away="notifOpen = false" class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border-2 border-slate-100 hover:bg-slate-100 hover:border-slate-200 transition-colors text-slate-500 hover:text-slate-700">
                             @if(count($notifsList) > 0)
-                                <div class="notif-dot" style="top:4px; right:4px;"></div>
+                                <div class="absolute top-[6px] right-[6px] w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white animate-pulse"></div>
                             @endif
-                            <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#64748b" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                            <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
                         </button>
-                        <!-- Notifications Dropdown Menu -->
-                        <div x-show="notifOpen" style="display:none; position:absolute; right:0; top:46px; width:300px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); z-index:100; overflow:hidden;">
-                            <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center;">
-                                <span style="font-size:12px; font-weight:800; color:#0f172a;">Notifications</span>
-                                <span style="font-size:10px; font-weight:700; color:#1d4ed8; background:#eff6ff; padding:2px 6px; border-radius:4px;">{{ count($notifsList) }} New</span>
+                        
+                        <!-- Notifications Menu -->
+                        <div x-show="notifOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="absolute right-0 top-[52px] w-[300px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 origin-top-right" x-cloak>
+                            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
+                                <span class="text-xs font-black text-slate-800">Notifications</span>
+                                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">{{ count($notifsList) }} New</span>
                             </div>
-                            <div style="max-height:240px; overflow-y:auto;">
+                            <div class="max-h-[280px] overflow-y-auto">
                                 @forelse($notifsList as $n)
-                                    <div style="padding:12px 16px; border-bottom:1px solid #f8fafc; display:flex; gap:10px; align-items:flex-start;">
-                                        <span style="margin-top:2px;">
+                                    <div class="flex gap-3 px-4 py-3 border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
+                                        <div class="mt-0.5 flex-shrink-0">
                                             @if(($n['type'] ?? '') === 'alert')
-                                                <svg width="14" height="14" fill="none" stroke="#ef4444" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                             @else
-                                                <svg width="14" height="14" fill="none" stroke="#1d4ed8" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                             @endif
-                                        </span>
-                                        <div style="text-align:left;">
-                                            <p style="font-size:11.5px; font-weight:600; color:#334155; margin:0; line-height:1.3;">{{ $n['title'] }}</p>
-                                            <span style="font-size:9.5px; color:#94a3b8; font-weight:500;">{{ $n['time'] }}</span>
+                                        </div>
+                                        <div>
+                                            <p class="text-[11.5px] font-semibold text-slate-700 leading-snug mb-0.5">{{ $n['title'] }}</p>
+                                            <span class="text-[9.5px] font-medium text-slate-400">{{ $n['time'] }}</span>
                                         </div>
                                     </div>
                                 @empty
-                                    <div style="padding:24px; text-align:center; font-size:12px; color:#94a3b8; font-weight:500;">No new notifications.</div>
+                                    <div class="p-6 text-center text-xs font-medium text-slate-400">No new notifications.</div>
                                 @endforelse
                             </div>
                         </div>
                     </div>
 
                     <!-- Profile Dropdown -->
-                    <div style="position:relative;">
-                        <button @click="profileOpen = !profileOpen; notifOpen = false" @click.away="profileOpen = false" style="background:none;border:none;cursor:pointer;display:flex;align-items:center;padding:4px;border-radius:50%;transition:all 0.15s;">
-                            <!-- Desktop: avatar + name -->
-                            <div style="display:flex;align-items:center;gap:8px;">
-                                <div class="topbar-avatar" style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#1d4ed8,#3b82f6);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:white;">
+                    <div class="relative">
+                        <button @click="profileOpen = !profileOpen; notifOpen = false" @click.away="profileOpen = false" class="flex items-center p-1 rounded-full hover:bg-slate-100 transition-colors">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-[34px] h-[34px] rounded-full bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center text-[13px] font-black text-white shadow-md">
                                     {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
                                 </div>
-                                <span class="topbar-user-info" style="font-size:13px;font-weight:700;color:#334155;white-space:nowrap;">{{ auth()->user()->name ?? 'User' }}</span>
-                                <svg class="dropdown-arrow" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#94a3b8" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+                                <span class="hidden lg:block text-[13px] font-bold text-slate-700">{{ auth()->user()->name ?? 'User' }}</span>
+                                <svg class="hidden lg:block w-3 h-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
                             </div>
                         </button>
-                        <!-- Profile Dropdown Menu -->
-                        <div x-show="profileOpen" style="display:none; position:absolute; right:0; top:46px; width:170px; background:white; border:1px solid #e2e8f0; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.08); z-index:100; overflow:hidden;">
-                            <a href="{{ route('profile.edit') }}" style="display:flex; align-items:center; gap:8px; padding:12px 16px; font-size:12.5px; font-weight:700; color:#334155; text-decoration:none; border-bottom:1px solid #f1f5f9; transition:background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                Profile
+                        
+                        <!-- Profile Menu -->
+                        <div x-show="profileOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="absolute right-0 top-[52px] w-[180px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 origin-top-right" x-cloak>
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-4 py-3 text-[12.5px] font-bold text-slate-700 hover:bg-slate-50 border-b border-slate-100 transition-colors">
+                                <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Profile Settings
                             </a>
-                            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+                            <form method="POST" action="{{ route('logout') }}" class="m-0">
                                 @csrf
-                                <button type="submit" style="display:flex; align-items:center; gap:8px; width:100%; padding:12px 16px; border:none; background:none; text-align:left; font-size:12.5px; font-weight:700; color:#dc2626; cursor:pointer; transition:background 0.15s;" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='white'">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                <button type="submit" class="flex items-center gap-2.5 w-full px-4 py-3 text-[12.5px] font-bold text-red-600 hover:bg-red-50/50 hover:text-red-700 transition-colors text-left">
+                                    <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                                     Sign Out
                                 </button>
                             </form>
@@ -425,10 +269,21 @@
                 </div>
             </header>
 
-            <!-- Page Content -->
-            <main class="page-content">
+            <main class="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8 animate-fade-in relative z-10 scrollbar-hide">
                 @if (isset($header))
-                    <div style="margin-bottom:28px;">{{ $header }}</div>
+                    <div class="mb-6 lg:mb-8 bg-white rounded-md p-5 shadow-sm border border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 relative overflow-hidden">
+                        <!-- Geometric Pattern Right Side -->
+                        <div class="absolute right-0 top-1/2 -translate-y-1/2 flex items-center pointer-events-none opacity-60">
+                            <div class="w-24 h-24 bg-blue-50 rotate-45 translate-x-12 rounded-lg"></div>
+                            <div class="w-36 h-36 bg-blue-100 rotate-45 translate-x-6 -ml-8 rounded-xl"></div>
+                            <div class="w-48 h-48 bg-blue-200 rotate-45 -ml-12 rounded-2xl"></div>
+                            <div class="w-32 h-32 bg-blue-300 rotate-45 -ml-16 rounded-lg"></div>
+                        </div>
+                        
+                        <div class="relative z-10 flex-1 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 w-full">
+                            <div class="w-full">{!! str_replace('ph-title', 'text-xl sm:text-2xl font-extrabold text-slate-800 tracking-tight', str_replace('ph-sub', 'text-slate-400 text-[11px] font-bold uppercase tracking-widest mt-1', $header)) !!}</div>
+                        </div>
+                    </div>
                 @endif
                 {{ $slot }}
             </main>
@@ -439,23 +294,9 @@
         {{ $scripts }}
     @endif
 
-    <style>
-        @media (max-width: 1023px) {
-            .sidebar { position: fixed; top: 0; left: 0; z-index: 50; transform: translateX(-100%); transition: transform 0.25s ease; }
-            .sidebar.mobile-open { transform: translateX(0); }
-            .mobile-overlay { display: block; }
-            .mobile-menu-btn { display: flex !important; }
-            .topbar-tagline { display: none !important; }
-            .topbar-user-info { display: none !important; }
-            .page-content { padding: 24px 20px; }
-            .topbar { padding: 0 20px; }
-        }
-    </style>
-    
     <script>
         NProgress.configure({ showSpinner: false, speed: 400, minimum: 0.1 });
         
-        // Start loader when clicking regular links
         document.addEventListener('click', function(e) {
             let target = e.target.closest('a');
             if (target && target.href && !target.href.startsWith('javascript:') && !target.href.includes('#') && target.target !== '_blank') {
@@ -463,12 +304,10 @@
             }
         });
 
-        // Start loader on form submit
         document.addEventListener('submit', function(e) {
             NProgress.start();
         });
 
-        // Intercept fetch requests
         const originalFetch = window.fetch;
         window.fetch = async function(...args) {
             NProgress.start();
@@ -480,7 +319,6 @@
             }
         };
 
-        // Stop loader when page fully loaded or back button used
         window.addEventListener('load', () => NProgress.done());
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) NProgress.done();
