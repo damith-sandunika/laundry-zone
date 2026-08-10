@@ -113,8 +113,8 @@ class StaffController extends Controller
 
     public function destroy(\App\Models\User $staff)
     {
-        $staff->update(['is_active' => false]);
-        return redirect()->route('staff.index')->with('success', 'Staff deactivated.');
+        $staff->delete();
+        return redirect()->route('staff.index')->with('success', 'Staff member deleted.');
     }
 
     // Pay Salary (registers an expense)

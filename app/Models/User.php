@@ -7,9 +7,11 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use App\Traits\BelongsToBranch;
 use Illuminate\Notifications\Notifiable;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
+
 class User extends Authenticatable
 {
-    use BelongsToBranch;
+    use BelongsToBranch, SoftDeletes;
 
     use HasFactory, Notifiable;
 
