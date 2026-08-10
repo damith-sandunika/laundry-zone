@@ -28,6 +28,9 @@
                     <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
                         <tr>
                             <th class="px-6 py-3 font-semibold">Name / Email</th>
+                            @if(auth()->user()->role === 'super_admin')
+                            <th class="px-6 py-3 font-semibold">Branch</th>
+                            @endif
                             <th class="px-6 py-3 font-semibold">Role</th>
                             <th class="px-6 py-3 font-semibold text-center">Status</th>
                             <th class="px-6 py-3 font-semibold text-center">Action</th>
@@ -40,8 +43,13 @@
                                     <p class="font-medium text-gray-900">{{ $employee->name }}</p>
                                     <p class="text-xs text-gray-500">{{ $employee->email }}</p>
                                 </td>
+                                @if(auth()->user()->role === 'super_admin')
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 text-xs font-semibold rounded {{ $employee->role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700' }}">
+                                    <span class="text-xs font-semibold text-gray-600">{{ $employee->branch->name ?? 'Global' }}</span>
+                                </td>
+                                @endif
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-0.5 text-xs font-semibold rounded {{ $employee->role === 'admin' ? 'bg-purple-100 text-purple-700' : ($employee->role === 'super_admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700') }}">
                                         {{ ucfirst($employee->role) }}
                                     </span>
                                 </td>
@@ -133,6 +141,17 @@
                                         <input type="password" name="password" required class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                     </div>
                                 </div>
+                                @if(auth()->user()->role === 'super_admin')
+                                <div>
+                                    <label class="block text-xs font-medium text-gray-700 mb-1">Assign to Branch</label>
+                                    <select name="branch_id" required class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        <option value="">Select Branch</option>
+                                        @foreach($branches as $b)
+                                            <option value="{{ $b->id }}">{{ $b->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @endif
                             </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">

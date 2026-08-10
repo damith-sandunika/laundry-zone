@@ -58,6 +58,8 @@ Route::middleware(['auth'])->group(function () {
 
     // ADMIN ONLY ROUTES
     Route::middleware(['admin'])->group(function () {
+        Route::resource('branches', \App\Http\Controllers\BranchController::class)->except(['create', 'show', 'edit']);
+
         Route::get('/services', [SettingsController::class, 'servicesIndex'])->name('services.index');
         
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');

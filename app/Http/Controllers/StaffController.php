@@ -23,20 +23,29 @@ class StaffController extends Controller
         }
         $salaries = $salaryExpensesQuery->latest()->get();
 
-        return view('staff.index', compact('staff', 'salaries'));
+        $branches = [];
+        if (auth()->user()->role === 'super_admin') {
+            $branches = \App\Models\Branch::all();
+        }
+
+        return view('staff.index', compact('staff', 'salaries', 'branches'));
     }
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:255',
             'role' => 'required|in:admin,staff',
             'password' => 'required|string|min:8',
-        ]);
+        ];
+        if (auth()->user()->role === 'super_admin') {
+            $rules['branch_id'] = 'required|exists:branches,id';
+        }
+        $request->validate($rules);
 
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->role === 'super_admin' ? $request->branch_id : (auth()->user()->branch_id ?? 1);
         $currentUserRole = auth()->user()->role;
         
         $role = $request->role;
@@ -83,9 +92,12 @@ class StaffController extends Controller
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
         }
+        if (auth()->user()->role === 'super_admin') {
+            $rules['branch_id'] = 'required|exists:branches,id';
+        }
         $request->validate($rules);
 
-        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active']);
+        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id']);
         
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && auth()->user()->role !== 'super_admin') {

@@ -45,6 +45,17 @@
                             <option value="super_admin" {{ $staff->role === 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                         </select>
                     </div>
+
+                    @if(auth()->user()->role === 'super_admin')
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Assign to Branch <span class="text-red-500">*</span></label>
+                        <select name="branch_id" class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                            @foreach(\App\Models\Branch::all() as $b)
+                                <option value="{{ $b->id }}" {{ $staff->branch_id == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @endif
                 </div>
 
                 <div>

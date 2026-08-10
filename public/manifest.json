@@ -1,6 +1,6 @@
 {
-    "name": "Urban Wash Laundry",
-    "short_name": "Urban Wash",
+    "name": "Laundry Zone",
+    "short_name": "Laundry Zone",
     "description": "Smart Laundry Management System",
     "start_url": "/login",
     "display": "standalone",
