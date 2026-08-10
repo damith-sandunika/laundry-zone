@@ -24,6 +24,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Staff List -->
             <div class="lg:col-span-2 bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
                         <tr>
@@ -80,6 +81,7 @@
                         @endforeach
                     </tbody>
                 </table>
+                </div>
             </div>
 
             <!-- Salary Log -->

@@ -22,6 +22,7 @@
     <div x-data="{ addModalOpen: false, editModalOpen: false, selectedBranch: null }" @open-add-branch.window="addModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
 
         <div class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
+            <div class="overflow-x-auto">
             <table class="w-full text-sm text-left">
                 <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
                     <tr>
@@ -81,6 +82,7 @@
                     @endforeach
                 </tbody>
             </table>
+            </div>
         </div>
 
         <!-- Add Branch Modal -->
