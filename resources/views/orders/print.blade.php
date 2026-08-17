@@ -86,7 +86,7 @@
 
     <div class="row total-row">
         <span>TOTAL</span>
-        <span>Rs.{{ number_format($order->total, 2) }}</span>
+        <span>{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</span>
     </div>
 
     <div class="row" style="margin-top:4px;">

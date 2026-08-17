@@ -23,7 +23,7 @@
             </button>
             <a href="{{ route('reports.pdf', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank"
                class="px-4 py-2 bg-gray-700 text-white text-xs font-semibold rounded hover:bg-gray-800 transition-colors">
-                🖨 Export / Print PDF
+                Export PDF
             </a>
             <a href="{{ route('reports.closeShift') }}" target="_blank"
                class="px-4 py-2 bg-amber-500 text-white text-xs font-semibold rounded hover:bg-amber-600 transition-colors">
@@ -83,6 +83,11 @@
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     Credit Customers
                 </button>
+                <button @click="activeReport = 'packages'" 
+                    :class="activeReport === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    Package Payments
+                </button>
             </div>
         </div>
 
@@ -107,7 +112,7 @@
                                     </td>
                                     <td class="px-4 py-3">{{ $order->customer->name }}</td>
                                     <td class="px-4 py-3 text-xs text-gray-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold">Rs.{{ number_format($order->total, 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -250,7 +255,7 @@
                                     </td>
                                     <td class="px-4 py-3 font-semibold">{{ $order->customer->name }} <br><span class="text-xs text-gray-500">{{ $order->customer->phone }}</span></td>
                                     <td class="px-4 py-3 text-xs text-gray-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold">Rs.{{ number_format($order->total, 2) }}</td>
+                                    <td class="px-4 py-3 text-right font-semibold">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
                                     <td class="px-4 py-3 text-right font-bold text-orange-600">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
                                     <td class="px-4 py-3 text-center">
                                         <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center flex-wrap">
@@ -267,6 +272,61 @@
                             @empty
                                 <tr>
                                     <td colspan="6" class="px-4 py-6 text-center text-gray-400">No active credit customers.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <!-- PACKAGE PAYMENTS LOG -->
+            <div x-show="activeReport === 'packages'" style="display: none;">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                            <tr>
+                                <th class="px-4 py-2">Customer</th>
+                                <th class="px-4 py-2">Package Details</th>
+                                <th class="px-4 py-2">Issue Date</th>
+                                <th class="px-4 py-2 text-right">Price</th>
+                                <th class="px-4 py-2 text-center">Status</th>
+                                <th class="px-4 py-2 text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($customerPackages as $cp)
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold">{{ $cp->customer->name ?? 'Deleted' }} <br><span class="text-xs text-gray-500">{{ $cp->customer->phone ?? '' }}</span></td>
+                                    <td class="px-4 py-3">
+                                        <div class="font-bold text-blue-600">{{ $cp->package->name ?? 'Unknown' }}</div>
+                                        <div class="text-[10px] text-gray-500">Exp: {{ $cp->end_date->format('Y-m-d') }}</div>
+                                    </td>
+                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $cp->start_date->format('Y-m-d') }}</td>
+                                    <td class="px-4 py-3 text-right font-bold">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($cp->payment_status === 'paid')
+                                            <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-green-100 text-green-700 rounded border border-green-200">PAID</span>
+                                        @else
+                                            <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-red-100 text-red-700 rounded border border-red-200">PENDING</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-4 py-3 text-center">
+                                        @if($cp->payment_status === 'pending')
+                                            <form action="{{ route('reports.approvePackagePayment', $cp->id) }}" method="POST" class="flex gap-2 items-center justify-center flex-wrap">
+                                                @csrf
+                                                <select name="payment_method" class="w-24 px-2 py-1 pr-6 border border-gray-300 rounded text-xs bg-white appearance-auto" style="min-width:80px;">
+                                                    <option value="cash">💵 Cash</option>
+                                                    <option value="card">💳 Card</option>
+                                                </select>
+                                                <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 whitespace-nowrap">✓ Approve</button>
+                                            </form>
+                                        @else
+                                            <span class="text-xs text-gray-400 font-semibold italic">Approved</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="px-4 py-6 text-center text-gray-400">No packages issued in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -291,7 +351,8 @@
                             <tr>
                                 <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Order</th>
                                 <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Customer</th>
-                                <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;text-align:right;">Pending Due</th>
+                                <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;text-align:right;">Service Amount</th>
+                                <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;text-align:center;">Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -309,12 +370,15 @@
                                         <span x-text="order.customer ? order.customer.name : 'Walk-in'"></span>
                                         <div style="font-size:11px;color:#64748b;margin-top:2px;" x-text="order.customer ? order.customer.phone : ''"></div>
                                     </td>
-                                    <td style="padding:12px 16px;text-align:right;font-weight:800;color:#dc2626;" x-text="'Rs.' + (parseFloat(order.total) - parseFloat(order.paid_amount)).toFixed(2)">
+                                    <td style="padding:12px 16px;text-align:right;font-weight:800;color:#dc2626;" x-text="'Rs.' + parseFloat(order.service_due || 0).toFixed(2)">
+                                    </td>
+                                    <td style="padding:12px 16px;text-align:center;">
+                                        <a :href="'/orders/' + order.id" target="_blank" style="padding:6px 12px;background:#2563eb;color:white;font-size:11px;font-weight:800;text-decoration:none;border-radius:6px;display:inline-block;transition:all 0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">View Order</a>
                                     </td>
                                 </tr>
                             </template>
                             <tr x-show="selectedServiceOrders.length === 0">
-                                <td colspan="3" style="padding:30px;text-align:center;color:#94a3b8;font-weight:500;font-size:13px;">No pending orders found.</td>
+                                <td colspan="4" style="padding:30px;text-align:center;color:#94a3b8;font-weight:500;font-size:13px;">No pending orders found.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -338,23 +402,51 @@
 
                 openPendingOrders(serviceName) {
                     this.selectedServiceName = serviceName;
-                    this.selectedServiceOrders = this.orders.filter(order => {
+                    
+                    let filtered = [];
+                    this.orders.forEach(order => {
                         const total = parseFloat(order.total) || 0;
                         const paid = parseFloat(order.paid_amount) || 0;
-                        if (total <= paid) return false;
+                        if (total <= paid) return;
 
-                        if (serviceName === '__all__') return true;
+                        if (serviceName === '__all__') {
+                            order.service_due = total - paid;
+                            filtered.push(order);
+                            return;
+                        }
 
+                        let matchFound = false;
+                        let serviceValue = 0;
+                        
                         if (order.items && order.items.length > 0) {
-                            return order.items.some(item => {
+                            order.items.forEach(item => {
                                 const svc = item.service_type || item.serviceType || item.service_type_id;
-                                if (!svc) return true;
+                                if (!svc) return;
                                 const name = typeof svc === 'object' ? (svc.name || '') : '';
-                                return name === serviceName || serviceName === '';
+                                if (name === serviceName) {
+                                    matchFound = true;
+                                    serviceValue += parseFloat(item.total_price) || 0;
+                                }
                             });
                         }
-                        return true;
+
+                        if (matchFound) {
+                            // Calculate specific service due
+                            let subtotal = parseFloat(order.subtotal) || 0;
+                            let discount = parseFloat(order.discount) || 0;
+                            let proportion = subtotal > 0 ? (1 - (discount / subtotal)) : 1;
+                            let finalServiceValue = serviceValue * proportion;
+                            
+                            // Calculate pending proportion
+                            let orderPending = total - paid;
+                            let pendingProportion = total > 0 ? (orderPending / total) : 0;
+                            
+                            order.service_due = finalServiceValue * pendingProportion;
+                            filtered.push(order);
+                        }
                     });
+                    
+                    this.selectedServiceOrders = filtered;
                     this.pendingModalOpen = true;
                 }
             }

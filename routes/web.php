@@ -35,6 +35,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::resource('customers', CustomerController::class);
 
+    Route::post('/orders/{order}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
     Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
     Route::get('/orders/{order}/print', [OrderController::class, 'printBill'])->name('orders.print');
     Route::get('/orders/{order}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
@@ -43,8 +44,14 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
+    Route::post('/packages/{customerPackage}/mark-paid', [\App\Http\Controllers\PackageController::class, 'markPaid'])->name('packages.markPaid');
+    Route::get('/packages/{customerPackage}/print', [\App\Http\Controllers\PackageController::class, 'printReceipt'])->name('packages.print');
+    Route::resource('packages', \App\Http\Controllers\PackageController::class)->except(['create', 'edit', 'update']);
+
     Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
     Route::post('/inventory/bulk-restock', [InventoryController::class, 'bulkStockIn'])->name('inventory.bulkStockIn');
+    Route::post('/inventory/bulk-stock-out', [InventoryController::class, 'bulkStockOut'])->name('inventory.bulkStockOut');
+    Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stockOut');
     Route::delete('/inventory/{item}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
 
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
@@ -59,8 +66,6 @@ Route::middleware(['auth'])->group(function () {
     // ADMIN ONLY ROUTES
     Route::middleware(['admin'])->group(function () {
         Route::resource('branches', \App\Http\Controllers\BranchController::class)->except(['create', 'show', 'edit']);
-
-        Route::get('/services', [SettingsController::class, 'servicesIndex'])->name('services.index');
         
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
@@ -81,9 +86,13 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
         Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
 
+        Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
+        Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
+
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
         Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
+        Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
 
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);

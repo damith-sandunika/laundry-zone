@@ -96,4 +96,9 @@ class Order extends Model
         $last = self::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->max('id') ?? 0;
         return 'U' . str_pad($last + 1, 4, '0', STR_PAD_LEFT);
     }
+
+    public function isPackageOrder()
+    {
+        return $this->items()->where('item_description', 'like', '%via Package%')->exists();
+    }
 }

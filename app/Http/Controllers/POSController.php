@@ -26,8 +26,13 @@ class POSController extends Controller
             $customersQuery->where('branch_id', $branchId);
         }
         $customers = $customersQuery->get();
+
+        $customerPackages = \App\Models\CustomerPackage::where('branch_id', $branchId)
+            ->where('status', 'active')
+            ->with(['package', 'services.serviceType'])
+            ->get();
                         
-        return view('pos.index', compact('services', 'customers'));
+        return view('pos.index', compact('services', 'customers', 'customerPackages'));
     }
 
     public function store(Request $request)
@@ -54,14 +59,68 @@ class POSController extends Controller
             ], 403);
         }
 
-        // Calculate Totals
-        $subtotal    = collect($request->cart)->sum(fn($item) => $item['base_price'] * $item['qty']);
-        $total       = $subtotal;
+        // Process cart with package deduction
+        $packageId = $request->customer_package_id ?? null;
+        $activePackage = null;
+        $packageServices = collect();
+
+        if ($packageId) {
+            $activePackage = \App\Models\CustomerPackage::with('services')->find($packageId);
+            if ($activePackage && $activePackage->status === 'active') {
+                $packageServices = $activePackage->services->keyBy('service_type_id');
+            } else {
+                $packageId = null;
+            }
+        }
+
+        $processedCart = [];
+        $subtotal = 0;
+        $packageDeductions = [];
+
+        foreach ($request->cart as $item) {
+            $serviceTypeId = $item['service_type_id'] ?? $item['id'];
+            $qty = (float)$item['qty'];
+            $basePrice = (float)$item['base_price'];
+            
+            $coveredQty = 0;
+            $chargeableQty = $qty;
+
+            // Check if service is covered by package
+            if ($packageId && empty($item['is_special']) && $packageServices->has($serviceTypeId)) {
+                $ps = $packageServices->get($serviceTypeId);
+                $remaining = max(0, $ps->total_quantity - $ps->used_quantity);
+                
+                if ($remaining > 0) {
+                    $coveredQty = min($remaining, $qty);
+                    $chargeableQty = $qty - $coveredQty;
+                    
+                    $packageDeductions[$ps->id] = $coveredQty;
+                }
+            }
+
+            $itemSubtotal = $chargeableQty * $basePrice;
+            $subtotal += $itemSubtotal;
+
+            $processedCart[] = [
+                'service_type_id' => $serviceTypeId,
+                'name' => $item['name'],
+                'qty' => $qty,
+                'base_price' => $basePrice,
+                'covered_qty' => $coveredQty,
+                'chargeable_qty' => $chargeableQty,
+                'total_price' => $itemSubtotal,
+                'is_special' => $item['is_special'] ?? false
+            ];
+        }
+
+        $discountPercentage = max(0, min(100, (float)($request->discount_percentage ?? 0)));
+        $discountAmount = $subtotal * ($discountPercentage / 100);
+        $total = $subtotal - $discountAmount;
         $paymentMode = $request->payment_mode ?? 'pay_on_pickup';
         $paidAmount  = $paymentMode === 'pay_now' ? $total : 0;
 
         try {
-            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId, $subtotal, $total, $paidAmount, $paymentMode) {
+            $result = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId, $subtotal, $discountAmount, $total, $paidAmount, $paymentMode, $processedCart, $packageId, $activePackage, $packageDeductions) {
                 // 1. Resolve Customer
                 $customerId = $request->customer_id;
                 if (!$customerId) {
@@ -80,7 +139,7 @@ class POSController extends Controller
                     'created_by'   => auth()->id(),
                     'status'       => 'received',
                     'subtotal'     => $subtotal,
-                    'discount'     => 0,
+                    'discount'     => $discountAmount,
                     'additional'   => 0,
                     'total'        => $total,
                     'paid_amount'  => $paidAmount,
@@ -104,9 +163,30 @@ class POSController extends Controller
                     'changed_by' => auth()->id(),
                 ]);
 
+                // Deduct Package Quantities
+                if ($packageId && count($packageDeductions) > 0) {
+                    foreach ($packageDeductions as $cpsId => $qtyUsed) {
+                        \App\Models\CustomerPackageService::where('id', $cpsId)
+                            ->increment('used_quantity', $qtyUsed);
+                    }
+                    
+                    // Check if package is exhausted
+                    $allServices = \App\Models\CustomerPackageService::where('customer_package_id', $packageId)->get();
+                    $isExhausted = true;
+                    foreach ($allServices as $s) {
+                        if ($s->used_quantity < $s->total_quantity) {
+                            $isExhausted = false;
+                            break;
+                        }
+                    }
+                    if ($isExhausted) {
+                        $activePackage->update(['status' => 'exhausted']);
+                    }
+                }
+
                 // 3. Create Items & Deduct Inventory
-                foreach ($request->cart as $item) {
-                    $serviceTypeId = isset($item['service_type_id']) ? $item['service_type_id'] : $item['id'];
+                foreach ($processedCart as $item) {
+                    $serviceTypeId = $item['service_type_id'];
 
                     if (!empty($item['is_special'])) {
                         $specialService = \App\Models\ServiceType::firstOrCreate(
@@ -119,59 +199,13 @@ class POSController extends Controller
                     \App\Models\OrderItem::create([
                         'order_id'        => $order->id,
                         'service_type_id' => $serviceTypeId,
-                        'item_description'=> $item['name'],
+                        'item_description'=> $item['name'] . ($item['covered_qty'] > 0 ? " ({$item['covered_qty']} via Package)" : ''),
                         'quantity'        => $item['qty'],
                         'unit_price'      => $item['base_price'],
-                        'total_price'     => $item['base_price'] * $item['qty'],
+                        'total_price'     => $item['total_price'],
                     ]);
 
-                    // Skip inventory deduction for special service
-                    if (!empty($item['is_special'])) continue;
 
-                    $service = \App\Models\ServiceType::with('inventoryItems')->find($serviceTypeId);
-                    if (!$service) continue;
-                    foreach ($service->inventoryItems as $invItem) {
-                        if ($invItem->pivot->deduct_at_stage === 'washing' || $invItem->pivot->deduct_at_stage === 'received' || $invItem->pivot->deduct_at_stage === 'done') {
-                            $qtyToDeduct = $invItem->pivot->qty_per_use * $item['qty'];
-                            
-                            $oldStock = $invItem->current_stock;
-                            $invItem->decrement('current_stock', $qtyToDeduct);
-                            $newStock = $oldStock - $qtyToDeduct;
-
-                            \App\Models\InventoryTransaction::create([
-                                'inventory_item_id' => $invItem->id,
-                                'type' => 'out',
-                                'quantity' => $qtyToDeduct,
-                                'order_id' => $order->id,
-                                'reference' => 'Order #' . $order->order_number . ' - Auto deduct',
-                                'created_by' => auth()->id(),
-                            ]);
-
-                            // Send Low Stock Alert to Admin if it crosses threshold
-                            if ($oldStock > $invItem->low_stock_threshold && $newStock <= $invItem->low_stock_threshold) {
-                                $branch = \App\Models\Branch::find($branchId);
-                                if ($branch && $branch->whatsapp_number) {
-                                    $template = \App\Models\WhatsappTemplate::where('type', 'low_stock_alert')->first();
-                                    $alertMsg = $template
-                                        ? str_replace(
-                                            ['[ItemName]', '[Location]', '[CurrentStock]', '[Unit]', '[Threshold]'],
-                                            [$invItem->name, $invItem->location ?? 'N/A', $newStock, $invItem->unit, $invItem->low_stock_threshold],
-                                            $template->content
-                                          )
-                                        : "⚠️ LOW STOCK: {$invItem->name} - {$newStock} {$invItem->unit} remaining. Location: " . ($invItem->location ?? 'N/A');
-
-                                    \App\Models\WhatsappLog::create([
-                                        'order_id'     => null,
-                                        'customer_id'  => null,
-                                        'phone'        => $branch->whatsapp_number,
-                                        'message_type' => 'system_alert',
-                                        'message'      => $alertMsg,
-                                        'status'       => 'pending',
-                                    ]);
-                                }
-                            }
-                        }
-                    }
                 }
 
                 // 4. WhatsApp notification queue
@@ -194,10 +228,11 @@ class POSController extends Controller
                     'order_number'  => $order->order_number,
                     'customer_name' => $customerObj->name,
                     'due_date'      => $order->due_date ? $order->due_date->format('d M Y') : '-',
-                    'cart'          => collect($request->cart)->map(fn($i) => [
+                    'cart'          => collect($processedCart)->map(fn($i) => [
                         'name' => $i['name'],
                         'qty'  => $i['qty'],
                     ])->values(),
+                    'total'         => $total,
                 ];
             });
 
@@ -209,6 +244,7 @@ class POSController extends Controller
                 'customer_name' => $result['customer_name'],
                 'due_date' => $result['due_date'],
                 'cart' => $result['cart'],
+                'total' => $result['total'],
             ]);
 
         } catch (\Exception $e) {

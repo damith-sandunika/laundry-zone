@@ -188,7 +188,7 @@
                         @endif
                         <tr style="background:#f8fafc;border-top:1.5px solid #e2e8f0;">
                             <td colspan="3" style="padding:12px 16px;text-align:right;font-size:12px;font-weight:800;color:#0f172a;">Total</td>
-                            <td style="padding:12px 16px;text-align:right;font-size:15px;font-weight:900;color:#1d4ed8;">Rs.{{ number_format($order->total, 2) }}</td>
+                            <td style="padding:12px 16px;text-align:right;font-size:15px;font-weight:900;color:#1d4ed8;">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -258,7 +258,7 @@
                 <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span style="color:#64748b;font-weight:600;">Total Bill</span>
-                        <span style="font-weight:800;color:#0f172a;">Rs.{{ number_format($order->total, 2) }}</span>
+                        <span style="font-weight:800;color:#0f172a;">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</span>
                     </div>
                     <div style="display:flex;justify-content:space-between;align-items:center;">
                         <span style="color:#64748b;font-weight:600;">Paid Amount</span>

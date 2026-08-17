@@ -28,7 +28,7 @@
                 <button @click="activeTab = 'services'; localStorage.setItem('settingsActiveTab', 'services')" 
                     :class="activeTab === 'services' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Services & Inventory
+                    Services
                 </button>
                 <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')" 
                     :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
@@ -39,6 +39,11 @@
                     :class="activeTab === 'whatsapp' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     WhatsApp API
+                </button>
+                <button @click="activeTab = 'packages'; localStorage.setItem('settingsActiveTab', 'packages')" 
+                    :class="activeTab === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    Packages
                 </button>
             </div>
         </div>
@@ -239,46 +244,89 @@
 
             <!-- SERVICES TAB -->
             <div x-show="activeTab === 'services'" style="display: none;">
+                @php
+                    $colorStyles = [
+                        'blue' => ['bg' => '#eff6ff', 'border' => '#bfdbfe', 'text' => '#1d4ed8'],
+                        'green' => ['bg' => '#f0fdf4', 'border' => '#bbf7d0', 'text' => '#15803d'],
+                        'purple' => ['bg' => '#fdf4ff', 'border' => '#e9d5ff', 'text' => '#7e22ce'],
+                        'orange' => ['bg' => '#fff7ed', 'border' => '#fed7aa', 'text' => '#c2410c'],
+                        'teal' => ['bg' => '#f0fdfa', 'border' => '#99f6e4', 'text' => '#0f766e'],
+                        'red' => ['bg' => '#fef2f2', 'border' => '#fecaca', 'text' => '#b91c1c'],
+                    ];
+                    
+                    $availableColors = ['blue', 'green', 'purple', 'orange', 'teal', 'red'];
+                @endphp
+
+                <style>
+                    .color-radio input[type="radio"] { display: none; }
+                    .color-radio label {
+                        display: flex; align-items: center; justify-content: center; width: 30px; height: 30px;
+                        border-radius: 50%; cursor: pointer; transition: all 0.15s; border: 2px solid transparent;
+                    }
+                    .color-radio input[type="radio"]:checked + label {
+                        transform: scale(1.15); box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); border-color: #0f172a;
+                    }
+                </style>
+
                 <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Available Services</h3>
-                    <button @click="serviceModalOpen = true" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
+                    <button onclick="document.getElementById('add-service-modal').style.display='flex'" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
                         + Add New Service
                     </button>
                 </div>
 
-                <div class="overflow-x-auto border border-gray-100 rounded-md">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-2">Service Name</th>
-                                <th class="px-4 py-2">Price Type</th>
-                                <th class="px-4 py-2">Price</th>
-                                <th class="px-4 py-2">Inventory Deducted (Per Qty)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gray-100">
-                            @forelse($services as $service)
-                                <tr>
-                                    <td class="px-4 py-3 font-semibold text-gray-850">{{ $service->name }}</td>
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $service->price_type === 'per_kg' ? 'Per KG' : 'Per Item' }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-900">Rs.{{ number_format($service->base_price, 2) }}</td>
-                                    <td class="px-4 py-3 text-xs text-gray-500">
-                                        @forelse($service->inventoryItems as $invItem)
-                                            <span class="inline-block bg-blue-50 text-blue-700 px-2 py-0.5 rounded mr-1">
-                                                {{ $invItem->name }}: {{ $invItem->pivot->qty_per_use }} {{ $invItem->unit }}
-                                            </span>
-                                        @empty
-                                            <span class="text-gray-400 italic">None linked</span>
-                                        @endforelse
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-4 py-6 text-center text-gray-500">No services found.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;">
+                    @forelse($services as $service)
+                    @php
+                        $style = $colorStyles[$service->color ?? 'blue'] ?? $colorStyles['blue'];
+                    @endphp
+                    <div style="background:white;border-radius:16px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;transition:box-shadow 0.15s;"
+                        onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.04)'">
+                        <div style="padding:20px 20px 14px;border-bottom:1px solid #f1f5f9;">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
+                                <div style="display:flex;align-items:center;gap:12px;">
+                                    <div style="width:40px;height:40px;border-radius:12px;background:{{ $style['bg'] }};border:1.5px solid {{ $style['border'] }};color:{{ $style['text'] }};display:flex;align-items:center;justify-content:center;">
+                                        <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size:16px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-0.01em;">{{ $service->name }}</h3>
+                                        <p style="font-size:12px;font-weight:600;color:#64748b;margin:0;text-transform:uppercase;letter-spacing:0.05em;">
+                                            {{ $service->price_type === 'per_kg' ? 'Per Kilogram' : 'Per Item' }}
+                                        </p>
+                                    </div>
+                                </div>
+                                <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.06em;
+                                    {{ $service->is_active ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;' }}">
+                                    {{ $service->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
+                            <span style="font-size:22px;font-weight:900;color:{{ $style['text'] }};letter-spacing:-0.02em;">Rs.{{ number_format($service->base_price, 2) }}</span>
+                            <div style="display:flex;gap:8px;">
+                                <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}')"
+                                    style="padding:7px 14px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;border:1.5px solid #bfdbfe;border-radius:8px;cursor:pointer;transition:all 0.15s;"
+                                    onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
+                                    Edit
+                                </button>
+                                <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" style="margin:0;">
+                                    @csrf @method('DELETE')
+                                    <button type="submit"
+                                        style="padding:7px 14px;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:700;border:1.5px solid #fecaca;border-radius:8px;cursor:pointer;transition:all 0.15s;"
+                                        onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    @empty
+                    <div style="grid-column:1/-1;padding:60px;text-align:center;background:white;border-radius:16px;border:1.5px solid #e2e8f0;">
+                        <svg width="48" height="48" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 16px;display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <p style="font-size:15px;font-weight:800;color:#0f172a;margin:0 0 6px;">No services yet</p>
+                        <p style="font-size:13px;color:#94a3b8;font-weight:500;">Click "Add New Service" to get started.</p>
+                    </div>
+                    @endforelse
                 </div>
             </div>
 
@@ -337,7 +385,7 @@
             </div>
 
             <!-- WHATSAPP API TAB -->
-            <div x-show="activeTab === 'whatsapp'" style="display: none;" x-data="whatsappAPI()" x-init="fetchStatus(); startPolling()">
+            <div x-show="activeTab === 'whatsapp'" style="display: none;" x-data="whatsappAPI()" x-init="init()">
 
                 <!-- Status Header Bar -->
                 <div class="flex flex-wrap justify-between items-center mb-6 gap-3">
@@ -449,6 +497,144 @@
 
             </div>
 
+            <!-- PACKAGES TAB -->
+            <div x-show="activeTab === 'packages'" style="display: none;" x-data="{ packageModalOpen: false }">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-semibold text-gray-800">Subscription Packages</h3>
+                    <button @click="packageModalOpen = true" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
+                        + Add New Package
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    @forelse($packages as $package)
+                        <div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col relative group">
+                            <div class="p-5 flex-1">
+                                <div class="flex justify-between items-start mb-2">
+                                    <h4 class="font-bold text-gray-900 text-lg">{{ $package->name }}</h4>
+                                    <span class="px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded-md {{ $package->payment_type === 'prepaid' ? 'bg-green-100 text-green-700' : 'bg-purple-100 text-purple-700' }}">
+                                        {{ $package->payment_type }}
+                                    </span>
+                                </div>
+                                <div class="text-2xl font-black text-blue-600 mb-4">
+                                    Rs.{{ number_format($package->price, 2) }}
+                                </div>
+                                
+                                <div class="space-y-2 mb-4">
+                                    <p class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Included Services</p>
+                                    @foreach($package->services as $ps)
+                                        <div class="flex justify-between items-center text-sm border-b border-gray-50 pb-1">
+                                            <span class="text-gray-700 font-medium flex items-center gap-2">
+                                                <span class="w-1.5 h-1.5 rounded-full bg-blue-400"></span>
+                                                {{ $ps->serviceType->name }}
+                                            </span>
+                                            <span class="font-bold text-gray-900">{{ number_format($ps->quantity_limit, 0) }}</span>
+                                        </div>
+                                    @endforeach
+                                </div>
+
+                                @if($package->is_rollover)
+                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg mt-2">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                        Rollover Enabled
+                                    </div>
+                                @endif
+                            </div>
+                            
+                            <div class="bg-gray-50 p-3 border-t border-gray-100 flex justify-end gap-2">
+                                <form action="{{ route('settings.destroyPackage', $package) }}" method="POST" onsubmit="return confirm('Delete this package?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded transition-colors">
+                                        Delete
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-span-full py-10 text-center text-gray-500 bg-gray-50 rounded-xl border border-dashed border-gray-300">
+                            <p class="mb-2">No packages defined.</p>
+                            <button @click="packageModalOpen = true" class="text-sm text-blue-600 font-bold hover:underline">Create your first package</button>
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Add Package Modal -->
+                <div x-show="packageModalOpen" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;">
+                    <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+                        <div x-show="packageModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity" @click="packageModalOpen = false">
+                            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+                        </div>
+                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                        <div x-show="packageModalOpen" x-transition class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
+                            <form action="{{ route('settings.storePackage') }}" method="POST">
+                                @csrf
+                                <div class="bg-white px-6 pt-6 pb-6">
+                                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                        Create New Package
+                                    </h3>
+                                    
+                                    <div class="space-y-5">
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Package Name <span class="text-red-500">*</span></label>
+                                            <input type="text" name="name" required placeholder="e.g. Premium Monthly Plan" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Package Price (Rs) <span class="text-red-500">*</span></label>
+                                                <input type="number" step="0.01" name="price" required placeholder="0.00" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Payment Type</label>
+                                                <select name="payment_type" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-semibold">
+                                                    <option value="prepaid">Pre-paid (Pay upfront)</option>
+                                                    <option value="postpaid">Post-paid (Pay later)</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
+                                            <div class="flex items-center h-5">
+                                                <input type="checkbox" name="is_rollover" value="1" class="w-4 h-4 text-amber-600 bg-white border-amber-300 rounded focus:ring-amber-500 focus:ring-2">
+                                            </div>
+                                            <div class="text-sm">
+                                                <label class="font-bold text-amber-900">Enable Rollover</label>
+                                                <p class="text-amber-700 text-xs mt-0.5">If checked, unused services will carry forward to the next month when the customer renews the package.</p>
+                                            </div>
+                                        </div>
+
+                                        <div class="border-t border-gray-100 pt-5">
+                                            <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">Included Services & Limits</h4>
+                                            <p class="text-[11px] text-gray-500 mb-3">Set the quantity limit for services included in this package. Leave as 0 if the service is not included.</p>
+                                            
+                                            <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                                                @foreach($services as $service)
+                                                    <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100">
+                                                        <span class="text-sm font-semibold text-gray-700">{{ $service->name }} <span class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
+                                                        <input type="number" step="any" name="services[{{ $service->id }}]" placeholder="0" class="w-24 text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center font-bold">
+                                                    </div>
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="bg-gray-50/80 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
+                                    <button type="button" @click="packageModalOpen = false" class="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm">
+                                        Cancel
+                                    </button>
+                                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">
+                                        Save Package
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
             <script>
                 function whatsappAPI() {
                     return {
@@ -458,7 +644,24 @@
                         error: null,
                         pollInterval: null,
 
+                        init() {
+                            this.$watch('activeTab', value => {
+                                if (value === 'whatsapp') {
+                                    this.fetchStatus();
+                                    this.startPolling();
+                                } else {
+                                    this.stopPolling();
+                                }
+                            });
+                            
+                            if (this.activeTab === 'whatsapp') {
+                                this.fetchStatus();
+                                this.startPolling();
+                            }
+                        },
+
                         fetchStatus() {
+                            if (this.activeTab !== 'whatsapp') return;
                             fetch("{{ route('whatsapp.status') }}")
                                 .then(res => res.json())
                                 .then(data => {
@@ -468,11 +671,11 @@
                                     this.loading = false;
                                     this.error = null;
                                     
-                                    // If connected, stop polling entirely as per user request
+                                    // If connected, stop polling entirely
                                     if (this.connected) {
-                                        if (this.pollInterval) clearInterval(this.pollInterval);
+                                        this.stopPolling();
                                     } else if (wasConnected && !this.connected) {
-                                        this.startPolling(4000); // Resume polling if it drops
+                                        if (this.activeTab === 'whatsapp') this.startPolling(4000); // Resume polling if it drops
                                     }
                                 })
                                 .catch(() => {
@@ -480,13 +683,28 @@
                                     this.loading = false;
                                     this.qrCode = null;
                                     this.connected = false;
-                                    this.startPolling(10000); // 10 seconds if error (server down)
+                                    if (this.activeTab === 'whatsapp') this.startPolling(10000); // 10 seconds if error (server down)
                                 });
                         },
 
                         startPolling(interval = 4000) {
-                            if (this.pollInterval) clearInterval(this.pollInterval);
-                            this.pollInterval = setInterval(() => this.fetchStatus(), interval);
+                            this.stopPolling();
+                            if (this.activeTab === 'whatsapp' && !this.connected) {
+                                this.pollInterval = setInterval(() => {
+                                    if (this.activeTab === 'whatsapp') {
+                                        this.fetchStatus();
+                                    } else {
+                                        this.stopPolling();
+                                    }
+                                }, interval);
+                            }
+                        },
+
+                        stopPolling() {
+                            if (this.pollInterval) {
+                                clearInterval(this.pollInterval);
+                                this.pollInterval = null;
+                            }
                         },
 
                         resetQR() {
@@ -618,5 +836,162 @@
                 </div>
             </div>
         </div>
+    </div>    <!-- ── Add Service Modal ── -->
+    <div id="add-service-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:480px;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Add New Service</h3>
+                    <p style="font-size:12px;color:#94a3b8;margin:0;font-weight:500;">Define a new laundry service type</p>
+                </div>
+                <button onclick="document.getElementById('add-service-modal').style.display='none'"
+                    style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('settings.storeService') }}" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;max-height:80vh;overflow-y:auto;">
+                @csrf
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Service Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Wash & Iron"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Select Color</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                        @foreach($availableColors ?? ['blue', 'green', 'purple', 'orange', 'teal', 'red'] as $i => $color)
+                        @php $bg = ($colorStyles ?? ['blue' => ['text' => '#1d4ed8'], 'green' => ['text' => '#15803d'], 'purple' => ['text' => '#7e22ce'], 'orange' => ['text' => '#c2410c'], 'teal' => ['text' => '#0f766e'], 'red' => ['text' => '#b91c1c']])[$color]['text']; @endphp
+                        <div class="color-radio">
+                            <input type="radio" name="color" id="add-color-{{ $i }}" value="{{ $color }}" {{ $i === 0 ? 'checked' : '' }}>
+                            <label for="add-color-{{ $i }}" style="background:{{ $bg }};"></label>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Base Price (Rs.)</label>
+                        <input type="number" name="base_price" required min="0" step="0.01" placeholder="0.00"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Price Type</label>
+                        <select name="price_type" required
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;"
+                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                            <option value="per_item">Per Item</option>
+                            <option value="per_kg">Per KG</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button type="button" onclick="document.getElementById('add-service-modal').style.display='none'"
+                        style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;"
+                        onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">Save Service</button>
+                </div>
+            </form>
+        </div>
     </div>
+
+    <!-- ── Edit Service Modal ── -->
+    <div id="edit-service-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:480px;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Edit Service</h3>
+                    <p style="font-size:12px;color:#94a3b8;margin:0;font-weight:500;">Update service details</p>
+                </div>
+                <button onclick="document.getElementById('edit-service-modal').style.display='none'"
+                    style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="edit-service-form" method="POST" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;max-height:80vh;overflow-y:auto;">
+                @csrf @method('PUT')
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Service Name</label>
+                    <input type="text" id="edit-name" name="name" required
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Select Color</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:10px;">
+                        @foreach($availableColors ?? ['blue', 'green', 'purple', 'orange', 'teal', 'red'] as $i => $color)
+                        @php $bg = ($colorStyles ?? ['blue' => ['text' => '#1d4ed8'], 'green' => ['text' => '#15803d'], 'purple' => ['text' => '#7e22ce'], 'orange' => ['text' => '#c2410c'], 'teal' => ['text' => '#0f766e'], 'red' => ['text' => '#b91c1c']])[$color]['text']; @endphp
+                        <div class="color-radio">
+                            <input type="radio" name="color" id="edit-color-{{ $i }}" value="{{ $color }}">
+                            <label for="edit-color-{{ $i }}" style="background:{{ $bg }};"></label>
+                        </div>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Base Price (Rs.)</label>
+                        <input type="number" id="edit-price" name="base_price" required min="0" step="0.01"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Price Type</label>
+                        <select id="edit-price-type" name="price_type" required
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                            <option value="per_item">Per Item</option>
+                            <option value="per_kg">Per KG</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Status</label>
+                    <select id="edit-active" name="is_active"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                        <option value="1">Active</option>
+                        <option value="0">Inactive</option>
+                    </select>
+                </div>
+                
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button type="button" onclick="document.getElementById('edit-service-modal').style.display='none'"
+                        style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;"
+                        onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">Update Service</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function openEditModal(id, name, price, priceType, isActive, icon, color) {
+            document.getElementById('edit-name').value = name;
+            document.getElementById('edit-price').value = price;
+            document.getElementById('edit-price-type').value = priceType;
+            document.getElementById('edit-active').value = isActive;
+            document.getElementById('edit-service-form').action = '/settings/services/' + id;
+
+            // Select the color
+            document.querySelectorAll('input[name="color"][id^="edit-color-"]').forEach(radio => {
+                if (radio.value === color) radio.checked = true;
+            });
+
+            document.getElementById('edit-service-modal').style.display = 'flex';
+        }
+        
+        document.getElementById('add-service-modal').addEventListener('click', function(e) {
+            if(e.target === this) this.style.display = 'none';
+        });
+        document.getElementById('edit-service-modal').addEventListener('click', function(e) {
+            if(e.target === this) this.style.display = 'none';
+        });
+    </script>
 </x-app-layout>

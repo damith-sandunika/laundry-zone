@@ -11,7 +11,7 @@ class OrderController extends Controller
         $branchId = auth()->user()->branch_id;
         $q = $request->input('q');
         
-        $query = \App\Models\Order::with(['customer', 'items', 'cubby.cubby'])
+        $query = \App\Models\Order::with(['customer', 'items.serviceType', 'cubby.cubby'])
                     ->orderBy('created_at', 'desc');
 
         if ($branchId) {
@@ -30,8 +30,93 @@ class OrderController extends Controller
 
         $orders = $query->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId ?? 1)->orderBy('name')->get();
+        $services = \App\Models\ServiceType::orderBy('name')->get();
 
-        return view('orders.index', compact('orders', 'cubbies'));
+        return view('orders.index', compact('orders', 'cubbies', 'services'));
+    }
+
+    public function updateOrder(Request $request, \App\Models\Order $order)
+    {
+        if (in_array($order->status, ['delivered', 'cancelled'])) {
+            return response()->json(['success' => false, 'message' => 'Cannot edit an order that is already delivered or cancelled.']);
+        }
+
+        $cart = $request->cart;
+        \Illuminate\Support\Facades\Log::info('Order Update Request Payload: ', $request->all());
+        if (!$cart || !is_array($cart) || count($cart) === 0) {
+            return response()->json(['success' => false, 'message' => 'Cart cannot be empty.']);
+        }
+
+        try {
+            \Illuminate\Support\Facades\DB::transaction(function () use ($request, $order, $cart) {
+                // Delete old items
+                \App\Models\OrderItem::where('order_id', $order->id)->delete();
+
+                $subtotal = 0;
+                $processedCart = [];
+                
+                // Process new items
+                foreach ($cart as $item) {
+                    $qty = (float)($item['qty'] ?? 1);
+                    if ($qty <= 0) continue;
+
+                    $basePrice = (float)($item['base_price'] ?? 0);
+                    $itemTotal = $qty * $basePrice;
+                    $subtotal += $itemTotal;
+
+                    $processedCart[] = [
+                        'service_type_id'  => $item['service_type_id'] ?? null,
+                        'item_description' => $item['name'] ?? 'Custom Service',
+                        'quantity'         => $qty,
+                        'unit_price'       => $basePrice,
+                        'total_price'      => $itemTotal,
+                    ];
+                }
+
+                // Calculate discount and total
+                $discountPercentage = max(0, min(100, (float)($request->discount_percentage ?? 0)));
+                $discountAmount = $subtotal * ($discountPercentage / 100);
+                $total = $subtotal - $discountAmount;
+
+                // Adjust paid_amount if it exceeds the new total (optional, but good practice)
+                $paidAmount = $order->paid_amount;
+                if ($paidAmount > $total) {
+                    $paidAmount = $total; // Cap paid amount to new total to avoid negative balance
+                }
+
+                $order->update([
+                    'subtotal'    => $subtotal,
+                    'discount'    => $discountAmount,
+                    'total'       => $total,
+                    'paid_amount' => $paidAmount,
+                ]);
+
+                // Insert new order items
+                foreach ($processedCart as $item) {
+                    \App\Models\OrderItem::create([
+                        'order_id'         => $order->id,
+                        'service_type_id'  => $item['service_type_id'],
+                        'item_description' => $item['service_type_id'] ? null : $item['item_description'],
+                        'quantity'         => $item['quantity'],
+                        'unit_price'       => $item['unit_price'],
+                        'total_price'      => $item['total_price'],
+                    ]);
+                }
+
+                // Log activity
+                \App\Models\OrderStatusHistory::create([
+                    'order_id'   => $order->id,
+                    'status'     => 'edited',
+                    'changed_by' => auth()->id(),
+                    'note'       => 'Order details updated'
+                ]);
+            });
+
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error("Order Update Error: " . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to update order.']);
+        }
     }
 
     public function show(\App\Models\Order $order)
@@ -180,23 +265,25 @@ class OrderController extends Controller
             ], 403);
         }
 
-        $order->status = 'received';
-        $order->payment_status = 'pending';
-        $order->paid_amount = 0;
-        
-        $orderCubby = $order->cubbies()->whereNull('released_at')->first();
-        if ($orderCubby) {
-            $orderCubby->update(['released_at' => now()]);
-            \App\Models\Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
-        }
+        \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
+            $order->status = 'received';
+            $order->payment_status = 'pending';
+            $order->paid_amount = 0;
+            
+            $orderCubby = $order->cubbies()->whereNull('released_at')->first();
+            if ($orderCubby) {
+                $orderCubby->update(['released_at' => now()]);
+                \App\Models\Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
+            }
 
-        $order->save();
+            $order->save();
 
-        \App\Models\OrderStatusHistory::create([
-            'order_id' => $order->id,
-            'status' => 'received',
-            'changed_by' => auth()->id(),
-        ]);
+            \App\Models\OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => 'received',
+                'changed_by' => auth()->id(),
+            ]);
+        });
 
         return response()->json([
             'success' => true,
@@ -215,85 +302,87 @@ class OrderController extends Controller
 
         $stateOrder = ['received' => 1, 'done' => 2, 'delivered' => 3, 'cancelled' => 4];
 
-        foreach ($request->order_ids as $id) {
-            $order = \App\Models\Order::with('customer')->find($id);
-            
-            if ($request->status !== 'cancelled') {
-                if (($stateOrder[$request->status] ?? 0) <= ($stateOrder[$order->status] ?? 0)) {
-                    continue; // Skip backward or same state updates
-                }
-            }
-
-            $order->status = $request->status;
-            
-            if ($request->status === 'done' && $request->cubby_id) {
-                // Release old active cubby if any
-                $oldCubby = $order->cubbies()->whereNull('released_at')->first();
-                if ($oldCubby && $oldCubby->cubby_id != $request->cubby_id) {
-                    $oldCubby->update(['released_at' => now()]);
-                    \App\Models\Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
+        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $stateOrder) {
+            foreach ($request->order_ids as $id) {
+                $order = \App\Models\Order::with('customer')->find($id);
+                
+                if ($request->status !== 'cancelled') {
+                    if (($stateOrder[$request->status] ?? 0) <= ($stateOrder[$order->status] ?? 0)) {
+                        continue; // Skip backward or same state updates
+                    }
                 }
 
-                if (!$oldCubby || $oldCubby->cubby_id != $request->cubby_id) {
-                    \App\Models\OrderCubby::create([
-                        'order_id' => $order->id,
-                        'cubby_id' => $request->cubby_id,
-                        'assigned_at' => now(),
-                    ]);
-                }
+                $order->status = $request->status;
                 
-                \App\Models\Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
-                
-                // WhatsApp MSG
-                $customer = $order->customer;
-                $cubby = \App\Models\Cubby::find($request->cubby_id);
-                $msgContent = \App\Models\WhatsappTemplate::generateMessage('order_ready', $order, $customer, $cubby ? $cubby->name : '');
-                
-                if (!empty($msgContent)) {
-                    \App\Models\WhatsappLog::create([
-                        'order_id' => $order->id,
-                        'customer_id' => $customer->id,
-                        'phone' => $customer->phone,
-                        'message_type' => 'order_ready',
-                        'message' => $msgContent,
-                        'status' => 'pending',
-                    ]);
-                }
-            }
-            
-            if ($request->status === 'delivered') {
-                $order->delivered_at = now();
-                if ($order->payment_method === 'credit') {
-                    $order->payment_status = 'pending';
-                } else {
-                    $amountToPay = $order->total - $order->paid_amount;
-                    if ($amountToPay > 0) {
-                        \App\Models\PaymentTransaction::create([
+                if ($request->status === 'done' && $request->cubby_id) {
+                    // Release old active cubby if any
+                    $oldCubby = $order->cubbies()->whereNull('released_at')->first();
+                    if ($oldCubby && $oldCubby->cubby_id != $request->cubby_id) {
+                        $oldCubby->update(['released_at' => now()]);
+                        \App\Models\Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
+                    }
+
+                    if (!$oldCubby || $oldCubby->cubby_id != $request->cubby_id) {
+                        \App\Models\OrderCubby::create([
                             'order_id' => $order->id,
-                            'amount' => $amountToPay,
-                            'payment_method' => $order->payment_method ?? 'cash',
-                            'created_by' => auth()->id(),
+                            'cubby_id' => $request->cubby_id,
+                            'assigned_at' => now(),
                         ]);
                     }
-                    $order->payment_status = 'paid';
-                    $order->paid_amount = $order->total;
+                    
+                    \App\Models\Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
+                    
+                    // WhatsApp MSG
+                    $customer = $order->customer;
+                    $cubby = \App\Models\Cubby::find($request->cubby_id);
+                    $msgContent = \App\Models\WhatsappTemplate::generateMessage('order_ready', $order, $customer, $cubby ? $cubby->name : '');
+                    
+                    if (!empty($msgContent)) {
+                        \App\Models\WhatsappLog::create([
+                            'order_id' => $order->id,
+                            'customer_id' => $customer->id,
+                            'phone' => $customer->phone,
+                            'message_type' => 'order_ready',
+                            'message' => $msgContent,
+                            'status' => 'pending',
+                        ]);
+                    }
                 }
+                
+                if ($request->status === 'delivered') {
+                    $order->delivered_at = now();
+                    if ($order->payment_method === 'credit') {
+                        $order->payment_status = 'pending';
+                    } else {
+                        $amountToPay = $order->total - $order->paid_amount;
+                        if ($amountToPay > 0) {
+                            \App\Models\PaymentTransaction::create([
+                                'order_id' => $order->id,
+                                'amount' => $amountToPay,
+                                'payment_method' => $order->payment_method ?? 'cash',
+                                'created_by' => auth()->id(),
+                            ]);
+                        }
+                        $order->payment_status = 'paid';
+                        $order->paid_amount = $order->total;
+                    }
 
-                $orderCubby = $order->cubbies()->whereNull('released_at')->first();
-                if ($orderCubby) {
-                    $orderCubby->update(['released_at' => now()]);
-                    \App\Models\Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
+                    $orderCubby = $order->cubbies()->whereNull('released_at')->first();
+                    if ($orderCubby) {
+                        $orderCubby->update(['released_at' => now()]);
+                        \App\Models\Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
+                    }
                 }
+                
+                $order->save();
+
+                \App\Models\OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => $request->status,
+                    'changed_by' => auth()->id(),
+                ]);
             }
-            
-            $order->save();
-
-            \App\Models\OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => $request->status,
-                'changed_by' => auth()->id(),
-            ]);
-        }
+        });
 
         return response()->json([
             'success' => true,

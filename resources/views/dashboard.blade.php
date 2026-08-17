@@ -18,12 +18,52 @@
                         <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
                         New Order
                     </a>
-                    <form action="{{ route('shifts.close') }}" method="POST" onsubmit="return confirm('Close today\'s shift?')" class="flex-1 sm:flex-none">
-                        @csrf
-                        <button type="submit" class="flex items-center justify-center w-full px-3 sm:px-5 py-2 bg-white text-slate-600 text-[11px] sm:text-[13px] font-bold border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors h-9 sm:h-10 shadow-sm whitespace-nowrap">
+                    <div x-data="{ showCloseShiftModal: false }">
+                        <button @click="showCloseShiftModal = true" class="flex items-center justify-center w-full px-3 sm:px-5 py-2 bg-white text-slate-600 text-[11px] sm:text-[13px] font-bold border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors h-9 sm:h-10 shadow-sm whitespace-nowrap">
                             Close Shift
                         </button>
-                    </form>
+
+                        <!-- Close Shift Modal -->
+                        <template x-teleport="body">
+                            <div x-show="showCloseShiftModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
+                                <div @click.away="showCloseShiftModal = false" x-show="showCloseShiftModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+                                    <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                        <h3 class="text-lg font-black text-slate-900">Close Today's Shift</h3>
+                                        <button @click="showCloseShiftModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span class="text-[13px] font-bold text-slate-500">Total Sale</span>
+                                            <span class="text-base font-black text-slate-900">Rs.{{ number_format($stats['total_sale'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span class="text-[13px] font-bold text-slate-500">Total Cash Balance</span>
+                                            <span class="text-base font-black text-emerald-600">Rs.{{ number_format($stats['cash_balance'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span class="text-[13px] font-bold text-slate-500">Total Card Balance</span>
+                                            <span class="text-base font-black text-blue-600">Rs.{{ number_format($stats['card_payments_amount'] ?? 0, 0) }}</span>
+                                        </div>
+                                        
+                                        <div class="mt-6 flex flex-col gap-3">
+                                            <a href="{{ route('reports.closeShift', ['action' => 'print']) }}" target="_blank" class="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 text-[13px] font-extrabold rounded-xl hover:bg-slate-200 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                                Get Receipt
+                                            </a>
+                                            <form action="{{ route('shifts.close') }}" method="POST" onsubmit="return confirm('Are you sure you want to close this shift?')">
+                                                @csrf
+                                                <button type="submit" class="w-full py-3 bg-red-500 text-white text-[13px] font-extrabold rounded-xl hover:bg-red-600 transition-colors">
+                                                    Close Branch
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
             @endif
         </div>
@@ -235,45 +275,47 @@
                 </div>
 
                 <!-- Inventory Modal -->
-                <div x-show="showInvModal" class="fixed inset-0 z-[100] flex items-start justify-center pt-16 sm:pt-24 bg-slate-900/40 backdrop-blur-sm p-4" x-cloak>
-                    <div @click.away="showInvModal = false" x-show="showInvModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden max-h-[85vh] flex flex-col">
-                        <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-                            <h3 class="text-lg font-black text-slate-900">Current Inventory Status</h3>
-                            <button @click="showInvModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
-                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                            </button>
-                        </div>
-                        <div class="overflow-y-auto flex-1 p-0">
-                            <table class="w-full text-left border-collapse">
-                                <thead class="bg-slate-50 sticky top-0">
-                                    <tr>
-                                        <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Item Name</th>
-                                        <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Stock Level</th>
-                                        <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100">
-                                    @foreach($allInventory as $inv)
-                                        <tr class="hover:bg-slate-50/50">
-                                            <td class="px-6 py-4 text-[13px] font-bold text-slate-900">{{ $inv->name }}</td>
-                                            <td class="px-6 py-4">
-                                                <span class="text-sm font-black text-blue-700">{{ $inv->current_stock }}</span>
-                                                <span class="text-[11px] font-bold text-slate-500">{{ $inv->unit }}</span>
-                                            </td>
-                                            <td class="px-6 py-4">
-                                                @if($inv->current_stock <= $inv->min_stock)
-                                                    <span class="inline-flex px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Low Stock</span>
-                                                @else
-                                                    <span class="inline-flex px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Good</span>
-                                                @endif
-                                            </td>
+                <template x-teleport="body">
+                    <div x-show="showInvModal" class="fixed inset-0 z-[100] flex items-start justify-center pt-16 sm:pt-24 bg-slate-900/40 backdrop-blur-sm p-4" x-cloak>
+                        <div @click.away="showInvModal = false" x-show="showInvModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden max-h-[85vh] flex flex-col">
+                            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <h3 class="text-lg font-black text-slate-900">Current Inventory Status</h3>
+                                <button @click="showInvModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="overflow-y-auto flex-1 p-0">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Item Name</th>
+                                            <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Stock Level</th>
+                                            <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Status</th>
                                         </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        @foreach($allInventory as $inv)
+                                            <tr class="hover:bg-slate-50/50">
+                                                <td class="px-6 py-4 text-[13px] font-bold text-slate-900">{{ $inv->name }}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="text-sm font-black text-blue-700">{{ $inv->current_stock }}</span>
+                                                    <span class="text-[11px] font-bold text-slate-500">{{ $inv->unit }}</span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    @if($inv->current_stock <= $inv->min_stock)
+                                                        <span class="inline-flex px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Low Stock</span>
+                                                    @else
+                                                        <span class="inline-flex px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Good</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
-                </div>
+                </template>
             </div>
 
             {{-- Shift Register (Dark Card) --}}

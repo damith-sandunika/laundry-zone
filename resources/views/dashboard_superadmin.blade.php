@@ -108,7 +108,7 @@
                                     <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-gray-100 text-gray-600 uppercase tracking-wider">Delivered</span>
                                 @endif
                             </td>
-                            <td class="px-6 py-3 text-right font-bold text-gray-900">Rs.{{ number_format($order->total_amount, 2) }}</td>
+                            <td class="px-6 py-3 text-right font-bold text-gray-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
                         </tr>
                     @empty
                         <tr>

@@ -21,7 +21,8 @@ class SettingsController extends Controller
         $services = \App\Models\ServiceType::with('inventoryItems')->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
-        return view('settings.index', compact('branch', 'services', 'cubbies', 'inventoryItems'));
+        $packages = \App\Models\Package::where('branch_id', $branchId)->with('services.serviceType')->get();
+        return view('settings.index', compact('branch', 'services', 'cubbies', 'inventoryItems', 'packages'));
     }
 
     public function updateGeneral(Request $request)
@@ -70,17 +71,6 @@ class SettingsController extends Controller
             'is_active'  => true,
         ]);
 
-        if ($request->inventory) {
-            foreach ($request->inventory as $itemId => $qty) {
-                if ($qty > 0) {
-                    $service->inventoryItems()->attach($itemId, [
-                        'qty_per_use'    => $qty,
-                        'deduct_at_stage'=> 'washing',
-                    ]);
-                }
-            }
-        }
-
         return redirect()->back()->with('success', 'Service added.');
     }
 
@@ -94,17 +84,6 @@ class SettingsController extends Controller
             'inventory'  => 'nullable|array',
         ]);
         $service->update($request->only(['name', 'base_price', 'price_type', 'is_active', 'icon', 'color']));
-
-        // Sync inventory links
-        if ($request->has('inventory')) {
-            $syncData = [];
-            foreach ($request->inventory as $itemId => $qty) {
-                if ($qty > 0) {
-                    $syncData[$itemId] = ['qty_per_use' => $qty, 'deduct_at_stage' => 'washing'];
-                }
-            }
-            $service->inventoryItems()->sync($syncData);
-        }
 
         return redirect()->back()->with('success', 'Service updated.');
     }
@@ -185,7 +164,7 @@ class SettingsController extends Controller
             $response = Http::timeout(3)->get("http://127.0.0.1:3001/api/whatsapp/status/{$branchId}");
             return response()->json($response->json());
         } catch (\Exception $e) {
-            return response()->json(['connected' => false, 'error' => true], 500);
+            return response()->json(['connected' => false, 'error' => true], 200);
         }
     }
 
@@ -211,5 +190,45 @@ class SettingsController extends Controller
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'error' => true], 500);
         }
+    }
+
+    public function storePackage(Request $request)
+    {
+        $branchId = auth()->user()->branch_id ?? 1;
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'payment_type' => 'required|in:prepaid,postpaid',
+            'is_rollover' => 'boolean',
+            'services' => 'required|array',
+            'services.*' => 'nullable|numeric|min:0'
+        ]);
+
+        $package = \App\Models\Package::create([
+            'branch_id' => $branchId,
+            'name' => $request->name,
+            'price' => $request->price,
+            'payment_type' => $request->payment_type,
+            'is_rollover' => $request->is_rollover ?? false,
+            'is_active' => true,
+        ]);
+
+        foreach ($request->services as $serviceId => $limit) {
+            if ($limit > 0) {
+                \App\Models\PackageService::create([
+                    'package_id' => $package->id,
+                    'service_type_id' => $serviceId,
+                    'quantity_limit' => $limit
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Package created successfully.');
+    }
+
+    public function destroyPackage(\App\Models\Package $package)
+    {
+        $package->delete();
+        return redirect()->back()->with('success', 'Package deleted successfully.');
     }
 }

@@ -146,6 +146,13 @@
                                 </button>
                             </div>
                             <span class="text-[11px] font-bold text-blue-600 block" x-text="selectedCustomer?.phone"></span>
+                            
+                            <template x-if="activePackage">
+                                <button type="button" @click="openPackageModal()" class="relative z-50 mt-2 text-[11px] font-black px-3 py-1.5 bg-gradient-to-r from-amber-400 to-orange-500 text-white hover:from-amber-500 hover:to-orange-600 rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-1.5 w-max">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                                    Use Package: <span x-text="activePackage?.package?.name || 'Active'"></span>
+                                </button>
+                            </template>
                         </div>
                     </div>
 
@@ -283,10 +290,20 @@
                         </button>
                     </div>
 
+                    <!-- Discount -->
+                    <div class="mb-3 px-1">
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Discount (%)</label>
+                        <input type="number" x-model.number="discountPercentage" min="0" max="100" step="1"
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                    </div>
+
                     <!-- Total -->
                     <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
                         <span class="text-[13px] font-black text-blue-900 uppercase tracking-widest">Final Total</span>
-                        <span class="text-2xl font-black text-blue-700" x-text="'Rs. ' + total.toFixed(2)"></span>
+                        <div class="text-right">
+                            <span x-show="discountPercentage > 0" class="text-sm font-bold text-slate-400 line-through block" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
+                            <span class="text-2xl font-black text-blue-700" x-text="'Rs. ' + total.toFixed(2)"></span>
+                        </div>
                     </div>
 
                 </div>
@@ -342,8 +359,9 @@
                     this.isSaving = false;
                 }
             }
-        }" x-on:open-customer-modal.window="open = true" x-on:close-customer-modal.window="open = false" x-show="open" x-cloak
-            class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        }"
+            x-on:open-customer-modal.window="open = true; document.getElementById('nc-name').focus(); setTimeout(()=>document.getElementById('nc-name').focus(), 100);"
+            x-show="open" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 100;">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="open = false"></div>
             
             <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-md z-10 animate-slide-up" @click.stop>
@@ -388,7 +406,7 @@
         <!-- ===================== Order Success Modal ===================== -->
         <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
             x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderId);"
-            x-show="show" x-cloak class="fixed inset-0 z-[70] flex items-center justify-center p-4">
+            x-show="show" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 70;">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity></div>
             
             <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-sm z-10 text-center p-8 animate-slide-up" @click.stop>
@@ -437,6 +455,67 @@
                 </div>
             </div>
         </div>
+        <!-- ===================== Package Order Modal ===================== -->
+        <div x-show="showPackageModal" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 65;">
+            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="showPackageModal = false"></div>
+            
+            <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-lg z-10 flex flex-col overflow-hidden animate-slide-up" @click.stop>
+                <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-black text-lg text-slate-900 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+                            Use Active Package
+                        </h3>
+                        <p class="text-[11px] font-bold text-slate-500 mt-1" x-text="activePackage?.package?.name || ''"></p>
+                    </div>
+                    <button @click="showPackageModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                </div>
+
+                <div class="p-6 space-y-5 overflow-y-auto max-h-[60vh] custom-scrollbar">
+                    
+                    <div class="bg-blue-50/50 rounded-xl p-4 border border-blue-100">
+                        <p class="text-xs font-bold text-slate-600 mb-3">Enter the quantities the customer is providing today. Any excess will be charged at standard rates.</p>
+                        <div class="space-y-3">
+                            <template x-for="(item, index) in packageCart" :key="index">
+                                <div class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200">
+                                    <div>
+                                        <div class="text-[13px] font-black text-slate-800" x-text="item.name"></div>
+                                        <div class="text-[10px] font-bold text-blue-600 mt-0.5">Remaining: <span x-text="item.remaining"></span></div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <button @click="if(item.qty > 0) item.qty--" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition-colors">−</button>
+                                        <input type="number" x-model.number="item.qty" class="w-16 text-center text-[14px] font-black border-2 border-slate-200 rounded-lg py-1 focus:border-blue-500 outline-none" min="0">
+                                        <button @click="item.qty++" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition-colors">+</button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Estimated Pickup Date</label>
+                        <input type="datetime-local" x-model="dueDate" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
+                    </div>
+
+                </div>
+
+                <div class="p-6 pt-0 bg-white border-t border-slate-100 mt-4">
+                    <button @click="placePackageOrder" :disabled="isPlacingOrder"
+                        class="w-full mt-4 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[15px] font-black rounded-xl shadow-lg shadow-blue-500/20 transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5">
+                        <template x-if="!isPlacingOrder">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                        </template>
+                        <template x-if="isPlacingOrder">
+                            <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                        </template>
+                        <span x-text="isPlacingOrder ? 'Processing...' : 'Done (Place Order)'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -444,6 +523,7 @@
             Alpine.data('posSystem', () => ({
                 allServices: @json($services),
                 allCustomers: @json($customers),
+                allCustomerPackages: @json($customerPackages),
                 searchQuery: '',
                 customerSearch: '',
                 filteredCustomers: [],
@@ -451,11 +531,16 @@
                 selectedCustomer: null,
                 cart: [],
 
+                activePackage: null,
+                showPackageModal: false,
+                packageCart: [],
+
                 showCheckoutModal: false,
                 isPlacingOrder: false,
                 paymentMode: 'pay_on_pickup',
                 paymentMethod: 'cash',
                 dueDate: '',
+                discountPercentage: 0,
                 specialName: '',
                 specialPrice: 0,
                 
@@ -495,11 +580,41 @@
                     this.selectedCustomer = cust;
                     this.customerSearch = '';
                     this.showCustDropdown = false;
+
+                    let pkgs = this.allCustomerPackages.filter(p => p.customer_id === cust.id && p.status !== 'exhausted');
+                    if(pkgs.length > 0) {
+                        this.activePackage = pkgs[0];
+                        this.packageCart = this.activePackage.services.map(s => {
+                            return {
+                                service_type_id: s.service_type.id,
+                                name: s.service_type.name,
+                                base_price: s.service_type.base_price,
+                                price_type: s.service_type.price_type,
+                                remaining: s.total_quantity - s.used_quantity,
+                                qty: 0
+                            };
+                        });
+                        
+                        let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); 
+                        this.dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                    } else {
+                        this.activePackage = null;
+                        this.packageCart = [];
+                    }
+                },
+
+                openPackageModal() {
+                    console.log('Opening package modal', this.activePackage);
+                    if(this.activePackage) {
+                        this.showPackageModal = true;
+                    }
                 },
 
                 clearCustomer() {
                     this.selectedCustomer = null;
                     this.customerSearch = '';
+                    this.activePackage = null;
+                    this.packageCart = [];
                 },
 
                 addToCart(service) {
@@ -516,11 +631,13 @@
                     else this.removeFromCart(index);
                 },
 
-                get subtotal() { return this.cart.reduce((s, i) => s + (i.base_price * (parseFloat(i.qty) || 0)), 0); },
-
-                get total() { return this.subtotal; },
-
-                addSpecialToCart() {
+                get subtotal() {
+                    return this.cart.reduce((sum, item) => sum + (item.base_price * (parseFloat(item.qty) || 0)), 0);
+                },
+                get total() {
+                    const discount = this.subtotal * ((parseFloat(this.discountPercentage) || 0) / 100);
+                    return this.subtotal - discount;
+                }, addSpecialToCart() {
                     if (!this.specialName || !this.specialPrice || this.specialPrice <= 0) {
                         alert('Please enter a service name and price.');
                         return;
@@ -538,7 +655,28 @@
                     this.specialPrice = 0;
                 },
 
-                async placeOrder() {
+                placePackageOrder() {
+                    this.cart = this.packageCart.filter(item => item.qty > 0).map(item => ({
+                        id: item.service_type_id,
+                        service_type_id: item.service_type_id,
+                        name: item.name,
+                        base_price: item.base_price,
+                        price_type: item.price_type,
+                        qty: item.qty
+                    }));
+                    
+                    if(this.cart.length === 0) {
+                        alert("Please enter quantities to proceed.");
+                        return;
+                    }
+                    
+                    this.paymentMode = 'pay_on_pickup';
+                    this.paymentMethod = 'cash';
+                    this.showPackageModal = false;
+                    this.placeOrder(this.activePackage.id);
+                },
+
+                async placeOrder(packageId = null) {
                     if (this.cart.length === 0) return;
                     if (!this.selectedCustomer) {
                         alert('Please select a customer for this order.');
@@ -558,7 +696,9 @@
                         cart: this.cart,
                         payment_mode: this.paymentMode,
                         payment_method: this.paymentMethod,
-                        due_date: this.dueDate
+                        due_date: this.dueDate,
+                        discount_percentage: this.discountPercentage || 0,
+                        customer_package_id: typeof packageId === 'number' ? packageId : null
                     };
 
                     try {
@@ -578,7 +718,7 @@
                                     orderId: data.order_id,
                                     orderNumber: data.order_number,
                                     customerName: data.customer_name,
-                                    total: this.total.toFixed(2),
+                                    total: parseFloat(data.total).toFixed(2),
                                     paymentMode: this.paymentMode,
                                     dueDate: data.due_date,
                                     cart: data.cart
@@ -590,6 +730,7 @@
                             this.paymentMode = 'pay_on_pickup';
                             this.paymentMethod = 'cash';
                             this.dueDate = '';
+                            this.activePackage = null;
                         } else {
                             console.error('Backend Error Response:', data);
                             alert('Order failed: ' + (data.message || data.error || 'Unknown error'));

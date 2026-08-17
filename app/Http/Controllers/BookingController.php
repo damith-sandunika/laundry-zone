@@ -31,28 +31,32 @@ class BookingController extends Controller
             'notes'              => 'nullable|string|max:500',
         ]);
 
-        $booking = OnlineBooking::create(array_merge($validated, ['status' => 'pending']));
+        $booking = \Illuminate\Support\Facades\DB::transaction(function () use ($validated) {
+            $booking = OnlineBooking::create(array_merge($validated, ['status' => 'pending']));
 
-        // Queue confirmation WhatsApp if phone provided
-        $branch = Branch::find($validated['branch_id']);
-        $msg  = "*" . ($branch->name ?? 'Smart Laundry') . " - Booking Confirmed!* ✅\n";
-        $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
-        $msg .= "📋 Booking ID: #" . str_pad($booking->id, 4, '0', STR_PAD_LEFT) . "\n";
-        $msg .= "👤 Name: " . $validated['customer_name'] . "\n";
-        $msg .= "🧺 Service: " . $validated['service_description'] . "\n";
-        $msg .= "📅 Preferred Date: " . date('d M Y', strtotime($validated['preferred_date'])) . "\n";
-        $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
-        $msg .= "We will contact you to confirm your booking.\n";
-        $msg .= "_Thank you for choosing " . ($branch->name ?? 'Smart Laundry') . "!_";
+            // Queue confirmation WhatsApp if phone provided
+            $branch = Branch::find($validated['branch_id']);
+            $msg  = "*" . ($branch->name ?? 'Smart Laundry') . " - Booking Confirmed!* ✅\n";
+            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $msg .= "📋 Booking ID: #" . str_pad($booking->id, 4, '0', STR_PAD_LEFT) . "\n";
+            $msg .= "👤 Name: " . $validated['customer_name'] . "\n";
+            $msg .= "🧺 Service: " . $validated['service_description'] . "\n";
+            $msg .= "📅 Preferred Date: " . date('d M Y', strtotime($validated['preferred_date'])) . "\n";
+            $msg .= "━━━━━━━━━━━━━━━━━━━━\n";
+            $msg .= "We will contact you to confirm your booking.\n";
+            $msg .= "_Thank you for choosing " . ($branch->name ?? 'Smart Laundry') . "!_";
 
-        \App\Models\WhatsappLog::create([
-            'order_id'     => null,
-            'customer_id'  => null,
-            'phone'        => $validated['customer_phone'],
-            'message_type' => 'booking_confirmation',
-            'message'      => $msg,
-            'status'       => 'pending',
-        ]);
+            \App\Models\WhatsappLog::create([
+                'order_id'     => null,
+                'customer_id'  => null,
+                'phone'        => $validated['customer_phone'],
+                'message_type' => 'booking_confirmation',
+                'message'      => $msg,
+                'status'       => 'pending',
+            ]);
+
+            return $booking;
+        });
 
         if ($request->wantsJson()) {
             return response()->json(['success' => true, 'booking_id' => $booking->id]);

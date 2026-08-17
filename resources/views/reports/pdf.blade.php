@@ -2,102 +2,246 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sales Report {{ $startDate }} to {{ $endDate }}</title>
+    <title>FULL FINANCIAL REPORT</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; font-size: 12px; color: #1f2937; padding: 24px; }
-        h1 { font-size: 20px; font-weight: bold; color: #1e40af; margin-bottom: 2px; }
-        h2 { font-size: 13px; font-weight: bold; margin: 20px 0 8px; color: #374151; border-bottom: 1px solid #d1d5db; padding-bottom: 4px; }
-        .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; border-bottom: 2px solid #1e40af; padding-bottom: 12px; }
-        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
-        .stat { background: #f3f4f6; border-radius: 6px; padding: 10px; text-align: center; }
-        .stat .val { font-size: 16px; font-weight: bold; color: #1e40af; }
-        .stat .lbl { font-size: 10px; color: #6b7280; margin-top: 2px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; font-size: 11px; }
-        th { background: #eff6ff; color: #1e40af; text-align: left; padding: 6px 8px; font-size: 10px; text-transform: uppercase; }
-        td { padding: 5px 8px; border-bottom: 1px solid #f3f4f6; }
-        tr:nth-child(even) td { background: #f9fafb; }
-        .total-row td { font-weight: bold; border-top: 2px solid #d1d5db; }
-        .badge { padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: bold; }
-        .badge-green { background: #dcfce7; color: #16a34a; }
-        .badge-amber { background: #fef3c7; color: #d97706; }
-        .footer { margin-top: 24px; text-align: center; font-size: 10px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 10px; }
-        @media print { .no-print { display: none; } }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
+        body { padding: 40px; color: #333; font-size: 11px; background: #fff; }
+        
+        /* Header / Letterhead */
+        .letterhead { text-align: center; border-bottom: 2px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+        .laundry-name { font-size: 28px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; margin-bottom: 5px; letter-spacing: 1px; }
+        .laundry-details { font-size: 11px; color: #64748b; line-height: 1.5; }
+        
+        .report-title { text-align: center; margin-bottom: 30px; }
+        .report-title h1 { font-size: 16px; font-weight: bold; letter-spacing: 2px; color: #475569; margin-bottom: 5px; }
+        .report-title p { font-size: 12px; color: #94a3b8; font-weight: 500; }
+        
+        h2 { font-size: 12px; font-weight: bold; color: #1e40af; margin: 25px 0 10px; padding-bottom: 5px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Summary Grid */
+        .summary-grid { display: table; width: 100%; margin-bottom: 30px; }
+        .summary-col { display: table-cell; width: 33.33%; padding: 15px; border: 1px solid #e2e8f0; text-align: center; background: #f8fafc; }
+        .summary-col.middle { border-left: none; border-right: none; }
+        .summary-val { font-size: 18px; font-weight: bold; color: #0f172a; margin-top: 5px; }
+        .summary-lbl { font-size: 10px; color: #64748b; text-transform: uppercase; font-weight: 600; letter-spacing: 0.5px; }
+        .summary-sub { font-size: 9px; color: #94a3b8; margin-top: 5px; }
+        
+        /* Tables */
+        table { width: 100%; border-collapse: collapse; margin-bottom: 25px; page-break-inside: avoid; }
+        th { background: #f1f5f9; color: #475569; text-align: left; padding: 10px 12px; font-size: 10px; text-transform: uppercase; font-weight: bold; border-bottom: 1px solid #cbd5e1; }
+        th.text-right, td.text-right { text-align: right; }
+        th.text-center, td.text-center { text-align: center; }
+        td { padding: 8px 12px; border-bottom: 1px solid #e2e8f0; color: #334155; font-size: 11px; }
+        tr:nth-child(even) td { background: #fdfdfd; }
+        .total-row td { font-weight: bold; color: #0f172a; border-top: 2px solid #cbd5e1; background: #f8fafc; }
+        .profit-row td { font-size: 14px; color: #16a34a; font-weight: 800; border-top: 2px solid #16a34a; background: #f0fdf4; }
+        
+        /* Badges */
+        .badge { padding: 3px 6px; border-radius: 3px; font-size: 9px; font-weight: bold; text-transform: uppercase; }
+        .badge-green { background: #dcfce7; color: #16a34a; border: 1px solid #bbf7d0; }
+        .badge-red { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-amber { background: #fef3c7; color: #d97706; border: 1px solid #fde68a; }
+        
+        .footer { margin-top: 40px; text-align: center; font-size: 9px; color: #94a3b8; border-top: 1px solid #e2e8f0; padding-top: 15px; }
+        @media print { .no-print { display: none; } body { padding: 0; } }
     </style>
 </head>
 <body>
-    <div class="no-print" style="margin-bottom:16px;">
-        <button onclick="window.print()" style="padding:8px 20px;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:13px;">🖨 Print / Save PDF</button>
-        <button onclick="window.history.back()" style="padding:8px 20px;background:#e5e7eb;color:#374151;border:none;border-radius:4px;cursor:pointer;font-size:13px;margin-left:8px;">← Back</button>
+    <div class="no-print" style="margin-bottom:20px; text-align: right;">
+        <button onclick="window.print()" style="padding:10px 20px;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;">🖨 Print / Save PDF</button>
+        <button onclick="window.history.back()" style="padding:10px 20px;background:#f1f5f9;color:#475569;border:1px solid #cbd5e1;border-radius:4px;cursor:pointer;font-size:12px;font-weight:bold;margin-left:10px;">← Back</button>
     </div>
 
-    <div class="header">
-        <div>
-            <h1>{{ $branch->name ?? 'Smart Laundry' }}</h1>
-            @if($branch && $branch->tagline)<p style="color:#6b7280;font-size:11px;">{{ $branch->tagline }}</p>@endif
-            @if($branch && $branch->address)<p style="color:#6b7280;font-size:11px;">{{ $branch->address }}</p>@endif
-        </div>
-        <div style="text-align:right;">
-            <p style="font-weight:bold;font-size:14px;color:#374151;">SALES REPORT</p>
-            <p style="color:#6b7280;">{{ \Carbon\Carbon::parse($startDate)->format('M d, Y') }} — {{ \Carbon\Carbon::parse($endDate)->format('M d, Y') }}</p>
-            <p style="color:#9ca3af;font-size:10px;">Generated: {{ now()->format('M d, Y h:i A') }}</p>
+    <!-- Letterhead -->
+    <div class="letterhead">
+        <div class="laundry-name">{{ $branch->name ?? 'Smart Laundry' }}</div>
+        <div class="laundry-details">
+            @if($branch && $branch->tagline){{ $branch->tagline }}<br>@endif
+            @if($branch && $branch->address){{ $branch->address }}<br>@endif
+            @if($branch && $branch->phone)Phone: {{ $branch->phone }}@endif
         </div>
     </div>
 
-    <!-- Summary Stats -->
-    <div class="stat-grid">
-        <div class="stat"><div class="val">Rs.{{ number_format($totalSales, 2) }}</div><div class="lbl">Total Sales</div></div>
-        <div class="stat"><div class="val">{{ $orders->count() }}</div><div class="lbl">Total Orders</div></div>
-        <div class="stat"><div class="val">Rs.{{ number_format($totalSalaries, 2) }}</div><div class="lbl">Staff Salaries</div></div>
-        <div class="stat"><div class="val">Rs.{{ number_format($totalExpenses, 2) }}</div><div class="lbl">Total Expenses</div></div>
+    <!-- Title & Date -->
+    <div class="report-title">
+        <h1>FULL FINANCIAL REPORT</h1>
+        <p>From: {{ \Carbon\Carbon::parse($startDate)->format('F d, Y') }} &nbsp;&nbsp; To: {{ \Carbon\Carbon::parse($endDate)->format('F d, Y') }}</p>
     </div>
+
+    <!-- Highlight Metrics -->
+    <div class="summary-grid">
+        <div class="summary-col">
+            <div class="summary-lbl">Total Gross Income</div>
+            <div class="summary-val" style="color: #2563eb;">Rs.{{ number_format($totalSales + $totalPackagePayments, 2) }}</div>
+            <div class="summary-sub">Services + Packages</div>
+        </div>
+        <div class="summary-col middle">
+            <div class="summary-lbl">Done Payments (Collected)</div>
+            <div class="summary-val" style="color: #16a34a;">Rs.{{ number_format($totalCollected, 2) }}</div>
+            <div class="summary-sub">Cash: Rs.{{ number_format($collectedCash, 2) }} | Card: Rs.{{ number_format($collectedCard, 2) }}</div>
+        </div>
+        <div class="summary-col">
+            <div class="summary-lbl">Pending Collection</div>
+            <div class="summary-val" style="color: #ea580c;">Rs.{{ number_format($totalPending + $totalCredit, 2) }}</div>
+            <div class="summary-sub">Pickups & Credits</div>
+        </div>
+    </div>
+
+    <!-- Net Financial Summary -->
+    <h2>Net Profit Calculation</h2>
+    <table>
+        <tr>
+            <td style="width: 70%;">Total Service Revenue ({{ $recentOrders->count() }} Orders)</td>
+            <td class="text-right">Rs.{{ number_format($totalSales, 2) }}</td>
+        </tr>
+        <tr>
+            <td>Total Package Sales Revenue</td>
+            <td class="text-right">Rs.{{ number_format($totalPackagePayments, 2) }}</td>
+        </tr>
+        <tr class="total-row">
+            <td>TOTAL GROSS REVENUE</td>
+            <td class="text-right">Rs.{{ number_format($totalSales + $totalPackagePayments, 2) }}</td>
+        </tr>
+        <tr>
+            <td style="color: #ef4444;">Less: Total Expenses & Salaries</td>
+            <td class="text-right" style="color: #ef4444;">- Rs.{{ number_format($totalExpenses, 2) }}</td>
+        </tr>
+        <tr class="profit-row">
+            <td>NET PROFIT (Calculated)</td>
+            <td class="text-right">Rs.{{ number_format(($totalSales + $totalPackagePayments) - $totalExpenses, 2) }}</td>
+        </tr>
+    </table>
 
     <!-- Service Breakdown -->
     <h2>Service Breakdown</h2>
     <table>
-        <tr><th>Service</th><th>Qty</th><th>Revenue</th></tr>
-        @foreach($services as $s)
-        <tr><td>{{ $s->name }}</td><td>{{ $s->total_qty }}</td><td>Rs.{{ number_format($s->total_revenue, 2) }}</td></tr>
-        @endforeach
-        <tr class="total-row"><td colspan="2">TOTAL</td><td>Rs.{{ number_format($totalSales, 2) }}</td></tr>
+        <thead>
+            <tr>
+                <th>Service Type</th>
+                <th class="text-center">Total Qty</th>
+                <th class="text-right">Revenue Generated</th>
+            </tr>
+        </thead>
+        <tbody>
+            @forelse($services as $s)
+            <tr>
+                <td>{{ $s->name }}</td>
+                <td class="text-center">{{ number_format($s->total_qty, 1) }}</td>
+                <td class="text-right">Rs.{{ number_format($s->total_revenue, 2) }}</td>
+            </tr>
+            @empty
+            <tr><td colspan="3" class="text-center" style="color:#94a3b8;">No services logged.</td></tr>
+            @endforelse
+            @if($services->count() > 0)
+            <tr class="total-row">
+                <td colspan="2">TOTAL SERVICE REVENUE</td>
+                <td class="text-right">Rs.{{ number_format($totalSales, 2) }}</td>
+            </tr>
+            @endif
+        </tbody>
     </table>
 
-    <!-- Order List -->
-    <h2>Order List</h2>
+    <!-- Packages Detail -->
+    @if($customerPackages->count() > 0)
+    <h2>Package Sales</h2>
     <table>
-        <tr><th>Order #</th><th>Customer</th><th>Total</th><th>Paid</th><th>Status</th><th>Date</th></tr>
-        @foreach($orders as $o)
-        <tr>
-            <td style="font-family:monospace;">{{ $o->order_number }}</td>
-            <td>{{ $o->customer->name ?? '—' }}</td>
-            <td>Rs.{{ number_format($o->total, 2) }}</td>
-            <td>Rs.{{ number_format($o->paid_amount, 2) }}</td>
-            <td><span class="badge {{ $o->payment_status === 'paid' ? 'badge-green' : 'badge-amber' }}">{{ ucfirst($o->payment_status) }}</span></td>
-            <td>{{ $o->created_at->format('M d') }}</td>
-        </tr>
-        @endforeach
-    </table>
-
-    <!-- Expenses -->
-    @if($expenses->count())
-    <h2>Expenses</h2>
-    <table>
-        <tr><th>Category</th><th>Description</th><th>Amount</th><th>Date</th></tr>
-        @foreach($expenses as $e)
-        <tr><td>{{ ucfirst($e->category) }}</td><td>{{ $e->description }}</td><td>Rs.{{ number_format($e->amount, 2) }}</td><td>{{ $e->expense_date }}</td></tr>
-        @endforeach
-        <tr class="total-row"><td colspan="2">TOTAL EXPENSES</td><td>Rs.{{ number_format($totalExpenses, 2) }}</td><td></td></tr>
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Package Name</th>
+                <th>Issue Date</th>
+                <th class="text-center">Status</th>
+                <th class="text-right">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($customerPackages as $cp)
+            <tr>
+                <td>{{ $cp->customer->name ?? '—' }}</td>
+                <td>{{ $cp->package->name ?? '—' }}</td>
+                <td>{{ $cp->start_date->format('M d, Y') }}</td>
+                <td class="text-center">
+                    <span class="badge {{ $cp->payment_status === 'paid' ? 'badge-green' : 'badge-amber' }}">{{ $cp->payment_status }}</span>
+                </td>
+                <td class="text-right">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
+            </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="4">TOTAL PACKAGE REVENUE</td>
+                <td class="text-right">Rs.{{ number_format($totalPackagePayments, 2) }}</td>
+            </tr>
+        </tbody>
     </table>
     @endif
 
-    <!-- Net Summary -->
-    <h2>Net Summary</h2>
-    <table style="max-width:320px;">
-        <tr><td>Total Revenue</td><td><b>Rs.{{ number_format($totalSales, 2) }}</b></td></tr>
-        <tr><td>Total Expenses</td><td>Rs.{{ number_format($totalExpenses, 2) }}</td></tr>
-        <tr class="total-row"><td>NET PROFIT</td><td>Rs.{{ number_format($totalSales - $totalExpenses, 2) }}</td></tr>
+    <!-- Expenses List -->
+    @if($expenses->count() > 0)
+    <h2>Expenses List</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Date</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th class="text-right">Amount Paid</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($expenses as $e)
+            <tr>
+                <td>{{ \Carbon\Carbon::parse($e->expense_date)->format('M d, Y') }}</td>
+                <td>{{ ucfirst($e->category) }}</td>
+                <td>{{ $e->description ?? '—' }}</td>
+                <td class="text-right" style="color: #ef4444;">Rs.{{ number_format($e->amount, 2) }}</td>
+            </tr>
+            @endforeach
+            <tr class="total-row">
+                <td colspan="3">TOTAL EXPENSES DEDUCTED</td>
+                <td class="text-right">Rs.{{ number_format($totalExpenses, 2) }}</td>
+            </tr>
+        </tbody>
     </table>
+    @endif
 
-    <div class="footer">{{ $branch->name ?? 'Smart Laundry' }} &bull; Report generated by Smart Laundry POS</div>
+    <!-- Recent Orders (Shortened) -->
+    @if($recentOrders->count() > 0)
+    <h2>Recent Orders (Latest {{ $recentOrders->count() }})</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Order #</th>
+                <th>Customer</th>
+                <th>Date</th>
+                <th class="text-center">Status</th>
+                <th class="text-right">Paid</th>
+                <th class="text-right">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach($recentOrders as $o)
+            <tr>
+                <td style="font-family: monospace; font-weight: bold; color: #475569;">{{ $o->order_number }}</td>
+                <td>{{ $o->customer->name ?? '—' }}</td>
+                <td>{{ $o->created_at->format('M d, Y') }}</td>
+                <td class="text-center">
+                    @if($o->payment_status === 'paid')
+                        <span class="badge badge-green">PAID</span>
+                    @elseif($o->payment_status === 'partial')
+                        <span class="badge badge-amber">PARTIAL</span>
+                    @else
+                        <span class="badge badge-red">PENDING</span>
+                    @endif
+                </td>
+                <td class="text-right">Rs.{{ number_format($o->paid_amount, 2) }}</td>
+                <td class="text-right font-bold">Rs.{{ number_format($o->total, 2) }}</td>
+            </tr>
+            @endforeach
+        </tbody>
+    </table>
+    @endif
+
+    <div class="footer">
+        {{ $branch->name ?? 'Smart Laundry' }} &bull; Report automatically generated by POS System on {{ now()->format('M d, Y h:i A') }}
+    </div>
 </body>
 </html>

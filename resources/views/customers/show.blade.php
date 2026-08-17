@@ -63,7 +63,7 @@
                     <td class="px-5 py-3 text-gray-600 text-xs">
                         {{ $order->items->pluck('serviceType.name')->filter()->join(', ') ?: '—' }}
                     </td>
-                    <td class="px-5 py-3 font-semibold">Rs.{{ number_format($order->total, 2) }}</td>
+                    <td class="px-5 py-3 font-semibold">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
                     <td class="px-5 py-3 text-green-600">Rs.{{ number_format($order->paid_amount, 2) }}</td>
                     <td class="px-5 py-3">
                         @php $colors = ['received'=>'blue','washing'=>'indigo','ready'=>'amber','delivered'=>'green','cancelled'=>'red']; $c = $colors[$order->status] ?? 'gray'; @endphp

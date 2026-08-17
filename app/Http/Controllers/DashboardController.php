@@ -64,8 +64,21 @@ class DashboardController extends Controller
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
+            // Calculate total gross sales logged during shift (Orders + Packages)
+            $totalOrderSales = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->sum('total');
+                
+            $totalPackageSales = \App\Models\PackagePayment::whereHas('customerPackage', fn($q) => $q->where('branch_id', $branchId))
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->sum('amount');
+                
+            $totalSale = $totalOrderSales + $totalPackageSales;
+
             $currentBalance = $activeSession->opening_cash + $cashCollected + $cardPaymentsAmount - $expensesLogged;
             $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
+        } else {
+            $totalSale = 0;
         }
 
         $stats = [
@@ -77,6 +90,7 @@ class DashboardController extends Controller
             'cash_balance' => $cashBalance,
             'card_payments' => $cardPayments,
             'card_payments_amount' => $cardPaymentsAmount,
+            'total_sale' => $totalSale ?? 0,
         ];
 
         // Active orders sorted by nearest due_date first
@@ -280,7 +294,7 @@ class DashboardController extends Controller
             }
 
             // ─── Service Breakdown ───
-            $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price) as total_revenue'))
+            $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'))
                 ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
                 ->join('orders', 'orders.id', '=', 'order_items.order_id')
                 ->where('orders.branch_id', $branchId)

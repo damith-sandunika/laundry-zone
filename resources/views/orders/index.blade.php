@@ -46,6 +46,14 @@
         deliverOrder: null,
         deliveryPaymentMethod: 'cash',
 
+        // Edit Order Modal
+        showEditModal: false,
+        editOrderData: null,
+        editCart: [],
+        editDiscount: 0,
+        selectedServiceToAdd: '',
+        allServices: JSON.parse(atob('{{ base64_encode(json_encode($services)) }}')),
+
         ordersList: JSON.parse(atob('{{ base64_encode(json_encode($orders)) }}')),
 
         toggleSelectAll(e) {
@@ -174,6 +182,78 @@
                 // Reload page to reflect changes
                 window.location.reload();
             } catch (err) { alert('Error updating status'); }
+        },
+
+        openEdit(order) {
+            this.editOrderData = order;
+            this.editCart = order.items.map(i => ({
+                service_type_id: i.service_type_id,
+                name: i.service_type ? i.service_type.name : i.item_description,
+                qty: i.quantity,
+                base_price: i.unit_price,
+                price_type: i.service_type ? i.service_type.price_type : 'per_item'
+            }));
+            
+            // Calculate discount percentage based on existing subtotal and discount
+            let st = parseFloat(order.subtotal) || 0;
+            let d = parseFloat(order.discount) || 0;
+            this.editDiscount = st > 0 ? Math.round((d / st) * 100) : 0;
+            
+            this.selectedServiceToAdd = '';
+            this.showEditModal = true;
+        },
+
+        addServiceToEditCart() {
+            if (!this.selectedServiceToAdd) return;
+            let svc = this.allServices.find(s => s.id == this.selectedServiceToAdd);
+            if (svc) {
+                this.editCart.push({
+                    service_type_id: svc.id,
+                    name: svc.name,
+                    qty: 1,
+                    base_price: svc.base_price,
+                    price_type: svc.price_type
+                });
+            }
+            this.selectedServiceToAdd = '';
+        },
+
+        get editSubtotal() {
+            return this.editCart.reduce((sum, item) => sum + (item.base_price * (parseFloat(item.qty) || 0)), 0);
+        },
+
+        get editTotal() {
+            let disc = this.editSubtotal * ((parseFloat(this.editDiscount) || 0) / 100);
+            return this.editSubtotal - disc;
+        },
+
+        async saveOrderEdit() {
+            if (this.editCart.length === 0) {
+                alert('Order must have at least one item.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`/orders/${this.editOrderData.id}/update`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({
+                        cart: this.editCart,
+                        discount_percentage: this.editDiscount
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.href = window.location.pathname + '?_t=' + Date.now();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to update order'));
+                }
+            } catch (err) {
+                alert('Connection error');
+            }
         }
 
     }"> <!-- STAT CARDS -->
@@ -357,13 +437,22 @@
                                     </template>
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;font-weight:800;color:#0f172a;font-size:13px;"
-                                    x-text="'Rs.' + parseFloat(order.total).toFixed(2)"></td>
+                                    x-text="parseFloat(order.total) === 0 ? 'Package' : 'Rs.' + parseFloat(order.total).toFixed(2)"></td>
                                 <td style="padding:12px 20px;text-align:center;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
                                         <a :href="'/orders/' + order.id"
                                             style="padding:5px 10px;background:white;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:8px;font-size:11.5px;font-weight:800;text-decoration:none;transition:all 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.05);"
                                             onmouseover="this.style.background='#eff6ff'"
                                             onmouseout="this.style.background='white'">View</a>
+
+                                        <template x-if="order.status !== 'delivered' && order.status !== 'cancelled'">
+                                            <button @click="openEdit(order)"
+                                                style="padding:5px 8px;background:white;color:#d97706;border:1.5px solid #fde68a;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
+                                                onmouseover="this.style.background='#fffbeb'"
+                                                onmouseout="this.style.background='white'" title="Edit Order">
+                                                ✏️
+                                            </button>
+                                        </template>
 
                                         <template x-if="currentTab === 'received' && order.status === 'received'">
                                             <button @click="openCubbetPopup(order)"
@@ -558,7 +647,7 @@
                             <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
                                 <span style="font-size:13px;font-weight:700;color:#64748b;">Total Bill:</span>
                                 <span style="font-size:14px;font-weight:900;color:#0f172a;"
-                                    x-text="'Rs.' + parseFloat(deliverOrder?.total || 0).toFixed(2)"></span>
+                                    x-text="parseFloat(deliverOrder?.total || 0) === 0 ? 'Package' : 'Rs.' + parseFloat(deliverOrder?.total || 0).toFixed(2)"></span>
                             </div>
                             <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
                                 <span style="font-size:13px;font-weight:700;color:#64748b;">Paid Amount:</span>
@@ -626,4 +715,109 @@
             </div>
 
         </div>
+            
+            <!-- ── Edit Order Modal ── -->
+            <div x-cloak x-show="showEditModal"
+                class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
+                <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:550px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;"
+                    @click.away="showEditModal = false">
+                    <div
+                        style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#fffbeb;">
+                        <div>
+                            <h3 style="font-size:18px;font-weight:900;color:#d97706;margin:0;">Edit Order</h3>
+                            <p style="font-size:12px;color:#b45309;margin:2px 0 0;font-weight:600;"
+                                x-text="'Order #' + (editOrderData ? editOrderData.order_number : '')"></p>
+                        </div>
+                        <button @click="showEditModal = false"
+                            style="background:none;border:none;cursor:pointer;color:#d97706;font-size:20px;">✕</button>
+                    </div>
+                    
+                    <div style="padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:20px;flex:1;">
+                        
+                        <!-- Add Service Dropdown -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Add Service</label>
+                            <div style="display:flex;gap:10px;">
+                                <select x-model="selectedServiceToAdd"
+                                    style="flex:1;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:13px;font-weight:700;outline:none;background:white;color:#0f172a;">
+                                    <option value="" style="color:#94a3b8;">-- Select a service to add --</option>
+                                    <template x-for="svc in allServices" :key="svc.id">
+                                        <option :value="svc.id" x-text="svc.name + ' - Rs.' + svc.base_price"></option>
+                                    </template>
+                                </select>
+                                <button type="button" @click="addServiceToEditCart()"
+                                    style="padding:10px 16px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Add</button>
+                            </div>
+                        </div>
+
+                        <!-- Current Cart Items -->
+                        <div>
+                            <label style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Order Items</label>
+                            
+                            <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+                                <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:#334155;">
+                                    <thead>
+                                        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
+                                            <th style="padding:10px 14px;text-align:left;font-weight:800;">Item</th>
+                                            <th style="padding:10px 14px;text-align:center;font-weight:800;width:110px;">Qty</th>
+                                            <th style="padding:10px 14px;text-align:right;font-weight:800;width:90px;">Total</th>
+                                            <th style="padding:10px 14px;text-align:center;width:40px;"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template x-for="(item, index) in editCart" :key="index">
+                                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                                <td style="padding:10px 14px;font-weight:700;" x-text="item.name"></td>
+                                                <td style="padding:10px 14px;text-align:center;">
+                                                    <input type="number" x-model.number="editCart[index].qty" style="width:70px;text-align:center;border:1.5px solid #e2e8f0;border-radius:6px;background:white;font-size:13px;font-weight:800;outline:none;padding:6px;" min="0.01" step="0.01">
+                                                </td>
+                                                <td style="padding:10px 14px;text-align:right;font-weight:800;" x-text="'Rs.' + (item.base_price * item.qty).toFixed(2)"></td>
+                                                <td style="padding:10px 14px;text-align:center;">
+                                                    <button @click="editCart.splice(index, 1)" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;" title="Remove">🗑️</button>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                        <tr x-show="editCart.length === 0">
+                                            <td colspan="4" style="padding:20px;text-align:center;color:#94a3b8;font-weight:600;font-style:italic;">No items in this order.</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Totals & Discount -->
+                        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                                <span style="font-size:13px;font-weight:700;color:#64748b;">Subtotal:</span>
+                                <span style="font-size:14px;font-weight:900;color:#0f172a;" x-text="'Rs.' + editSubtotal.toFixed(2)"></span>
+                            </div>
+                            
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                                <span style="font-size:13px;font-weight:700;color:#64748b;">Discount (%):</span>
+                                <input type="number" x-model.number="editDiscount" min="0" max="100" style="width:70px;text-align:right;padding:6px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:800;outline:none;">
+                            </div>
+
+                            <div x-show="editDiscount > 0" style="display:flex;justify-content:space-between;margin-bottom:10px;">
+                                <span style="font-size:13px;font-weight:700;color:#dc2626;">Discount Amount:</span>
+                                <span style="font-size:13px;font-weight:800;color:#dc2626;" x-text="'- Rs.' + (editSubtotal * (editDiscount / 100)).toFixed(2)"></span>
+                            </div>
+
+                            <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1.5px dashed #cbd5e1;">
+                                <span style="font-size:14px;font-weight:800;color:#0f172a;">Final Total:</span>
+                                <span style="font-size:18px;font-weight:900;color:#16a34a;" x-text="'Rs.' + editTotal.toFixed(2)"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div style="padding:20px 24px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:12px;">
+                        <button type="button" @click="showEditModal = false"
+                            style="flex:1;padding:12px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;">Cancel</button>
+                        <button type="button" @click="saveOrderEdit()"
+                            style="flex:1;padding:12px;background:#d97706;color:white;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(217,119,6,0.3);">
+                            💾 Save Changes</button>
+                    </div>
+                </div>
+            </div>
+
 </x-app-layout>
