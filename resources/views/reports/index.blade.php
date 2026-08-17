@@ -180,7 +180,7 @@
                             @forelse($salaries as $sal)
                                 <tr>
                                     <td class="px-4 py-3 text-xs text-gray-500">{{ $sal->expense_date }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-700">{{ $sal->notes }}</td>
+                                    <td class="px-4 py-3 font-medium text-gray-700">{{ $sal->description }}</td>
                                     <td class="px-4 py-3 text-right font-semibold text-red-600">Rs.{{ number_format($sal->amount, 2) }}</td>
                                 </tr>
                             @empty
