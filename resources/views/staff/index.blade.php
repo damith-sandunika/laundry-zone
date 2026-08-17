@@ -133,6 +133,8 @@
                                         <label class="block text-xs font-medium text-gray-700 mb-1">System Role</label>
                                         <select name="role" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                             <option value="staff">Staff (Cashier / Washer)</option>
+                                            <option value="workshop_admin">Workshop Operator</option>
+                                            <option value="rider">Delivery Rider</option>
                                             @if(auth()->user()->role === 'super_admin')
                                             <option value="admin">Admin</option>
                                             @endif

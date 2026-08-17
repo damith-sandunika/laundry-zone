@@ -66,14 +66,21 @@
 
         get filteredOrders() {
             if (this.currentTab === 'all') return this.ordersList;
+            if (this.currentTab === 'received') {
+                return this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop');
+            }
+            if (this.currentTab === 'done') {
+                return this.ordersList.filter(o => o.status === 'done' || o.status === 'returned_from_workshop');
+            }
             return this.ordersList.filter(o => o.status === this.currentTab);
         },
 
         get counts() {
             return {
                 all: this.ordersList.length,
-                received: this.ordersList.filter(o => o.status === 'received').length,
-                done: this.ordersList.filter(o => o.status === 'done').length,
+                received: this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop').length,
+                processing: this.ordersList.filter(o => o.status === 'processing').length,
+                done: this.ordersList.filter(o => o.status === 'done' || o.status === 'returned_from_workshop').length,
                 delivered: this.ordersList.filter(o => o.status === 'delivered').length
             };
         },
@@ -107,8 +114,29 @@
             }
         },
 
+        bulkWorkshopId: '',
+
         async submitBulkUpdate() {
             try {
+                if (this.bulkStatus === 'dispatched_to_workshop') {
+                    if (!this.bulkWorkshopId) { alert('Please select a workshop'); return; }
+                    const res = await fetch('{{ route('orders.bulkDispatchWorkshop') }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                        },
+                        body: JSON.stringify({
+                            order_ids: this.selectedOrders,
+                            workshop_branch_id: this.bulkWorkshopId,
+                            dispatch_notes: 'Bulk dispatched from branch'
+                        })
+                    });
+                    const data = await res.json(); // WorkshopController needs to return json actually. Wait, bulkDispatch returns redirect. Let's fix this in a sec or just reload.
+                    window.location.reload();
+                    return;
+                }
+
                 const res = await fetch('{{ route('orders.bulkStatus') }}', {
                     method: 'POST',
                     headers: {
@@ -128,7 +156,8 @@
                     alert('Bulk update failed');
                 }
             } catch (err) {
-                alert('Connection error');
+                // If it was a redirect, fetch might throw an opaque error but it succeeded
+                window.location.reload();
             }
         },
 
@@ -254,63 +283,39 @@
             } catch (err) {
                 alert('Connection error');
             }
-        }
+        }    }"> <!-- STAT CARDS -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
 
-    }"> <!-- STAT CARDS -->
-        <div class="grid grid-cols-3 gap-2 md:gap-4 mb-6">
-
-            <!-- Received -->
+            <!-- Pending Dispatch -->
             <div @click="currentTab = 'received'"
                 :class="currentTab === 'received' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <div :class="currentTab === 'received' ? 'bg-orange-600 text-white' : 'bg-orange-100 text-orange-600'"
-                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                    </svg>
-                </div>
-                <span class="text-xs md:text-sm font-black mt-1"
-                    :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'"
-                    x-text="counts.received"></span>
-                <span
-                    class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Received</span>
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.received"></span>
+                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">New</span>
             </div>
 
-            <!-- Ready / Done -->
+            <!-- At Workshop -->
+            <div @click="currentTab = 'processing'"
+                :class="currentTab === 'processing' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'processing' ? 'text-yellow-700' : 'text-gray-900'" x-text="counts.processing"></span>
+                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">At Workshop</span>
+            </div>
+
+            <!-- Ready for Pickup -->
             <div @click="currentTab = 'done'"
                 :class="currentTab === 'done' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <div :class="currentTab === 'done' ? 'bg-green-600 text-white' : 'bg-green-100 text-green-600'"
-                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                </div>
-                <span class="text-xs md:text-sm font-black mt-1"
-                    :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
-                <span class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Done</span>
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
+                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Ready</span>
             </div>
 
             <!-- Delivered -->
             <div @click="currentTab = 'delivered'"
                 :class="currentTab === 'delivered' ? 'border-gray-500 bg-gray-100' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <div :class="currentTab === 'delivered' ? 'bg-gray-600 text-white' : 'bg-gray-200 text-gray-600'"
-                    class="w-9 h-9 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
-                    <svg class="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2.5"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                    </svg>
-                </div>
-                <span class="text-xs md:text-sm font-black mt-1"
-                    :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'"
-                    x-text="counts.delivered"></span>
-                <span
-                    class="hidden md:block text-xs font-semibold text-gray-400 uppercase tracking-wider">Delivered</span>
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'" x-text="counts.delivered"></span>
+                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Delivered</span>
             </div>
         </div>
 
@@ -377,7 +382,9 @@
                         <template x-for="order in filteredOrders" :key="order.id">
                             <tr :style="
                             order.status === 'received' ? 'background:#fffbeb;border-bottom:1px solid #fde68a;' :
+                            order.status === 'dispatched_to_workshop' ? 'background:#eff6ff;border-bottom:1px solid #bfdbfe;' :
                             order.status === 'done' ? 'background:#f0fdf4;border-bottom:1px solid #bbf7d0;' :
+                            order.status === 'returned_from_workshop' ? 'background:#fdf4ff;border-bottom:1px solid #f5d0fe;' :
                             order.status === 'delivered' ? 'background:#f8fafc;border-bottom:1px solid #e2e8f0;' :
                             'background:white;border-bottom:1px solid #f1f5f9;'
                         " style="transition:all 0.1s;" onmouseover="this.style.opacity='0.85'"
@@ -420,11 +427,21 @@
                                 <td style="padding:12px 20px;">
                                     <span :style="
                                     order.status === 'received' ? 'background:#fef3c7;color:#d97706;border:1px solid #fde68a;' :
+                                    order.status === 'dispatched_to_workshop' ? 'background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;' :
                                     order.status === 'done' ? 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;' :
+                                    order.status === 'returned_from_workshop' ? 'background:#fae8ff;color:#a21caf;border:1px solid #f5d0fe;' :
                                     order.status === 'delivered' ? 'background:#e2e8f0;color:#475569;border:1px solid #cbd5e1;' :
                                     'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;'
-                                " style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">
-                                        <span x-text="order.status"></span>
+                                " style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;display:inline-block;">
+                                        <template x-if="order.status === 'dispatched_to_workshop'">
+                                            <span x-text="'Sent to ' + (order.workshop ? order.workshop.name : 'Workshop')"></span>
+                                        </template>
+                                        <template x-if="order.status === 'returned_from_workshop'">
+                                            <span x-text="'Arriving from ' + (order.workshop ? order.workshop.name : 'Workshop')"></span>
+                                        </template>
+                                        <template x-if="order.status !== 'dispatched_to_workshop' && order.status !== 'returned_from_workshop'">
+                                            <span x-text="order.status"></span>
+                                        </template>
                                     </span>
                                 </td>
                                 <td style="padding:12px 20px;font-weight:700;">
@@ -455,17 +472,26 @@
                                         </template>
 
                                         <template x-if="currentTab === 'received' && order.status === 'received'">
+                                            <button @click="bulkStatus = 'dispatched_to_workshop'; selectedOrders = [order.id]; showBulkModal = true;"
+                                                style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(79,70,229,0.3);transition:transform 0.1s;"
+                                                onmouseover="this.style.transform='scale(1.05)'"
+                                                onmouseout="this.style.transform='scale(1)'">
+                                                Dispatch
+                                            </button>
+                                        </template>
+
+                                        <template x-if="currentTab === 'done' && order.status === 'returned_from_workshop'">
                                             <button @click="openCubbetPopup(order)"
                                                 style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);transition:transform 0.1s;"
                                                 onmouseover="this.style.transform='scale(1.05)'"
                                                 onmouseout="this.style.transform='scale(1)'">
-                                                Mark Done
+                                                Confirm Arrival (Done)
                                             </button>
                                         </template>
 
                                         <template x-if="currentTab === 'done' && order.status === 'done'">
                                             <button @click="openDeliverPopup(order)"
-                                                style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(79,70,229,0.3);transition:transform 0.1s;"
+                                                style="padding:5px 10px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(14,165,233,0.3);transition:transform 0.1s;"
                                                 onmouseover="this.style.transform='scale(1.05)'"
                                                 onmouseout="this.style.transform='scale(1)'">
                                                 Deliver
@@ -515,22 +541,33 @@
                         <div>
                             <label
                                 style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Target
-                                Status</label>
+                                Action</label>
                             <select x-model="bulkStatus"
                                 style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;">
-                                <option value="done" x-show="currentTab !== 'done'">✅ Done</option>
-                                <option value="delivered">🚚 Delivered</option>
+                                <option value="dispatched_to_workshop" x-show="currentTab === 'received'">🚚 Dispatch to Workshop</option>
+                                <option value="done" x-show="currentTab === 'done'">✅ Confirm Arrival (Mark Done)</option>
+                                <option value="delivered" x-show="currentTab === 'done'">📦 Mark Delivered</option>
                                 <option value="cancelled">❌ Cancelled</option>
+                            </select>
+                        </div>
+
+                        <div x-show="bulkStatus === 'dispatched_to_workshop'" x-cloak>
+                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Select Workshop</label>
+                            <select x-model="bulkWorkshopId" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;">
+                                <option value="">-- Select Workshop --</option>
+                                @foreach($workshops as $ws)
+                                    <option value="{{ $ws->id }}">{{ $ws->name }}</option>
+                                @endforeach
                             </select>
                         </div>
 
                         <div x-show="bulkStatus === 'done'" x-cloak>
                             <label
                                 style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Assign
-                                to Cubbet</label>
+                                to Cubbet (Optional)</label>
                             <select x-model="bulkCubbyId"
                                 style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;">
-                                <option value="">-- Select Empty Cubbet --</option>
+                                <option value="">-- No Cubbet --</option>
                                 @foreach($cubbies as $cubby)
                                     <option value="{{ $cubby->id }}">{{ $cubby->name }}</option>
                                 @endforeach

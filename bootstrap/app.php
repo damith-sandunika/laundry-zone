@@ -12,10 +12,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'role'     => \App\Http\Middleware\RoleMiddleware::class,
+            'admin'    => \App\Http\Middleware\AdminMiddleware::class,
+            'rider'    => \App\Http\Middleware\RiderMiddleware::class,
+            'workshop' => \App\Http\Middleware\WorkshopMiddleware::class,
         ]);
     })
+    ->withProviders([
+        \App\Providers\WhatsAppServiceProvider::class,
+    ])
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

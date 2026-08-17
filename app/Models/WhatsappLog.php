@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToBranch;
 
 class WhatsappLog extends Model
 {
-    use BelongsToBranch;
     protected $fillable = [
-        'branch_id', 'order_id', 'customer_id', 'phone', 'message_type', 'message', 'status', 'sent_at', 'error_message'
+        'branch_id', 'order_id', 'customer_id',
+        'phone', 'message_type', 'message',
+        'status', 'wa_message_id', 'error', 'sent_at'
     ];
 
     protected $casts = [
@@ -24,5 +24,17 @@ class WhatsappLog extends Model
     public function customer()
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    // Status badge color
+    public function statusColor(): string
+    {
+        return match($this->status) {
+            'sent'     => 'green',
+            'pending'  => 'yellow',
+            'failed'   => 'red',
+            'disabled' => 'gray',
+            default    => 'gray',
+        };
     }
 }

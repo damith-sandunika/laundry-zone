@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use App\Services\WhatsAppService;
 
 class SettingsController extends Controller
 {
@@ -18,11 +19,12 @@ class SettingsController extends Controller
     {
         $branchId = auth()->user()->branch_id ?? 1;
         $branch = \App\Models\Branch::find($branchId);
-        $services = \App\Models\ServiceType::with('inventoryItems')->get();
+        $serviceCategories = \App\Models\ServiceCategory::where('branch_id', $branchId)->with('services')->get();
+        $services = \App\Models\ServiceType::with(['inventoryItems', 'category'])->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
         $packages = \App\Models\Package::where('branch_id', $branchId)->with('services.serviceType')->get();
-        return view('settings.index', compact('branch', 'services', 'cubbies', 'inventoryItems', 'packages'));
+        return view('settings.index', compact('branch', 'serviceCategories', 'services', 'cubbies', 'inventoryItems', 'packages'));
     }
 
     public function updateGeneral(Request $request)
@@ -56,19 +58,21 @@ class SettingsController extends Controller
     public function storeService(Request $request)
     {
         $request->validate([
-            'name'       => 'required|string|max:255',
-            'base_price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:per_kg,per_item',
-            'inventory'  => 'nullable|array',
+            'name'        => 'required|string|max:255',
+            'category_id' => 'nullable|exists:service_categories,id',
+            'base_price'  => 'required|numeric|min:0',
+            'price_type'  => 'required|in:per_kg,per_item',
+            'inventory'   => 'nullable|array',
         ]);
 
         $service = \App\Models\ServiceType::create([
-            'name'       => $request->name,
-            'base_price' => $request->base_price,
-            'price_type' => $request->price_type,
-            'icon'       => $request->icon ?? '👕',
-            'color'      => $request->color ?? 'blue',
-            'is_active'  => true,
+            'name'        => $request->name,
+            'category_id' => $request->category_id,
+            'base_price'  => $request->base_price,
+            'price_type'  => $request->price_type,
+            'icon'        => $request->icon ?? '👕',
+            'color'       => $request->color ?? 'blue',
+            'is_active'   => true,
         ]);
 
         return redirect()->back()->with('success', 'Service added.');
@@ -77,13 +81,14 @@ class SettingsController extends Controller
     public function updateService(Request $request, \App\Models\ServiceType $service)
     {
         $request->validate([
-            'name'       => 'required|string|max:255',
-            'base_price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:per_kg,per_item',
-            'is_active'  => 'boolean',
-            'inventory'  => 'nullable|array',
+            'name'        => 'required|string|max:255',
+            'category_id' => 'nullable|exists:service_categories,id',
+            'base_price'  => 'required|numeric|min:0',
+            'price_type'  => 'required|in:per_kg,per_item',
+            'is_active'   => 'boolean',
+            'inventory'   => 'nullable|array',
         ]);
-        $service->update($request->only(['name', 'base_price', 'price_type', 'is_active', 'icon', 'color']));
+        $service->update($request->only(['name', 'category_id', 'base_price', 'price_type', 'is_active', 'icon', 'color']));
 
         return redirect()->back()->with('success', 'Service updated.');
     }
@@ -92,6 +97,38 @@ class SettingsController extends Controller
     {
         $service->delete();
         return redirect()->back()->with('success', 'Service deleted.');
+    }
+
+    public function storeServiceCategory(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255'
+        ]);
+
+        \App\Models\ServiceCategory::create([
+            'branch_id' => auth()->user()->branch_id ?? 1,
+            'name'      => $request->name,
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'Service Category created.');
+    }
+
+    public function updateServiceCategory(Request $request, \App\Models\ServiceCategory $category)
+    {
+        $request->validate([
+            'name'      => 'required|string|max:255',
+            'is_active' => 'boolean'
+        ]);
+
+        $category->update($request->only(['name', 'is_active']));
+        return redirect()->back()->with('success', 'Service Category updated.');
+    }
+
+    public function destroyServiceCategory(\App\Models\ServiceCategory $category)
+    {
+        $category->delete();
+        return redirect()->back()->with('success', 'Service Category deleted.');
     }
 
     public function storeCubby(Request $request)
@@ -159,37 +196,26 @@ class SettingsController extends Controller
 
     public function whatsappStatus()
     {
-        try {
-            $branchId = auth()->user()->branch_id ?? 1;
-            $response = Http::timeout(3)->get("http://127.0.0.1:3001/api/whatsapp/status/{$branchId}");
-            return response()->json($response->json());
-        } catch (\Exception $e) {
-            return response()->json(['connected' => false, 'error' => true], 200);
-        }
+        $service = new WhatsAppService();
+        return response()->json($service->getStatus());
     }
 
     public function whatsappLogout()
     {
-        try {
-            $branchId = auth()->user()->branch_id ?? 1;
-            $response = Http::timeout(3)->post("http://127.0.0.1:3001/api/whatsapp/logout/{$branchId}");
-            return response()->json($response->json());
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => true], 500);
-        }
+        // With Cloud API, no session to logout. Just confirm.
+        return response()->json(['success' => true, 'message' => 'WhatsApp Cloud API - no session logout required.']);
     }
 
     public function whatsappReset()
     {
-        try {
-            $branchId = auth()->user()->branch_id ?? 1;
-            // The node script requires POST to start a new session (or reset)
-            // It has /api/whatsapp/start/:branch_id for generating a new QR
-            $response = Http::timeout(3)->post("http://127.0.0.1:3001/api/whatsapp/start/{$branchId}");
-            return response()->json($response->json());
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'error' => true], 500);
-        }
+        // With Cloud API, test connection by checking config
+        $service = new WhatsAppService();
+        $status  = $service->getStatus();
+        return response()->json([
+            'success' => true,
+            'connected' => $status['connected'],
+            'message'  => $status['connected'] ? 'WhatsApp Cloud API is configured correctly.' : 'Please set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID in .env',
+        ]);
     }
 
     public function storePackage(Request $request)

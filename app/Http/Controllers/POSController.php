@@ -20,6 +20,7 @@ class POSController extends Controller
         }
         
         $services = \App\Models\ServiceType::where('is_active', true)->get();
+        $categories = \App\Models\ServiceCategory::where('is_active', true)->where('branch_id', $branchId)->get();
         
         $customersQuery = \App\Models\Customer::where('is_active', true);
         if ($branchId) {
@@ -32,7 +33,7 @@ class POSController extends Controller
             ->with(['package', 'services.serviceType'])
             ->get();
                         
-        return view('pos.index', compact('services', 'customers', 'customerPackages'));
+        return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages'));
     }
 
     public function store(Request $request)

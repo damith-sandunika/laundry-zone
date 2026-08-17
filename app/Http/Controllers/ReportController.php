@@ -8,10 +8,14 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $branchId = auth()->user()->branch_id;
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
+        
+        $branches = $isSuperAdmin ? \App\Models\Branch::where('is_active', true)->get() : collect();
 
         // 1. Sales Report
         $salesQuery = \App\Models\Order::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
@@ -97,15 +101,53 @@ class ReportController extends Controller
         }
         $customerPackages = $customerPackagesQuery->latest()->get();
 
+        // 6. Advanced Analytics
+        // Walk-in vs Delivery Split
+        $deliveryAppointments = \App\Models\DeliveryAppointment::whereNotNull('order_id')
+            ->whereHas('order', function($q) use ($startDate, $endDate, $branchId) {
+                $q->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+                if ($branchId) $q->where('branch_id', $branchId);
+            })->get();
+        
+        $deliveryOrderIds = $deliveryAppointments->pluck('order_id')->toArray();
+        
+        $deliveryOrders = $orders->whereIn('id', $deliveryOrderIds);
+        $walkinOrders = $orders->whereNotIn('id', $deliveryOrderIds);
+        
+        $deliveryRevenue = $deliveryOrders->sum('total');
+        $walkinRevenue = $walkinOrders->sum('total');
+
+        // Daily Revenue Trend
+        $dailyRevenue = \App\Models\Order::select(\DB::raw('DATE(created_at) as date'), \DB::raw('SUM(total) as revenue'))
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        if ($branchId) {
+            $dailyRevenue->where('branch_id', $branchId);
+        }
+        $dailyRevenue = $dailyRevenue->groupBy('date')->orderBy('date', 'asc')->get();
+
+        // Top Customers
+        $topCustomersQuery = clone $salesQuery;
+        $topCustomers = $topCustomersQuery->select('customer_id', \DB::raw('SUM(total) as total_spent'), \DB::raw('COUNT(id) as total_orders'))
+            ->with('customer')
+            ->groupBy('customer_id')
+            ->orderByDesc('total_spent')
+            ->limit(5)
+            ->get();
+
         return view('reports.index', compact(
-            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'totalCredit', 'totalPending', 'services', 'salaries', 'totalSalaries', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders', 'customerPackages', 'packagePayments'
+            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'totalCredit', 'totalPending', 
+            'services', 'salaries', 'totalSalaries', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders', 
+            'customerPackages', 'packagePayments', 'branches', 'branchId', 'isSuperAdmin',
+            'deliveryRevenue', 'walkinRevenue', 'deliveryOrders', 'walkinOrders', 'dailyRevenue', 'topCustomers'
         ));
     }
 
     public function exportPdf(Request $request)
     {
-        // Reuse same logic, render print-friendly view
-        $branchId  = auth()->user()->branch_id;
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+        
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate   = $request->input('end_date', now()->toDateString());
 
@@ -130,6 +172,15 @@ class ReportController extends Controller
         if ($branchId) $expenseQuery->where('branch_id', $branchId);
         $expenses      = $expenseQuery->get();
         $totalExpenses = $expenses->sum('amount');
+
+        // Inventory Cost
+        $inventoryCostQuery = \App\Models\InventoryTransaction::where('inventory_transactions.type', 'out')
+            ->join('inventory_items', 'inventory_items.id', '=', 'inventory_transactions.inventory_item_id')
+            ->whereBetween('inventory_transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        if ($branchId) {
+            $inventoryCostQuery->where('inventory_items.branch_id', $branchId);
+        }
+        $totalInventoryCost = $inventoryCostQuery->sum(\DB::raw('inventory_transactions.quantity * inventory_items.cost_per_unit'));
 
         $paymentsQuery = \App\Models\PaymentTransaction::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         if ($branchId) {
@@ -165,11 +216,11 @@ class ReportController extends Controller
         $branch = \App\Models\Branch::find($branchId ?? 1);
 
         // Limit orders passed to PDF to keep it clean (latest 15)
-        $recentOrders = $orders->take(15);
+        $recentOrders = collect(); // User requested to remove recent orders
 
         return view('reports.pdf', compact(
             'recentOrders', 'totalSales', 'services', 'salaries', 'totalSalaries',
-            'expenses', 'totalExpenses', 'startDate', 'endDate', 'branch', 
+            'expenses', 'totalExpenses', 'totalInventoryCost', 'startDate', 'endDate', 'branch', 
             'totalPackagePayments', 'totalCollected', 'collectedCash', 'collectedCard',
             'totalCredit', 'totalPending', 'customerPackages'
         ));

@@ -11,7 +11,7 @@ class OrderController extends Controller
         $branchId = auth()->user()->branch_id;
         $q = $request->input('q');
         
-        $query = \App\Models\Order::with(['customer', 'items.serviceType', 'cubby.cubby'])
+        $query = \App\Models\Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop'])
                     ->orderBy('created_at', 'desc');
 
         if ($branchId) {
@@ -31,8 +31,9 @@ class OrderController extends Controller
         $orders = $query->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId ?? 1)->orderBy('name')->get();
         $services = \App\Models\ServiceType::orderBy('name')->get();
+        $workshops = \App\Models\Branch::workshops()->get();
 
-        return view('orders.index', compact('orders', 'cubbies', 'services'));
+        return view('orders.index', compact('orders', 'cubbies', 'services', 'workshops'));
     }
 
     public function updateOrder(Request $request, \App\Models\Order $order)
@@ -142,7 +143,7 @@ class OrderController extends Controller
     public function updateStatus(Request $request, \App\Models\Order $order)
     {
         $request->validate([
-            'status' => 'required|in:received,washing,ironing,done,delivered,cancelled',
+            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,cancelled',
             'cubby_id' => 'nullable|exists:cubbies,id'
         ]);
 
@@ -173,6 +174,26 @@ class OrderController extends Controller
                             'message' => $msgContent,
                             'status' => 'pending',
                         ]);
+                    }
+                }
+                
+                if ($request->status === 'done') {
+                    // Complete Workshop Dispatch
+                    $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
+                        ->whereNotIn('status', ['received_at_branch'])
+                        ->first();
+                    if ($dispatch) {
+                        $dispatch->update([
+                            'status' => 'received_at_branch',
+                            'received_at_branch_at' => now(),
+                        ]);
+                    }
+                }
+                
+                if ($request->status === 'done') {
+                    $appt = \App\Models\DeliveryAppointment::where('order_id', $order->id)->first();
+                    if ($appt && $appt->status !== 'ready') {
+                        $appt->update(['status' => 'ready']);
                     }
                 }
 
@@ -218,6 +239,11 @@ class OrderController extends Controller
                             'message' => $msgContent,
                             'status' => 'pending',
                         ]);
+                    }
+                    
+                    $appt = \App\Models\DeliveryAppointment::where('order_id', $order->id)->first();
+                    if ($appt) {
+                        $appt->update(['status' => 'delivered']);
                     }
                 }
 
@@ -296,11 +322,19 @@ class OrderController extends Controller
         $request->validate([
             'order_ids' => 'required|array',
             'order_ids.*' => 'exists:orders,id',
-            'status' => 'required|in:received,done,delivered,cancelled',
+            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,cancelled',
             'cubby_id' => 'nullable|exists:cubbies,id'
         ]);
 
-        $stateOrder = ['received' => 1, 'done' => 2, 'delivered' => 3, 'cancelled' => 4];
+        $stateOrder = [
+            'received' => 1, 
+            'dispatched_to_workshop' => 2, 
+            'processing' => 3, 
+            'returned_from_workshop' => 4, 
+            'done' => 5, 
+            'delivered' => 6, 
+            'cancelled' => 7
+        ];
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($request, $stateOrder) {
             foreach ($request->order_ids as $id) {
@@ -347,6 +381,24 @@ class OrderController extends Controller
                             'status' => 'pending',
                         ]);
                     }
+                    
+                    // Complete Workshop Dispatch
+                    $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
+                        ->whereNotIn('status', ['received_at_branch'])
+                        ->first();
+                    if ($dispatch) {
+                        $dispatch->update([
+                            'status' => 'received_at_branch',
+                            'received_at_branch_at' => now(),
+                        ]);
+                    }
+                }
+                
+                if ($request->status === 'done') {
+                    $appt = \App\Models\DeliveryAppointment::where('order_id', $order->id)->first();
+                    if ($appt && $appt->status !== 'ready') {
+                        $appt->update(['status' => 'ready']);
+                    }
                 }
                 
                 if ($request->status === 'delivered') {
@@ -371,6 +423,11 @@ class OrderController extends Controller
                     if ($orderCubby) {
                         $orderCubby->update(['released_at' => now()]);
                         \App\Models\Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
+                    }
+                    
+                    $appt = \App\Models\DeliveryAppointment::where('order_id', $order->id)->first();
+                    if ($appt) {
+                        $appt->update(['status' => 'delivered']);
                     }
                 }
                 

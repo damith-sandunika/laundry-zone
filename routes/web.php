@@ -13,17 +13,30 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\WhatsappTemplateController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\DeliveryController;
+use App\Http\Controllers\RiderController;
+use App\Http\Controllers\WorkshopController;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
+// ─── Public Booking Routes (Customer Site) ───
+Route::get('/', [\App\Http\Controllers\CustomerSiteController::class, 'home'])->name('home');
+Route::get('/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('booking.page');
+Route::post('/book', [\App\Http\Controllers\CustomerSiteController::class, 'store'])->name('booking.store');
+Route::get('/book/success/{appointment}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('site.success');
 
-// Public Booking Routes
-Route::get('/book', [\App\Http\Controllers\BookingController::class, 'page'])->name('booking.page');
-Route::post('/book', [\App\Http\Controllers\BookingController::class, 'store'])->name('booking.store');
-Route::get('/book/success', [\App\Http\Controllers\BookingController::class, 'success'])->name('booking.success');
+// ─── Public Order Tracking (QR Code link) ───
+Route::get('/orders/{order}/track', function (\App\Models\Order $order) {
+    return view('orders.track', compact('order'));
+})->name('orders.track');
+
+// ─── Public QR Code Generator ───
+Route::get('/qr/{content}', function (string $content) {
+    $service = new \App\Services\WhatsAppService();
+    $path = $service->generateQrCodeImage(base64_decode($content), 'qr');
+    return response()->file($path, ['Content-Type' => 'image/png']);
+})->name('qr.generate');
 
 Route::middleware(['auth'])->group(function () {
+
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/shifts/open', [DashboardController::class, 'openShift'])->name('shifts.open');
     Route::post('/shifts/close', [DashboardController::class, 'closeShift'])->name('shifts.close');
@@ -42,6 +55,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
     Route::post('/orders/{order}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
+    // Workshop dispatch from order
+    Route::post('/orders/{order}/dispatch-workshop', [WorkshopController::class, 'dispatch'])->name('orders.dispatchWorkshop');
+    Route::post('/orders/workshop/bulk-dispatch', [WorkshopController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
+    Route::get('/orders/{order}/workshop-tracking', [WorkshopController::class, 'tracking'])->name('orders.workshopTracking');
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
     Route::post('/packages/{customerPackage}/mark-paid', [\App\Http\Controllers\PackageController::class, 'markPaid'])->name('packages.markPaid');
@@ -63,13 +80,52 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // ADMIN ONLY ROUTES
+    // ─── RIDER ROUTES ───
+    Route::middleware(['rider'])->prefix('rider')->name('rider.')->group(function () {
+        Route::get('/dashboard', [RiderController::class, 'dashboard'])->name('dashboard');
+        Route::get('/tasks', [RiderController::class, 'tasks'])->name('tasks');
+        Route::post('/tasks/{task}/accept', [RiderController::class, 'accept'])->name('tasks.accept');
+        Route::post('/tasks/{task}/on-way', [RiderController::class, 'onWay'])->name('tasks.onWay');
+        Route::post('/tasks/{task}/arrived', [RiderController::class, 'arrived'])->name('tasks.arrived');
+        Route::post('/tasks/{task}/complete', [RiderController::class, 'complete'])->name('tasks.complete');
+        Route::post('/tasks/{task}/location', [RiderController::class, 'updateLocation'])->name('tasks.location');
+        Route::get('/tasks/{task}/create-order', [RiderController::class, 'createOrder'])->name('createOrder');
+        Route::post('/tasks/{task}/store-order', [RiderController::class, 'storeOrder'])->name('storeOrder');
+    });
+
+    // ─── WORKSHOP ROUTES ───
+    Route::middleware(['workshop'])->prefix('workshop')->name('workshop.')->group(function () {
+        Route::get('/dashboard', [WorkshopController::class, 'dashboard'])->name('dashboard');
+        Route::get('/history', [WorkshopController::class, 'history'])->name('history');
+        Route::post('/dispatches/{dispatch}/receive', [WorkshopController::class, 'receive'])->name('receive');
+        Route::post('/dispatches/{dispatch}/start-processing', [WorkshopController::class, 'startProcessing'])->name('startProcessing');
+        Route::post('/dispatches/{dispatch}/complete', [WorkshopController::class, 'complete'])->name('complete');
+        Route::post('/dispatches/{dispatch}/return', [WorkshopController::class, 'returnToBranch'])->name('return');
+        Route::post('/bulk-status', [WorkshopController::class, 'bulkStatus'])->name('bulkStatus');
+    });
+
+    // ─── ADMIN ONLY ROUTES ───
     Route::middleware(['admin'])->group(function () {
         Route::resource('branches', \App\Http\Controllers\BranchController::class)->except(['create', 'show', 'edit']);
-        
+
+        // ─── Delivery Management (Branch Admin) ───
+        Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery.index');
+        Route::get('/delivery/{appointment}/confirm', [DeliveryController::class, 'confirm'])->name('delivery.confirm');
+        Route::post('/delivery/{appointment}/confirm-action', [DeliveryController::class, 'confirmAction'])->name('delivery.confirmAction');
+        Route::post('/delivery/{appointment}/cancel', [DeliveryController::class, 'cancel'])->name('delivery.cancel');
+        Route::post('/delivery/{appointment}/assign-rider', [DeliveryController::class, 'assignRider'])->name('delivery.assignRider');
+        Route::post('/delivery/{appointment}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
+        Route::post('/delivery/{appointment}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
+        Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
+        Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
+
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
         
+        // Payment Settings
+        Route::get('/settings/payment-methods', [\App\Http\Controllers\PaymentSettingsController::class, 'index'])->name('settings.payment-methods.index');
+        Route::post('/settings/payment-methods', [\App\Http\Controllers\PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
+
         // WhatsApp Proxy Routes (Server-ready)
         Route::get('/settings/whatsapp/status', [SettingsController::class, 'whatsappStatus'])->name('whatsapp.status');
         Route::post('/settings/whatsapp/logout', [SettingsController::class, 'whatsappLogout'])->name('whatsapp.logout');
@@ -78,11 +134,15 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
         Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
         Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');
-        
+
+        Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
+        Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
+        Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
+
         Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
         Route::put('/settings/cubbies/{cubby}', [SettingsController::class, 'updateCubby'])->name('settings.updateCubby');
         Route::delete('/settings/cubbies/{cubby}', [SettingsController::class, 'destroyCubby'])->name('settings.destroyCubby');
-        
+
         Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
         Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
 

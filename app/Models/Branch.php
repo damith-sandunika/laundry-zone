@@ -7,8 +7,18 @@ use Illuminate\Database\Eloquent\Model;
 class Branch extends Model
 {
     protected $fillable = [
-        'name', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_path', 'logo_size', 'is_active'
+        'name', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_path', 'logo_size', 'type', 'is_active'
     ];
+
+    public function scopeWorkshops($query)
+    {
+        return $query->where('type', 'workshop');
+    }
+
+    public function scopeRegularBranches($query)
+    {
+        return $query->where('type', 'branch');
+    }
 
     public function users()
     {

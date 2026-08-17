@@ -46,7 +46,14 @@
                                         </div>
                                     @endif
                                     <div>
-                                        <p class="font-bold text-gray-900">{{ $branch->name }}</p>
+                                        <div class="flex items-center gap-2">
+                                            <p class="font-bold text-gray-900">{{ $branch->name }}</p>
+                                            @if($branch->type === 'workshop')
+                                                <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-purple-100 text-purple-700 uppercase">Workshop</span>
+                                            @else
+                                                <span class="px-2 py-0.5 text-[9px] font-bold rounded bg-blue-100 text-blue-700 uppercase">Branch</span>
+                                            @endif
+                                        </div>
                                         <p class="text-xs text-gray-500">{{ $branch->tagline ?? 'No Tagline' }}</p>
                                     </div>
                                 </div>
@@ -101,6 +108,13 @@
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Branch Name <span class="text-red-500">*</span></label>
                                     <input type="text" name="name" required class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Facility Type <span class="text-red-500">*</span></label>
+                                    <select name="type" required class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                        <option value="branch">Retail Branch</option>
+                                        <option value="workshop">Central Workshop</option>
+                                    </select>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>
@@ -159,6 +173,13 @@
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Branch Name <span class="text-red-500">*</span></label>
                                     <input type="text" name="name" :value="selectedBranch?.name" required class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Facility Type <span class="text-red-500">*</span></label>
+                                    <select name="type" :value="selectedBranch?.type" required class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                        <option value="branch">Retail Branch</option>
+                                        <option value="workshop">Central Workshop</option>
+                                    </select>
                                 </div>
                                 <div class="grid grid-cols-2 gap-4">
                                     <div>

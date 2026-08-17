@@ -9,7 +9,7 @@
                 </div>
                 <h2 class="ph-title">Order Details</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">
-                    Customer: <span style="font-weight:700;color:#334155;">{{ $order->customer->name }}</span> &bull; {{ $order->created_at->format('M d, Y h:i A') }}
+                    Customer: <span style="font-weight:700;color:#334155;">{{ $order->customer->name ?? 'Unknown Customer' }}</span> &bull; {{ $order->created_at->format('M d, Y h:i A') }}
                 </p>
             </div>
             <a href="{{ route('orders.print', $order->id) }}" target="_blank"
@@ -237,13 +237,13 @@
                 <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
                     <div>
                         <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Full Name</span>
-                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->name }}</p>
+                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->name ?? 'Unknown Customer' }}</p>
                     </div>
                     <div>
                         <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Phone</span>
-                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->phone }}</p>
+                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->phone ?? 'N/A' }}</p>
                     </div>
-                    @if($order->customer->address)
+                    @if(optional($order->customer)->address)
                     <div>
                         <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Address</span>
                         <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">{{ $order->customer->address }}</p>

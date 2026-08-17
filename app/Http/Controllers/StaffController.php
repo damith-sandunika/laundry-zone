@@ -37,7 +37,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:255',
-            'role' => 'required|in:admin,staff',
+            'role' => 'required|in:admin,branch_admin,staff,rider,workshop_admin',
             'password' => 'required|string|min:8',
         ];
         if (auth()->user()->role === 'super_admin') {
@@ -49,7 +49,7 @@ class StaffController extends Controller
         $currentUserRole = auth()->user()->role;
         
         $role = $request->role;
-        // Only super_admin can create admin users. Others default to staff.
+        // Only super_admin can create admin users. Others (like rider/staff/workshop) are allowed.
         if ($role === 'admin' && $currentUserRole !== 'super_admin') {
             $role = 'staff';
         }
@@ -86,7 +86,7 @@ class StaffController extends Controller
             'name'      => 'required|string|max:255',
             'email'     => 'required|string|email|max:255|unique:users,email,' . $staff->id,
             'phone'     => 'nullable|string|max:50',
-            'role'      => 'required|in:admin,staff,super_admin',
+            'role'      => 'required|in:admin,branch_admin,staff,super_admin,rider,workshop_admin',
             'is_active' => 'required|boolean',
         ];
         if ($request->filled('password')) {

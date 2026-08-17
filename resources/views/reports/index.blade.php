@@ -1,122 +1,235 @@
 <x-app-layout>
     <x-slot name="header">
-        <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div class="flex justify-between items-center flex-wrap gap-3">
             <div>
-                <h2 class="ph-title">Business Reports</h2>
-                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Analyze sales, revenue, stock deductions and payroll</p>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight">Business Analytics & Reports</h2>
+                <p class="text-sm text-slate-500 font-medium mt-1">Comprehensive insights, sales trends, and performance metrics</p>
+            </div>
+            <div class="flex gap-3">
+                <a href="{{ route('reports.closeShift') }}" target="_blank"
+                   class="px-4 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-amber-500/20 transition-all">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    Close Shift
+                </a>
+                <a href="{{ route('reports.pdf', ['start_date' => $startDate, 'end_date' => $endDate, 'branch_id' => $branchId]) }}" target="_blank"
+                   class="px-4 py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-slate-800/20 transition-all">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Export PDF
+                </a>
             </div>
         </div>
     </x-slot>
 
-    <div class="bg-white p-4 rounded-md border border-gray-100 shadow-sm mb-6 bg-gray-50">
-        <form action="{{ route('reports.index') }}" method="GET" class="flex flex-wrap items-end gap-3">
-            <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Start Date</label>
-                <input type="date" name="start_date" value="{{ $startDate }}" class="text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- Filters Section -->
+    <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm mb-6">
+        <form action="{{ route('reports.index') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+            @if($isSuperAdmin)
+                <div class="flex-1 min-w-[200px]">
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Branch</label>
+                    <select name="branch_id" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-0 transition-colors">
+                        <option value="">🌍 All Branches (Company Wide)</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>
+                                🏪 {{ $branch->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Start Date</label>
+                <input type="date" name="start_date" value="{{ $startDate }}" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-0 transition-colors">
+            </div>
+            <div class="flex-1 min-w-[150px]">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">End Date</label>
+                <input type="date" name="end_date" value="{{ $endDate }}" class="w-full px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-0 transition-colors">
             </div>
             <div>
-                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">End Date</label>
-                <input type="date" name="end_date" value="{{ $endDate }}" class="text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                <button type="submit" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 hover:-translate-y-0.5 text-white text-sm font-bold rounded-xl flex items-center gap-2 shadow-lg shadow-blue-600/25 transition-all">
+                    <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                    Apply Filter
+                </button>
             </div>
-            <button type="submit" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
-                Apply Filter
-            </button>
-            <a href="{{ route('reports.pdf', ['start_date' => $startDate, 'end_date' => $endDate]) }}" target="_blank"
-               class="px-4 py-2 bg-gray-700 text-white text-xs font-semibold rounded hover:bg-gray-800 transition-colors">
-                Export PDF
-            </a>
-            <a href="{{ route('reports.closeShift') }}" target="_blank"
-               class="px-4 py-2 bg-amber-500 text-white text-xs font-semibold rounded hover:bg-amber-600 transition-colors">
-                📋 Close Shift Report
-            </a>
         </form>
     </div>
 
-    <!-- Stat Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white p-5 rounded-md border border-gray-100 shadow-sm">
-            <h4 class="text-xs font-semibold text-gray-500 uppercase mb-1">Total Sales Revenue</h4>
-            <p class="text-2xl font-bold text-gray-900">Rs.{{ number_format($totalSales, 2) }}</p>
-        </div>
-        <div class="bg-white p-5 rounded-md border border-gray-100 shadow-sm">
-            <h4 class="text-xs font-semibold text-gray-500 uppercase mb-1">Done Payments (Collected)</h4>
-            <p class="text-2xl font-bold text-green-600">Rs.{{ number_format($totalCollected, 2) }}</p>
-            <div class="mt-2 text-[11px] font-bold text-gray-500 flex justify-between">
-                <span>💵 Cash: Rs.{{ number_format($collectedCash, 2) }}</span>
-                <span>💳 Card: Rs.{{ number_format($collectedCard, 2) }}</span>
+    <!-- Key Metrics Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+        <!-- Total Revenue -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group">
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"></div>
+            <div class="flex items-center gap-3 mb-4 relative z-10">
+                <div class="w-10 h-10 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Gross Revenue</h3>
+            </div>
+            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10">Rs.{{ number_format($totalSales, 2) }}</p>
+            <div class="mt-3 text-xs font-semibold text-emerald-500 flex items-center gap-1 relative z-10">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
+                In selected period
             </div>
         </div>
-        <div class="bg-white p-5 rounded-md border border-gray-100 shadow-sm">
-            <h4 class="text-xs font-semibold text-gray-500 uppercase mb-1">Pending Payments</h4>
-            <p class="text-2xl font-bold text-red-500">Rs.{{ number_format($totalPending + $totalCredit, 2) }}</p>
+
+        <!-- Collections -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group">
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-emerald-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"></div>
+            <div class="flex items-center gap-3 mb-4 relative z-10">
+                <div class="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                </div>
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Collected Payments</h3>
+            </div>
+            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10">Rs.{{ number_format($totalCollected, 2) }}</p>
+            <div class="mt-3 flex gap-2 text-xs font-bold text-slate-500 relative z-10">
+                <span class="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">💵 Rs.{{ number_format($collectedCash, 2) }}</span>
+                <span class="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">💳 Rs.{{ number_format($collectedCard, 2) }}</span>
+            </div>
+        </div>
+
+        <!-- Walk-in vs Delivery -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group">
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-violet-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"></div>
+            <div class="flex items-center gap-3 mb-4 relative z-10">
+                <div class="w-10 h-10 bg-violet-50 text-violet-500 rounded-xl flex items-center justify-center">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                </div>
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Channel Revenue</h3>
+            </div>
+            <div class="flex items-end gap-4 relative z-10">
+                <div class="flex-1">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">🚶 Walk-in</div>
+                    <div class="text-lg font-black text-slate-900 tracking-tight">Rs.{{ number_format($walkinRevenue, 2) }}</div>
+                </div>
+                <div class="w-px h-10 bg-slate-200"></div>
+                <div class="flex-1">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">🚚 Delivery</div>
+                    <div class="text-lg font-black text-violet-500 tracking-tight">Rs.{{ number_format($deliveryRevenue, 2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group">
+            <div class="absolute -top-4 -right-4 w-24 h-24 bg-rose-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"></div>
+            <div class="flex items-center gap-3 mb-4 relative z-10">
+                <div class="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center">
+                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                </div>
+                <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Pending / Due</h3>
+            </div>
+            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10">Rs.{{ number_format($totalPending + $totalCredit, 2) }}</p>
+            <div class="mt-3 text-xs font-bold text-rose-500 flex items-center gap-1 relative z-10">
+                Includes Rs.{{ number_format($totalCredit, 2) }} from Credit Customers
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
+            <h3 class="text-base font-black text-slate-900 mb-4">Daily Revenue Trend</h3>
+            <div id="revenueChart" class="h-[300px] w-full"></div>
+        </div>
+        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
+            <h3 class="text-base font-black text-slate-900 mb-4">Order Channels</h3>
+            <div class="flex-1 flex items-center justify-center">
+                <div id="channelChart" class="w-full"></div>
+            </div>
         </div>
     </div>
 
     <!-- Reports Content Wrapper -->
-    <div x-data="reportData()" class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
+    <div x-data="reportData()" class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
         
         <!-- Premium Horizontally Scrollable Tab Header -->
-        <div class="p-3 border-b border-gray-100 bg-gray-50/50 overflow-x-auto scrollbar-none">
-            <div class="flex gap-2 w-max bg-gray-200/50 p-1 rounded-xl">
-                <button @click="activeReport = 'services'" 
-                    :class="activeReport === 'services' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+        <div class="p-4 border-b border-slate-100 bg-slate-50 overflow-x-auto scrollbar-none">
+            <div class="flex gap-2 w-max bg-slate-200/60 p-1.5 rounded-2xl">
+                <button @click="activeReport = 'services'" :class="activeReport === 'services' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
                     Service Breakdown
                 </button>
-                <button @click="activeReport = 'sales'" 
-                    :class="activeReport === 'sales' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                <button @click="activeReport = 'sales'" :class="activeReport === 'sales' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
                     Sales Log
                 </button>
-                <button @click="activeReport = 'salaries'" 
-                    :class="activeReport === 'salaries' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                <button @click="activeReport = 'customers'" :class="activeReport === 'customers' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
+                    Top Customers
+                </button>
+                <button @click="activeReport = 'salaries'" :class="activeReport === 'salaries' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
                     Salaries Log
                 </button>
-                <button @click="activeReport = 'inventory'" 
-                    :class="activeReport === 'inventory' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Inventory Usage Log
+                <button @click="activeReport = 'inventory'" :class="activeReport === 'inventory' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
+                    Inventory Usage
                 </button>
-                <button @click="activeReport = 'credit'" 
-                    :class="activeReport === 'credit' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                <button @click="activeReport = 'credit'" :class="activeReport === 'credit' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
                     Credit Customers
                 </button>
-                <button @click="activeReport = 'packages'" 
-                    :class="activeReport === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                <button @click="activeReport = 'packages'" :class="activeReport === 'packages' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
                     Package Payments
                 </button>
             </div>
         </div>
 
-        <div class="p-6">
+        <div>
             <!-- SALES LOG -->
-            <div x-show="activeReport === 'sales'">
+            <div x-show="activeReport === 'sales'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-4 py-2">Order No</th>
-                                <th class="px-4 py-2">Customer</th>
-                                <th class="px-4 py-2">Date</th>
-                                <th class="px-4 py-2 text-right">Total</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-slate-100">
                             @forelse($orders as $order)
-                                <tr>
-                                    <td class="px-4 py-3 font-medium text-blue-600">
-                                        <a href="{{ route('orders.show', $order->id) }}" class="hover:underline">{{ $order->order_number }}</a>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold">
+                                        <a href="{{ route('orders.show', $order->id) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
                                     </td>
-                                    <td class="px-4 py-3">{{ $order->customer->name }}</td>
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
+                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</td>
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-4 py-6 text-center text-gray-400">No sales record in this range.</td>
+                                    <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No sales record in this range.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TOP CUSTOMERS -->
+            <div x-show="activeReport === 'customers'" style="display:none;" x-transition>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Rank</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Orders</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total Spent</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($topCustomers as $index => $tc)
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-black text-lg text-slate-300">#{{ $index + 1 }}</td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-bold text-slate-900 text-base">{{ $tc->customer->name ?? 'Deleted Customer' }}</div>
+                                        <div class="text-sm font-semibold text-slate-500">{{ $tc->customer->phone ?? '' }}</div>
+                                    </td>
+                                    <td class="px-6 py-4 text-center font-black text-blue-500 text-base">{{ $tc->total_orders }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-emerald-500 text-lg">Rs.{{ number_format($tc->total_spent, 2) }}</td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No customer data available.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -125,39 +238,39 @@
             </div>
 
             <!-- SERVICE BREAKDOWN -->
-            <div x-show="activeReport === 'services'" style="display: none;">
+            <div x-show="activeReport === 'services'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-4 py-2">Service Name</th>
-                                <th class="px-4 py-2 text-center">Total Count</th>
-                                <th class="px-4 py-2 text-right">Full Total</th>
-                                <th class="px-4 py-2 text-right">Done Payment</th>
-                                <th class="px-4 py-2 text-right">Pending Payment</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Service Name</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Count</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Full Total</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Collected</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Pending Due</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-slate-100">
                             @forelse($services as $serv)
-                                <tr>
-                                    <td class="px-4 py-3 font-semibold">{{ $serv->name }}</td>
-                                    <td class="px-4 py-3 text-center">{{ number_format($serv->total_qty, 1) }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold text-blue-600">Rs.{{ number_format($serv->total_revenue, 2) }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold text-green-600">Rs.{{ number_format($serv->done_payment, 2) }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold text-red-500">
-                                        <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
-                                            <span>Rs.{{ number_format($serv->pending_payment + $serv->credit_payment, 2) }}</span>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold text-slate-900 text-sm">{{ $serv->name }}</td>
+                                    <td class="px-6 py-4 text-center font-bold text-slate-500">{{ number_format($serv->total_qty, 1) }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-blue-600">Rs.{{ number_format($serv->total_revenue, 2) }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-emerald-500">Rs.{{ number_format($serv->done_payment, 2) }}</td>
+                                    <td class="px-6 py-4 text-right">
+                                        <div class="flex justify-end items-center gap-3">
+                                            <span class="font-black text-rose-500">Rs.{{ number_format($serv->pending_payment + $serv->credit_payment, 2) }}</span>
                                             @if($serv->pending_payment > 0 || $serv->credit_payment > 0)
-                                                <button @click="openPendingOrders('{{ addslashes($serv->name) }}')" class="px-3 py-1 text-[11px] uppercase tracking-wider bg-blue-50 text-blue-600 rounded-md border border-blue-200 hover:bg-blue-100 hover:text-blue-700 font-bold transition-all shadow-sm">View</button>
+                                                <button @click="openPendingOrders('{{ addslashes($serv->name) }}')" class="px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-blue-50 text-blue-600 border-2 border-blue-100 rounded-lg hover:bg-blue-100 transition-colors">View</button>
                                             @else
-                                                <button class="px-3 py-1 text-[11px] uppercase tracking-wider bg-gray-50 text-gray-400 rounded-md border border-gray-200 cursor-not-allowed font-bold" disabled>View</button>
+                                                <button class="px-3 py-1.5 text-xs font-bold uppercase tracking-widest bg-slate-50 text-slate-300 border-2 border-slate-100 rounded-lg cursor-not-allowed" disabled>View</button>
                                             @endif
                                         </div>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-4 py-6 text-center text-gray-400">No service usage tracked in this range.</td>
+                                    <td colspan="5" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No service usage tracked in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -166,26 +279,26 @@
             </div>
 
             <!-- SALARIES LOG -->
-            <div x-show="activeReport === 'salaries'" style="display: none;">
+            <div x-show="activeReport === 'salaries'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-4 py-2">Date</th>
-                                <th class="px-4 py-2">Payment Details</th>
-                                <th class="px-4 py-2 text-right">Amount</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Payment Details</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Amount</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-slate-100">
                             @forelse($salaries as $sal)
-                                <tr>
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $sal->expense_date }}</td>
-                                    <td class="px-4 py-3 font-medium text-gray-700">{{ $sal->description }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold text-red-600">Rs.{{ number_format($sal->amount, 2) }}</td>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $sal->expense_date }}</td>
+                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $sal->description }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-rose-500">Rs.{{ number_format($sal->amount, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-4 py-6 text-center text-gray-400">No payroll expenses logged in this range.</td>
+                                    <td colspan="3" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No payroll expenses logged in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -194,38 +307,38 @@
             </div>
 
             <!-- INVENTORY USAGE LOG -->
-            <div x-show="activeReport === 'inventory'" style="display: none;">
+            <div x-show="activeReport === 'inventory'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-4 py-2">Date</th>
-                                <th class="px-4 py-2">Supply Item</th>
-                                <th class="px-4 py-2">Type</th>
-                                <th class="px-4 py-2 text-center">Qty Changes</th>
-                                <th class="px-4 py-2">Reason / Authorized By</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Supply Item</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Qty Changes</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Reason / By</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-slate-100">
                             @forelse($inventoryLogs as $log)
-                                <tr>
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $log->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-4 py-3 font-semibold text-gray-800">{{ $log->inventoryItem->name ?? 'Deleted Item' }}</td>
-                                    <td class="px-4 py-3">
-                                        <span class="px-2 py-0.5 text-xs font-semibold rounded {{ $log->type === 'stock_in' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-xs font-semibold text-slate-500">{{ $log->created_at->format('Y-m-d h:i A') }}</td>
+                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $log->inventoryItem->name ?? 'Deleted Item' }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-lg border {{ $log->type === 'stock_in' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
                                             {{ strtoupper(str_replace('_', ' ', $log->type)) }}
                                         </span>
                                     </td>
-                                    <td class="px-4 py-3 text-center font-bold {{ $log->type === 'stock_in' ? 'text-green-600' : 'text-red-600' }}">
+                                    <td class="px-6 py-4 text-center font-black text-base {{ $log->type === 'stock_in' ? 'text-emerald-500' : 'text-rose-500' }}">
                                         {{ $log->type === 'stock_in' ? '+' : '-' }}{{ $log->quantity }}
                                     </td>
-                                    <td class="px-4 py-3 text-xs text-gray-500">
-                                        {{ $log->notes ?? '-' }} / <span class="font-medium text-gray-700">{{ $log->createdBy->name ?? 'System' }}</span>
+                                    <td class="px-6 py-4 text-sm font-medium text-slate-500">
+                                        {{ $log->notes ?? '-' }} <br><span class="font-bold text-slate-900">{{ $log->createdBy->name ?? 'System' }}</span>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-4 py-6 text-center text-gray-400">No inventory transactions tracked in this range.</td>
+                                    <td colspan="5" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No inventory transactions tracked in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -234,99 +347,100 @@
             </div>
 
             <!-- CREDIT CUSTOMERS LOG -->
-            <div x-show="activeReport === 'credit'" style="display: none;">
+            <div x-show="activeReport === 'credit'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-4 py-2">Order No</th>
-                                <th class="px-4 py-2">Customer</th>
-                                <th class="px-4 py-2">Date Issued</th>
-                                <th class="px-4 py-2 text-right">Total</th>
-                                <th class="px-4 py-2 text-right">Balance Due</th>
-                                <th class="px-4 py-2 text-center">Action</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date Issued</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Balance Due</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-slate-100">
                             @forelse($creditOrders as $order)
-                                <tr>
-                                    <td class="px-4 py-3 font-medium text-blue-600">
-                                        <a href="{{ route('orders.show', $order->id) }}" class="hover:underline">{{ $order->order_number }}</a>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold">
+                                        <a href="{{ route('orders.show', $order->id) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
                                     </td>
-                                    <td class="px-4 py-3 font-semibold">{{ $order->customer->name }} <br><span class="text-xs text-gray-500">{{ $order->customer->phone }}</span></td>
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-4 py-3 text-right font-semibold">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
-                                    <td class="px-4 py-3 text-right font-bold text-orange-600">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
-                                    <td class="px-4 py-3 text-center">
-                                        <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center flex-wrap">
+                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $order->customer->name }} <br><span class="text-xs text-slate-500">{{ $order->customer->phone }}</span></td>
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
+                                    <td class="px-6 py-4 text-right font-bold text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-orange-600 text-base">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
+                                    <td class="px-6 py-4 text-center">
+                                        <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center">
                                             @csrf
-                                            <input type="number" name="amount" value="{{ $order->total - $order->paid_amount }}" step="0.01" max="{{ $order->total - $order->paid_amount }}" class="w-24 px-2 py-1 border border-gray-300 rounded text-xs" required>
-                                            <select name="payment_method" class="w-24 px-2 py-1 pr-6 border border-gray-300 rounded text-xs bg-white appearance-auto" style="min-width:80px;">
+                                            <input type="number" name="amount" value="{{ $order->total - $order->paid_amount }}" step="0.01" max="{{ $order->total - $order->paid_amount }}" class="w-20 px-3 py-1.5 border-2 border-slate-200 rounded-lg text-sm font-bold focus:ring-0 focus:border-blue-500" required>
+                                            <select name="payment_method" class="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-sm font-bold bg-white focus:ring-0 focus:border-blue-500">
                                                 <option value="cash">💵 Cash</option>
                                                 <option value="card">💳 Card</option>
                                             </select>
-                                            <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 whitespace-nowrap">✓ Pay</button>
+                                            <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-black shadow-md shadow-emerald-500/20 transition-all">✓ Pay</button>
                                         </form>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-6 text-center text-gray-400">No active credit customers.</td>
+                                    <td colspan="6" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No active credit customers.</td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
+
             <!-- PACKAGE PAYMENTS LOG -->
-            <div x-show="activeReport === 'packages'" style="display: none;">
+            <div x-show="activeReport === 'packages'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-4 py-2">Customer</th>
-                                <th class="px-4 py-2">Package Details</th>
-                                <th class="px-4 py-2">Issue Date</th>
-                                <th class="px-4 py-2 text-right">Price</th>
-                                <th class="px-4 py-2 text-center">Status</th>
-                                <th class="px-4 py-2 text-center">Action</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Package Details</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Issue Date</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Price</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100">
+                        <tbody class="divide-y divide-slate-100">
                             @forelse($customerPackages as $cp)
-                                <tr>
-                                    <td class="px-4 py-3 font-semibold">{{ $cp->customer->name ?? 'Deleted' }} <br><span class="text-xs text-gray-500">{{ $cp->customer->phone ?? '' }}</span></td>
-                                    <td class="px-4 py-3">
-                                        <div class="font-bold text-blue-600">{{ $cp->package->name ?? 'Unknown' }}</div>
-                                        <div class="text-[10px] text-gray-500">Exp: {{ $cp->end_date->format('Y-m-d') }}</div>
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $cp->customer->name ?? 'Deleted' }} <br><span class="text-xs text-slate-500">{{ $cp->customer->phone ?? '' }}</span></td>
+                                    <td class="px-6 py-4">
+                                        <div class="font-black text-blue-600">{{ $cp->package->name ?? 'Unknown' }}</div>
+                                        <div class="text-xs font-semibold text-slate-500">Exp: {{ $cp->end_date->format('Y-m-d') }}</div>
                                     </td>
-                                    <td class="px-4 py-3 text-xs text-gray-500">{{ $cp->start_date->format('Y-m-d') }}</td>
-                                    <td class="px-4 py-3 text-right font-bold">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $cp->start_date->format('Y-m-d') }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-slate-900">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
+                                    <td class="px-6 py-4 text-center">
                                         @if($cp->payment_status === 'paid')
-                                            <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-green-100 text-green-700 rounded border border-green-200">PAID</span>
+                                            <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">PAID</span>
                                         @else
-                                            <span class="px-2 py-0.5 text-[10px] uppercase font-bold bg-red-100 text-red-700 rounded border border-red-200">PENDING</span>
+                                            <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-rose-50 text-rose-700 border border-rose-200 rounded-lg">PENDING</span>
                                         @endif
                                     </td>
-                                    <td class="px-4 py-3 text-center">
+                                    <td class="px-6 py-4 text-center">
                                         @if($cp->payment_status === 'pending')
-                                            <form action="{{ route('reports.approvePackagePayment', $cp->id) }}" method="POST" class="flex gap-2 items-center justify-center flex-wrap">
+                                            <form action="{{ route('reports.approvePackagePayment', $cp->id) }}" method="POST" class="flex gap-2 items-center justify-center">
                                                 @csrf
-                                                <select name="payment_method" class="w-24 px-2 py-1 pr-6 border border-gray-300 rounded text-xs bg-white appearance-auto" style="min-width:80px;">
+                                                <select name="payment_method" class="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-sm font-bold bg-white focus:ring-0 focus:border-blue-500">
                                                     <option value="cash">💵 Cash</option>
                                                     <option value="card">💳 Card</option>
                                                 </select>
-                                                <button type="submit" class="px-3 py-1 bg-green-600 text-white rounded text-xs font-bold hover:bg-green-700 whitespace-nowrap">✓ Approve</button>
+                                                <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-xs font-black shadow-md shadow-emerald-500/20 transition-all">✓ Approve</button>
                                             </form>
                                         @else
-                                            <span class="text-xs text-gray-400 font-semibold italic">Approved</span>
+                                            <span class="text-sm font-bold text-slate-400 italic">Approved</span>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-4 py-6 text-center text-gray-400">No packages issued in this range.</td>
+                                    <td colspan="6" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No packages issued in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -336,55 +450,51 @@
         </div>
 
         <!-- Pending Orders Modal -->
-        <div x-cloak x-show="pendingModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-[4px] p-4">
-            <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:500px;overflow:hidden;display:flex;flex-direction:column;max-height:85vh;" @click.away="pendingModalOpen = false">
-                <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#fffbeb;">
+        <div x-cloak x-show="pendingModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]" @click.away="pendingModalOpen = false">
+                <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-amber-50">
                     <div>
-                        <h3 style="font-size:16px;font-weight:900;color:#d97706;margin:0;">Pending Orders</h3>
-                        <p style="font-size:12px;color:#b45309;margin:2px 0 0;font-weight:600;" x-text="'Service: ' + selectedServiceName"></p>
+                        <h3 class="text-lg font-black text-amber-600">Pending Orders</h3>
+                        <p class="text-sm font-bold text-amber-700 mt-1" x-text="'Service: ' + selectedServiceName"></p>
                     </div>
-                    <button @click="pendingModalOpen = false" style="background:none;border:none;cursor:pointer;color:#d97706;font-size:20px;font-weight:bold;">✕</button>
+                    <button @click="pendingModalOpen = false" class="w-10 h-10 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors font-bold text-lg">✕</button>
                 </div>
-                <div style="padding:0;overflow-y:auto;background:#f8fafc;flex:1;">
-                    <table style="width:100%;border-collapse:collapse;text-align:left;font-size:13px;">
-                        <thead style="background:#f1f5f9;position:sticky;top:0;">
+                <div class="overflow-y-auto bg-slate-50 flex-1">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-100 sticky top-0">
                             <tr>
-                                <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Order</th>
-                                <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Customer</th>
-                                <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;text-align:right;">Service Amount</th>
-                                <th style="padding:12px 16px;font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;text-align:center;">Action</th>
+                                <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Order</th>
+                                <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Service Amount</th>
+                                <th class="px-4 py-3 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody class="divide-y divide-slate-200">
                             <template x-for="order in selectedServiceOrders" :key="order.id">
-                                <tr style="border-bottom:1px solid #e2e8f0;background:white;transition:background 0.1s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
-                                    <td style="padding:12px 16px;">
+                                <tr class="bg-white hover:bg-slate-50 transition-colors">
+                                    <td class="px-4 py-4">
                                         <div class="flex items-center gap-2">
-                                            <a :href="'/orders/' + order.id" target="_blank" style="font-weight:800;color:#2563eb;text-decoration:none;" x-text="order.order_number"></a>
-                                            <span x-show="order.payment_method === 'credit'" class="px-1.5 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded">CREDIT</span>
-                                            <span x-show="order.payment_method === 'pay_on_pickup'" class="px-1.5 py-0.5 bg-yellow-100 text-yellow-700 text-[10px] font-bold rounded">PAY ON PICKUP</span>
+                                            <a :href="'/orders/' + order.id" target="_blank" class="font-bold text-blue-600 hover:underline" x-text="order.order_number"></a>
+                                            <span x-show="order.payment_method === 'credit'" class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-md">CREDIT</span>
+                                            <span x-show="order.payment_method === 'pay_on_pickup'" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-md">PAY ON PICKUP</span>
                                         </div>
-                                        <div style="font-size:11px;color:#94a3b8;font-weight:500;margin-top:2px;" x-text="new Date(order.created_at).toLocaleDateString()"></div>
+                                        <div class="text-xs font-semibold text-slate-400 mt-1" x-text="new Date(order.created_at).toLocaleDateString()"></div>
                                     </td>
-                                    <td style="padding:12px 16px;font-weight:600;color:#334155;">
+                                    <td class="px-4 py-4 font-bold text-slate-900">
                                         <span x-text="order.customer ? order.customer.name : 'Walk-in'"></span>
-                                        <div style="font-size:11px;color:#64748b;margin-top:2px;" x-text="order.customer ? order.customer.phone : ''"></div>
+                                        <div class="text-xs font-semibold text-slate-500 mt-1" x-text="order.customer ? order.customer.phone : ''"></div>
                                     </td>
-                                    <td style="padding:12px 16px;text-align:right;font-weight:800;color:#dc2626;" x-text="'Rs.' + parseFloat(order.service_due || 0).toFixed(2)">
-                                    </td>
-                                    <td style="padding:12px 16px;text-align:center;">
-                                        <a :href="'/orders/' + order.id" target="_blank" style="padding:6px 12px;background:#2563eb;color:white;font-size:11px;font-weight:800;text-decoration:none;border-radius:6px;display:inline-block;transition:all 0.15s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">View Order</a>
+                                    <td class="px-4 py-4 text-right font-black text-rose-500" x-text="'Rs.' + parseFloat(order.service_due || 0).toFixed(2)"></td>
+                                    <td class="px-4 py-4 text-center">
+                                        <a :href="'/orders/' + order.id" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors inline-block">View</a>
                                     </td>
                                 </tr>
                             </template>
                             <tr x-show="selectedServiceOrders.length === 0">
-                                <td colspan="4" style="padding:30px;text-align:center;color:#94a3b8;font-weight:500;font-size:13px;">No pending orders found.</td>
+                                <td colspan="4" class="px-6 py-10 text-center text-slate-400 font-semibold text-sm">No pending orders found.</td>
                             </tr>
                         </tbody>
                     </table>
-                </div>
-                <div style="padding:16px 24px;border-top:1px solid #f1f5f9;background:white;text-align:right;">
-                    <button @click="pendingModalOpen = false" style="padding:10px 20px;background:#f1f5f9;color:#475569;font-size:13px;font-weight:700;border:none;border-radius:10px;cursor:pointer;">Close</button>
                 </div>
             </div>
         </div>
@@ -392,6 +502,103 @@
     </div>
 
     <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // ApexCharts logic
+            const dailyData = @json($dailyRevenue);
+            const walkinRev = {{ $walkinRevenue }};
+            const deliveryRev = {{ $deliveryRevenue }};
+            
+            // Format dates and series for revenue trend
+            const categories = dailyData.map(d => {
+                let date = new Date(d.date);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            const seriesData = dailyData.map(d => parseFloat(d.revenue));
+
+            // Revenue Chart
+            var revOptions = {
+                series: [{
+                    name: 'Revenue',
+                    data: seriesData
+                }],
+                chart: {
+                    height: 300,
+                    type: 'area',
+                    toolbar: { show: false },
+                    fontFamily: 'inherit'
+                },
+                colors: ['#2563eb'],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 3 },
+                fill: {
+                    type: 'gradient',
+                    gradient: {
+                        shadeIntensity: 1,
+                        opacityFrom: 0.4,
+                        opacityTo: 0.05,
+                        stops: [0, 90, 100]
+                    }
+                },
+                xaxis: {
+                    categories: categories,
+                    labels: { style: { colors: '#64748b', fontWeight: 600 } },
+                    axisBorder: { show: false },
+                    axisTicks: { show: false }
+                },
+                yaxis: {
+                    labels: {
+                        style: { colors: '#64748b', fontWeight: 600 },
+                        formatter: function(val) { return "Rs." + val.toLocaleString() }
+                    }
+                },
+                grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+                tooltip: {
+                    theme: 'light',
+                    y: { formatter: function(val) { return "Rs." + val.toLocaleString() } }
+                }
+            };
+
+            var revChart = new ApexCharts(document.querySelector("#revenueChart"), revOptions);
+            revChart.render();
+
+            // Channel Chart (Donut)
+            if (walkinRev > 0 || deliveryRev > 0) {
+                var chanOptions = {
+                    series: [walkinRev, deliveryRev],
+                    labels: ['Walk-in', 'Delivery'],
+                    chart: { type: 'donut', height: 280, fontFamily: 'inherit' },
+                    colors: ['#0f172a', '#8b5cf6'],
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '70%',
+                                labels: {
+                                    show: true,
+                                    name: { fontSize: '14px', fontWeight: 600, color: '#64748b' },
+                                    value: { fontSize: '24px', fontWeight: 900, color: '#0f172a', formatter: function(val) { return "Rs." + val.toLocaleString() } },
+                                    total: {
+                                        show: true,
+                                        label: 'Total',
+                                        formatter: function (w) {
+                                            return "Rs." + (w.globals.seriesTotals.reduce((a, b) => a + b, 0)).toLocaleString()
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    dataLabels: { enabled: false },
+                    stroke: { width: 0 },
+                    legend: { position: 'bottom', horizontalAlign: 'center', fontWeight: 700, markers: { radius: 12 } },
+                    tooltip: { theme: 'light', y: { formatter: function(val) { return "Rs." + val.toLocaleString() } } }
+                };
+                var chanChart = new ApexCharts(document.querySelector("#channelChart"), chanOptions);
+                chanChart.render();
+            } else {
+                document.querySelector("#channelChart").innerHTML = '<div class="text-center text-slate-400 font-semibold p-10">No revenue data to display</div>';
+            }
+        });
+
         function reportData() {
             return {
                 activeReport: 'services',

@@ -10,7 +10,7 @@ class Order extends Model
     use BelongsToBranch;
 
     protected $fillable = [
-        'order_number', 'branch_id', 'customer_id', 'created_by',
+        'order_number', 'branch_id', 'customer_id', 'created_by', 'workshop_id',
         'status', 'subtotal', 'discount', 'additional', 'total', 'paid_amount',
         'payment_status', 'payment_method', 'loyalty_points_used',
         'loyalty_points_earned', 'due_date', 'notes', 'is_online_booking',
@@ -26,28 +26,39 @@ class Order extends Model
 
     // Status labels for display
     public static $statusLabels = [
-        'received'  => 'Received',
-        'done'      => 'Done',
-        'delivered' => 'Delivered',
-        'cancelled' => 'Cancelled',
+        'received'               => 'Received',
+        'dispatched_to_workshop' => 'Sent to Workshop',
+        'processing'             => 'At Workshop',
+        'returned_from_workshop' => 'Returning to Branch',
+        'done'                   => 'Done',
+        'delivered'              => 'Delivered',
+        'cancelled'              => 'Cancelled',
     ];
 
     // Status colors for UI badges
     public static $statusColors = [
-        'received'  => 'info',
-        'done'      => 'success',
-        'delivered' => 'secondary',
-        'cancelled' => 'danger',
+        'received'               => 'info',
+        'dispatched_to_workshop' => 'warning',
+        'processing'             => 'primary',
+        'returned_from_workshop' => 'warning',
+        'done'                   => 'success',
+        'delivered'              => 'secondary',
+        'cancelled'              => 'danger',
     ];
 
     public function customer()
     {
-        return $this->belongsTo(Customer::class);
+        return $this->belongsTo(Customer::class)->withoutGlobalScopes();
     }
 
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function workshop()
+    {
+        return $this->belongsTo(Branch::class, 'workshop_id')->withoutGlobalScopes();
     }
 
     public function items()

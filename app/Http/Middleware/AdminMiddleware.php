@@ -8,14 +8,9 @@ use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
 {
-    /**
-     * Handle an incoming request.
-     *
-     * @param  Closure(Request): (Response)  $next
-     */
     public function handle(Request $request, Closure $next): Response
     {
-        if (auth()->check() && in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+        if (auth()->check() && in_array(auth()->user()->role, ['admin', 'super_admin', 'branch_admin'])) {
             return $next($request);
         }
 

@@ -40,6 +40,24 @@
                     </div>
                 </div>
 
+                                <!-- Category Filters -->
+                <div class="px-5 py-2 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 overflow-x-auto scrollbar-none">
+                    <div class="flex gap-2 w-max">
+                        <template x-for="cat in allCategories" :key="cat.id">
+                            <button @click="activeCategory = cat.id" 
+                                :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap"
+                                x-text="cat.name">
+                            </button>
+                        </template>
+                        <button @click="activeCategory = 'uncategorized'" 
+                            :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
+                            Uncategorized
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Services Grid -->
                 <div class="flex-1 overflow-y-auto p-4 custom-scrollbar z-10">
                     <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
@@ -520,10 +538,12 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('posSystem', () => ({
+                        Alpine.data('posSystem', () => ({
                 allServices: @json($services),
+                allCategories: @json($categories),
                 allCustomers: @json($customers),
                 allCustomerPackages: @json($customerPackages),
+                activeCategory: {{ $categories->first() ? $categories->first()->id : "'uncategorized'" }},
                 searchQuery: '',
                 customerSearch: '',
                 filteredCustomers: [],
@@ -551,9 +571,19 @@
                     };
                 },
 
-                get filteredServices() {
-                    if (!this.searchQuery) return this.allServices;
-                    return this.allServices.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                                get filteredServices() {
+                    let filtered = this.allServices;
+                    
+                    if (this.activeCategory === 'uncategorized') {
+                        filtered = filtered.filter(s => s.category_id === null);
+                    } else if (this.activeCategory !== null) {
+                        filtered = filtered.filter(s => s.category_id === this.activeCategory);
+                    }
+                    
+                    if (this.searchQuery) {
+                        filtered = filtered.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                    }
+                    return filtered;
                 },
 
                 getColorStyle(colorName) {
