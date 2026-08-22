@@ -504,8 +504,8 @@
                                     </div>
                                     <div class="flex items-center gap-2">
                                         <button @click="if(item.qty > 0) item.qty--" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition-colors">−</button>
-                                        <input type="number" x-model.number="item.qty" class="w-16 text-center text-[14px] font-black border-2 border-slate-200 rounded-lg py-1 focus:border-blue-500 outline-none" min="0">
-                                        <button @click="item.qty++" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition-colors">+</button>
+                                        <input type="number" x-model.number="item.qty" @input="if(item.qty > item.remaining) item.qty = item.remaining" class="w-16 text-center text-[14px] font-black border-2 border-slate-200 rounded-lg py-1 focus:border-blue-500 outline-none" min="0" :max="item.remaining">
+                                        <button @click="if(item.qty < item.remaining) item.qty++" :disabled="item.qty >= item.remaining" :class="item.qty >= item.remaining ? 'opacity-50 cursor-not-allowed' : ''" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 font-black flex items-center justify-center transition-colors">+</button>
                                     </div>
                                 </div>
                             </template>

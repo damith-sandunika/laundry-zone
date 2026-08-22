@@ -44,6 +44,7 @@ class StaffController extends Controller
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string|max:255',
             'basic_salary' => 'nullable|numeric|min:0',
+            'casual_leaves' => 'nullable|integer|min:0',
         ];
         if (auth()->user()->role === 'super_admin') {
             $rules['branch_id'] = 'required|exists:branches,id';
@@ -72,6 +73,7 @@ class StaffController extends Controller
             'address' => $request->address,
             'emergency_contact' => $request->emergency_contact,
             'basic_salary' => $request->basic_salary,
+            'casual_leaves' => $request->casual_leaves ?? 0,
         ]);
 
         return redirect()->back()->with('success', 'Staff member added successfully.');
@@ -103,6 +105,7 @@ class StaffController extends Controller
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string|max:255',
             'basic_salary' => 'nullable|numeric|min:0',
+            'casual_leaves' => 'nullable|integer|min:0',
         ];
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
@@ -112,7 +115,7 @@ class StaffController extends Controller
         }
         $request->validate($rules);
 
-        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id', 'nic', 'dob', 'address', 'emergency_contact', 'basic_salary']);
+        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id', 'nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves']);
         
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && auth()->user()->role !== 'super_admin') {

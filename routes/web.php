@@ -12,6 +12,7 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\HRController;
+use App\Http\Controllers\HRDashboardController;
 use App\Http\Controllers\WhatsappTemplateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DeliveryController;
@@ -160,6 +161,7 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('staff', StaffController::class);
 
         // HR Routes
+        Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->name('hr.dashboard');
         Route::post('/hr/{staff}/attendance', [HRController::class, 'storeAttendance'])->name('hr.attendance.store');
         Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');

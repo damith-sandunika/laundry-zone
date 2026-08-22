@@ -85,6 +85,11 @@
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Casual Leaves (Per Year)</label>
+                            <input type="number" name="casual_leaves" value="{{ old('casual_leaves', $staff->casual_leaves) }}"
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        </div>
+                        <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">NIC (Optional)</label>
                             <input type="text" name="nic" value="{{ old('nic', $staff->nic) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">

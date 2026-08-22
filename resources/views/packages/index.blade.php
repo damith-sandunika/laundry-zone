@@ -70,13 +70,41 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-50/50 p-4 border-t border-slate-100 flex items-center justify-between gap-2">
-                    <form action="{{ route('packages.destroy', $cp) }}" method="POST" onsubmit="return confirm('Remove this package?');" class="m-0">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Package">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                        </button>
-                    </form>
+                <div class="bg-slate-50/50 p-4 border-t border-slate-100 flex items-center justify-between gap-2" x-data="{ deleteModalOpen_{{ $cp->id }}: false }">
+                    <button type="button" @click="deleteModalOpen_{{ $cp->id }} = true" class="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Delete Package">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </button>
+
+                    <!-- Delete Authorization Modal -->
+                    <div x-show="deleteModalOpen_{{ $cp->id }}" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;">
+                        <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+                            <div x-show="deleteModalOpen_{{ $cp->id }}" x-transition.opacity class="fixed inset-0 transition-opacity" @click="deleteModalOpen_{{ $cp->id }} = false">
+                                <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+                            </div>
+                            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                            <div x-show="deleteModalOpen_{{ $cp->id }}" x-transition class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full border border-gray-100">
+                                <form action="{{ route('packages.destroy', $cp) }}" method="POST">
+                                    @csrf @method('DELETE')
+                                    <div class="bg-white px-6 pt-6 pb-6">
+                                        <h3 class="text-lg font-bold text-gray-900 mb-4 flex items-center gap-2">
+                                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                            Delete Authorization Required
+                                        </h3>
+                                        <p class="text-sm text-gray-600 mb-4">Deleting this package will reverse any payments related to it. Please enter a Branch Admin or Super Admin password to confirm.</p>
+                                        
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Admin Password</label>
+                                            <input type="password" name="admin_password" required class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-red-500 focus:border-red-500 bg-gray-50">
+                                        </div>
+                                    </div>
+                                    <div class="bg-gray-50/80 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
+                                        <button type="button" @click="deleteModalOpen_{{ $cp->id }} = false" class="px-4 py-2 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Cancel</button>
+                                        <button type="submit" class="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-bold shadow-md hover:bg-red-700 transition-colors">Confirm Delete</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
 
                     <div class="flex gap-2">
                         @if($cp->payment_status === 'pending')
@@ -147,8 +175,7 @@
                                                 <span class="font-black text-blue-600 text-sm">Rs.{{ number_format($p->price, 0) }}</span>
                                             </div>
                                             <div class="text-[11px] font-bold text-slate-500">
-                                                {{ $p->payment_type === 'prepaid' ? 'Pre-paid' : 'Post-paid' }} 
-                                                @if($p->is_rollover) &bull; Rollover Enabled @endif
+                                                {{ $p->payment_type === 'prepaid' ? 'Pre-paid' : 'Post-paid' }}
                                             </div>
                                         </div>
                                     </label>

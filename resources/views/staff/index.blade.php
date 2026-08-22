@@ -19,7 +19,7 @@
         </div>
     @endif
 
-    <div x-data="{ addModalOpen: false, salaryModalOpen: false, selectedUser: null, selectedMonth: '' }" @open-add-staff.window="addModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
+    <div x-data="{ addModalOpen: false, salaryModalOpen: false, selectedUser: null, selectedMonth: '', notComingModalOpen: false, notComingUser: null }" @open-add-staff.window="addModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
 
         <div>
             <!-- Staff List -->
@@ -34,6 +34,7 @@
                             @endif
                             <th class="px-6 py-3 font-semibold">Role</th>
                             <th class="px-6 py-3 font-semibold text-center">Status</th>
+                            <th class="px-6 py-3 font-semibold text-center bg-blue-50/50 rounded-t-lg">Today's Attendance</th>
                             <th class="px-6 py-3 font-semibold text-center">Action</th>
                         </tr>
                     </thead>
@@ -59,6 +60,35 @@
                                         <span class="px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-700">Active</span>
                                     @else
                                         <span class="px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-700">Suspended</span>
+                                    @endif
+                                </td>
+                                
+                                <!-- Quick Attendance Action -->
+                                <td class="px-6 py-4 text-center bg-blue-50/20 border-x border-gray-100">
+                                    @php
+                                        $todayAtt = $employee->attendances()->whereDate('date', now()->format('Y-m-d'))->first();
+                                    @endphp
+                                    
+                                    @if($todayAtt)
+                                        <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-lg {{ $todayAtt->status === 'present' ? 'bg-green-100 text-green-700' : ($todayAtt->status === 'late' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700') }}">
+                                            Marked: {{ $todayAtt->status }}
+                                        </span>
+                                    @else
+                                        <div class="flex items-center justify-center gap-1">
+                                            <form method="POST" action="{{ route('hr.attendance.store', $employee) }}">
+                                                @csrf
+                                                <input type="hidden" name="date" value="{{ now()->format('Y-m-d') }}">
+                                                <input type="hidden" name="status" value="present">
+                                                <button type="submit" class="px-2 py-1 text-[10px] font-bold uppercase bg-green-50 text-green-600 rounded hover:bg-green-100 border border-green-200" title="Present">✔️ P</button>
+                                            </form>
+                                            <form method="POST" action="{{ route('hr.attendance.store', $employee) }}">
+                                                @csrf
+                                                <input type="hidden" name="date" value="{{ now()->format('Y-m-d') }}">
+                                                <input type="hidden" name="status" value="late">
+                                                <button type="submit" class="px-2 py-1 text-[10px] font-bold uppercase bg-orange-50 text-orange-600 rounded hover:bg-orange-100 border border-orange-200" title="Late">⏰ L</button>
+                                            </form>
+                                            <button @click="notComingUser = {{ $employee }}; notComingModalOpen = true" type="button" class="px-2 py-1 text-[10px] font-bold uppercase bg-red-50 text-red-600 rounded hover:bg-red-100 border border-red-200" title="Not Coming">❌ N</button>
+                                        </div>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center space-x-2">
@@ -137,6 +167,22 @@
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Basic Salary (Rs.)</label>
                                             <input type="number" step="0.01" name="basic_salary" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                         </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Casual Leaves (Per Year)</label>
+                                            <input type="number" name="casual_leaves" value="14" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
+                                            <input type="date" name="dob" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Emergency Contact</label>
+                                            <input type="text" name="emergency_contact" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">NIC (Optional)</label>
                                             <input type="text" name="nic" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
@@ -220,5 +266,48 @@
             </div>
         </div>
 
+        <!-- Not Coming (Leave) Modal -->
+        <div x-show="notComingModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+            <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+                <div x-show="notComingModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity" @click="notComingModalOpen = false">
+                    <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+                </div>
+                <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                <div x-show="notComingModalOpen" x-transition class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full">
+                    <form x-bind:action="`/hr/${notComingUser?.id}/leaves`" method="POST">
+                        @csrf
+                        <div class="bg-white px-4 pt-5 pb-4 sm:p-6">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-2">Mark as Not Coming</h3>
+                            <p class="text-xs text-gray-500 mb-4" x-text="`Record leave for ${notComingUser?.name}`"></p>
+                            
+                            <input type="hidden" name="start_date" value="{{ now()->format('Y-m-d') }}">
+                            <input type="hidden" name="end_date" value="{{ now()->format('Y-m-d') }}">
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Leave Type</label>
+                                    <select name="type" required class="w-full text-sm border-gray-200 rounded-lg">
+                                        <option value="casual">Casual Leave</option>
+                                        <option value="sick">Sick Leave</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Description / Reason</label>
+                                    <textarea name="reason" rows="2" required placeholder="Ex: Family matter, fever..." class="w-full text-sm border-gray-200 rounded-lg"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-gray-50 px-4 py-3 sm:px-6 flex justify-end gap-3">
+                            <button type="button" @click="notComingModalOpen = false" class="px-4 py-2 bg-white border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">
+                                Cancel
+                            </button>
+                            <button type="submit" class="px-4 py-2 bg-red-600 border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-red-700">
+                                Save Leave
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 </x-app-layout>
