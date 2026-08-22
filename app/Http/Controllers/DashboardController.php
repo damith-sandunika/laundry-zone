@@ -22,8 +22,15 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $branchId = auth()->user()->branch_id;
-        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $user = auth()->user();
+
+        // Redirect riders to their own dashboard
+        if ($user->role === 'rider') {
+            return redirect()->route('rider.dashboard');
+        }
+
+        $branchId = $user->branch_id;
+        $isSuperAdmin = $user->role === 'super_admin';
 
         $activeOrders = Order::whereNotIn('status', ['delivered', 'cancelled']);
         $pendingDeliveries = Order::where('status', 'done');

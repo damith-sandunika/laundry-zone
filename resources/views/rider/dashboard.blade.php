@@ -23,7 +23,7 @@
     @endif
 
     <!-- STAT CARDS -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-6">
         <!-- Active Tasks -->
         <div class="flex flex-col items-center justify-center p-4 md:px-6 md:py-5 rounded-xl border-2 border-orange-500 bg-orange-50 shadow-sm">
             <div class="bg-orange-600 text-white w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center">
