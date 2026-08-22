@@ -38,30 +38,30 @@
             </div>
         </div>
 
-        <!-- Pending Deliveries -->
+        <!-- Present Staff -->
         <div class="bg-gradient-to-br from-orange-50 to-amber-100 p-6 rounded-2xl border border-orange-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
             <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/40 rounded-full group-hover:scale-150 transition-transform duration-500 blur-sm"></div>
             <div class="relative z-10 flex justify-between items-start">
                 <div>
-                    <p class="text-[11px] font-bold text-orange-700 uppercase tracking-wider mb-2">Pending Deliveries</p>
-                    <h3 class="text-3xl font-black text-gray-900">{{ $superAdminStats['pending_deliveries'] }}</h3>
+                    <p class="text-[11px] font-bold text-orange-700 uppercase tracking-wider mb-2">Today Present Staff</p>
+                    <h3 class="text-3xl font-black text-gray-900">{{ $superAdminStats['today_present_staff'] }}</h3>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-white shadow-sm text-orange-600 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 </div>
             </div>
         </div>
 
-        <!-- Customers -->
+        <!-- Opening Branches -->
         <div class="bg-gradient-to-br from-purple-50 to-fuchsia-100 p-6 rounded-2xl border border-purple-200 shadow-sm relative overflow-hidden group hover:shadow-md transition-all duration-300">
             <div class="absolute -right-4 -top-4 w-20 h-20 bg-white/40 rounded-full group-hover:scale-150 transition-transform duration-500 blur-sm"></div>
             <div class="relative z-10 flex justify-between items-start">
                 <div>
-                    <p class="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2">Total Customers</p>
-                    <h3 class="text-3xl font-black text-gray-900">{{ $superAdminStats['active_customers'] }}</h3>
+                    <p class="text-[11px] font-bold text-purple-700 uppercase tracking-wider mb-2">Opening Branches</p>
+                    <h3 class="text-3xl font-black text-gray-900">{{ $superAdminStats['opening_branches'] }}</h3>
                 </div>
                 <div class="w-12 h-12 rounded-xl bg-white shadow-sm text-purple-600 flex items-center justify-center">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                 </div>
             </div>
         </div>

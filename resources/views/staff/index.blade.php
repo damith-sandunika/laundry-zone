@@ -33,8 +33,10 @@
                             <th class="px-6 py-3 font-semibold">Branch</th>
                             @endif
                             <th class="px-6 py-3 font-semibold">Role</th>
+                            @if(auth()->user()->role !== 'super_admin')
                             <th class="px-6 py-3 font-semibold text-center">Status</th>
                             <th class="px-6 py-3 font-semibold text-center bg-blue-50/50 rounded-t-lg">Today's Attendance</th>
+                            @endif
                             <th class="px-6 py-3 font-semibold text-center">Action</th>
                         </tr>
                     </thead>
@@ -51,16 +53,16 @@
                                 </td>
                                 @endif
                                 <td class="px-6 py-4">
-                                    <span class="px-2 py-0.5 text-xs font-semibold rounded {{ $employee->role === 'admin' ? 'bg-purple-100 text-purple-700' : ($employee->role === 'super_admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-blue-100 text-blue-700') }}">
-                                        {{ ucfirst($employee->role) }}
+                                    <span class="px-2.5 py-1 text-[11px] font-bold uppercase rounded-lg bg-gray-100 text-gray-700 tracking-wider">
+                                        {{ str_replace('_', ' ', $employee->role) }}
                                     </span>
                                 </td>
+                                
+                                @if(auth()->user()->role !== 'super_admin')
                                 <td class="px-6 py-4 text-center">
-                                    @if($employee->is_active)
-                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-green-100 text-green-700">Active</span>
-                                    @else
-                                        <span class="px-2 py-0.5 text-xs font-semibold rounded bg-red-100 text-red-700">Suspended</span>
-                                    @endif
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-lg {{ $employee->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        {{ $employee->is_active ? 'Active' : 'Inactive' }}
+                                    </span>
                                 </td>
                                 
                                 <!-- Quick Attendance Action -->
@@ -113,6 +115,7 @@
                                         </div>
                                     @endif
                                 </td>
+                                @endif
                                 <td class="px-6 py-4 text-center space-x-2">
                                     <button 
                                         @click="selectedUser = {{ $employee }}; selectedMonth = '{{ now()->format('F Y') }}'; salaryModalOpen = true"

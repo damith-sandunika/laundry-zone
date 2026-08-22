@@ -173,9 +173,9 @@ class DashboardController extends Controller
 
             $superAdminStats = [
                 'total_revenue_today' => $todayRevenue,
+                'today_present_staff' => \App\Models\Attendance::whereDate('date', $today)->whereIn('status', ['present', 'late'])->count(),
+                'opening_branches' => \App\Models\RegisterSession::where('status', 'open')->count(),
                 'new_orders_today' => \App\Models\Order::whereDate('created_at', $today)->count(),
-                'pending_deliveries' => \App\Models\Order::where('status', 'done')->count(),
-                'active_customers' => \App\Models\Customer::count(),
             ];
             
             // Chart 1: Sales by Branch (Today)

@@ -25,26 +25,29 @@
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     General Settings
                 </button>
-                <button @click="activeTab = 'services'; localStorage.setItem('settingsActiveTab', 'services')" 
-                    :class="activeTab === 'services' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Services
-                </button>
-                <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')" 
-                    :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Stock Locations
-                </button>
-                <button @click="activeTab = 'whatsapp'; localStorage.setItem('settingsActiveTab', 'whatsapp')" 
-                    :class="activeTab === 'whatsapp' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    WhatsApp API
-                </button>
-                <button @click="activeTab = 'packages'; localStorage.setItem('settingsActiveTab', 'packages')" 
-                    :class="activeTab === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Packages
-                </button>
+                @if(auth()->user()->role === 'super_admin')
+                    <button @click="activeTab = 'services'; localStorage.setItem('settingsActiveTab', 'services')" 
+                        :class="activeTab === 'services' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Services
+                    </button>
+                    <button @click="activeTab = 'packages'; localStorage.setItem('settingsActiveTab', 'packages')" 
+                        :class="activeTab === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Packages
+                    </button>
+                @else
+                    <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')" 
+                        :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Stock Locations
+                    </button>
+                    <button @click="activeTab = 'whatsapp'; localStorage.setItem('settingsActiveTab', 'whatsapp')" 
+                        :class="activeTab === 'whatsapp' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        WhatsApp API
+                    </button>
+                @endif
             </div>
         </div>
 
