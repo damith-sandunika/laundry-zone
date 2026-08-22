@@ -6,12 +6,26 @@
                 <p class="text-sm font-medium text-gray-500 mt-1">Company-wide Human Resources Overview</p>
             </div>
             
-            <form method="GET" action="{{ route('hr.dashboard') }}" class="flex items-center gap-2">
-                <select name="branch_id" onchange="this.form.submit()" class="text-sm border-gray-200 rounded-lg focus:ring-blue-500 font-medium">
+            <form method="GET" action="{{ route('hr.dashboard') }}" class="flex flex-wrap items-center gap-2">
+                <select name="branch_id" onchange="this.form.submit()" class="text-sm border-gray-200 rounded-lg focus:ring-blue-500 font-medium bg-white">
                     <option value="">All Branches (Global)</option>
                     @foreach($branches as $branch)
                         <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>
                             {{ $branch->name }}
+                        </option>
+                    @endforeach
+                </select>
+                <select name="month" onchange="this.form.submit()" class="text-sm border-gray-200 rounded-lg focus:ring-blue-500 font-medium bg-white">
+                    @foreach(range(1, 12) as $m)
+                        <option value="{{ $m }}" {{ $month == $m ? 'selected' : '' }}>
+                            {{ date('F', mktime(0, 0, 0, $m, 10)) }}
+                        </option>
+                    @endforeach
+                </select>
+                <select name="year" onchange="this.form.submit()" class="text-sm border-gray-200 rounded-lg focus:ring-blue-500 font-medium bg-white">
+                    @foreach(range(now()->year - 2, now()->year) as $y)
+                        <option value="{{ $y }}" {{ $year == $y ? 'selected' : '' }}>
+                            {{ $y }}
                         </option>
                     @endforeach
                 </select>
@@ -158,5 +172,92 @@
             </div>
 
         </div>
+
+        <!-- Monthly Staff Attendance Summary Table -->
+        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" 
+             x-data="{
+                sortCol: 'name',
+                sortAsc: true,
+                staff: {{ Js::from($staffSummary) }},
+                get sortedStaff() {
+                    return this.staff.sort((a, b) => {
+                        let valA = a[this.sortCol];
+                        let valB = b[this.sortCol];
+                        
+                        if (typeof valA === 'string') {
+                            valA = valA.toLowerCase();
+                            valB = valB.toLowerCase();
+                        }
+                        
+                        if (valA < valB) return this.sortAsc ? -1 : 1;
+                        if (valA > valB) return this.sortAsc ? 1 : -1;
+                        return 0;
+                    });
+                },
+                sortBy(col) {
+                    if (this.sortCol === col) {
+                        this.sortAsc = !this.sortAsc;
+                    } else {
+                        this.sortCol = col;
+                        this.sortAsc = true;
+                    }
+                }
+             }">
+            <div class="p-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                <h3 class="font-bold text-gray-800">
+                    Monthly Attendance & Performance Summary ({{ date('F Y', mktime(0, 0, 0, $month, 10, $year)) }})
+                </h3>
+            </div>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-50 text-xs text-gray-500 uppercase font-extrabold tracking-wider border-b border-gray-100">
+                            <th @click="sortBy('name')" class="p-4 cursor-pointer hover:bg-gray-100 transition">
+                                <div class="flex items-center gap-2">Staff Name <span x-show="sortCol === 'name'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('branch')" class="p-4 cursor-pointer hover:bg-gray-100 transition">
+                                <div class="flex items-center gap-2">Branch <span x-show="sortCol === 'branch'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('present')" class="p-4 text-center cursor-pointer hover:bg-gray-100 transition text-green-700">
+                                <div class="flex items-center justify-center gap-2">Present <span x-show="sortCol === 'present'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('late')" class="p-4 text-center cursor-pointer hover:bg-gray-100 transition text-orange-600">
+                                <div class="flex items-center justify-center gap-2">Late <span x-show="sortCol === 'late'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('half_day')" class="p-4 text-center cursor-pointer hover:bg-gray-100 transition text-blue-600">
+                                <div class="flex items-center justify-center gap-2">Half Day <span x-show="sortCol === 'half_day'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('leave_days')" class="p-4 text-center cursor-pointer hover:bg-gray-100 transition text-red-600">
+                                <div class="flex items-center justify-center gap-2">Leaves <span x-show="sortCol === 'leave_days'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-gray-50">
+                        <template x-for="user in sortedStaff" :key="user.id">
+                            <tr class="hover:bg-gray-50 transition">
+                                <td class="p-4 font-bold text-gray-800 text-sm" x-text="user.name"></td>
+                                <td class="p-4">
+                                    <span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" x-text="user.branch"></span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <span class="text-sm font-black" :class="user.present > 0 ? 'text-green-600' : 'text-gray-400'" x-text="user.present"></span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <span class="text-sm font-black" :class="user.late > 0 ? 'text-orange-500' : 'text-gray-400'" x-text="user.late"></span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <span class="text-sm font-black" :class="user.half_day > 0 ? 'text-blue-500' : 'text-gray-400'" x-text="user.half_day"></span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <span class="text-sm font-black" :class="user.leave_days > 0 ? 'text-red-600' : 'text-gray-400'" x-text="user.leave_days"></span>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
     </div>
 </x-app-layout>

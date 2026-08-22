@@ -36,15 +36,18 @@ class HRController extends Controller
             'reason' => 'required|string',
         ]);
 
+        $status = auth()->user()->hasAdminAccess() ? 'approved' : 'pending';
+
         $staff->leaves()->create([
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'type' => $request->type,
             'reason' => $request->reason,
-            'status' => 'pending',
+            'status' => $status,
+            'approved_by' => $status === 'approved' ? auth()->id() : null,
         ]);
 
-        return back()->with('success', 'Leave requested successfully.');
+        return back()->with('success', $status === 'approved' ? 'Leave marked and approved successfully.' : 'Leave requested successfully.');
     }
 
     public function updateLeave(Request $request, \App\Models\Leave $leave)

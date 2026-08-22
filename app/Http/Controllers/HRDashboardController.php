@@ -14,9 +14,9 @@ class HRDashboardController extends Controller
         }
 
         $branchId = $request->query('branch_id');
+        $month = $request->query('month', now()->month);
+        $year = $request->query('year', now()->year);
         $today = now()->format('Y-m-d');
-        $month = now()->month;
-        $year = now()->year;
 
         // Base Query for Staff
         $staffQuery = \App\Models\User::whereIn('role', ['admin', 'branch_admin', 'staff', 'rider', 'workshop_admin'])
@@ -26,10 +26,11 @@ class HRDashboardController extends Controller
             $staffQuery->where('branch_id', $branchId);
         }
 
-        $staffIds = $staffQuery->pluck('id');
+        $staff = $staffQuery->with('branch')->get();
+        $staffIds = $staff->pluck('id');
         $totalStaff = $staffIds->count();
 
-        // Today's Attendance
+        // Today's Attendance (for Top Cards)
         $attendancesToday = \App\Models\Attendance::whereIn('user_id', $staffIds)
             ->whereDate('date', $today)
             ->get();
@@ -54,7 +55,7 @@ class HRDashboardController extends Controller
             ->latest('start_date')
             ->get();
 
-        // Advances this month
+        // Advances for selected month
         $advancesThisMonth = \App\Models\SalaryAdvance::whereIn('user_id', $staffIds)
             ->whereMonth('date', $month)
             ->whereYear('date', $year)
@@ -69,6 +70,49 @@ class HRDashboardController extends Controller
             ->take(5)
             ->get();
 
+        // Monthly Summary for all staff in table
+        $monthlyAttendances = \App\Models\Attendance::whereIn('user_id', $staffIds)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->get()
+            ->groupBy('user_id');
+
+        $monthlyLeaves = \App\Models\Leave::whereIn('user_id', $staffIds)
+            ->where('status', 'approved')
+            ->where(function($q) use ($month, $year) {
+                $q->whereMonth('start_date', $month)->whereYear('start_date', $year)
+                  ->orWhere(function($q2) use ($month, $year) {
+                      $q2->whereMonth('end_date', $month)->whereYear('end_date', $year);
+                  });
+            })
+            ->get()
+            ->groupBy('user_id');
+
+        $staffSummary = $staff->map(function($user) use ($monthlyAttendances, $monthlyLeaves, $month, $year) {
+            $userAttendances = $monthlyAttendances->get($user->id, collect());
+            
+            $userLeaves = $monthlyLeaves->get($user->id, collect());
+            $leaveDays = 0;
+            foreach($userLeaves as $l) {
+                // Approximate leave days within this month (simple diff)
+                // If a leave spans months, ideally we'd calculate overlapping days. 
+                // For simplicity, we just take the total days of leaves that touch this month.
+                $start = \Carbon\Carbon::parse($l->start_date);
+                $end = \Carbon\Carbon::parse($l->end_date);
+                $leaveDays += $end->diffInDays($start) + 1;
+            }
+
+            return [
+                'id' => $user->id,
+                'name' => $user->name,
+                'branch' => $user->branch ? $user->branch->name : 'Global',
+                'present' => $userAttendances->where('status', 'present')->count(),
+                'late' => $userAttendances->where('status', 'late')->count(),
+                'half_day' => $userAttendances->where('status', 'half_day')->count(),
+                'leave_days' => $leaveDays,
+            ];
+        });
+
         return view('hr.dashboard', compact(
             'totalStaff',
             'presentCount',
@@ -80,7 +124,10 @@ class HRDashboardController extends Controller
             'advancesThisMonth',
             'branches',
             'recentAttendances',
-            'branchId'
+            'branchId',
+            'month',
+            'year',
+            'staffSummary'
         ));
     }
 }
