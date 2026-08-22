@@ -70,9 +70,31 @@
                                     @endphp
                                     
                                     @if($todayAtt)
-                                        <span class="px-2 py-1 text-[10px] font-bold uppercase rounded-lg {{ $todayAtt->status === 'present' ? 'bg-green-100 text-green-700' : ($todayAtt->status === 'late' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700') }}">
-                                            Marked: {{ $todayAtt->status }}
-                                        </span>
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="px-2 py-0.5 text-[10px] font-bold uppercase rounded-lg {{ $todayAtt->status === 'present' ? 'bg-green-100 text-green-700' : ($todayAtt->status === 'late' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700') }}">
+                                                {{ $todayAtt->status }}
+                                            </span>
+                                            
+                                            @if($todayAtt->status !== 'absent')
+                                                <div class="text-[10px] font-semibold text-gray-500 mt-0.5">
+                                                    In: {{ $todayAtt->clock_in ? \Carbon\Carbon::parse($todayAtt->clock_in)->format('h:i A') : '--' }}
+                                                </div>
+                                                
+                                                @if($todayAtt->clock_out)
+                                                    <div class="text-[10px] font-semibold text-gray-500">
+                                                        Out: {{ \Carbon\Carbon::parse($todayAtt->clock_out)->format('h:i A') }}
+                                                    </div>
+                                                @else
+                                                    <form method="POST" action="{{ route('hr.attendance.update', $todayAtt) }}" class="mt-1">
+                                                        @csrf @method('PUT')
+                                                        <input type="hidden" name="clock_out" value="{{ now()->format('H:i') }}">
+                                                        <button type="submit" class="px-2 py-0.5 text-[9px] font-bold uppercase bg-gray-100 text-gray-600 rounded hover:bg-gray-200 border border-gray-300">
+                                                            Mark Out
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            @endif
+                                        </div>
                                     @else
                                         <div class="flex items-center justify-center gap-1">
                                             <form method="POST" action="{{ route('hr.attendance.store', $employee) }}">

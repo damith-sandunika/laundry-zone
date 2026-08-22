@@ -11,20 +11,31 @@ class HRController extends Controller
         $request->validate([
             'date' => 'required|date',
             'clock_in' => 'nullable|date_format:H:i',
-            'clock_out' => 'nullable|date_format:H:i|after_or_equal:clock_in',
             'status' => 'required|in:present,half_day,late',
         ]);
 
         $staff->attendances()->updateOrCreate(
             ['date' => $request->date],
             [
-                'clock_in' => $request->clock_in,
-                'clock_out' => $request->clock_out,
+                'clock_in' => $request->clock_in ?? now()->format('H:i:s'),
                 'status' => $request->status,
             ]
         );
 
         return back()->with('success', 'Attendance marked successfully.');
+    }
+
+    public function updateAttendance(Request $request, \App\Models\Attendance $attendance)
+    {
+        $request->validate([
+            'clock_out' => 'required|date_format:H:i',
+        ]);
+
+        $attendance->update([
+            'clock_out' => $request->clock_out,
+        ]);
+
+        return back()->with('success', 'Out time marked successfully.');
     }
 
     public function storeLeave(Request $request, \App\Models\User $staff)
