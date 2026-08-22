@@ -140,19 +140,19 @@
                 </div>
             </div>
             
-            <div class="flex-1 hero-img-container hidden md:block">
+            <div class="flex-1 hero-img-container w-full mt-10 lg:mt-0">
                 <div class="relative">
                     <div class="absolute inset-0 bg-blue-500 rounded-[3rem] rotate-3 opacity-10"></div>
-                    <img src="{{ asset('images/hero_laundry.png') }}" alt="Fresh Laundry" class="relative z-10 w-full h-auto object-cover rounded-[3rem] shadow-2xl border-4 border-white">
+                    <img src="{{ asset('images/hero_laundry.png') }}" alt="Fresh Laundry" class="relative z-10 w-full h-64 md:h-auto object-cover rounded-[3rem] shadow-2xl border-4 border-white">
                     
                     <!-- Floating badge -->
-                    <div class="absolute -left-8 top-1/4 bg-white p-4 rounded-2xl shadow-xl z-20 flex items-center gap-4 animate-bounce" style="animation-duration: 3s;">
-                        <div class="bg-blue-600 text-white w-12 h-12 flex items-center justify-center rounded-xl text-xl">
+                    <div class="absolute -left-4 md:-left-8 top-1/4 bg-white p-3 md:p-4 rounded-2xl shadow-xl z-20 flex items-center gap-3 md:gap-4 animate-bounce" style="animation-duration: 3s;">
+                        <div class="bg-blue-600 text-white w-10 h-10 md:w-12 md:h-12 flex items-center justify-center rounded-xl text-lg md:text-xl">
                             <i class="fa-solid fa-droplet"></i>
                         </div>
                         <div>
-                            <p class="font-bold text-slate-800 leading-tight">100%</p>
-                            <p class="text-xs text-slate-500">Clean Guarantee</p>
+                            <p class="font-bold text-slate-800 leading-tight text-sm md:text-base">100%</p>
+                            <p class="text-[10px] md:text-xs text-slate-500">Clean Guarantee</p>
                         </div>
                     </div>
                 </div>
@@ -179,7 +179,7 @@
             <button @click="activeCategory = {{ $category->id }}" 
                 :class="activeCategory === {{ $category->id }} ? 'bg-accent text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'"
                 class="px-6 py-3 rounded-full font-semibold transition-all duration-300 flex items-center gap-2">
-                @if($category->name == 'Wash & Fold') <i class="fa-solid fa-washing-machine"></i>
+                @if($category->name == 'Wash & Fold') <i class="fa-solid fa-soap"></i>
                 @elseif($category->name == 'Dry Cleaning') <i class="fa-solid fa-shirt"></i>
                 @elseif($category->name == 'Ironing') <i class="fa-solid fa-fire-burner"></i>
                 @else <i class="fa-solid fa-layer-group"></i> @endif
@@ -298,7 +298,7 @@
 
             <div class="relative z-10 bg-white p-4 text-center group mb-8 md:mb-0">
                 <div class="w-24 h-24 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:border-blue-200 transition-colors shadow-lg">
-                    <i class="fa-solid fa-washing-machine text-4xl text-accent"></i>
+                    <i class="fa-solid fa-hands-bubbles text-4xl text-accent"></i>
                 </div>
                 <h3 class="font-bold text-lg text-slate-800">3. Clean</h3>
                 <p class="text-sm text-slate-500 mt-2 max-w-[150px] mx-auto">Clothes are cleaned with premium products.</p>
@@ -355,10 +355,10 @@
                 </div>
             </div>
             <div class="flex-1 flex justify-center">
-                <!-- A nice stacked towels image placeholder -->
+                <!-- A nice stacked towels image -->
                 <div class="relative">
                     <div class="absolute inset-0 bg-blue-600 rounded-[2rem] rotate-6 opacity-10"></div>
-                    <img src="https://images.unsplash.com/photo-1582735689307-88d407335ce5?q=80&w=800&auto=format&fit=crop" alt="Clean Towels" class="relative z-10 rounded-[2rem] shadow-2xl object-cover h-[400px] w-[500px]">
+                    <img src="{{ asset('images/choose_laundry.png') }}" alt="Clean Towels" class="relative z-10 rounded-[2rem] shadow-2xl object-cover h-[400px] w-[500px]">
                 </div>
             </div>
         </div>
@@ -447,30 +447,8 @@
         </div>
         
         <div class="flex-1 relative z-10 flex justify-center lg:justify-end">
-            <!-- App mockup list -->
-            <div class="space-y-4">
-                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 border border-white/20">
-                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl"><i class="fa-solid fa-check"></i></div>
-                    <div>
-                        <h4 class="font-bold">Easy Booking</h4>
-                        <p class="text-sm text-blue-100">In just 3 clicks</p>
-                    </div>
-                </div>
-                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 border border-white/20 ml-8">
-                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl"><i class="fa-solid fa-location-dot"></i></div>
-                    <div>
-                        <h4 class="font-bold">Real-time Tracking</h4>
-                        <p class="text-sm text-blue-100">Know exactly where it is</p>
-                    </div>
-                </div>
-                <div class="bg-white/10 backdrop-blur-md rounded-2xl p-4 flex items-center gap-4 border border-white/20">
-                    <div class="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center text-xl"><i class="fa-solid fa-shield-halved"></i></div>
-                    <div>
-                        <h4 class="font-bold">Secure & Reliable</h4>
-                        <p class="text-sm text-blue-100">Your clothes are safe</p>
-                    </div>
-                </div>
-            </div>
+            <!-- App mockup image instead of list -->
+            <img src="{{ asset('images/app_mockup.png') }}" alt="App Mockup" class="w-full max-w-[300px] h-auto drop-shadow-2xl rounded-[3rem] transform lg:-translate-y-4 hover:-translate-y-6 transition-transform duration-500">
         </div>
     </div>
 </section>
@@ -485,51 +463,42 @@
 
         <div class="flex flex-col lg:flex-row gap-12 bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
             <!-- Contact Info -->
-            <div class="flex-1 p-10 lg:p-12 space-y-8">
-                <div class="flex gap-4">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-phone"></i>
+            <div class="flex-1 p-10 lg:p-12 h-[500px] overflow-y-auto custom-scrollbar">
+                <div class="space-y-8">
+                    @foreach($branches as $b)
+                    <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                        <h3 class="font-bold text-lg text-brand mb-4 border-b border-slate-200 pb-2"><i class="fa-solid fa-store text-accent mr-2"></i>{{ $b->name }}</h3>
+                        <div class="space-y-4">
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm">
+                                    <i class="fa-solid fa-phone"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-xs text-slate-800 uppercase">Phone</h4>
+                                    <p class="text-slate-600 text-sm">{{ $b->phone ?? '-' }}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm">
+                                    <i class="fa-brands fa-whatsapp"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-xs text-slate-800 uppercase">WhatsApp</h4>
+                                    <p class="text-slate-600 text-sm">{{ $b->whatsapp_number ?? '-' }}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-4">
+                                <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm">
+                                    <i class="fa-solid fa-location-dot"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-bold text-xs text-slate-800 uppercase">Address</h4>
+                                    <p class="text-slate-600 text-sm">{{ $b->address ?? '-' }}</p>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="font-bold text-slate-800">Phone</h4>
-                        <p class="text-slate-500">077 123 4567</p>
-                    </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-brands fa-whatsapp"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-slate-800">WhatsApp</h4>
-                        <p class="text-slate-500">077 123 4567</p>
-                    </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-envelope"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-slate-800">Email</h4>
-                        <p class="text-accent">info@laundryzone.lk</p>
-                    </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-location-dot"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-slate-800">Address</h4>
-                        <p class="text-slate-500">123, Laundry Zone Street,<br>Colombo 05, Sri Lanka</p>
-                    </div>
-                </div>
-                <div class="flex gap-4">
-                    <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-xl shrink-0">
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                    <div>
-                        <h4 class="font-bold text-slate-800">Open Hours</h4>
-                        <p class="text-slate-500">Mon - Sun : 8.00 AM - 8.00 PM</p>
-                    </div>
+                    @endforeach
                 </div>
             </div>
             
