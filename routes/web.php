@@ -31,6 +31,18 @@ Route::get('/book', [CustomerSiteController::class, 'booking'])->name('booking.p
 Route::post('/book', [CustomerSiteController::class, 'store'])->name('booking.store');
 Route::get('/book/success/{appointment}', [CustomerSiteController::class, 'success'])->name('site.success');
 
+// ─── Customer Auth & Dashboard Routes ───
+Route::get('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'showLogin'])->name('customer.login');
+Route::post('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'login'])->name('customer.login.submit');
+Route::get('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'showRegister'])->name('customer.register');
+Route::post('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'register'])->name('customer.register.submit');
+Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('customer.logout');
+
+Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
+    Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
+});
+
 // ─── Public Order Tracking (QR Code link) ───
 Route::get('/orders/{order}/track', function (Order $order) {
     return view('orders.track', compact('order'));
@@ -79,6 +91,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/inventory/bulk-stock-out', [InventoryController::class, 'bulkStockOut'])->name('inventory.bulkStockOut');
     Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stockOut');
     Route::delete('/inventory/{item}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+
+    Route::resource('payment_methods', \App\Http\Controllers\PaymentMethodController::class)->only(['store', 'update', 'destroy']);
 
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
 

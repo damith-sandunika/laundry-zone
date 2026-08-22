@@ -3,14 +3,20 @@
 namespace App\Models;
 
 use App\Traits\BelongsToBranch;
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 
-class Customer extends Model
+class Customer extends Authenticatable
 {
-    use BelongsToBranch;
+    use BelongsToBranch, Notifiable;
 
     protected $fillable = [
-        'branch_id', 'name', 'phone', 'email', 'address', 'loyalty_points', 'is_active',
+        'branch_id', 'name', 'phone', 'email', 'password', 'remember_token', 'address', 'loyalty_points', 'is_active',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
     ];
 
     public function orders()

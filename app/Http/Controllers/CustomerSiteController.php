@@ -27,10 +27,10 @@ class CustomerSiteController extends Controller
     public function booking()
     {
         $branches = Branch::regularBranches()->where('is_active', true)->get();
-        $paymentSettings = PaymentSetting::where('is_enabled', true)->get()->groupBy('branch_id');
+        $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
 
-        return view('site.booking', compact('branches', 'paymentSettings', 'categories'));
+        return view('site.booking', compact('branches', 'paymentMethods', 'categories'));
     }
 
     public function store(Request $request, WhatsAppService $waService)
@@ -39,6 +39,7 @@ class CustomerSiteController extends Controller
             $validated = $request->validate([
                 'name' => 'required|string|max:255',
                 'phone' => 'required|string|max:50',
+                'password' => 'nullable|string|min:8',
                 'branch_id' => 'required|exists:branches,id',
                 'pickup_address' => 'required|string|max:255',
                 'map_address' => 'nullable|string',
@@ -56,6 +57,7 @@ class CustomerSiteController extends Controller
                 'delivery_lat' => 'nullable|numeric',
                 'delivery_lng' => 'nullable|numeric',
                 'delivery_address' => 'nullable|string|max:255',
+                'receipt_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ]);
         } catch (ValidationException $e) {
             \Log::error('Booking Validation Failed', $e->errors());
@@ -72,7 +74,12 @@ class CustomerSiteController extends Controller
             $deliveryAddress = $request->pickup_address;
         }
 
-        $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress) {
+        $receiptPath = null;
+        if ($request->hasFile('receipt_image')) {
+            $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
+        }
+
+        $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress, $receiptPath) {
             // Find or create customer based on phone globally
             $customer = Customer::where('phone', $request->phone)->first();
             if (! $customer) {
@@ -81,7 +88,17 @@ class CustomerSiteController extends Controller
                     'name' => $request->name,
                     'address' => $request->pickup_address,
                     'branch_id' => $request->branch_id,
+                    'password' => $request->password ? \Illuminate\Support\Facades\Hash::make($request->password) : null,
                 ]);
+            } elseif ($request->password && empty($customer->password)) {
+                $customer->update([
+                    'password' => \Illuminate\Support\Facades\Hash::make($request->password)
+                ]);
+            }
+
+            // Auto login if not logged in and a password is provided (or just registered)
+            if (!auth('customer')->check() && !empty($customer->password)) {
+                auth('customer')->login($customer);
             }
 
             return DeliveryAppointment::create([
@@ -104,6 +121,7 @@ class CustomerSiteController extends Controller
                 'delivery_lat' => $deliveryLat,
                 'delivery_lng' => $deliveryLng,
                 'delivery_address' => $deliveryAddress,
+                'receipt_path' => $receiptPath,
             ]);
         });
 

@@ -67,7 +67,7 @@
                 <p class="text-blue-100 text-xs md:text-sm">Fill in the details below and we'll take care of the rest.</p>
             </div>
 
-            <form action="{{ route('booking.store') }}" method="POST" id="bookingForm" class="p-4 md:p-6 space-y-6">
+            <form action="{{ route('booking.store') }}" method="POST" id="bookingForm" class="p-4 md:p-6 space-y-6" enctype="multipart/form-data" x-data="{ selectedPaymentMethod: '{{ $paymentMethods->first()?->type ?? 'cash' }}' }">
                 @csrf
                 <input type="hidden" name="item_description" id="item_description" x-model="formattedCart">
                 <input type="hidden" name="type" value="pickup">
@@ -82,27 +82,12 @@
                     </div>
                 @endif
 
-                <!-- 1. Basic Info -->
-                <div>
+                <!-- 1. Contact Details -->
+                <div class="space-y-3">
                     <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
                         <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-user"></i></span>
                         Contact Details
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Your Name</label>
-                            <input type="text" name="name" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400" placeholder="John Doe">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Phone</label>
-                            <input type="text" name="phone" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400" placeholder="07XXXXXXXX">
-                        </div>
-                        <div class="md:col-span-2">
-                            <label class="block text-xs font-bold text-slate-700 mb-1">Nearest Branch</label>
-                            <select name="branch_id" id="branch_selector" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium cursor-pointer">
-                                <option value="">Select a branch...</option>
-                                @foreach($branches as $branch)
-                                    <option value="{{ $branch->id }}">{{ $branch->name }} ({{ $branch->address }})</option>
                                 @endforeach
                             </select>
                         </div>
@@ -281,30 +266,36 @@
                         Payment Options
                     </h3>
                     <div class="grid grid-cols-2 gap-3 mb-3">
-                        <label class="relative cursor-pointer">
-                            <input type="radio" name="payment_method" value="cash" class="custom-radio sr-only" checked>
-                            <div class="p-3 border-2 border-slate-200 rounded-xl bg-white hover:border-blue-300 transition-all flex items-center gap-3">
-                                <div class="w-4 h-4 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0">
-                                    <div class="radio-dot w-2 h-2 rounded-full"></div>
+                        @foreach($paymentMethods as $index => $method)
+                            <label class="relative cursor-pointer">
+                                <input type="radio" name="payment_method" value="{{ $method->name }}" class="custom-radio sr-only" x-model="selectedPaymentMethod" value="{{ $method->type }}" {{ $index === 0 ? 'checked' : '' }}>
+                                <div class="p-3 border-2 border-slate-200 rounded-xl bg-white hover:border-blue-300 transition-all flex items-center gap-3">
+                                    <div class="w-4 h-4 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0">
+                                        <div class="radio-dot w-2 h-2 rounded-full"></div>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        @if($method->type === 'cash')
+                                            <i class="fa-solid fa-money-bill-wave text-green-600 text-base"></i>
+                                        @elseif($method->type === 'card_transfer')
+                                            <i class="fa-solid fa-credit-card text-blue-600 text-base"></i>
+                                        @else
+                                            <i class="fa-solid fa-building-columns text-purple-600 text-base"></i>
+                                        @endif
+                                        <div class="font-bold text-sm text-slate-800">{{ $method->name }}</div>
+                                    </div>
                                 </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-money-bill-wave text-green-600 text-base"></i>
-                                    <div class="font-bold text-sm text-slate-800">Cash on Delivery</div>
-                                </div>
-                            </div>
-                        </label>
-                        <label class="relative cursor-pointer">
-                            <input type="radio" name="payment_method" value="card_or_transfer" class="custom-radio sr-only">
-                            <div class="p-3 border-2 border-slate-200 rounded-xl bg-white hover:border-blue-300 transition-all flex items-center gap-3">
-                                <div class="w-4 h-4 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0">
-                                    <div class="radio-dot w-2 h-2 rounded-full"></div>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <i class="fa-solid fa-credit-card text-blue-600 text-base"></i>
-                                    <div class="font-bold text-sm text-slate-800">Card / Bank Transfer</div>
-                                </div>
-                            </div>
-                        </label>
+                            </label>
+                        @endforeach
+                    </div>
+
+                    <!-- Bank Transfer Receipt Upload -->
+                    <div x-show="selectedPaymentMethod === 'bank_transfer'" x-transition class="mb-4 bg-purple-50 p-4 rounded-xl border border-purple-100">
+                        @php $bankMethod = $paymentMethods->where('type', 'bank_transfer')->first(); @endphp
+                        @if($bankMethod && $bankMethod->instructions)
+                            <div class="text-xs text-purple-800 whitespace-pre-line mb-3 font-medium">{{ $bankMethod->instructions }}</div>
+                        @endif
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Upload Receipt (Optional for now)</label>
+                        <input type="file" name="receipt_image" accept="image/*" class="w-full text-xs text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-purple-100 file:text-purple-700 hover:file:bg-purple-200">
                     </div>
 
                     <div>

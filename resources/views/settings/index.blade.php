@@ -47,6 +47,11 @@
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                         WhatsApp API
                     </button>
+                    <button @click="activeTab = 'payments'; localStorage.setItem('settingsActiveTab', 'payments')" 
+                        :class="activeTab === 'payments' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Payment Methods
+                    </button>
                 @endif
             </div>
         </div>
@@ -240,7 +245,7 @@
 
                             <div style="display: flex; justify-content: space-between; padding: 3px 0; gap: 4px; margin-bottom: 2px;">
                                 <span style="font-weight: 700; font-size: 12px; display: block; word-break: break-word;">Ironing</span>
-                                <span style="font-weight: 800;">Rs.450.00</span>
+                                <span style="font-weight: 450.00">Rs.450.00</span>
                             </div>
                             <div style="font-size: 12px; margin-bottom: 6px;">
                                 3 x Rs.150.00
@@ -276,7 +281,122 @@
                 </form>
             </div>
 
-                        <!-- SERVICES TAB -->
+            <!-- PAYMENT METHODS TAB -->
+            <div x-show="activeTab === 'payments'" style="display: none;" class="p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800">Payment Methods</h3>
+                        <p class="text-sm text-slate-500">Manage available payment methods for customers.</p>
+                    </div>
+                    <button @click="$dispatch('open-modal', 'add-payment-method')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center gap-2">
+                        <i class="fa-solid fa-plus"></i> Add Method
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    @foreach($paymentMethods as $method)
+                        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-5 flex justify-between items-start">
+                            <div>
+                                <div class="flex items-center gap-2 mb-2">
+                                    <h4 class="font-bold text-slate-800">{{ $method->name }}</h4>
+                                    @if($method->is_active)
+                                        <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-0.5 rounded-md">Active</span>
+                                    @else
+                                        <span class="bg-slate-200 text-slate-600 text-xs font-bold px-2 py-0.5 rounded-md">Inactive</span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-slate-500 uppercase tracking-wider font-bold mb-3">{{ str_replace('_', ' ', $method->type) }}</p>
+                                @if($method->instructions)
+                                    <div class="text-sm text-slate-600 bg-white p-3 rounded-xl border border-slate-100">
+                                        {{ $method->instructions }}
+                                    </div>
+                                @endif
+                            </div>
+                            <div class="flex gap-2">
+                                <button @click="$dispatch('open-modal', 'edit-payment-{{ $method->id }}')" class="text-slate-400 hover:text-blue-600 transition-colors">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <form action="{{ route('payment_methods.destroy', $method->id) }}" method="POST" onsubmit="return confirm('Are you sure?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-slate-400 hover:text-red-600 transition-colors">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Edit Modal -->
+                        <x-modal name="edit-payment-{{ $method->id }}" focusable>
+                            <form method="POST" action="{{ route('payment_methods.update', $method->id) }}" class="p-6">
+                                @csrf @method('PUT')
+                                <h2 class="text-lg font-bold text-slate-800 mb-4">Edit Payment Method</h2>
+                                <div class="space-y-4">
+                                    <div>
+                                        <x-input-label for="name" value="Method Name" />
+                                        <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="$method->name" required />
+                                    </div>
+                                    <div>
+                                        <x-input-label for="type" value="Method Type" />
+                                        <select name="type" class="mt-1 block w-full border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" required>
+                                            <option value="cash" {{ $method->type == 'cash' ? 'selected' : '' }}>Cash on Delivery</option>
+                                            <option value="card_transfer" {{ $method->type == 'card_transfer' ? 'selected' : '' }}>Card Transfer</option>
+                                            <option value="bank_transfer" {{ $method->type == 'bank_transfer' ? 'selected' : '' }}>Bank Transfer</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <x-input-label for="instructions" value="Instructions (e.g., Bank Details)" />
+                                        <textarea name="instructions" class="mt-1 block w-full border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" rows="3">{{ $method->instructions }}</textarea>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="is_active" id="is_active_edit_{{ $method->id }}" value="1" {{ $method->is_active ? 'checked' : '' }} class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                                        <label for="is_active_edit_{{ $method->id }}" class="text-sm font-medium text-slate-700">Active</label>
+                                    </div>
+                                </div>
+                                <div class="mt-6 flex justify-end gap-3">
+                                    <button type="button" x-on:click="$dispatch('close')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm">Cancel</button>
+                                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700">Save Changes</button>
+                                </div>
+                            </form>
+                        </x-modal>
+                    @endforeach
+                </div>
+            </div>
+
+            <!-- Add Modal -->
+            <x-modal name="add-payment-method" focusable>
+                <form method="POST" action="{{ route('payment_methods.store') }}" class="p-6">
+                    @csrf
+                    <h2 class="text-lg font-bold text-slate-800 mb-4">Add Payment Method</h2>
+                    <div class="space-y-4">
+                        <div>
+                            <x-input-label for="name" value="Method Name" />
+                            <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" required />
+                        </div>
+                        <div>
+                            <x-input-label for="type" value="Method Type" />
+                            <select name="type" class="mt-1 block w-full border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" required>
+                                <option value="cash">Cash on Delivery</option>
+                                <option value="card_transfer">Card Transfer</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                            </select>
+                        </div>
+                        <div>
+                            <x-input-label for="instructions" value="Instructions (e.g., Bank Details)" />
+                            <textarea name="instructions" class="mt-1 block w-full border-slate-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm" rows="3"></textarea>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" name="is_active" id="is_active_new" value="1" checked class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                            <label for="is_active_new" class="text-sm font-medium text-slate-700">Active</label>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end gap-3">
+                        <button type="button" x-on:click="$dispatch('close')" class="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold text-sm">Cancel</button>
+                        <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700">Add Method</button>
+                    </div>
+                </form>
+            </x-modal>
+
+            <!-- SERVICES TAB -->
             <div x-show="activeTab === 'services'" style="display: none;">
                 @php
                     $colorStyles = [

@@ -32,8 +32,9 @@ class SettingsController extends Controller
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
         $packages = Package::with('services.serviceType')->get();
+        $paymentMethods = \App\Models\PaymentMethod::all();
 
-        return view('settings.index', compact('branch', 'serviceCategories', 'services', 'cubbies', 'inventoryItems', 'packages'));
+        return view('settings.index', compact('branch', 'serviceCategories', 'services', 'cubbies', 'inventoryItems', 'packages', 'paymentMethods'));
     }
 
     public function updateGeneral(Request $request)
