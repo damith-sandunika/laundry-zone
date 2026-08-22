@@ -50,7 +50,7 @@ class CustomerSiteController extends Controller
 
                 // New fields
                 'payment_method' => 'required|string',
-                'payment_timing' => 'required|in:pay_now,pay_on_delivery',
+                'payment_timing' => 'required|in:at_pickup,at_delivery',
                 'delivery_preference' => 'required|in:deliver_to_address,pickup_from_branch',
                 'same_as_pickup' => 'nullable|boolean',
                 'delivery_lat' => 'nullable|numeric',
