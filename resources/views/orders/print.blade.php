@@ -45,7 +45,14 @@
         @endif
     </div>
     
-    <div class="center bold" style="font-size:18px; letter-spacing:-0.03em; margin-bottom: 2px;">{{ $branch->name ?? 'SMART LAUNDRY' }}</div>
+    <div class="center bold" style="font-size:18px; letter-spacing:-0.03em; margin-bottom: 2px;">
+        {{ \App\Models\Branch::first()->name ?? 'SMART LAUNDRY' }}
+    </div>
+    
+    @if($branch && $branch->id !== (\App\Models\Branch::first()->id ?? 1))
+        <div class="center bold" style="font-size:14px; margin-bottom: 2px;">{{ $branch->name }}</div>
+    @endif
+
     @if($branch && $branch->tagline)
         <div class="center" style="font-size:10px; margin-bottom:2px;">{{ $branch->tagline }}</div>
     @endif

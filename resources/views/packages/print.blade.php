@@ -27,9 +27,13 @@
     </style>
 </head>
 <body onload="window.print(); setTimeout(() => window.close(), 500);">
-    <div class="text-center font-bold" style="font-size: 16px;">
-        {{ $branch->name ?? 'Laundry Zone' }}
+    <div class="center bold" style="font-size:18px; letter-spacing:-0.03em; margin-bottom: 2px;">
+        {{ \App\Models\Branch::first()->name ?? 'SMART LAUNDRY' }}
     </div>
+    
+    @if($branch && $branch->id !== (\App\Models\Branch::first()->id ?? 1))
+        <div class="center bold" style="font-size:14px; margin-bottom: 2px;">{{ $branch->name }}</div>
+    @endif
     <div class="text-center" style="font-size: 10px;">
         {{ $branch->address ?? '' }}<br>
         {{ $branch->phone ?? '' }}

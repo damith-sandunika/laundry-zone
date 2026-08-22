@@ -59,7 +59,10 @@
         <button onclick="window.close()" style="padding:8px 16px;background:#f3f4f6;color:#000;border:1px solid #d1d5db;border-radius:4px;cursor:pointer;font-family:monospace;font-size:12px;margin-left:8px;">CLOSE</button>
     </div>
 
-    <h1>{{ $branch->name ?? 'Smart Laundry' }}</h1>
+    <h1 style="margin-bottom: 2px;">{{ \App\Models\Branch::first()->name ?? 'SMART LAUNDRY' }}</h1>
+    @if($branch && $branch->id !== (\App\Models\Branch::first()->id ?? 1))
+        <h2 style="font-size: 14px; margin: 0 0 4px 0;">{{ $branch->name }}</h2>
+    @endif
     <div class="sub">SHIFT CLOSING SUMMARY</div>
     <div class="sub">
         {{ $session ? \Carbon\Carbon::parse($session->opened_at)->format('M d, Y h:i A') : $startDate }}<br>
