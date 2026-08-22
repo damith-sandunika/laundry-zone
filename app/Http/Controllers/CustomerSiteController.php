@@ -15,8 +15,9 @@ class CustomerSiteController extends Controller
     public function home()
     {
         $branches = Branch::regularBranches()->where('is_active', true)->get();
-        $services = ServiceType::where('is_active', true)->get();
-        return view('site.home', compact('branches', 'services'));
+        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
+        $packages = \App\Models\Package::with('services.serviceType')->where('is_active', true)->get();
+        return view('site.home', compact('branches', 'categories', 'packages'));
     }
 
     public function booking()
