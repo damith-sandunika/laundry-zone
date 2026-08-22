@@ -8,6 +8,7 @@ use App\Models\DeliveryAppointment;
 use App\Models\Customer;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class CustomerSiteController extends Controller
 {
@@ -64,38 +65,40 @@ class CustomerSiteController extends Controller
             $deliveryAddress = $request->pickup_address;
         }
 
-        // Find or create customer based on phone globally
-        $customer = Customer::where('phone', $request->phone)->first();
-        if (!$customer) {
-            $customer = Customer::create([
-                'phone' => $request->phone,
-                'name' => $request->name,
-                'address' => $request->pickup_address,
-                'branch_id' => $request->branch_id
-            ]);
-        }
+        $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress) {
+            // Find or create customer based on phone globally
+            $customer = Customer::where('phone', $request->phone)->first();
+            if (!$customer) {
+                $customer = Customer::create([
+                    'phone' => $request->phone,
+                    'name' => $request->name,
+                    'address' => $request->pickup_address,
+                    'branch_id' => $request->branch_id
+                ]);
+            }
 
-        $appointment = DeliveryAppointment::create([
-            'customer_id' => $customer->id,
-            'branch_id' => $request->branch_id,
-            'pickup_address' => $request->pickup_address,
-            'map_address' => $request->map_address,
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'pickup_scheduled_at' => $request->pickup_scheduled_at,
-            'item_description' => $request->item_description,
-            'notes' => $request->notes,
-            'contact_phone' => $request->phone,
-            'status' => 'pending',
-            
-            // New fields
-            'payment_method' => $request->payment_method,
-            'payment_timing' => $request->payment_timing,
-            'delivery_preference' => $request->delivery_preference,
-            'delivery_lat' => $deliveryLat,
-            'delivery_lng' => $deliveryLng,
-            'delivery_address' => $deliveryAddress,
-        ]);
+            return DeliveryAppointment::create([
+                'customer_id' => $customer->id,
+                'branch_id' => $request->branch_id,
+                'pickup_address' => $request->pickup_address,
+                'map_address' => $request->map_address,
+                'latitude' => $request->latitude,
+                'longitude' => $request->longitude,
+                'pickup_scheduled_at' => $request->pickup_scheduled_at,
+                'item_description' => $request->item_description,
+                'notes' => $request->notes,
+                'contact_phone' => $request->phone,
+                'status' => 'pending',
+                
+                // New fields
+                'payment_method' => $request->payment_method,
+                'payment_timing' => $request->payment_timing,
+                'delivery_preference' => $request->delivery_preference,
+                'delivery_lat' => $deliveryLat,
+                'delivery_lng' => $deliveryLng,
+                'delivery_address' => $deliveryAddress,
+            ]);
+        });
 
         // WhatsApp notification
         $waService->notifyBookingReceived($appointment);
