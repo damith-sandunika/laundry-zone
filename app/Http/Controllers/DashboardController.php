@@ -20,7 +20,6 @@ class DashboardController extends Controller
             $activeOrders->where('branch_id', $branchId);
             $pendingDeliveries->where('branch_id', $branchId);
             $completedToday->where('branch_id', $branchId);
-            $totalCustomers->where('branch_id', $branchId);
         }
 
         // Active register session details

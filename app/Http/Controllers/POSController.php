@@ -20,16 +20,11 @@ class POSController extends Controller
         }
         
         $services = \App\Models\ServiceType::where('is_active', true)->get();
-        $categories = \App\Models\ServiceCategory::where('is_active', true)->where('branch_id', $branchId)->get();
+        $categories = \App\Models\ServiceCategory::where('is_active', true)->get();
         
-        $customersQuery = \App\Models\Customer::where('is_active', true);
-        if ($branchId) {
-            $customersQuery->where('branch_id', $branchId);
-        }
-        $customers = $customersQuery->get();
+        $customers = \App\Models\Customer::where('is_active', true)->get();
 
-        $customerPackages = \App\Models\CustomerPackage::where('branch_id', $branchId)
-            ->where('status', 'active')
+        $customerPackages = \App\Models\CustomerPackage::where('status', 'active')
             ->with(['package', 'services.serviceType'])
             ->get();
                         

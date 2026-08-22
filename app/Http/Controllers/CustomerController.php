@@ -8,13 +8,7 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $branchId = auth()->user()->branch_id;
-        
-        $query = \App\Models\Customer::with('branch')->orderBy('name', 'asc');
-        if ($branchId) {
-            $query->where('branch_id', $branchId);
-        }
-        $customers = $query->get();
+        $customers = \App\Models\Customer::with('branch')->orderBy('name', 'asc')->get();
         return view('customers.index', compact('customers'));
     }
 
@@ -53,10 +47,8 @@ class CustomerController extends Controller
 
     public function search(Request $request)
     {
-        $branchId = auth()->user()->branch_id;
         $q = $request->input('q', '');
         $query = \App\Models\Customer::orderBy('name');
-        if ($branchId) $query->where('branch_id', $branchId);
         if ($q) $query->where(function($qb) use ($q) {
             $qb->where('name', 'like', "%{$q}%")->orWhere('phone', 'like', "%{$q}%");
         });

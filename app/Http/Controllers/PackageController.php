@@ -15,13 +15,12 @@ class PackageController extends Controller
     public function index()
     {
         $branchId = auth()->user()->branch_id ?? 1;
-        $customerPackages = CustomerPackage::where('branch_id', $branchId)
-            ->with(['customer', 'package', 'services.serviceType'])
+        $customerPackages = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
             ->orderBy('created_at', 'desc')
             ->get();
             
-        $packages = Package::where('branch_id', $branchId)->where('is_active', true)->get();
-        $customers = Customer::where('branch_id', $branchId)->get();
+        $packages = Package::where('is_active', true)->get();
+        $customers = Customer::all();
 
         return view('packages.index', compact('customerPackages', 'packages', 'customers'));
     }

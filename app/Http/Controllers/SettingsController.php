@@ -19,11 +19,11 @@ class SettingsController extends Controller
     {
         $branchId = auth()->user()->branch_id ?? 1;
         $branch = \App\Models\Branch::find($branchId);
-        $serviceCategories = \App\Models\ServiceCategory::where('branch_id', $branchId)->with('services')->get();
+        $serviceCategories = \App\Models\ServiceCategory::with('services')->get();
         $services = \App\Models\ServiceType::with(['inventoryItems', 'category'])->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
-        $packages = \App\Models\Package::where('branch_id', $branchId)->with('services.serviceType')->get();
+        $packages = \App\Models\Package::with('services.serviceType')->get();
         return view('settings.index', compact('branch', 'serviceCategories', 'services', 'cubbies', 'inventoryItems', 'packages'));
     }
 
@@ -106,7 +106,7 @@ class SettingsController extends Controller
         ]);
 
         \App\Models\ServiceCategory::create([
-            'branch_id' => auth()->user()->branch_id ?? 1,
+            'branch_id' => null,
             'name'      => $request->name,
             'is_active' => true,
         ]);
@@ -239,7 +239,7 @@ class SettingsController extends Controller
         ]);
 
         $package = \App\Models\Package::create([
-            'branch_id' => $branchId,
+            'branch_id' => null,
             'name' => $request->name,
             'price' => $request->price,
             'payment_type' => $request->payment_type,

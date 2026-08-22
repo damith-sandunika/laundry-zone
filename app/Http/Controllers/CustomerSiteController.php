@@ -64,11 +64,16 @@ class CustomerSiteController extends Controller
             $deliveryAddress = $request->pickup_address;
         }
 
-        // Find or create customer based on phone AND branch
-        $customer = Customer::firstOrCreate(
-            ['phone' => $request->phone, 'branch_id' => $request->branch_id],
-            ['name' => $request->name, 'address' => $request->pickup_address]
-        );
+        // Find or create customer based on phone globally
+        $customer = Customer::where('phone', $request->phone)->first();
+        if (!$customer) {
+            $customer = Customer::create([
+                'phone' => $request->phone,
+                'name' => $request->name,
+                'address' => $request->pickup_address,
+                'branch_id' => $request->branch_id
+            ]);
+        }
 
         $appointment = DeliveryAppointment::create([
             'customer_id' => $customer->id,
