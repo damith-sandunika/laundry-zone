@@ -163,16 +163,40 @@ class DashboardController extends Controller
         ];
 
         // ── Super Admin Global Stats ──
-        $superAdminStats = [];
         if ($isSuperAdmin) {
+            $today = now()->format('Y-m-d');
+            
+            // Daily Global Revenue (Orders + Packages)
+            $todayOrderSales = \App\Models\Order::whereDate('created_at', $today)->sum('total');
+            $todayPackageSales = \App\Models\PackagePayment::whereDate('created_at', $today)->sum('amount');
+            $todayRevenue = $todayOrderSales + $todayPackageSales;
+
             $superAdminStats = [
-                'total_branches' => \App\Models\Branch::count(),
-                'active_branches' => \App\Models\Branch::where('is_active', true)->count(),
-                'total_staff' => \App\Models\User::count(),
-                'total_customers' => \App\Models\Customer::count(),
-                'global_orders' => \App\Models\Order::count(),
-                'global_revenue' => \App\Models\Order::sum('paid_amount'),
+                'total_revenue_today' => $todayRevenue,
+                'new_orders_today' => \App\Models\Order::whereDate('created_at', $today)->count(),
+                'pending_deliveries' => \App\Models\Order::where('status', 'done')->count(),
+                'active_customers' => \App\Models\Customer::count(),
             ];
+            
+            // Chart 1: Sales by Branch (Today)
+            $branches = \App\Models\Branch::all();
+            $branchLabels = [];
+            $branchSales = [];
+            foreach($branches as $b) {
+                $branchLabels[] = $b->name;
+                $branchSales[] = \App\Models\Order::where('branch_id', $b->id)->whereDate('created_at', $today)->sum('total') 
+                               + \App\Models\PackagePayment::whereHas('customerPackage', fn($q) => $q->where('branch_id', $b->id))->whereDate('created_at', $today)->sum('amount');
+            }
+            $chartBranchSales = ['labels' => $branchLabels, 'data' => $branchSales];
+
+            // Chart 2: Orders by Status (Today)
+            $statuses = ['received', 'processing', 'washing', 'ironing', 'done', 'delivered'];
+            $statusLabels = ['Received', 'Processing', 'Washing', 'Ironing', 'Ready', 'Delivered'];
+            $statusCounts = [];
+            foreach($statuses as $s) {
+                $statusCounts[] = \App\Models\Order::whereDate('created_at', $today)->where('status', $s)->count();
+            }
+            $chartOrderStatus = ['labels' => $statusLabels, 'data' => $statusCounts];
             
             // Get recent global activity
             $recentGlobalOrders = \App\Models\Order::with(['customer', 'branch'])
@@ -180,7 +204,7 @@ class DashboardController extends Controller
                 ->take(10)
                 ->get();
                 
-            return view('dashboard_superadmin', compact('superAdminStats', 'recentGlobalOrders', 'branchName'));
+            return view('dashboard_superadmin', compact('superAdminStats', 'recentGlobalOrders', 'branchName', 'chartBranchSales', 'chartOrderStatus'));
         }
 
         return view('dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'branchName', 'chartData'));
