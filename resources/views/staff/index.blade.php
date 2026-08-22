@@ -117,11 +117,13 @@
                                 </td>
                                 @endif
                                 <td class="px-6 py-4 text-center space-x-2">
+                                    @if(auth()->user()->role !== 'super_admin')
                                     <button 
                                         @click="selectedUser = {{ $employee }}; selectedMonth = '{{ now()->format('F Y') }}'; salaryModalOpen = true"
                                         class="text-xs font-semibold px-2.5 py-1 bg-green-50 border border-green-200 text-green-600 rounded hover:bg-green-100">
                                         Pay Salary
                                     </button>
+                                    @endif
                                     <a href="{{ route('staff.show', $employee) }}" class="text-xs font-semibold px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-600 rounded hover:bg-blue-100">
                                         View
                                     </a>
