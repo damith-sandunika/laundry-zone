@@ -36,18 +36,15 @@
 <!-- Navbar -->
 <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300" x-data="{ mobileMenuOpen: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-20 items-center relative">
-            <div class="flex-shrink-0 flex items-center">
-                <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto mr-2">
-            </div>
-            
-            <!-- Center Brand Name -->
-            <div class="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center">
-                <span class="font-black text-2xl tracking-tight text-brand">Laundry Zone</span>
+        <div class="flex justify-between h-20 items-center">
+            <!-- Logo + Brand Name (left on desktop, center on mobile) -->
+            <div class="flex items-center gap-2 md:flex-none w-full md:w-auto justify-center md:justify-start">
+                <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto">
+                <span class="font-black text-xl tracking-tight text-brand">Laundry Zone</span>
             </div>
             
             <!-- Desktop Menu -->
-            <div class="hidden md:flex space-x-6 lg:space-x-8 items-center font-medium text-sm ml-auto mr-8">
+            <div class="hidden md:flex space-x-6 lg:space-x-8 items-center font-medium text-sm">
                 <a href="#" class="text-blue-600 border-b-2 border-blue-600 pb-1">Home</a>
                 <a href="#services" class="text-slate-600 hover:text-blue-600 transition">Services</a>
                 <a href="#pricing" class="text-slate-600 hover:text-blue-600 transition">Pricing</a>
@@ -63,8 +60,8 @@
                 </a>
             </div>
 
-            <!-- Mobile menu button -->
-            <div class="md:hidden flex items-center">
+            <!-- Mobile menu button (absolute right) -->
+            <div class="md:hidden absolute right-4 flex items-center">
                 <button @click="mobileMenuOpen = !mobileMenuOpen" class="text-gray-600 hover:text-blue-600 focus:outline-none">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
@@ -76,7 +73,7 @@
     </div>
 
     <!-- Mobile Menu -->
-    <div x-show="mobileMenuOpen" style="display:none" class="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg">
+    <div x-show="mobileMenuOpen" style="display:none" class="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg z-50">
         <div class="px-4 pt-2 pb-6 space-y-1">
             <a href="#" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 bg-blue-50">Home</a>
             <a href="#services" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">Services</a>
@@ -167,10 +164,7 @@
 </section>
 
 <!-- Services Section -->
-<section id="services" class="py-20 bg-white" x-data="{ 
-    activeCategory: {{ $categories->first()->id ?? 0 }},
-    categories: {{ Js::from($categories) }}
-}">
+<section id="services" class="py-20 bg-white" x-data="{ openCategory: null }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center mb-16">
             <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What We Offer</span>
@@ -178,46 +172,83 @@
             <div class="w-16 h-1 bg-accent mx-auto rounded-full"></div>
         </div>
 
-        <!-- Categories Tabs -->
-        <div class="flex flex-wrap justify-center gap-3 mb-12">
+        <!-- Category Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             @foreach($categories as $category)
-            <button @click="activeCategory = {{ $category->id }}" 
-                :class="activeCategory === {{ $category->id }} ? 'bg-accent text-white shadow-md' : 'bg-slate-50 text-slate-600 hover:bg-slate-100 border border-slate-200'"
-                class="px-6 py-3 rounded-full font-semibold transition-all duration-300 flex items-center gap-2">
-                @if($category->name == 'Wash & Fold') <i class="fa-solid fa-soap"></i>
-                @elseif($category->name == 'Dry Cleaning') <i class="fa-solid fa-shirt"></i>
-                @elseif($category->name == 'Ironing') <i class="fa-solid fa-fire-burner"></i>
-                @else <i class="fa-solid fa-layer-group"></i> @endif
-                {{ $category->name }}
-            </button>
-            @endforeach
-        </div>
-
-        <!-- Services Grid -->
-        <div>
-            @foreach($categories as $category)
-            <div x-show="activeCategory === {{ $category->id }}" x-transition.opacity style="display:none;" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                @foreach($category->services as $service)
-                <div class="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-center group cursor-pointer">
-                    <div class="w-20 h-20 mx-auto bg-blue-50 rounded-2xl flex items-center justify-center mb-6 group-hover:bg-accent group-hover:text-white transition-colors">
-                        @if(str_contains(strtolower($service->name), 'wash'))
-                            <i class="fa-solid fa-jug-detergent text-3xl text-accent group-hover:text-white transition-colors"></i>
-                        @elseif(str_contains(strtolower($service->name), 'iron'))
-                            <i class="fa-solid fa-fire-burner text-3xl text-accent group-hover:text-white transition-colors"></i>
-                        @elseif(str_contains(strtolower($service->name), 'dry'))
-                            <i class="fa-solid fa-shirt text-3xl text-accent group-hover:text-white transition-colors"></i>
-                        @else
-                            <i class="fa-solid fa-hands-bubbles text-3xl text-accent group-hover:text-white transition-colors"></i>
-                        @endif
+            <div class="rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300"
+                 :class="openCategory === {{ $category->id }} ? 'ring-2 ring-blue-200 shadow-xl' : 'hover:shadow-lg'">
+                
+                <!-- Category Header Card -->
+                <div @click="openCategory = openCategory === {{ $category->id }} ? null : {{ $category->id }}"
+                     class="p-6 cursor-pointer flex items-center justify-between transition-colors duration-200"
+                     :class="openCategory === {{ $category->id }} ? 'bg-accent text-white' : 'bg-white text-slate-800'">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-colors"
+                             :class="openCategory === {{ $category->id }} ? 'bg-white/20 text-white' : 'bg-blue-50 text-accent'">
+                            @if(str_contains(strtolower($category->name), 'wash'))
+                                <i class="fa-solid fa-soap"></i>
+                            @elseif(str_contains(strtolower($category->name), 'dry'))
+                                <i class="fa-solid fa-shirt"></i>
+                            @elseif(str_contains(strtolower($category->name), 'iron'))
+                                <i class="fa-solid fa-fire-burner"></i>
+                            @else
+                                <i class="fa-solid fa-layer-group"></i>
+                            @endif
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-extrabold">{{ $category->name }}</h3>
+                            <p class="text-sm mt-0.5" :class="openCategory === {{ $category->id }} ? 'text-blue-100' : 'text-slate-500'">{{ $category->services->count() }} service(s) available</p>
+                        </div>
                     </div>
-                    <h3 class="text-xl font-bold text-slate-800 mb-2">{{ $service->name }}</h3>
-                    <p class="text-sm text-slate-500 mb-4">{{ $service->description ?? 'Professional care for your clothes.' }}</p>
-                    <div class="w-10 h-1 bg-blue-200 mx-auto rounded-full group-hover:bg-accent group-hover:w-16 transition-all duration-300"></div>
+                    <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all"
+                         :class="openCategory === {{ $category->id }} ? 'bg-white/20 rotate-180' : 'bg-slate-100'">
+                        <i class="fa-solid fa-chevron-down text-sm" :class="openCategory === {{ $category->id }} ? 'text-white' : 'text-slate-500'"></i>
+                    </div>
                 </div>
-                @endforeach
-                @if($category->services->isEmpty())
-                    <div class="col-span-full text-center text-slate-500 py-10">No services found in this category.</div>
-                @endif
+                
+                <!-- Services List (Expandable) -->
+                <div x-show="openCategory === {{ $category->id }}"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 -translate-y-2"
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-end="opacity-0"
+                     style="display:none;"
+                     class="bg-slate-50 border-t border-slate-100">
+                    @foreach($category->services as $service)
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 last:border-0 hover:bg-white transition-colors">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-xl bg-blue-50 text-accent flex items-center justify-center">
+                                @if(str_contains(strtolower($service->name), 'wash'))
+                                    <i class="fa-solid fa-jug-detergent"></i>
+                                @elseif(str_contains(strtolower($service->name), 'iron'))
+                                    <i class="fa-solid fa-fire-burner"></i>
+                                @elseif(str_contains(strtolower($service->name), 'dry'))
+                                    <i class="fa-solid fa-shirt"></i>
+                                @else
+                                    <i class="fa-solid fa-hands-bubbles"></i>
+                                @endif
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800">{{ $service->name }}</h4>
+                                <p class="text-xs text-slate-500 mt-0.5">{{ $service->description ?? 'Professional care for your clothes.' }}</p>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0 ml-4">
+                            <p class="text-accent font-extrabold text-lg">Rs. {{ number_format($service->base_price, 0) }}</p>
+                            <p class="text-xs text-slate-400">{{ $service->price_type == 'per_kg' ? 'per kg' : 'per item' }}</p>
+                        </div>
+                    </div>
+                    @endforeach
+                    @if($category->services->isEmpty())
+                        <div class="p-6 text-center text-slate-400 text-sm">No services in this category yet.</div>
+                    @endif
+                    <div class="p-4 border-t border-slate-100">
+                        <a href="{{ route('booking.page') }}" class="block w-full text-center bg-accent text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm">
+                            Book {{ $category->name }} <i class="fa-solid fa-arrow-right ml-1"></i>
+                        </a>
+                    </div>
+                </div>
             </div>
             @endforeach
         </div>
