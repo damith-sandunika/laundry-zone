@@ -196,26 +196,35 @@ class SettingsController extends Controller
 
     public function whatsappStatus()
     {
-        $service = new WhatsAppService();
-        return response()->json($service->getStatus());
+        $branchId = auth()->user()->branch_id ?? 1;
+        try {
+            $response = \Illuminate\Support\Facades\Http::timeout(5)->get("http://127.0.0.1:3005/api/whatsapp/status/{$branchId}");
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            return response()->json(['connected' => false, 'qr' => null, 'error' => 'Service offline']);
+        }
     }
 
     public function whatsappLogout()
     {
-        // With Cloud API, no session to logout. Just confirm.
-        return response()->json(['success' => true, 'message' => 'WhatsApp Cloud API - no session logout required.']);
+        $branchId = auth()->user()->branch_id ?? 1;
+        try {
+            $response = \Illuminate\Support\Facades\Http::post("http://127.0.0.1:3005/api/whatsapp/logout/{$branchId}");
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Service offline']);
+        }
     }
 
     public function whatsappReset()
     {
-        // With Cloud API, test connection by checking config
-        $service = new WhatsAppService();
-        $status  = $service->getStatus();
-        return response()->json([
-            'success' => true,
-            'connected' => $status['connected'],
-            'message'  => $status['connected'] ? 'WhatsApp Cloud API is configured correctly.' : 'Please set WHATSAPP_ACCESS_TOKEN and WHATSAPP_PHONE_NUMBER_ID in .env',
-        ]);
+        $branchId = auth()->user()->branch_id ?? 1;
+        try {
+            $response = \Illuminate\Support\Facades\Http::post("http://127.0.0.1:3005/api/whatsapp/start/{$branchId}");
+            return response()->json($response->json());
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Service offline']);
+        }
     }
 
     public function storePackage(Request $request)
@@ -225,7 +234,6 @@ class SettingsController extends Controller
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
             'payment_type' => 'required|in:prepaid,postpaid',
-            'is_rollover' => 'boolean',
             'services' => 'required|array',
             'services.*' => 'nullable|numeric|min:0'
         ]);
@@ -235,7 +243,6 @@ class SettingsController extends Controller
             'name' => $request->name,
             'price' => $request->price,
             'payment_type' => $request->payment_type,
-            'is_rollover' => $request->is_rollover ?? false,
             'is_active' => true,
         ]);
 
@@ -250,6 +257,37 @@ class SettingsController extends Controller
         }
 
         return redirect()->back()->with('success', 'Package created successfully.');
+    }
+
+    public function updatePackage(Request $request, \App\Models\Package $package)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price' => 'required|numeric|min:0',
+            'payment_type' => 'required|in:prepaid,postpaid',
+            'services' => 'required|array',
+            'services.*' => 'nullable|numeric|min:0'
+        ]);
+
+        $package->update([
+            'name' => $request->name,
+            'price' => $request->price,
+            'payment_type' => $request->payment_type,
+        ]);
+
+        // Re-create services
+        \App\Models\PackageService::where('package_id', $package->id)->delete();
+        foreach ($request->services as $serviceId => $limit) {
+            if ($limit > 0) {
+                \App\Models\PackageService::create([
+                    'package_id' => $package->id,
+                    'service_type_id' => $serviceId,
+                    'quantity_limit' => $limit
+                ]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Package updated successfully.');
     }
 
     public function destroyPackage(\App\Models\Package $package)
