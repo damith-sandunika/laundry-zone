@@ -2,6 +2,16 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Branch;
+use App\Models\Expense;
+use App\Models\InventoryItem;
+use App\Models\InventoryTransaction;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\RegisterSession;
+use App\Models\WhatsappLog;
+use App\Models\WhatsappTemplate;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class AutoCloseShifts extends Command
@@ -25,11 +35,11 @@ class AutoCloseShifts extends Command
      */
     public function handle()
     {
-        $now = \Carbon\Carbon::now()->format('H:i');
+        $now = Carbon::now()->format('H:i');
 
-        $openSessions = \App\Models\RegisterSession::where('status', 'open')
+        $openSessions = RegisterSession::where('status', 'open')
             ->whereHas('branch', function ($query) use ($now) {
-                $query->where('auto_close_time', 'like', $now . '%');
+                $query->where('auto_close_time', 'like', $now.'%');
             })
             ->get();
 
@@ -40,11 +50,11 @@ class AutoCloseShifts extends Command
         foreach ($openSessions as $session) {
             $branchId = $session->branch_id;
 
-            $salesCollected = \App\Models\Order::where('branch_id', $branchId)
+            $salesCollected = Order::where('branch_id', $branchId)
                 ->where('created_at', '>=', $session->opened_at)
                 ->sum('paid_amount');
 
-            $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
+            $expensesLogged = Expense::where('branch_id', $branchId)
                 ->where('created_at', '>=', $session->opened_at)
                 ->sum('amount');
 
@@ -58,46 +68,46 @@ class AutoCloseShifts extends Command
             ]);
 
             // WhatsApp End-of-Day Summary
-            $branch = \App\Models\Branch::find($branchId);
+            $branch = Branch::find($branchId);
             if ($branch && $branch->whatsapp_number) {
-                $orderCount = \App\Models\Order::where('branch_id', $branchId)
+                $orderCount = Order::where('branch_id', $branchId)
                     ->where('created_at', '>=', $session->opened_at)->count();
-                $deliveredCount = \App\Models\Order::where('branch_id', $branchId)
+                $deliveredCount = Order::where('branch_id', $branchId)
                     ->where('status', 'delivered')
                     ->where('created_at', '>=', $session->opened_at)->count();
-                $pendingCount  = \App\Models\Order::where('branch_id', $branchId)
+                $pendingCount = Order::where('branch_id', $branchId)
                     ->whereNotIn('status', ['delivered', 'cancelled'])
                     ->where('created_at', '>=', $session->opened_at)->count();
 
-                $openedAt    = \Carbon\Carbon::parse($session->opened_at);
-                $shiftDate   = $openedAt->format('d M Y');
-                $openedTime  = $openedAt->format('h:i A');
-                $closedTime  = now()->format('h:i A');
+                $openedAt = Carbon::parse($session->opened_at);
+                $shiftDate = $openedAt->format('d M Y');
+                $openedTime = $openedAt->format('h:i A');
+                $closedTime = now()->format('h:i A');
 
-                $inventoryItems = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
+                $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
                 $stockLines = '';
                 foreach ($inventoryItems as $inv) {
                     $stockLines .= "   • {$inv->name}: {$inv->current_stock} {$inv->unit} remaining\n";
                 }
 
-                $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price) as total_revenue'))
+                $serviceBreakdown = OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price) as total_revenue'))
                     ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
                     ->join('orders', 'orders.id', '=', 'order_items.order_id')
                     ->where('orders.branch_id', $branchId)
                     ->where('orders.created_at', '>=', $session->opened_at)
                     ->groupBy('service_types.name')
                     ->get();
-                    
-                $sbText = "";
+
+                $sbText = '';
                 if ($serviceBreakdown->count() > 0) {
                     $sbText .= "👕 *Services Sold:*\n";
                     foreach ($serviceBreakdown as $sb) {
-                        $sbText .= "   • {$sb->name}: {$sb->total_qty} (Rs." . number_format($sb->total_revenue, 2) . ")\n";
+                        $sbText .= "   • {$sb->name}: {$sb->total_qty} (Rs.".number_format($sb->total_revenue, 2).")\n";
                     }
-                    $sbText .= "━━━━━━━━━━━━━━━━━━━━";
+                    $sbText .= '━━━━━━━━━━━━━━━━━━━━';
                 }
 
-                $inventoryConsumed = \App\Models\InventoryTransaction::select('inventory_items.name', 'inventory_items.unit', \DB::raw('SUM(inventory_transactions.quantity) as total_used'))
+                $inventoryConsumed = InventoryTransaction::select('inventory_items.name', 'inventory_items.unit', \DB::raw('SUM(inventory_transactions.quantity) as total_used'))
                     ->join('inventory_items', 'inventory_items.id', '=', 'inventory_transactions.inventory_item_id')
                     ->where('inventory_items.branch_id', $branchId)
                     ->where('inventory_transactions.type', 'out')
@@ -105,22 +115,22 @@ class AutoCloseShifts extends Command
                     ->groupBy('inventory_items.name', 'inventory_items.unit')
                     ->get();
 
-                $icText = "";
+                $icText = '';
                 if ($inventoryConsumed->count() > 0) {
                     $icText .= "📦 *Inventory Consumed:*\n";
                     foreach ($inventoryConsumed as $ic) {
                         $icText .= "   • {$ic->name}: {$ic->total_used} {$ic->unit}\n";
                     }
-                    $icText .= "━━━━━━━━━━━━━━━━━━━━";
+                    $icText .= '━━━━━━━━━━━━━━━━━━━━';
                 }
 
-                $srText = "";
+                $srText = '';
                 if ($stockLines) {
                     $srText .= "📊 *Stock Remaining:*\n";
                     $srText .= $stockLines;
                 }
 
-                $template = \App\Models\WhatsappTemplate::where('type', 'shift_close')->first();
+                $template = WhatsappTemplate::where('type', 'shift_close')->first();
                 $summary = $template ? $template->content : "*[BranchName] - End of Day Report* 🔴\n━━━━━━━━━━━━━━━━━━━━\n📅 Date: [Date]\n🕐 Shift: [ShiftTime]\n━━━━━━━━━━━━━━━━━━━━\n📦 Total Orders: [TotalOrders]\n✅ Delivered: [DeliveredCount]\n⏳ Pending: [PendingCount]\n━━━━━━━━━━━━━━━━━━━━\n[ServiceBreakdown]\n💰 Sales Collected: Rs.[SalesCollected]\n📤 Expenses: Rs.[Expenses]\n🏦 Opening Balance: Rs.[OpeningBalance]\n💵 *Final Cash Count: Rs.[FinalCash]*\n[InventoryConsumed]\n[StockRemaining]\n━━━━━━━━━━━━━━━━━━━━\n_Powered by SmartLaundry System_";
 
                 $summary = str_replace('[BranchName]', $branch->name ?? 'SmartLaundry', $summary);
@@ -136,20 +146,20 @@ class AutoCloseShifts extends Command
                 $summary = str_replace('[FinalCash]', number_format($finalCash, 2), $summary);
                 $summary = str_replace('[InventoryConsumed]', $icText, $summary);
                 $summary = str_replace('[StockRemaining]', $srText, $summary);
-                
+
                 $summary = preg_replace("/\n\s*\n/", "\n", $summary);
 
-                \App\Models\WhatsappLog::create([
-                    'order_id'     => null,
-                    'customer_id'  => null,
-                    'phone'        => $branch->whatsapp_number,
+                WhatsappLog::create([
+                    'order_id' => null,
+                    'customer_id' => null,
+                    'phone' => $branch->whatsapp_number,
                     'message_type' => 'shift_close',
-                    'message'      => "AUTOMATIC CLOSE:\n" . $summary,
-                    'status'       => 'pending',
+                    'message' => "AUTOMATIC CLOSE:\n".$summary,
+                    'status' => 'pending',
                 ]);
             }
         }
-        
-        $this->info(count($openSessions) . ' shifts auto-closed.');
+
+        $this->info(count($openSessions).' shifts auto-closed.');
     }
 }

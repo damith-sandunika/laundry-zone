@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
 use App\Models\PaymentSetting;
 use Illuminate\Http\Request;
 
@@ -11,12 +12,12 @@ class PaymentSettingsController extends Controller
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403, 'Only Super Admin can manage payment methods.');
 
-        $branches = \App\Models\Branch::regularBranches()->get();
+        $branches = Branch::regularBranches()->get();
         $selectedBranchId = $request->branch_id ?? ($branches->first()->id ?? 1);
 
         $settings = PaymentSetting::where('branch_id', $selectedBranchId)->get()->keyBy('method');
         $allMethods = PaymentSetting::allMethods();
-        
+
         return view('settings.payment-methods', compact('settings', 'allMethods', 'branches', 'selectedBranchId'));
     }
 
@@ -25,7 +26,7 @@ class PaymentSettingsController extends Controller
         abort_unless(auth()->user()->isSuperAdmin(), 403, 'Only Super Admin can manage payment methods.');
 
         $branchId = $request->branch_id;
-        
+
         $request->validate([
             'methods' => 'required|array',
             'methods.*.is_enabled' => 'nullable|boolean',

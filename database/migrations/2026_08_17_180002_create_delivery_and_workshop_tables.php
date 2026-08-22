@@ -57,7 +57,7 @@ return new class extends Migration
                 'processing',
                 'completed_at_workshop',
                 'returned_to_branch',
-                'received_at_branch'
+                'received_at_branch',
             ])->default('dispatched_to_workshop');
             $table->timestamp('dispatched_at')->nullable();
             $table->timestamp('received_at_workshop_at')->nullable();

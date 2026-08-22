@@ -10,6 +10,7 @@ class WhatsappTemplateController extends Controller
     public function index()
     {
         $templates = WhatsappTemplate::all();
+
         return view('whatsapp_templates.index', compact('templates'));
     }
 

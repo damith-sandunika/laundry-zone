@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToBranch;
+use Illuminate\Database\Eloquent\Model;
 
 class RegisterSession extends Model
 {
     use BelongsToBranch;
 
     protected $fillable = [
-        'branch_id', 'user_id', 'opening_cash', 'closing_cash', 'opened_at', 'closed_at', 'status', 'closed_by'
+        'branch_id', 'user_id', 'opening_cash', 'closing_cash', 'opened_at', 'closed_at', 'status', 'closed_by',
     ];
 
     protected $casts = [

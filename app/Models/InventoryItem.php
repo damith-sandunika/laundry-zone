@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToBranch;
+use Illuminate\Database\Eloquent\Model;
 
 class InventoryItem extends Model
 {
     use BelongsToBranch;
 
     protected $fillable = [
-        'branch_id', 'name', 'unit', 'current_stock', 'min_stock', 'cost_per_unit', 'is_active', 'low_stock_threshold', 'location'
+        'branch_id', 'name', 'unit', 'current_stock', 'min_stock', 'cost_per_unit', 'is_active', 'low_stock_threshold', 'location',
     ];
 
     public function transactions()
@@ -26,8 +26,8 @@ class InventoryItem extends Model
     public function serviceTypes()
     {
         return $this->belongsToMany(ServiceType::class, 'service_inventory')
-                    ->withPivot('qty_per_use', 'deduct_at_stage')
-                    ->withTimestamps();
+            ->withPivot('qty_per_use', 'deduct_at_stage')
+            ->withTimestamps();
     }
 
     // Check if stock is low

@@ -2,6 +2,7 @@
 
 namespace App\Traits;
 
+use App\Models\Branch;
 use App\Models\Scopes\BranchScope;
 use Illuminate\Support\Facades\Auth;
 
@@ -29,6 +30,6 @@ trait BelongsToBranch
      */
     public function branch()
     {
-        return $this->belongsTo(\App\Models\Branch::class);
+        return $this->belongsTo(Branch::class);
     }
 }

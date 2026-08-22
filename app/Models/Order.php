@@ -2,8 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\Scopes\BranchScope;
 use App\Traits\BelongsToBranch;
+use Illuminate\Database\Eloquent\Model;
 
 class Order extends Model
 {
@@ -14,36 +15,36 @@ class Order extends Model
         'status', 'subtotal', 'discount', 'additional', 'total', 'paid_amount',
         'payment_status', 'payment_method', 'loyalty_points_used',
         'loyalty_points_earned', 'due_date', 'notes', 'is_online_booking',
-        'ready_at', 'delivered_at'
+        'ready_at', 'delivered_at',
     ];
 
     protected $casts = [
-        'due_date'       => 'datetime',
-        'ready_at'       => 'datetime',
-        'delivered_at'   => 'datetime',
+        'due_date' => 'datetime',
+        'ready_at' => 'datetime',
+        'delivered_at' => 'datetime',
         'is_online_booking' => 'boolean',
     ];
 
     // Status labels for display
     public static $statusLabels = [
-        'received'               => 'Received',
+        'received' => 'Received',
         'dispatched_to_workshop' => 'Sent to Workshop',
-        'processing'             => 'At Workshop',
+        'processing' => 'At Workshop',
         'returned_from_workshop' => 'Returning to Branch',
-        'done'                   => 'Done',
-        'delivered'              => 'Delivered',
-        'cancelled'              => 'Cancelled',
+        'done' => 'Done',
+        'delivered' => 'Delivered',
+        'cancelled' => 'Cancelled',
     ];
 
     // Status colors for UI badges
     public static $statusColors = [
-        'received'               => 'info',
+        'received' => 'info',
         'dispatched_to_workshop' => 'warning',
-        'processing'             => 'primary',
+        'processing' => 'primary',
         'returned_from_workshop' => 'warning',
-        'done'                   => 'success',
-        'delivered'              => 'secondary',
-        'cancelled'              => 'danger',
+        'done' => 'success',
+        'delivered' => 'secondary',
+        'cancelled' => 'danger',
     ];
 
     public function customer()
@@ -104,8 +105,9 @@ class Order extends Model
     // Generate unique order number: U0001, U0002, ...
     public static function generateOrderNumber(): string
     {
-        $last = self::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->max('id') ?? 0;
-        return 'U' . str_pad($last + 1, 4, '0', STR_PAD_LEFT);
+        $last = self::withoutGlobalScope(BranchScope::class)->max('id') ?? 0;
+
+        return 'U'.str_pad($last + 1, 4, '0', STR_PAD_LEFT);
     }
 
     public function isPackageOrder()

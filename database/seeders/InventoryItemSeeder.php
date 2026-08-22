@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\InventoryItem;
 use App\Models\ServiceInventory;
+use Illuminate\Database\Seeder;
 
 class InventoryItemSeeder extends Seeder
 {
@@ -13,43 +13,43 @@ class InventoryItemSeeder extends Seeder
         // Branch 1 - Colombo inventory
         $items = [
             [
-                'branch_id'     => 1,
-                'name'          => 'Washing Detergent',
-                'unit'          => 'ml',
+                'branch_id' => 1,
+                'name' => 'Washing Detergent',
+                'unit' => 'ml',
                 'current_stock' => 10000,
-                'min_stock'     => 2000,
+                'min_stock' => 2000,
                 'cost_per_unit' => 0.05,
             ],
             [
-                'branch_id'     => 1,
-                'name'          => 'Fabric Softener',
-                'unit'          => 'ml',
+                'branch_id' => 1,
+                'name' => 'Fabric Softener',
+                'unit' => 'ml',
                 'current_stock' => 5000,
-                'min_stock'     => 1000,
+                'min_stock' => 1000,
                 'cost_per_unit' => 0.08,
             ],
             [
-                'branch_id'     => 1,
-                'name'          => 'Bleach',
-                'unit'          => 'ml',
+                'branch_id' => 1,
+                'name' => 'Bleach',
+                'unit' => 'ml',
                 'current_stock' => 3000,
-                'min_stock'     => 500,
+                'min_stock' => 500,
                 'cost_per_unit' => 0.03,
             ],
             [
-                'branch_id'     => 1,
-                'name'          => 'Dry Clean Solvent',
-                'unit'          => 'ml',
+                'branch_id' => 1,
+                'name' => 'Dry Clean Solvent',
+                'unit' => 'ml',
                 'current_stock' => 8000,
-                'min_stock'     => 1500,
+                'min_stock' => 1500,
                 'cost_per_unit' => 0.20,
             ],
             [
-                'branch_id'     => 1,
-                'name'          => 'Starch Spray',
-                'unit'          => 'ml',
+                'branch_id' => 1,
+                'name' => 'Starch Spray',
+                'unit' => 'ml',
                 'current_stock' => 2000,
-                'min_stock'     => 400,
+                'min_stock' => 400,
                 'cost_per_unit' => 0.10,
             ],
         ];
@@ -57,7 +57,7 @@ class InventoryItemSeeder extends Seeder
         $createdIds = [];
         foreach ($items as $item) {
             $inv = InventoryItem::create(array_merge($item, [
-                'is_active'  => true,
+                'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));
@@ -74,7 +74,7 @@ class InventoryItemSeeder extends Seeder
 
         foreach ($branch2Items as $item) {
             InventoryItem::create(array_merge($item, [
-                'is_active'  => true,
+                'is_active' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
             ]));

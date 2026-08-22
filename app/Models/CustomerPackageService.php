@@ -12,7 +12,7 @@ class CustomerPackageService extends Model
     {
         return $this->belongsTo(ServiceType::class);
     }
-    
+
     public function customerPackage()
     {
         return $this->belongsTo(CustomerPackage::class);

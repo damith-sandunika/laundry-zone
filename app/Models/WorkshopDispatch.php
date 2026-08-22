@@ -12,15 +12,15 @@ class WorkshopDispatch extends Model
         'received_by', 'returned_by', 'status',
         'dispatched_at', 'received_at_workshop_at', 'completed_at_workshop_at',
         'returned_at', 'received_at_branch_at',
-        'dispatch_notes', 'workshop_notes'
+        'dispatch_notes', 'workshop_notes',
     ];
 
     protected $casts = [
-        'dispatched_at'             => 'datetime',
-        'received_at_workshop_at'   => 'datetime',
-        'completed_at_workshop_at'  => 'datetime',
-        'returned_at'               => 'datetime',
-        'received_at_branch_at'     => 'datetime',
+        'dispatched_at' => 'datetime',
+        'received_at_workshop_at' => 'datetime',
+        'completed_at_workshop_at' => 'datetime',
+        'returned_at' => 'datetime',
+        'received_at_branch_at' => 'datetime',
     ];
 
     public function order(): BelongsTo
@@ -68,27 +68,27 @@ class WorkshopDispatch extends Model
 
     public function statusLabel(): string
     {
-        return match($this->status) {
-            'dispatched_to_workshop'  => 'Dispatched to Workshop',
-            'received_at_workshop'    => 'Received at Workshop',
-            'processing'              => 'Processing',
-            'completed_at_workshop'   => 'Completed at Workshop',
-            'returned_to_branch'      => 'Returned to Branch',
-            'received_at_branch'      => 'Received at Branch',
-            default                   => ucfirst(str_replace('_', ' ', $this->status)),
+        return match ($this->status) {
+            'dispatched_to_workshop' => 'Dispatched to Workshop',
+            'received_at_workshop' => 'Received at Workshop',
+            'processing' => 'Processing',
+            'completed_at_workshop' => 'Completed at Workshop',
+            'returned_to_branch' => 'Returned to Branch',
+            'received_at_branch' => 'Received at Branch',
+            default => ucfirst(str_replace('_', ' ', $this->status)),
         };
     }
 
     public function statusColor(): string
     {
-        return match($this->status) {
-            'dispatched_to_workshop'  => 'orange',
-            'received_at_workshop'    => 'blue',
-            'processing'              => 'yellow',
-            'completed_at_workshop'   => 'teal',
-            'returned_to_branch'      => 'purple',
-            'received_at_branch'      => 'green',
-            default                   => 'gray',
+        return match ($this->status) {
+            'dispatched_to_workshop' => 'orange',
+            'received_at_workshop' => 'blue',
+            'processing' => 'yellow',
+            'completed_at_workshop' => 'teal',
+            'returned_to_branch' => 'purple',
+            'received_at_branch' => 'green',
+            default => 'gray',
         };
     }
 }

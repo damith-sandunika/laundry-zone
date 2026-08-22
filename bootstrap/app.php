@@ -1,5 +1,10 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\RiderMiddleware;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\WorkshopMiddleware;
+use App\Providers\WhatsAppServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,14 +17,14 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role'     => \App\Http\Middleware\RoleMiddleware::class,
-            'admin'    => \App\Http\Middleware\AdminMiddleware::class,
-            'rider'    => \App\Http\Middleware\RiderMiddleware::class,
-            'workshop' => \App\Http\Middleware\WorkshopMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'admin' => AdminMiddleware::class,
+            'rider' => RiderMiddleware::class,
+            'workshop' => WorkshopMiddleware::class,
         ]);
     })
     ->withProviders([
-        \App\Providers\WhatsAppServiceProvider::class,
+        WhatsAppServiceProvider::class,
     ])
     ->withExceptions(function (Exceptions $exceptions): void {
         //

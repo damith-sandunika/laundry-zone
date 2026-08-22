@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentSetting extends Model
 {
     protected $fillable = [
-        'branch_id', 'method', 'display_name', 'instructions', 'is_enabled'
+        'branch_id', 'method', 'display_name', 'instructions', 'is_enabled',
     ];
 
     protected $casts = [
@@ -25,10 +25,10 @@ class PaymentSetting extends Model
         return [
             'cash' => 'Cash',
             'card' => 'Card (POS)',
-            'cod'  => 'Cash on Delivery',
+            'cod' => 'Cash on Delivery',
             'koko' => 'Koko Pay',
             'bank' => 'Bank Transfer',
-            'online' => 'Online Gateway'
+            'online' => 'Online Gateway',
         ];
     }
 }

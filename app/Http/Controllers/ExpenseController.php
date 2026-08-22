@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Expense;
+use App\Models\RegisterSession;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
@@ -9,16 +11,16 @@ class ExpenseController extends Controller
     public function index(Request $request)
     {
         $branchId = auth()->user()->branch_id;
-        
-        $activeSession = \App\Models\RegisterSession::where('branch_id', $branchId ?? 1)
+
+        $activeSession = RegisterSession::where('branch_id', $branchId ?? 1)
             ->where('status', 'open')
             ->first();
 
-        $query = \App\Models\Expense::query();
+        $query = Expense::query();
         if ($branchId) {
             $query->where('branch_id', $branchId);
         }
-        
+
         $period = $request->input('period', 'shift');
         $category = $request->input('category', '');
         $startDate = $request->input('start_date', '');
@@ -66,7 +68,7 @@ class ExpenseController extends Controller
 
         $branchId = auth()->user()->branch_id ?? 1;
 
-        \App\Models\Expense::create([
+        Expense::create([
             'branch_id' => $branchId,
             'category' => $request->category,
             'description' => $request->description,
@@ -78,12 +80,12 @@ class ExpenseController extends Controller
         return redirect()->back()->with('success', 'Expense recorded successfully.');
     }
 
-    public function edit(\App\Models\Expense $expense)
+    public function edit(Expense $expense)
     {
         return view('expenses.edit', compact('expense'));
     }
 
-    public function update(Request $request, \App\Models\Expense $expense)
+    public function update(Request $request, Expense $expense)
     {
         $request->validate([
             'category' => 'required|string|max:255',
@@ -97,9 +99,10 @@ class ExpenseController extends Controller
         return redirect()->route('expenses.index')->with('success', 'Expense updated successfully.');
     }
 
-    public function destroy(\App\Models\Expense $expense)
+    public function destroy(Expense $expense)
     {
         $expense->delete();
+
         return redirect()->route('expenses.index')->with('success', 'Expense deleted successfully.');
     }
 }

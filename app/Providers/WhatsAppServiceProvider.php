@@ -10,7 +10,7 @@ class WhatsAppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(WhatsAppService::class, function ($app) {
-            return new WhatsAppService();
+            return new WhatsAppService;
         });
     }
 

@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
+use App\Models\Cubby;
 use App\Models\Customer;
 use App\Models\Order;
+use App\Models\OrderCubby;
 use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\ServiceType;
 use App\Models\User;
-use App\Models\Cubby;
-use App\Models\OrderCubby;
 use Carbon\Carbon;
+use Illuminate\Database\Seeder;
 
 class TemporaryDataSeeder extends Seeder
 {
@@ -28,7 +28,7 @@ class TemporaryDataSeeder extends Seeder
             $customers[] = Customer::create([
                 'branch_id' => $branchId,
                 'name' => "Demo Customer $i",
-                'phone' => "07700000" . str_pad($i, 2, '0', STR_PAD_LEFT),
+                'phone' => '07700000'.str_pad($i, 2, '0', STR_PAD_LEFT),
                 'address' => "No. $i, Demo Street, Colombo",
                 'created_at' => Carbon::now()->subDays(rand(1, 10)),
             ]);
@@ -50,7 +50,7 @@ class TemporaryDataSeeder extends Seeder
 
             // Create Order
             $order = Order::create([
-                'order_number' => 'LDY' . $createdAt->format('ymd') . str_pad($i, 3, '0', STR_PAD_LEFT),
+                'order_number' => 'LDY'.$createdAt->format('ymd').str_pad($i, 3, '0', STR_PAD_LEFT),
                 'branch_id' => $branchId,
                 'customer_id' => $customer->id,
                 'created_by' => $admin->id,

@@ -10,14 +10,14 @@ class DeliveryTask extends Model
     protected $fillable = [
         'delivery_appointment_id', 'order_id', 'rider_id', 'branch_id',
         'task_type', 'status', 'pickup_location', 'dropoff_location',
-        'rider_lat', 'rider_lng', 'accepted_at', 'completed_at', 'notes'
+        'rider_lat', 'rider_lng', 'accepted_at', 'completed_at', 'notes',
     ];
 
     protected $casts = [
-        'accepted_at'  => 'datetime',
+        'accepted_at' => 'datetime',
         'completed_at' => 'datetime',
-        'rider_lat'    => 'decimal:7',
-        'rider_lng'    => 'decimal:7',
+        'rider_lat' => 'decimal:7',
+        'rider_lng' => 'decimal:7',
     ];
 
     public function appointment(): BelongsTo
@@ -42,27 +42,27 @@ class DeliveryTask extends Model
 
     public function statusLabel(): string
     {
-        return match($this->status) {
-            'assigned'   => 'Assigned',
-            'accepted'   => 'Accepted',
-            'on_way'     => 'On The Way',
-            'arrived'    => 'Arrived',
-            'completed'  => 'Completed',
-            'cancelled'  => 'Cancelled',
-            default      => ucfirst($this->status),
+        return match ($this->status) {
+            'assigned' => 'Assigned',
+            'accepted' => 'Accepted',
+            'on_way' => 'On The Way',
+            'arrived' => 'Arrived',
+            'completed' => 'Completed',
+            'cancelled' => 'Cancelled',
+            default => ucfirst($this->status),
         };
     }
 
     public function statusColor(): string
     {
-        return match($this->status) {
-            'assigned'  => 'yellow',
-            'accepted'  => 'blue',
-            'on_way'    => 'indigo',
-            'arrived'   => 'purple',
+        return match ($this->status) {
+            'assigned' => 'yellow',
+            'accepted' => 'blue',
+            'on_way' => 'indigo',
+            'arrived' => 'purple',
             'completed' => 'green',
             'cancelled' => 'red',
-            default     => 'gray',
+            default => 'gray',
         };
     }
 }

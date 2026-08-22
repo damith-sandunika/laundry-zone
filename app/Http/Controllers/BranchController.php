@@ -16,6 +16,7 @@ class BranchController extends Controller
         }
 
         $branches = Branch::all();
+
         return view('branches.index', compact('branches'));
     }
 
@@ -33,7 +34,7 @@ class BranchController extends Controller
             'whatsapp_number' => 'nullable|string|max:50',
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size']);
@@ -63,11 +64,11 @@ class BranchController extends Controller
             'whatsapp_number' => 'nullable|string|max:50',
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048'
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
         $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size']);
-        
+
         // Ensure is_active defaults to false if not present, true if present
         $data['is_active'] = $request->has('is_active');
 

@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -61,7 +60,7 @@ class WhatsappTemplateSeeder extends Seeder
                 'available_tags' => json_encode(['[BranchName]', '[ItemName]', '[CurrentStock]']),
                 'created_at' => now(),
                 'updated_at' => now(),
-            ]
+            ],
         ];
 
         foreach ($templates as $template) {

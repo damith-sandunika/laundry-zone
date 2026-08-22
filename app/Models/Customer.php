@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToBranch;
+use Illuminate\Database\Eloquent\Model;
 
 class Customer extends Model
 {
     use BelongsToBranch;
 
     protected $fillable = [
-        'branch_id', 'name', 'phone', 'email', 'address', 'loyalty_points', 'is_active'
+        'branch_id', 'name', 'phone', 'email', 'address', 'loyalty_points', 'is_active',
     ];
 
     public function orders()

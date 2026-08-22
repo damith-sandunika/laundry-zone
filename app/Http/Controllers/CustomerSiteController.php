@@ -3,27 +3,32 @@
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
-use App\Models\ServiceType;
-use App\Models\DeliveryAppointment;
 use App\Models\Customer;
+use App\Models\DeliveryAppointment;
+use App\Models\Package;
+use App\Models\PaymentSetting;
+use App\Models\ServiceCategory;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class CustomerSiteController extends Controller
 {
     public function home()
     {
         $branches = Branch::regularBranches()->where('is_active', true)->get();
-        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
-        $packages = \App\Models\Package::with('services.serviceType')->where('is_active', true)->get();
+        $categories = ServiceCategory::with('services')->where('is_active', true)->get();
+        $packages = Package::with('services.serviceType')->where('is_active', true)->get();
+
         return view('site.home', compact('branches', 'categories', 'packages'));
     }
 
     public function booking()
     {
         $branches = Branch::regularBranches()->where('is_active', true)->get();
-        $paymentSettings = \App\Models\PaymentSetting::where('is_enabled', true)->get()->groupBy('branch_id');
+        $paymentSettings = PaymentSetting::where('is_enabled', true)->get()->groupBy('branch_id');
+
         return view('site.booking', compact('branches', 'paymentSettings'));
     }
 
@@ -41,7 +46,7 @@ class CustomerSiteController extends Controller
                 'pickup_scheduled_at' => 'required|date|after:now',
                 'item_description' => 'nullable|string',
                 'notes' => 'nullable|string',
-                
+
                 // New fields
                 'payment_method' => 'required|string',
                 'payment_timing' => 'required|in:pay_now,pay_on_delivery',
@@ -51,7 +56,7 @@ class CustomerSiteController extends Controller
                 'delivery_lng' => 'nullable|numeric',
                 'delivery_address' => 'nullable|string|max:255',
             ]);
-        } catch (\Illuminate\Validation\ValidationException $e) {
+        } catch (ValidationException $e) {
             \Log::error('Booking Validation Failed', $e->errors());
             throw $e;
         }
@@ -69,12 +74,12 @@ class CustomerSiteController extends Controller
         $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress) {
             // Find or create customer based on phone globally
             $customer = Customer::where('phone', $request->phone)->first();
-            if (!$customer) {
+            if (! $customer) {
                 $customer = Customer::create([
                     'phone' => $request->phone,
                     'name' => $request->name,
                     'address' => $request->pickup_address,
-                    'branch_id' => $request->branch_id
+                    'branch_id' => $request->branch_id,
                 ]);
             }
 
@@ -90,7 +95,7 @@ class CustomerSiteController extends Controller
                 'notes' => $request->notes,
                 'contact_phone' => $request->phone,
                 'status' => 'pending',
-                
+
                 // New fields
                 'payment_method' => $request->payment_method,
                 'payment_timing' => $request->payment_timing,

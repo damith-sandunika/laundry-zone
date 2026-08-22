@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\BelongsToBranch;
 
 class Package extends Model
 {
-    use HasFactory, BelongsToBranch;
+    use BelongsToBranch, HasFactory;
 
     protected $guarded = [];
 

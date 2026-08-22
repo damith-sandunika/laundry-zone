@@ -9,7 +9,7 @@ class ServiceInventory extends Model
     protected $table = 'service_inventory';
 
     protected $fillable = [
-        'service_type_id', 'inventory_item_id', 'qty_per_use', 'deduct_at_stage'
+        'service_type_id', 'inventory_item_id', 'qty_per_use', 'deduct_at_stage',
     ];
 
     public function serviceType()

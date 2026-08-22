@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToBranch;
+use Illuminate\Database\Eloquent\Model;
 
 class CustomerPackage extends Model
 {
     use BelongsToBranch;
 
     protected $guarded = [];
-    
+
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',

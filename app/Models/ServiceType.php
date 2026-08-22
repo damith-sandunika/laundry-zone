@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceType extends Model
 {
     protected $fillable = [
-        'category_id', 'name', 'description', 'price_type', 'base_price', 'loyalty_points_earn', 'is_active', 'icon', 'color'
+        'category_id', 'name', 'description', 'price_type', 'base_price', 'loyalty_points_earn', 'is_active', 'icon', 'color',
     ];
 
     public function category()
@@ -29,7 +29,7 @@ class ServiceType extends Model
     public function inventoryItems()
     {
         return $this->belongsToMany(InventoryItem::class, 'service_inventory')
-                    ->withPivot('qty_per_use', 'deduct_at_stage')
-                    ->withTimestamps();
+            ->withPivot('qty_per_use', 'deduct_at_stage')
+            ->withTimestamps();
     }
 }

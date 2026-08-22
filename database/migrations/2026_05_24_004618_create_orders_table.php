@@ -20,7 +20,7 @@ return new class extends Migration
                 'drying',
                 'ready',
                 'delivered',
-                'cancelled'
+                'cancelled',
             ])->default('received');
             $table->decimal('subtotal', 10, 2)->default(0);
             $table->decimal('discount', 10, 2)->default(0);

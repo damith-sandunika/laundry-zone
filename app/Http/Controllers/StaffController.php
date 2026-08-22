@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\Expense;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class StaffController extends Controller
@@ -9,15 +12,15 @@ class StaffController extends Controller
     public function index()
     {
         $branchId = auth()->user()->branch_id;
-        
-        $query = \App\Models\User::query();
+
+        $query = User::query();
         if ($branchId) {
             $query->where('branch_id', $branchId);
         }
         $staff = $query->orderBy('name', 'asc')->get();
 
         // Get expenses related to staff salary
-        $salaryExpensesQuery = \App\Models\Expense::where('category', 'salary');
+        $salaryExpensesQuery = Expense::where('category', 'salary');
         if ($branchId) {
             $salaryExpensesQuery->where('branch_id', $branchId);
         }
@@ -25,7 +28,7 @@ class StaffController extends Controller
 
         $branches = [];
         if (auth()->user()->role === 'super_admin') {
-            $branches = \App\Models\Branch::all();
+            $branches = Branch::all();
         }
 
         return view('staff.index', compact('staff', 'salaries', 'branches'));
@@ -53,14 +56,14 @@ class StaffController extends Controller
 
         $branchId = auth()->user()->role === 'super_admin' ? $request->branch_id : (auth()->user()->branch_id ?? 1);
         $currentUserRole = auth()->user()->role;
-        
+
         $role = $request->role;
         // Only super_admin can create admin users. Others (like rider/staff/workshop) are allowed.
         if ($role === 'admin' && $currentUserRole !== 'super_admin') {
             $role = 'staff';
         }
 
-        \App\Models\User::create([
+        User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
@@ -79,26 +82,27 @@ class StaffController extends Controller
         return redirect()->back()->with('success', 'Staff member added successfully.');
     }
 
-    public function show(\App\Models\User $staff)
+    public function show(User $staff)
     {
-        $salaries = \App\Models\Expense::where('category', 'salary')
+        $salaries = Expense::where('category', 'salary')
             ->where('description', 'like', "%{$staff->name}%")
             ->latest()->get();
+
         return view('staff.show', compact('staff', 'salaries'));
     }
 
-    public function edit(\App\Models\User $staff)
+    public function edit(User $staff)
     {
         return view('staff.edit', compact('staff'));
     }
 
-    public function update(Request $request, \App\Models\User $staff)
+    public function update(Request $request, User $staff)
     {
         $rules = [
-            'name'      => 'required|string|max:255',
-            'email'     => 'required|string|email|max:255|unique:users,email,' . $staff->id,
-            'phone'     => 'nullable|string|max:50',
-            'role'      => 'required|in:admin,branch_admin,staff,super_admin,rider,workshop_admin',
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users,email,'.$staff->id,
+            'phone' => 'nullable|string|max:50',
+            'role' => 'required|in:admin,branch_admin,staff,super_admin,rider,workshop_admin',
             'is_active' => 'required|boolean',
             'nic' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
@@ -116,7 +120,7 @@ class StaffController extends Controller
         $request->validate($rules);
 
         $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id', 'nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves']);
-        
+
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && auth()->user()->role !== 'super_admin') {
             unset($data['role']); // Keep existing role
@@ -126,12 +130,14 @@ class StaffController extends Controller
             $data['password'] = bcrypt($request->password);
         }
         $staff->update($data);
+
         return redirect()->route('staff.index')->with('success', 'Staff updated.');
     }
 
-    public function destroy(\App\Models\User $staff)
+    public function destroy(User $staff)
     {
         $staff->delete();
+
         return redirect()->route('staff.index')->with('success', 'Staff member deleted.');
     }
 
@@ -144,10 +150,10 @@ class StaffController extends Controller
             'month' => 'required|string',
         ]);
 
-        $user = \App\Models\User::find($request->user_id);
+        $user = User::find($request->user_id);
         $branchId = auth()->user()->branch_id ?? 1;
 
-        \App\Models\Expense::create([
+        Expense::create([
             'branch_id' => $branchId,
             'category' => 'salary',
             'amount' => $request->amount,

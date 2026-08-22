@@ -16,10 +16,10 @@ class BranchScope implements Scope
     {
         if (Auth::hasUser()) {
             $user = Auth::user();
-            
+
             // Allow super_admin to see all branches' data
             if ($user->role !== 'super_admin') {
-                $builder->where($model->getTable() . '.branch_id', $user->branch_id);
+                $builder->where($model->getTable().'.branch_id', $user->branch_id);
             }
         }
     }

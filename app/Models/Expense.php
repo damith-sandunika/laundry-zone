@@ -2,15 +2,15 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use App\Traits\BelongsToBranch;
+use Illuminate\Database\Eloquent\Model;
 
 class Expense extends Model
 {
     use BelongsToBranch;
 
     protected $fillable = [
-        'branch_id', 'category', 'description', 'amount', 'expense_date', 'receipt_image', 'created_by'
+        'branch_id', 'category', 'description', 'amount', 'expense_date', 'receipt_image', 'created_by',
     ];
 
     protected $casts = [

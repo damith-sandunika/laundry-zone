@@ -13,13 +13,13 @@ class DeliveryAppointment extends Model
         'latitude', 'longitude', 'map_address', 'item_description',
         'pickup_scheduled_at', 'delivery_scheduled_at', 'status', 'notes', 'contact_phone',
         'order_id', 'picked_up_at', 'payment_method', 'payment_timing', 'delivery_preference',
-        'delivery_lat', 'delivery_lng'
+        'delivery_lat', 'delivery_lng',
     ];
 
     protected $casts = [
-        'pickup_scheduled_at'   => 'datetime',
+        'pickup_scheduled_at' => 'datetime',
         'delivery_scheduled_at' => 'datetime',
-        'picked_up_at'          => 'datetime',
+        'picked_up_at' => 'datetime',
     ];
 
     public function customer(): BelongsTo
@@ -50,19 +50,19 @@ class DeliveryAppointment extends Model
     // Status label helper
     public function statusLabel(): string
     {
-        return match($this->status) {
-            'pending'          => 'Pending',
-            'confirmed'        => 'Confirmed',
-            'rider_assigned'   => 'Rider Assigned',
-            'picked_up'        => 'Picked Up',
-            'order_created'    => 'Order Created',
-            'at_branch'        => 'At Branch',
-            'processing'       => 'Processing',
-            'ready'            => 'Ready',
+        return match ($this->status) {
+            'pending' => 'Pending',
+            'confirmed' => 'Confirmed',
+            'rider_assigned' => 'Rider Assigned',
+            'picked_up' => 'Picked Up',
+            'order_created' => 'Order Created',
+            'at_branch' => 'At Branch',
+            'processing' => 'Processing',
+            'ready' => 'Ready',
             'out_for_delivery' => 'Out for Delivery',
-            'delivered'        => 'Delivered',
-            'cancelled'        => 'Cancelled',
-            default            => ucfirst(str_replace('_', ' ', $this->status)),
+            'delivered' => 'Delivered',
+            'cancelled' => 'Cancelled',
+            default => ucfirst(str_replace('_', ' ', $this->status)),
         };
     }
 
@@ -74,18 +74,18 @@ class DeliveryAppointment extends Model
     // Status badge color helper
     public function statusColor(): string
     {
-        return match($this->status) {
-            'pending'          => 'yellow',
-            'confirmed'        => 'blue',
-            'rider_assigned'   => 'indigo',
-            'picked_up'        => 'purple',
-            'at_branch'        => 'orange',
-            'processing'       => 'cyan',
-            'ready'            => 'teal',
+        return match ($this->status) {
+            'pending' => 'yellow',
+            'confirmed' => 'blue',
+            'rider_assigned' => 'indigo',
+            'picked_up' => 'purple',
+            'at_branch' => 'orange',
+            'processing' => 'cyan',
+            'ready' => 'teal',
             'out_for_delivery' => 'blue',
-            'delivered'        => 'green',
-            'cancelled'        => 'red',
-            default            => 'gray',
+            'delivered' => 'green',
+            'cancelled' => 'red',
+            default => 'gray',
         };
     }
 }

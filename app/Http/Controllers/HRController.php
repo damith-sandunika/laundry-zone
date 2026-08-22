@@ -2,11 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Attendance;
+use App\Models\Leave;
+use App\Models\User;
 use Illuminate\Http\Request;
 
 class HRController extends Controller
 {
-    public function storeAttendance(Request $request, \App\Models\User $staff)
+    public function storeAttendance(Request $request, User $staff)
     {
         $request->validate([
             'date' => 'required|date',
@@ -25,7 +28,7 @@ class HRController extends Controller
         return back()->with('success', 'Attendance marked successfully.');
     }
 
-    public function updateAttendance(Request $request, \App\Models\Attendance $attendance)
+    public function updateAttendance(Request $request, Attendance $attendance)
     {
         $request->validate([
             'clock_out' => 'required|date_format:H:i',
@@ -38,7 +41,7 @@ class HRController extends Controller
         return back()->with('success', 'Out time marked successfully.');
     }
 
-    public function storeLeave(Request $request, \App\Models\User $staff)
+    public function storeLeave(Request $request, User $staff)
     {
         $request->validate([
             'start_date' => 'required|date',
@@ -69,10 +72,10 @@ class HRController extends Controller
         return back()->with('success', $status === 'approved' ? 'Leave marked and approved successfully.' : 'Leave requested successfully.');
     }
 
-    public function updateLeave(Request $request, \App\Models\Leave $leave)
+    public function updateLeave(Request $request, Leave $leave)
     {
         // Only admins can approve/reject
-        if (!auth()->user()->hasAdminAccess()) {
+        if (! auth()->user()->hasAdminAccess()) {
             abort(403);
         }
 
@@ -95,7 +98,7 @@ class HRController extends Controller
         return back()->with('success', 'Leave status updated.');
     }
 
-    public function storeAdvance(Request $request, \App\Models\User $staff)
+    public function storeAdvance(Request $request, User $staff)
     {
         $request->validate([
             'amount' => 'required|numeric|min:1',

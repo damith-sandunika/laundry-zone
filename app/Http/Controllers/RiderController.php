@@ -3,9 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Models\DeliveryTask;
-use App\Models\DeliveryAppointment;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\PaymentTransaction;
 use App\Models\ServiceType;
 use App\Services\WhatsAppService;
 use Illuminate\Http\Request;
@@ -54,7 +54,7 @@ class RiderController extends Controller
         $this->authorizeRiderTask($task);
 
         $task->update([
-            'status'      => 'accepted',
+            'status' => 'accepted',
             'accepted_at' => now(),
         ]);
 
@@ -89,7 +89,7 @@ class RiderController extends Controller
         $this->authorizeRiderTask($task);
 
         $task->update([
-            'status'       => 'completed',
+            'status' => 'completed',
             'completed_at' => now(),
         ]);
 
@@ -107,21 +107,21 @@ class RiderController extends Controller
                 if ($request->has('payment_amount') && $request->payment_amount > 0) {
                     $amount = $request->payment_amount;
                     $method = $request->payment_method ?? 'cash';
-                    
-                    \App\Models\PaymentTransaction::create([
+
+                    PaymentTransaction::create([
                         'order_id' => $order->id,
                         'amount' => $amount,
                         'payment_method' => $method,
                         'created_by' => auth()->id(),
                     ]);
-                    
+
                     $order->paid_amount += $amount;
                     $order->payment_status = ($order->paid_amount >= $order->total) ? 'paid' : 'partial';
                     $order->payment_method = $method;
                 }
 
                 $order->update([
-                    'status'       => 'delivered',
+                    'status' => 'delivered',
                     'delivered_at' => now(),
                 ]);
             }
@@ -134,16 +134,19 @@ class RiderController extends Controller
     public function createOrder(DeliveryTask $task)
     {
         $this->authorizeRiderTask($task);
-        if ($task->task_type !== 'pickup') abort(403, 'Can only create orders for pickups.');
+        if ($task->task_type !== 'pickup') {
+            abort(403, 'Can only create orders for pickups.');
+        }
 
         $services = ServiceType::where('is_active', true)->get();
+
         return view('rider.create-order', compact('task', 'services'));
     }
 
     public function storeOrder(Request $request, DeliveryTask $task, WhatsAppService $waService)
     {
         $this->authorizeRiderTask($task);
-        
+
         $request->validate([
             'items' => 'required|array',
             'items.*.service_id' => 'required|exists:service_types,id',
@@ -153,7 +156,7 @@ class RiderController extends Controller
 
         $appointment = $task->appointment;
         $branchId = $task->branch_id;
-        
+
         // Calculate subtotal
         $subtotal = 0;
         foreach ($request->items as $item) {
@@ -223,7 +226,7 @@ class RiderController extends Controller
 
     private function authorizeRiderTask(DeliveryTask $task): void
     {
-        if ($task->rider_id !== auth()->id() && !auth()->user()->isSuperAdmin()) {
+        if ($task->rider_id !== auth()->id() && ! auth()->user()->isSuperAdmin()) {
             abort(403, 'Not your task.');
         }
     }

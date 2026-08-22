@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class OrderCubby extends Model
 {
     protected $fillable = [
-        'order_id', 'cubby_id', 'assigned_at', 'released_at'
+        'order_id', 'cubby_id', 'assigned_at', 'released_at',
     ];
 
     protected $casts = [

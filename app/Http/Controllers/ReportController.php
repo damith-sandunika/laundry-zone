@@ -2,6 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Branch;
+use App\Models\CustomerPackage;
+use App\Models\DeliveryAppointment;
+use App\Models\Expense;
+use App\Models\InventoryItem;
+use App\Models\InventoryTransaction;
+use App\Models\Order;
+use App\Models\OrderItem;
+use App\Models\PackagePayment;
+use App\Models\PaymentTransaction;
+use App\Models\RegisterSession;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -11,45 +22,49 @@ class ReportController extends Controller
         $user = auth()->user();
         $isSuperAdmin = $user->isSuperAdmin();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
-        
+
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
-        
-        $branches = $isSuperAdmin ? \App\Models\Branch::where('is_active', true)->get() : collect();
+
+        $branches = $isSuperAdmin ? Branch::where('is_active', true)->get() : collect();
 
         // 1. Sales Report
-        $salesQuery = \App\Models\Order::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $salesQuery = Order::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
         }
         $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->get();
         $totalSales = $orders->sum('total');
-        
-        $paymentsQuery = \App\Models\PaymentTransaction::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        $paymentsQuery = PaymentTransaction::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
-            $paymentsQuery->whereHas('order', function($q) use ($branchId) {
+            $paymentsQuery->whereHas('order', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         }
         $payments = $paymentsQuery->get();
-        
-        $packagePaymentsQuery = \App\Models\PackagePayment::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+
+        $packagePaymentsQuery = PackagePayment::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
-            $packagePaymentsQuery->whereHas('customerPackage', function($q) use ($branchId) {
+            $packagePaymentsQuery->whereHas('customerPackage', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         }
         $packagePayments = $packagePaymentsQuery->get();
-        
+
         $totalCollected = $payments->sum('amount') + $packagePayments->sum('amount');
         $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
         $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        
-        $totalCredit = $orders->where('payment_method', 'credit')->sum(function($q) { return max(0, $q->total - $q->paid_amount); });
-        $totalPending = $orders->where('payment_method', '!=', 'credit')->sum(function($q) { return max(0, $q->total - $q->paid_amount); });
+
+        $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
+            return max(0, $q->total - $q->paid_amount);
+        });
+        $totalPending = $orders->where('payment_method', '!=', 'credit')->sum(function ($q) {
+            return max(0, $q->total - $q->paid_amount);
+        });
 
         // Credit Customers
-        $creditOrdersQuery = \App\Models\Order::with('customer')
+        $creditOrdersQuery = Order::with('customer')
             ->whereColumn('paid_amount', '<', 'total')
             ->where('payment_method', 'credit');
         if ($branchId) {
@@ -58,9 +73,9 @@ class ReportController extends Controller
         $creditOrders = $creditOrdersQuery->orderBy('created_at', 'asc')->get();
 
         // 2. Service-wise breakdown
-        $serviceBreakdown = \App\Models\OrderItem::select(
-            'service_types.name', 
-            \DB::raw('SUM(order_items.quantity) as total_qty'), 
+        $serviceBreakdown = OrderItem::select(
+            'service_types.name',
+            \DB::raw('SUM(order_items.quantity) as total_qty'),
             \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'),
             \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0)) * IFNULL(orders.paid_amount / NULLIF(orders.total, 0), 0)) as done_payment'),
             \DB::raw('SUM(CASE WHEN orders.payment_method = "credit" THEN order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0)) * (1 - IFNULL(orders.paid_amount / NULLIF(orders.total, 0), 0)) ELSE 0 END) as credit_payment'),
@@ -68,14 +83,14 @@ class ReportController extends Controller
         )
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
-            ->whereBetween('orders.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $serviceBreakdown->where('orders.branch_id', $branchId);
         }
         $services = $serviceBreakdown->groupBy('service_types.name')->get();
 
         // 3. Staff Salary Report
-        $salaryQuery = \App\Models\Expense::where('category', 'salary')
+        $salaryQuery = Expense::where('category', 'salary')
             ->whereBetween('expense_date', [$startDate, $endDate]);
         if ($branchId) {
             $salaryQuery->where('branch_id', $branchId);
@@ -84,18 +99,18 @@ class ReportController extends Controller
         $totalSalaries = $salaries->sum('amount');
 
         // 4. Inventory Transactions Log
-        $inventoryQuery = \App\Models\InventoryTransaction::with(['inventoryItem', 'createdBy'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $inventoryQuery = InventoryTransaction::with(['inventoryItem', 'createdBy'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
-            $inventoryQuery->whereHas('inventoryItem', function($q) use ($branchId) {
+            $inventoryQuery->whereHas('inventoryItem', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         }
         $inventoryLogs = $inventoryQuery->latest()->get();
 
         // 5. Packages Report
-        $customerPackagesQuery = \App\Models\CustomerPackage::with(['customer', 'package', 'services.serviceType'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $customerPackagesQuery = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $customerPackagesQuery->where('branch_id', $branchId);
         }
@@ -103,23 +118,25 @@ class ReportController extends Controller
 
         // 6. Advanced Analytics
         // Walk-in vs Delivery Split
-        $deliveryAppointments = \App\Models\DeliveryAppointment::whereNotNull('order_id')
-            ->whereHas('order', function($q) use ($startDate, $endDate, $branchId) {
-                $q->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
-                if ($branchId) $q->where('branch_id', $branchId);
+        $deliveryAppointments = DeliveryAppointment::whereNotNull('order_id')
+            ->whereHas('order', function ($q) use ($startDate, $endDate, $branchId) {
+                $q->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+                if ($branchId) {
+                    $q->where('branch_id', $branchId);
+                }
             })->get();
-        
+
         $deliveryOrderIds = $deliveryAppointments->pluck('order_id')->toArray();
-        
+
         $deliveryOrders = $orders->whereIn('id', $deliveryOrderIds);
         $walkinOrders = $orders->whereNotIn('id', $deliveryOrderIds);
-        
+
         $deliveryRevenue = $deliveryOrders->sum('total');
         $walkinRevenue = $walkinOrders->sum('total');
 
         // Daily Revenue Trend
-        $dailyRevenue = \App\Models\Order::select(\DB::raw('DATE(created_at) as date'), \DB::raw('SUM(total) as revenue'))
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $dailyRevenue = Order::select(\DB::raw('DATE(created_at) as date'), \DB::raw('SUM(total) as revenue'))
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $dailyRevenue->where('branch_id', $branchId);
         }
@@ -135,8 +152,8 @@ class ReportController extends Controller
             ->get();
 
         return view('reports.index', compact(
-            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'totalCredit', 'totalPending', 
-            'services', 'salaries', 'totalSalaries', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders', 
+            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'totalCredit', 'totalPending',
+            'services', 'salaries', 'totalSalaries', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders',
             'customerPackages', 'packagePayments', 'branches', 'branchId', 'isSuperAdmin',
             'deliveryRevenue', 'walkinRevenue', 'deliveryOrders', 'walkinOrders', 'dailyRevenue', 'topCustomers'
         ));
@@ -147,52 +164,60 @@ class ReportController extends Controller
         $user = auth()->user();
         $isSuperAdmin = $user->isSuperAdmin();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
-        
-        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
-        $endDate   = $request->input('end_date', now()->toDateString());
 
-        $salesQuery = \App\Models\Order::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
-        if ($branchId) $salesQuery->where('branch_id', $branchId);
-        $orders     = $salesQuery->with('customer')->orderBy('created_at', 'desc')->get();
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $salesQuery = Order::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        if ($branchId) {
+            $salesQuery->where('branch_id', $branchId);
+        }
+        $orders = $salesQuery->with('customer')->orderBy('created_at', 'desc')->get();
         $totalSales = $orders->sum('total');
 
-        $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'))
+        $serviceBreakdown = OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'))
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
-        if ($branchId) $serviceBreakdown->where('orders.branch_id', $branchId);
+        if ($branchId) {
+            $serviceBreakdown->where('orders.branch_id', $branchId);
+        }
         $services = $serviceBreakdown->groupBy('service_types.name')->get();
 
-        $salaryQuery = \App\Models\Expense::where('category', 'salary')->whereBetween('expense_date', [$startDate, $endDate]);
-        if ($branchId) $salaryQuery->where('branch_id', $branchId);
-        $salaries      = $salaryQuery->orderBy('expense_date', 'desc')->get();
+        $salaryQuery = Expense::where('category', 'salary')->whereBetween('expense_date', [$startDate, $endDate]);
+        if ($branchId) {
+            $salaryQuery->where('branch_id', $branchId);
+        }
+        $salaries = $salaryQuery->orderBy('expense_date', 'desc')->get();
         $totalSalaries = $salaries->sum('amount');
 
-        $expenseQuery = \App\Models\Expense::whereBetween('expense_date', [$startDate, $endDate]);
-        if ($branchId) $expenseQuery->where('branch_id', $branchId);
-        $expenses      = $expenseQuery->get();
+        $expenseQuery = Expense::whereBetween('expense_date', [$startDate, $endDate]);
+        if ($branchId) {
+            $expenseQuery->where('branch_id', $branchId);
+        }
+        $expenses = $expenseQuery->get();
         $totalExpenses = $expenses->sum('amount');
 
         // Inventory Cost
-        $inventoryCostQuery = \App\Models\InventoryTransaction::where('inventory_transactions.type', 'out')
+        $inventoryCostQuery = InventoryTransaction::where('inventory_transactions.type', 'out')
             ->join('inventory_items', 'inventory_items.id', '=', 'inventory_transactions.inventory_item_id')
-            ->whereBetween('inventory_transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            ->whereBetween('inventory_transactions.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $inventoryCostQuery->where('inventory_items.branch_id', $branchId);
         }
         $totalInventoryCost = $inventoryCostQuery->sum(\DB::raw('inventory_transactions.quantity * inventory_items.cost_per_unit'));
 
-        $paymentsQuery = \App\Models\PaymentTransaction::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $paymentsQuery = PaymentTransaction::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
-            $paymentsQuery->whereHas('order', function($q) use ($branchId) {
+            $paymentsQuery->whereHas('order', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         }
         $payments = $paymentsQuery->get();
 
-        $packagePaymentsQuery = \App\Models\PackagePayment::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $packagePaymentsQuery = PackagePayment::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
-            $packagePaymentsQuery->whereHas('customerPackage', function($q) use ($branchId) {
+            $packagePaymentsQuery->whereHas('customerPackage', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId);
             });
         }
@@ -203,24 +228,28 @@ class ReportController extends Controller
         $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
         $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
 
-        $totalCredit = $orders->where('payment_method', 'credit')->sum(function($q) { return max(0, $q->total - $q->paid_amount); });
-        $totalPending = $orders->where('payment_method', '!=', 'credit')->sum(function($q) { return max(0, $q->total - $q->paid_amount); });
+        $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
+            return max(0, $q->total - $q->paid_amount);
+        });
+        $totalPending = $orders->where('payment_method', '!=', 'credit')->sum(function ($q) {
+            return max(0, $q->total - $q->paid_amount);
+        });
 
-        $customerPackagesQuery = \App\Models\CustomerPackage::with(['customer', 'package', 'services.serviceType'])
-            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        $customerPackagesQuery = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $customerPackagesQuery->where('branch_id', $branchId);
         }
         $customerPackages = $customerPackagesQuery->latest()->get();
 
-        $branch = \App\Models\Branch::find($branchId ?? 1);
+        $branch = Branch::find($branchId ?? 1);
 
         // Limit orders passed to PDF to keep it clean (latest 15)
         $recentOrders = collect(); // User requested to remove recent orders
 
         return view('reports.pdf', compact(
             'recentOrders', 'totalSales', 'services', 'salaries', 'totalSalaries',
-            'expenses', 'totalExpenses', 'totalInventoryCost', 'startDate', 'endDate', 'branch', 
+            'expenses', 'totalExpenses', 'totalInventoryCost', 'startDate', 'endDate', 'branch',
             'totalPackagePayments', 'totalCollected', 'collectedCash', 'collectedCard',
             'totalCredit', 'totalPending', 'customerPackages'
         ));
@@ -229,41 +258,41 @@ class ReportController extends Controller
     public function closeShiftReport(Request $request)
     {
         $branchId = auth()->user()->branch_id ?? 1;
-        $branch   = \App\Models\Branch::find($branchId);
+        $branch = Branch::find($branchId);
 
         // Latest active shift
-        $session = \App\Models\RegisterSession::where('branch_id', $branchId)
+        $session = RegisterSession::where('branch_id', $branchId)
             ->whereNull('closed_at')
             ->latest()
             ->first();
 
-        if (!$session) {
-            $session = \App\Models\RegisterSession::where('branch_id', $branchId)
+        if (! $session) {
+            $session = RegisterSession::where('branch_id', $branchId)
                 ->latest()
                 ->first();
         }
 
         $startDate = $session ? $session->opened_at->toDateString() : now()->toDateString();
-        $endDate   = now()->toDateString();
+        $endDate = now()->toDateString();
 
-        $orders = \App\Models\Order::where('branch_id', $branchId)
+        $orders = Order::where('branch_id', $branchId)
             ->whereBetween('created_at', [$session ? $session->opened_at : now()->startOfDay(), now()])
             ->with('customer')
             ->get();
-        $totalSales    = $orders->sum('total');
-        $totalCashIn   = $orders->sum('paid_amount');
+        $totalSales = $orders->sum('total');
+        $totalCashIn = $orders->sum('paid_amount');
         $totalDiscounts = $orders->sum('discount');
-        
+
         $cashPaymentOnly = $orders->where('payment_method', 'cash')->sum('paid_amount');
 
-        $expenses = \App\Models\Expense::where('branch_id', $branchId)
+        $expenses = Expense::where('branch_id', $branchId)
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->get();
         $totalExpenses = $expenses->sum('amount');
 
-        $packagePayments = \App\Models\PackagePayment::whereHas('customerPackage', function($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            })
+        $packagePayments = PackagePayment::whereHas('customerPackage', function ($q) use ($branchId) {
+            $q->where('branch_id', $branchId);
+        })
             ->whereBetween('created_at', [$session ? $session->opened_at : now()->startOfDay(), now()])
             ->get();
         $totalPackageIncome = $packagePayments->sum('amount');
@@ -276,10 +305,10 @@ class ReportController extends Controller
         $closingBalance = $openingBalance + $totalCashIn - $totalExpenses;
 
         // Stock levels at end of day
-        $inventoryItems = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
+        $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
 
         // Service Breakdown
-        $serviceBreakdown = \App\Models\OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'))
+        $serviceBreakdown = OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'))
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.branch_id', $branchId)
@@ -288,7 +317,7 @@ class ReportController extends Controller
             ->get();
 
         // Inventory Consumed
-        $inventoryConsumed = \App\Models\InventoryTransaction::select('inventory_items.name', 'inventory_items.unit', \DB::raw('SUM(inventory_transactions.quantity) as total_used'))
+        $inventoryConsumed = InventoryTransaction::select('inventory_items.name', 'inventory_items.unit', \DB::raw('SUM(inventory_transactions.quantity) as total_used'))
             ->join('inventory_items', 'inventory_items.id', '=', 'inventory_transactions.inventory_item_id')
             ->where('inventory_items.branch_id', $branchId)
             ->where('inventory_transactions.type', 'out')
@@ -303,10 +332,10 @@ class ReportController extends Controller
         ));
     }
 
-    public function approvePackagePayment(Request $request, \App\Models\CustomerPackage $customerPackage)
+    public function approvePackagePayment(Request $request, CustomerPackage $customerPackage)
     {
         $request->validate([
-            'payment_method' => 'required|in:cash,card'
+            'payment_method' => 'required|in:cash,card',
         ]);
 
         if ($customerPackage->payment_status === 'paid') {
@@ -314,11 +343,11 @@ class ReportController extends Controller
         }
 
         \Illuminate\Support\Facades\DB::transaction(function () use ($customerPackage, $request) {
-            \App\Models\PackagePayment::create([
+            PackagePayment::create([
                 'customer_package_id' => $customerPackage->id,
                 'amount' => $customerPackage->package->price,
                 'payment_method' => $request->payment_method,
-                'created_by' => auth()->id()
+                'created_by' => auth()->id(),
             ]);
 
             $customerPackage->update(['payment_status' => 'paid']);

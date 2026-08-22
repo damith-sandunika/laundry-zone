@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class LoyaltyTransaction extends Model
 {
     protected $fillable = [
-        'customer_id', 'order_id', 'type', 'points', 'description'
+        'customer_id', 'order_id', 'type', 'points', 'description',
     ];
 
     public function customer()

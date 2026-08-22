@@ -2,13 +2,18 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use App\Models\Package;
+use App\Models\Branch;
+use App\Models\Customer;
 use App\Models\CustomerPackage;
 use App\Models\CustomerPackageService;
-use App\Models\Customer;
 use App\Models\Expense;
+use App\Models\Package;
+use App\Models\PackagePayment;
+use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class PackageController extends Controller
 {
@@ -18,7 +23,7 @@ class PackageController extends Controller
         $customerPackages = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         $packages = Package::where('is_active', true)->get();
         $customers = Customer::all();
 
@@ -30,16 +35,16 @@ class PackageController extends Controller
         $branchId = auth()->user()->branch_id ?? 1;
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'package_id' => 'required|exists:packages,id'
+            'package_id' => 'required|exists:packages,id',
         ]);
 
         $package = Package::with('services')->findOrFail($request->package_id);
-        
+
         // Expiry is 3 months according to user request "masa 3n exper wenn oni"
         $startDate = Carbon::now();
         $endDate = Carbon::now()->addMonths(3);
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $branchId, $package, $startDate, $endDate) {
+        DB::transaction(function () use ($request, $branchId, $package, $startDate, $endDate) {
             $customerPackage = CustomerPackage::create([
                 'branch_id' => $branchId,
                 'customer_id' => $request->customer_id,
@@ -47,7 +52,7 @@ class PackageController extends Controller
                 'start_date' => $startDate,
                 'end_date' => $endDate,
                 'status' => 'active',
-                'payment_status' => $package->payment_type === 'prepaid' ? 'paid' : 'pending'
+                'payment_status' => $package->payment_type === 'prepaid' ? 'paid' : 'pending',
             ]);
 
             // Copy services and limits
@@ -56,17 +61,17 @@ class PackageController extends Controller
                     'customer_package_id' => $customerPackage->id,
                     'service_type_id' => $ps->service_type_id,
                     'total_quantity' => $ps->quantity_limit,
-                    'used_quantity' => 0
+                    'used_quantity' => 0,
                 ]);
             }
 
             // If prepaid, record income in package_payments
             if ($package->payment_type === 'prepaid') {
-                \App\Models\PackagePayment::create([
+                PackagePayment::create([
                     'customer_package_id' => $customerPackage->id,
                     'amount' => $package->price,
                     'payment_method' => $request->payment_method ?? 'cash',
-                    'created_by' => auth()->id()
+                    'created_by' => auth()->id(),
                 ]);
             }
         });
@@ -80,7 +85,7 @@ class PackageController extends Controller
             return redirect()->back()->with('error', 'Package is already paid.');
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($customerPackage) {
+        DB::transaction(function () use ($customerPackage) {
             $customerPackage->update(['payment_status' => 'paid']);
 
             Expense::create([
@@ -90,7 +95,7 @@ class PackageController extends Controller
                 'amount' => $customerPackage->package->price,
                 'date' => Carbon::today(),
                 'description' => "Package Sale ({$customerPackage->package->name}) - Paid Postpaid",
-                'created_by' => auth()->id()
+                'created_by' => auth()->id(),
             ]);
         });
 
@@ -101,32 +106,32 @@ class PackageController extends Controller
     {
         $request->validate(['admin_password' => 'required']);
 
-        $admins = \App\Models\User::whereIn('role', ['branch_admin', 'super_admin'])
+        $admins = User::whereIn('role', ['branch_admin', 'super_admin'])
             ->where('branch_id', $customerPackage->branch_id)
             ->get();
-            
+
         $authorized = false;
         foreach ($admins as $admin) {
-            if (\Illuminate\Support\Facades\Hash::check($request->admin_password, $admin->password)) {
+            if (Hash::check($request->admin_password, $admin->password)) {
                 $authorized = true;
                 break;
             }
         }
 
-        if (!$authorized) {
+        if (! $authorized) {
             return redirect()->back()->with('error', 'Invalid admin password. Deletion unauthorized.');
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($customerPackage) {
+        DB::transaction(function () use ($customerPackage) {
             // Revert prepaid income
-            \App\Models\PackagePayment::where('customer_package_id', $customerPackage->id)->delete();
-            
+            PackagePayment::where('customer_package_id', $customerPackage->id)->delete();
+
             // Revert postpaid income
             $expense = Expense::where('branch_id', $customerPackage->branch_id)
                 ->where('description', "Package Sale ({$customerPackage->package->name}) - Paid Postpaid")
                 ->latest()
                 ->first();
-                
+
             if ($expense) {
                 $expense->delete();
             }
@@ -140,7 +145,8 @@ class PackageController extends Controller
     public function printReceipt(CustomerPackage $customerPackage)
     {
         $customerPackage->load('customer', 'package', 'services.serviceType');
-        $branch = \App\Models\Branch::find($customerPackage->branch_id);
+        $branch = Branch::find($customerPackage->branch_id);
+
         return view('packages.print', compact('customerPackage', 'branch'));
     }
 }
