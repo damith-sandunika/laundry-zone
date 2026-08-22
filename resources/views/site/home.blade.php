@@ -37,8 +37,8 @@
 <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300" x-data="{ mobileMenuOpen: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between h-20 items-center">
-            <!-- Logo + Brand Name (left on desktop, center on mobile) -->
-            <div class="flex items-center gap-2 md:flex-none w-full md:w-auto justify-center md:justify-start">
+            <!-- Logo + Brand Name: left on all sizes -->
+            <div class="flex items-center gap-2">
                 <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto">
                 <span class="font-black text-xl tracking-tight text-brand">Laundry Zone</span>
             </div>

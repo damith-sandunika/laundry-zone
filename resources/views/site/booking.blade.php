@@ -36,22 +36,21 @@
 </head>
 <body class="antialiased text-slate-800" x-data="bookingForm({{ Js::from($categories) }})">
 
-<nav class="glass-header shadow-sm sticky top-0 z-50 border-b border-slate-200">
+<nav class="bg-white/95 backdrop-blur-md shadow-sm sticky top-0 z-50 border-b border-slate-200">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-20 items-center relative">
-            <div class="flex-shrink-0 flex items-center">
+        <div class="flex justify-between h-16 items-center">
+            <!-- Logo + Name: always left-aligned -->
+            <div class="flex items-center gap-2">
                 <a href="{{ url('/') }}" class="flex items-center gap-2">
-                    <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto mr-2">
+                    <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-9 w-auto">
+                    <span class="font-black text-lg tracking-tight text-brand">Laundry Zone</span>
                 </a>
             </div>
-            
-            <div class="absolute left-1/2 -translate-x-1/2 hidden md:flex items-center">
-                <span class="font-black text-2xl tracking-tight text-brand">Laundry Zone</span>
-            </div>
 
-            <div class="flex items-center space-x-4">
-                <a href="{{ url('/') }}" class="text-slate-600 font-medium hover:text-blue-600 transition text-sm">
-                    <i class="fa-solid fa-arrow-left mr-1"></i> Back to Home
+            <!-- Right side -->
+            <div class="flex items-center">
+                <a href="{{ url('/') }}" class="text-slate-500 hover:text-blue-600 transition text-sm font-medium flex items-center gap-1.5">
+                    <i class="fa-solid fa-arrow-left text-xs"></i> Back
                 </a>
             </div>
         </div>
@@ -111,8 +110,8 @@
                 </div>
 
                 <!-- 2. Services Selection -->
-                <div>
-                    <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                <div class="pt-2 border-t border-slate-100">
+                    <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 pb-2">
                         <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-shirt"></i></span>
                         Select Services
                     </h3>
