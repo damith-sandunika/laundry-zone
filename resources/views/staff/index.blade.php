@@ -21,9 +21,9 @@
 
     <div x-data="{ addModalOpen: false, salaryModalOpen: false, selectedUser: null, selectedMonth: '' }" @open-add-staff.window="addModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div>
             <!-- Staff List -->
-            <div class="lg:col-span-2 bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                 <table class="w-full text-sm text-left">
                     <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
@@ -81,26 +81,6 @@
                         @endforeach
                     </tbody>
                 </table>
-                </div>
-            </div>
-
-            <!-- Salary Log -->
-            <div class="bg-white rounded-md border border-gray-100 shadow-sm p-4 h-fit">
-                <h3 class="text-sm font-semibold text-gray-800 mb-4">Recent Salary Payments</h3>
-                <div class="space-y-3">
-                    @forelse($salaries as $salary)
-                        <div class="p-3 border border-gray-100 rounded-md bg-gray-50 flex justify-between items-center">
-                            <div>
-                                <p class="text-xs font-semibold text-gray-800">{{ $salary->description }}</p>
-                                <p class="text-[10px] text-gray-400">{{ $salary->created_at->format('M d, Y') }}</p>
-                            </div>
-                            <span class="text-sm font-bold text-green-600">Rs.{{ number_format($salary->amount, 2) }}</span>
-                        </div>
-                    @empty
-                        <p class="text-xs text-gray-400 text-center py-4">No recent salary payments logged.</p>
-                    @endforelse
-                </div>
-            </div>
         </div>
 
         <!-- Add Staff Modal -->

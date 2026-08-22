@@ -62,7 +62,9 @@
                     <div class="flex-1 space-y-4 max-w-xl">
                         @csrf
                     <div>
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Laundry Shop Name</label>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">
+                            {{ auth()->user()->role === 'super_admin' ? 'Main Shop Name (Global)' : 'Branch Name' }}
+                        </label>
                         <input type="text" name="name" x-model="formName" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                     </div>
                     <div>
@@ -83,6 +85,7 @@
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tagline (Will appear on print bills)</label>
                         <input type="text" name="tagline" x-model="formTagline" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                     </div>
+                    @if(auth()->user()->role === 'super_admin')
                     <div x-data="{ 
                         dragOver: false, 
                         fileName: '', 
@@ -103,7 +106,7 @@
                             }
                         }
                     }">
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-2">Thermal Bill Logo</label>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-2">Global Thermal Bill Logo</label>
                         
                         <div @dragover.prevent="dragOver = true" 
                              @dragleave.prevent="dragOver = false" 
@@ -138,6 +141,7 @@
                             <p class="text-[10px] text-gray-400 mt-1">Adjust to scale the logo appropriately on the thermal bill.</p>
                         </div>
                     </div>
+                    @endif
                         <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                             Save Settings
                         </button>
@@ -155,15 +159,33 @@
                             
                             <!-- Header -->
                             <div class="text-center" style="margin-bottom: 12px;">
-                                <template x-if="previewUrl">
-                                    <img :src="previewUrl" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; filter: grayscale(100%) contrast(1.2); display: inline-block;`">
-                                </template>
-                                <template x-if="!previewUrl">
-                                    <img src="{{ asset('images/print_logo.png') }}" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; display: inline-block;`">
-                                </template>
+                                @if(auth()->user()->role === 'super_admin')
+                                    <template x-if="previewUrl">
+                                        <img :src="previewUrl" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; filter: grayscale(100%) contrast(1.2); display: inline-block;`">
+                                    </template>
+                                    <template x-if="!previewUrl">
+                                        <img src="{{ asset('images/print_logo.png') }}" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; display: inline-block;`">
+                                    </template>
+                                @else
+                                    @php
+                                        $mainBranch = \App\Models\Branch::first();
+                                    @endphp
+                                    @if($mainBranch && $mainBranch->logo_path)
+                                        <img src="{{ asset($mainBranch->logo_path) }}" alt="Logo" style="max-width: {{ $mainBranch->logo_size ?? 140 }}px; height: auto; filter: grayscale(100%) contrast(1.2); display: inline-block;">
+                                    @else
+                                        <img src="{{ asset('images/print_logo.png') }}" alt="Logo" style="max-width: 140px; height: auto; display: inline-block;">
+                                    @endif
+                                @endif
                             </div>
                             
-                            <div class="text-center" style="font-size:18px; letter-spacing:-0.03em; font-weight: 800; margin-bottom: 2px;" x-text="formName || 'SMART LAUNDRY'"></div>
+                            <div class="text-center" style="font-size:18px; letter-spacing:-0.03em; font-weight: 800; margin-bottom: 2px;">
+                                @if(auth()->user()->role === 'super_admin')
+                                    <span x-text="formName || 'SMART LAUNDRY'"></span>
+                                @else
+                                    <span>{{ \App\Models\Branch::first()->name ?? 'SMART LAUNDRY' }}</span>
+                                    <div style="font-size:14px; margin-top: 2px;" x-text="formName"></div>
+                                @endif
+                            </div>
                             
                             <template x-if="formTagline">
                                 <div class="text-center" style="font-size:10px; margin-bottom:2px;" x-text="formTagline"></div>
@@ -637,21 +659,75 @@
                                     @endforeach
                                 </div>
 
-                                @if($package->is_rollover)
-                                    <div class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-amber-50 text-amber-700 text-xs font-bold rounded-lg mt-2">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                                        Rollover Enabled
-                                    </div>
-                                @endif
+
                             </div>
                             
-                            <div class="bg-gray-50 p-3 border-t border-gray-100 flex justify-end gap-2">
+                            <div class="bg-gray-50 p-3 border-t border-gray-100 flex justify-end gap-2" x-data="{ editPackageModalOpen_{{ $package->id }}: false }">
+                                <button type="button" @click="editPackageModalOpen_{{ $package->id }} = true" class="text-xs font-bold text-blue-600 hover:bg-blue-50 px-3 py-1.5 rounded transition-colors">
+                                    Edit
+                                </button>
                                 <form action="{{ route('settings.destroyPackage', $package) }}" method="POST" onsubmit="return confirm('Delete this package?');">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-xs font-bold text-red-600 hover:bg-red-50 px-3 py-1.5 rounded transition-colors">
                                         Delete
                                     </button>
                                 </form>
+
+                                <!-- Edit Package Modal -->
+                                <div x-show="editPackageModalOpen_{{ $package->id }}" class="fixed inset-0 z-[9999] overflow-y-auto" style="display: none;">
+                                    <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
+                                        <div x-show="editPackageModalOpen_{{ $package->id }}" x-transition.opacity class="fixed inset-0 transition-opacity" @click="editPackageModalOpen_{{ $package->id }} = false">
+                                            <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
+                                        </div>
+                                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+                                        <div x-show="editPackageModalOpen_{{ $package->id }}" x-transition class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-xl w-full border border-gray-100">
+                                            <form action="{{ route('settings.updatePackage', $package) }}" method="POST">
+                                                @csrf @method('PUT')
+                                                <div class="bg-white px-6 pt-6 pb-6">
+                                                    <h3 class="text-xl font-bold text-gray-900 mb-6 flex items-center gap-2">
+                                                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                                        Edit Package
+                                                    </h3>
+                                                    <div class="space-y-5">
+                                                        <div class="text-left">
+                                                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Package Name <span class="text-red-500">*</span></label>
+                                                            <input type="text" name="name" value="{{ $package->name }}" required class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                                        </div>
+                                                        <div class="grid grid-cols-2 gap-4 text-left">
+                                                            <div>
+                                                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Package Price (Rs) <span class="text-red-500">*</span></label>
+                                                                <input type="number" step="0.01" name="price" value="{{ $package->price }}" required class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                                            </div>
+                                                            <div>
+                                                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1">Payment Type</label>
+                                                                <select name="payment_type" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50 font-semibold">
+                                                                    <option value="prepaid" {{ $package->payment_type === 'prepaid' ? 'selected' : '' }}>Pre-paid (Pay upfront)</option>
+                                                                    <option value="postpaid" {{ $package->payment_type === 'postpaid' ? 'selected' : '' }}>Post-paid (Pay later)</option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="border-t border-gray-100 pt-5 text-left">
+                                                            <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">Included Services & Limits</h4>
+                                                            <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                                                                @foreach($services as $service)
+                                                                    @php $qty = $package->services->where('service_type_id', $service->id)->first()->quantity_limit ?? 0; @endphp
+                                                                    <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100">
+                                                                        <span class="text-sm font-semibold text-gray-700">{{ $service->name }} <span class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
+                                                                        <input type="number" step="any" name="services[{{ $service->id }}]" value="{{ $qty }}" class="w-24 text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center font-bold">
+                                                                    </div>
+                                                                @endforeach
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="bg-gray-50/80 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
+                                                    <button type="button" @click="editPackageModalOpen_{{ $package->id }} = false" class="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm">Cancel</button>
+                                                    <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold shadow-md hover:shadow-lg hover:shadow-blue-500/30 transition-all transform hover:-translate-y-0.5">Save Changes</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     @empty
@@ -698,15 +774,7 @@
                                             </div>
                                         </div>
 
-                                        <div class="p-4 bg-amber-50 rounded-xl border border-amber-100 flex items-start gap-3">
-                                            <div class="flex items-center h-5">
-                                                <input type="checkbox" name="is_rollover" value="1" class="w-4 h-4 text-amber-600 bg-white border-amber-300 rounded focus:ring-amber-500 focus:ring-2">
-                                            </div>
-                                            <div class="text-sm">
-                                                <label class="font-bold text-amber-900">Enable Rollover</label>
-                                                <p class="text-amber-700 text-xs mt-0.5">If checked, unused services will carry forward to the next month when the customer renews the package.</p>
-                                            </div>
-                                        </div>
+
 
                                         <div class="border-t border-gray-100 pt-5">
                                             <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">Included Services & Limits</h4>
