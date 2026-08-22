@@ -25,7 +25,17 @@ class AutoCloseShifts extends Command
      */
     public function handle()
     {
-        $openSessions = \App\Models\RegisterSession::where('status', 'open')->get();
+        $now = \Carbon\Carbon::now()->format('H:i');
+
+        $openSessions = \App\Models\RegisterSession::where('status', 'open')
+            ->whereHas('branch', function ($query) use ($now) {
+                $query->where('auto_close_time', 'like', $now . '%');
+            })
+            ->get();
+
+        if ($openSessions->isEmpty()) {
+            return;
+        }
 
         foreach ($openSessions as $session) {
             $branchId = $session->branch_id;

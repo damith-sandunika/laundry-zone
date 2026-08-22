@@ -88,6 +88,15 @@
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tagline (Will appear on print bills)</label>
                         <input type="text" name="tagline" x-model="formTagline" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                     </div>
+                    
+                    @if(auth()->user()->role === 'super_admin')
+                    <div class="pt-2">
+                        <label class="block text-xs font-bold text-gray-800 uppercase mb-1">Global Auto-Close Time</label>
+                        <p class="text-[11px] text-gray-500 mb-2">All branches will be automatically closed and their daily shift reports will be generated at this time.</p>
+                        <input type="time" name="auto_close_time" value="{{ $branch->auto_close_time ?? '' }}" class="w-48 text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500 font-mono">
+                    </div>
+                    @endif
+
                     @if(auth()->user()->role === 'super_admin')
                     <div x-data="{ 
                         dragOver: false, 

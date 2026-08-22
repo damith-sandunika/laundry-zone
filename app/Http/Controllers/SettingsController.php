@@ -40,9 +40,10 @@ class SettingsController extends Controller
             'tagline'          => 'nullable|string|max:255',
             'logo_size'        => 'nullable|integer|min:20|max:300',
             'logo'             => 'nullable|image|max:2048',
+            'auto_close_time'  => 'nullable|date_format:H:i'
         ]);
 
-        $data = $request->only(['name', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size']);
+        $data = $request->only(['name', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'auto_close_time']);
 
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
@@ -52,6 +53,12 @@ class SettingsController extends Controller
         }
 
         $branch->update($data);
+
+        // If super admin, sync auto_close_time to all branches
+        if (auth()->user()->role === 'super_admin' && $request->has('auto_close_time')) {
+            \App\Models\Branch::query()->update(['auto_close_time' => $request->auto_close_time]);
+        }
+
         return redirect()->back()->with('success', 'General settings saved.');
     }
 
