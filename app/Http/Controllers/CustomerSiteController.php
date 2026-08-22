@@ -28,8 +28,9 @@ class CustomerSiteController extends Controller
     {
         $branches = Branch::regularBranches()->where('is_active', true)->get();
         $paymentSettings = PaymentSetting::where('is_enabled', true)->get()->groupBy('branch_id');
+        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
 
-        return view('site.booking', compact('branches', 'paymentSettings'));
+        return view('site.booking', compact('branches', 'paymentSettings', 'categories'));
     }
 
     public function store(Request $request, WhatsAppService $waService)

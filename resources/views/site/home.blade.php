@@ -36,13 +36,18 @@
 <!-- Navbar -->
 <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300" x-data="{ mobileMenuOpen: false }">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-20 items-center">
+        <div class="flex justify-between h-20 items-center relative">
             <div class="flex-shrink-0 flex items-center">
-                <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Laundry Zone" class="h-10 w-auto mr-2">
+                <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto mr-2">
+            </div>
+            
+            <!-- Center Brand Name -->
+            <div class="absolute left-1/2 -translate-x-1/2 hidden lg:flex items-center">
+                <span class="font-black text-2xl tracking-tight text-brand">Laundry Zone</span>
             </div>
             
             <!-- Desktop Menu -->
-            <div class="hidden md:flex space-x-8 items-center font-medium text-sm">
+            <div class="hidden md:flex space-x-6 lg:space-x-8 items-center font-medium text-sm ml-auto mr-8">
                 <a href="#" class="text-blue-600 border-b-2 border-blue-600 pb-1">Home</a>
                 <a href="#services" class="text-slate-600 hover:text-blue-600 transition">Services</a>
                 <a href="#pricing" class="text-slate-600 hover:text-blue-600 transition">Pricing</a>
@@ -229,34 +234,34 @@
             <p class="text-slate-500 max-w-2xl mx-auto">Choose a package that best fits your laundry needs. Save more with our bundle deals.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-center max-w-6xl mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center max-w-5xl mx-auto">
             @foreach($packages->take(3) as $index => $package)
-            <div class="bg-white rounded-3xl p-8 border border-slate-100 {{ $index === 1 ? 'shadow-2xl ring-4 ring-blue-500/20 md:-translate-y-4 scale-105 relative' : 'shadow-lg hover:shadow-xl' }} transition-all">
+            <div class="bg-white rounded-2xl p-6 border border-slate-100 {{ $index === 1 ? 'shadow-2xl ring-2 ring-blue-500/20 md:-translate-y-2 scale-105 relative' : 'shadow hover:shadow-lg' }} transition-all">
                 @if($index === 1)
                 <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                    <span class="bg-accent text-white text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-md">Most Popular</span>
+                    <span class="bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">Most Popular</span>
                 </div>
                 @endif
-                <h3 class="text-2xl font-bold text-center text-brand mb-2">{{ $package->name }}</h3>
-                <div class="text-center mb-6">
-                    <span class="text-sm text-slate-500 font-medium">From</span><br>
-                    <span class="text-4xl font-extrabold text-slate-800">Rs. {{ number_format($package->price, 0) }}</span>
+                <h3 class="text-xl font-bold text-center text-brand mb-1">{{ $package->name }}</h3>
+                <div class="text-center mb-4">
+                    <span class="text-xs text-slate-500 font-medium">From</span><br>
+                    <span class="text-3xl font-extrabold text-slate-800">Rs. {{ number_format($package->price, 0) }}</span>
                 </div>
                 
-                <ul class="space-y-4 mb-8">
+                <ul class="space-y-2.5 mb-6">
                     @foreach($package->services as $ps)
-                    <li class="flex items-center gap-3 text-sm text-slate-600">
-                        <i class="fa-solid fa-check text-accent bg-blue-50 w-6 h-6 rounded-full flex items-center justify-center text-xs"></i>
-                        {{ $ps->serviceType->name ?? 'Service' }} <span class="text-slate-400 text-xs ml-auto">x{{ $ps->total_quantity }}</span>
+                    <li class="flex items-center gap-2 text-xs text-slate-600">
+                        <i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i>
+                        {{ $ps->serviceType->name ?? 'Service' }} <span class="text-slate-400 text-[10px] ml-auto">x{{ $ps->total_quantity }}</span>
                     </li>
                     @endforeach
-                    <li class="flex items-center gap-3 text-sm text-slate-600">
-                        <i class="fa-solid fa-check text-accent bg-blue-50 w-6 h-6 rounded-full flex items-center justify-center text-xs"></i>
+                    <li class="flex items-center gap-2 text-xs text-slate-600">
+                        <i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i>
                         Free Delivery
                     </li>
                 </ul>
                 
-                <a href="{{ route('booking.page') }}" class="block w-full text-center py-3 rounded-xl font-bold transition-all {{ $index === 1 ? 'bg-accent text-white hover:bg-blue-700 shadow-lg' : 'bg-blue-50 text-blue-600 hover:bg-blue-100' }}">
+                <a href="{{ route('booking.page') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all {{ $index === 1 ? 'bg-accent text-white hover:bg-blue-700 shadow-md' : 'bg-blue-50 text-blue-600 hover:bg-blue-100' }}">
                     Book Now
                 </a>
             </div>
