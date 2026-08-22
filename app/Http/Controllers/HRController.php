@@ -38,7 +38,7 @@ class HRController extends Controller
 
         $status = auth()->user()->hasAdminAccess() ? 'approved' : 'pending';
 
-        $staff->leaves()->create([
+        $leave = $staff->leaves()->create([
             'start_date' => $request->start_date,
             'end_date' => $request->end_date,
             'type' => $request->type,
@@ -46,6 +46,14 @@ class HRController extends Controller
             'status' => $status,
             'approved_by' => $status === 'approved' ? auth()->id() : null,
         ]);
+
+        if ($status === 'approved') {
+            // Create an 'absent' attendance record for today so the button goes away in the index
+            $staff->attendances()->updateOrCreate(
+                ['date' => $request->start_date],
+                ['status' => 'absent']
+            );
+        }
 
         return back()->with('success', $status === 'approved' ? 'Leave marked and approved successfully.' : 'Leave requested successfully.');
     }
@@ -65,6 +73,13 @@ class HRController extends Controller
             'status' => $request->status,
             'approved_by' => auth()->id(),
         ]);
+
+        if ($request->status === 'approved') {
+            $leave->user->attendances()->updateOrCreate(
+                ['date' => $leave->start_date],
+                ['status' => 'absent']
+            );
+        }
 
         return back()->with('success', 'Leave status updated.');
     }
