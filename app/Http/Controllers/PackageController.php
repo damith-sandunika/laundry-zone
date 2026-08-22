@@ -51,37 +51,12 @@ class PackageController extends Controller
                 'payment_status' => $package->payment_type === 'prepaid' ? 'paid' : 'pending'
             ]);
 
-            // Check for rollover
-            $previousServices = [];
-            if ($package->is_rollover) {
-                $lastPackage = CustomerPackage::where('customer_id', $request->customer_id)
-                    ->where('package_id', $package->id)
-                    ->where('status', '!=', 'exhausted')
-                    ->latest()
-                    ->first();
-
-                if ($lastPackage) {
-                    // Get remaining quantities
-                    foreach ($lastPackage->services as $oldService) {
-                        $remaining = max(0, $oldService->total_quantity - $oldService->used_quantity);
-                        if ($remaining > 0) {
-                            $previousServices[$oldService->service_type_id] = $remaining;
-                        }
-                    }
-                    
-                    // Mark old package as expired/renewed
-                    $lastPackage->update(['status' => 'exhausted']);
-                }
-            }
-
-            // Copy services and limits with rollover
+            // Copy services and limits
             foreach ($package->services as $ps) {
-                $rolloverQty = $previousServices[$ps->service_type_id] ?? 0;
-                
                 CustomerPackageService::create([
                     'customer_package_id' => $customerPackage->id,
                     'service_type_id' => $ps->service_type_id,
-                    'total_quantity' => $ps->quantity_limit + $rolloverQty,
+                    'total_quantity' => $ps->quantity_limit,
                     'used_quantity' => 0
                 ]);
             }
@@ -123,10 +98,44 @@ class PackageController extends Controller
         return redirect()->back()->with('success', 'Package marked as paid.');
     }
 
-    public function destroy(CustomerPackage $customerPackage)
+    public function destroy(Request $request, CustomerPackage $customerPackage)
     {
-        $customerPackage->delete();
-        return redirect()->back()->with('success', 'Customer package removed.');
+        $request->validate(['admin_password' => 'required']);
+
+        $admins = \App\Models\User::whereIn('role', ['branch_admin', 'super_admin'])
+            ->where('branch_id', $customerPackage->branch_id)
+            ->get();
+            
+        $authorized = false;
+        foreach ($admins as $admin) {
+            if (\Illuminate\Support\Facades\Hash::check($request->admin_password, $admin->password)) {
+                $authorized = true;
+                break;
+            }
+        }
+
+        if (!$authorized) {
+            return redirect()->back()->with('error', 'Invalid admin password. Deletion unauthorized.');
+        }
+
+        \Illuminate\Support\Facades\DB::transaction(function () use ($customerPackage) {
+            // Revert prepaid income
+            \App\Models\PackagePayment::where('customer_package_id', $customerPackage->id)->delete();
+            
+            // Revert postpaid income
+            $expense = Expense::where('branch_id', $customerPackage->branch_id)
+                ->where('description', "Package Sale ({$customerPackage->package->name}) - Paid Postpaid")
+                ->latest()
+                ->first();
+                
+            if ($expense) {
+                $expense->delete();
+            }
+
+            $customerPackage->delete();
+        });
+
+        return redirect()->back()->with('success', 'Customer package removed and accounting cleared.');
     }
 
     public function printReceipt(CustomerPackage $customerPackage)

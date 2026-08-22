@@ -87,15 +87,27 @@ class POSController extends Controller
             $chargeableQty = $qty;
 
             // Check if service is covered by package
-            if ($packageId && empty($item['is_special']) && $packageServices->has($serviceTypeId)) {
-                $ps = $packageServices->get($serviceTypeId);
-                $remaining = max(0, $ps->total_quantity - $ps->used_quantity);
-                
-                if ($remaining > 0) {
-                    $coveredQty = min($remaining, $qty);
-                    $chargeableQty = $qty - $coveredQty;
+            if ($packageId) {
+                if (empty($item['is_special']) && $packageServices->has($serviceTypeId)) {
+                    $ps = $packageServices->get($serviceTypeId);
+                    $remaining = max(0, $ps->total_quantity - $ps->used_quantity);
+                    
+                    if ($qty > $remaining) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => "Cannot process order. Requested quantity ({$qty}) for '{$item['name']}' exceeds the remaining package limit ({$remaining})."
+                        ], 403);
+                    }
+                    
+                    $coveredQty = $qty;
+                    $chargeableQty = 0;
                     
                     $packageDeductions[$ps->id] = $coveredQty;
+                } else {
+                    return response()->json([
+                        'success' => false,
+                        'message' => "Cannot process order. '{$item['name']}' is not covered by the selected package."
+                    ], 403);
                 }
             }
 

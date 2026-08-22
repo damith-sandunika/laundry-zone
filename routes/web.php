@@ -11,6 +11,7 @@ use App\Http\Controllers\OnlineBookingController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
+use App\Http\Controllers\HRController;
 use App\Http\Controllers\WhatsappTemplateController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\DeliveryController;
@@ -147,6 +148,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
 
         Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
+        Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
         Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
 
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
@@ -156,6 +158,12 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);
+
+        // HR Routes
+        Route::post('/hr/{staff}/attendance', [HRController::class, 'storeAttendance'])->name('hr.attendance.store');
+        Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
+        Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
+        Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
 
         Route::get('/whatsapp-templates', [WhatsappTemplateController::class, 'index'])->name('whatsapp_templates.index');
         Route::put('/whatsapp-templates/{whatsappTemplate}', [WhatsappTemplateController::class, 'update'])->name('whatsapp_templates.update');

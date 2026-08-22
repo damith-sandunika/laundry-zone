@@ -14,7 +14,8 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'phone', 'password', 'role', 'branch_id', 'is_active'
+        'name', 'email', 'phone', 'password', 'role', 'branch_id', 'is_active',
+        'nic', 'dob', 'address', 'emergency_contact', 'basic_salary'
     ];
 
     protected $hidden = [
@@ -38,6 +39,21 @@ class User extends Authenticatable
     public function deliveryTasks()
     {
         return $this->hasMany(DeliveryTask::class, 'rider_id');
+    }
+
+    public function attendances()
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function leaves()
+    {
+        return $this->hasMany(Leave::class);
+    }
+
+    public function salaryAdvances()
+    {
+        return $this->hasMany(SalaryAdvance::class);
     }
 
     // ─── Role Helpers ───

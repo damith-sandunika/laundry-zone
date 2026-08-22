@@ -67,6 +67,9 @@
                                         class="text-xs font-semibold px-2.5 py-1 bg-green-50 border border-green-200 text-green-600 rounded hover:bg-green-100">
                                         Pay Salary
                                     </button>
+                                    <a href="{{ route('staff.show', $employee) }}" class="text-xs font-semibold px-2.5 py-1 bg-blue-50 border border-blue-200 text-blue-600 rounded hover:bg-blue-100">
+                                        View
+                                    </a>
                                     <a href="{{ route('staff.edit', $employee) }}" class="text-xs font-semibold px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded hover:bg-gray-100">
                                         Edit
                                     </a>
@@ -123,6 +126,35 @@
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Login Password</label>
                                         <input type="password" name="password" required class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                    </div>
+                                </div>
+                                
+                                <!-- HR Details -->
+                                <div class="mt-4 pt-4 border-t border-gray-100">
+                                    <h4 class="text-xs font-bold text-gray-800 uppercase mb-3">HR & Salary Details</h4>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Basic Salary (Rs.)</label>
+                                            <input type="number" step="0.01" name="basic_salary" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">NIC (Optional)</label>
+                                            <input type="text" name="nic" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
+                                            <input type="date" name="dob" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Emergency Contact</label>
+                                            <input type="text" name="emergency_contact" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Address</label>
+                                        <textarea name="address" rows="2" class="w-full text-sm border-gray-300 rounded-md shadow-sm"></textarea>
                                     </div>
                                 </div>
                                 @if(auth()->user()->role === 'super_admin')
