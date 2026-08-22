@@ -58,25 +58,24 @@
     </div>
 </nav>
 
-<div class="max-w-7xl mx-auto px-4 py-10 lg:flex lg:gap-8">
+<div class="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6 lg:flex lg:gap-6">
     
     <!-- Main Form Section -->
     <div class="lg:w-2/3">
-        <div class="bg-white rounded-[2rem] shadow-xl shadow-slate-200/50 overflow-hidden border border-slate-100 mb-8">
-            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-8 py-10 text-white relative overflow-hidden">
-                <div class="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
-                <h1 class="text-3xl md:text-4xl font-extrabold mb-2 relative z-10">Schedule a Pickup</h1>
-                <p class="text-blue-100 relative z-10">Fill in the details below and we'll take care of the rest.</p>
+        <div class="bg-white rounded-2xl shadow-lg border border-slate-100 mb-6 overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-700 px-5 py-5 text-white">
+                <h1 class="text-xl md:text-2xl font-extrabold mb-0.5">Schedule a Pickup</h1>
+                <p class="text-blue-100 text-xs md:text-sm">Fill in the details below and we'll take care of the rest.</p>
             </div>
 
-            <form action="{{ route('booking.store') }}" method="POST" id="bookingForm" class="p-8">
+            <form action="{{ route('booking.store') }}" method="POST" id="bookingForm" class="p-4 md:p-6 space-y-6">
                 @csrf
                 <input type="hidden" name="item_description" id="item_description" x-model="formattedCart">
                 <input type="hidden" name="type" value="pickup">
                 
                 @if ($errors->any())
-                    <div class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl text-red-600">
-                        <ul class="list-disc list-inside text-sm font-medium">
+                    <div class="p-3 bg-red-50 border border-red-200 rounded-xl text-red-600">
+                        <ul class="list-disc list-inside text-xs font-medium">
                             @foreach ($errors->all() as $error)
                                 <li>{{ $error }}</li>
                             @endforeach
@@ -85,83 +84,82 @@
                 @endif
 
                 <!-- 1. Basic Info -->
-                <h3 class="text-xl font-black text-brand mb-4 flex items-center gap-3 border-b border-slate-100 pb-2">
-                    <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-user"></i></span> 
-                    Contact Details
-                </h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Your Name</label>
-                        <input type="text" name="name" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400 shadow-sm" placeholder="John Doe">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">WhatsApp / Phone Number</label>
-                        <input type="text" name="phone" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400 shadow-sm" placeholder="07XXXXXXXX">
-                    </div>
-                    <div class="md:col-span-2">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Nearest Branch</label>
-                        <select name="branch_id" id="branch_selector" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium shadow-sm cursor-pointer">
-                            <option value="">Select a branch...</option>
-                            @foreach($branches as $branch)
-                                <option value="{{ $branch->id }}">{{ $branch->name }} ({{ $branch->address }})</option>
-                            @endforeach
-                        </select>
+                <div>
+                    <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-user"></i></span>
+                        Contact Details
+                    </h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Your Name</label>
+                            <input type="text" name="name" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400" placeholder="John Doe">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">WhatsApp / Phone</label>
+                            <input type="text" name="phone" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400" placeholder="07XXXXXXXX">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Nearest Branch</label>
+                            <select name="branch_id" id="branch_selector" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium cursor-pointer">
+                                <option value="">Select a branch...</option>
+                                @foreach($branches as $branch)
+                                    <option value="{{ $branch->id }}">{{ $branch->name }} ({{ $branch->address }})</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 2. Services Selection -->
-                <h3 class="text-xl font-black text-brand mb-4 flex items-center gap-3 border-b border-slate-100 pb-2">
-                    <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-shirt"></i></span> 
-                    Select Services
-                </h3>
-                <div class="mb-10 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <p class="text-sm text-slate-500 mb-4 font-medium">Select the items you want us to clean.</p>
+                <div>
+                    <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-shirt"></i></span>
+                        Select Services
+                    </h3>
+                    <p class="text-xs text-slate-500 mb-3">Select the items you want us to clean.</p>
                     
-                    <div class="space-y-4">
+                    <div class="space-y-2">
                         <template x-for="category in categories" :key="category.id">
-                            <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm transition-all duration-300" :class="expandedCategory === category.id ? 'ring-2 ring-blue-100' : ''">
-                                <!-- Category Header -->
-                                <div @click="expandedCategory = expandedCategory === category.id ? null : category.id" class="p-4 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors">
-                                    <div class="flex items-center gap-3">
-                                        <div class="w-10 h-10 rounded-xl bg-blue-50 text-accent flex items-center justify-center text-lg">
+                            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden" :class="expandedCategory === category.id ? 'ring-2 ring-blue-100' : ''">
+                                <div @click="expandedCategory = expandedCategory === category.id ? null : category.id" class="px-3 py-2.5 flex justify-between items-center cursor-pointer hover:bg-slate-50 transition-colors">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-7 h-7 rounded-lg bg-blue-50 text-accent flex items-center justify-center text-sm">
                                             <i class="fa-solid fa-layer-group" x-show="category.name !== 'Wash & Fold' && category.name !== 'Dry Cleaning' && category.name !== 'Ironing'"></i>
                                             <i class="fa-solid fa-soap" x-show="category.name === 'Wash & Fold'"></i>
                                             <i class="fa-solid fa-shirt" x-show="category.name === 'Dry Cleaning'"></i>
                                             <i class="fa-solid fa-fire-burner" x-show="category.name === 'Ironing'"></i>
                                         </div>
-                                        <span class="font-bold text-slate-800" x-text="category.name"></span>
+                                        <span class="font-bold text-sm text-slate-800" x-text="category.name"></span>
                                     </div>
-                                    <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300" :class="expandedCategory === category.id ? 'rotate-180' : ''"></i>
+                                    <i class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform duration-300" :class="expandedCategory === category.id ? 'rotate-180' : ''"></i>
                                 </div>
                                 
-                                <!-- Services List Dropdown -->
                                 <div x-show="expandedCategory === category.id" 
-                                     x-transition:enter="transition ease-out duration-200"
-                                     x-transition:enter-start="opacity-0 -translate-y-2"
-                                     x-transition:enter-end="opacity-100 translate-y-0"
-                                     x-transition:leave="transition ease-in duration-150"
-                                     x-transition:leave-start="opacity-100"
+                                     x-transition:enter="transition ease-out duration-150"
+                                     x-transition:enter-start="opacity-0"
+                                     x-transition:enter-end="opacity-100"
+                                     x-transition:leave="transition ease-in duration-100"
                                      x-transition:leave-end="opacity-0"
                                      style="display:none;">
-                                    <div class="p-4 bg-slate-50/50 border-t border-slate-100 space-y-3">
+                                    <div class="border-t border-slate-100 divide-y divide-slate-50">
                                         <template x-for="service in category.services" :key="service.id">
-                                            <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-slate-100 shadow-sm">
+                                            <div class="flex items-center justify-between px-3 py-2 hover:bg-slate-50">
                                                 <div>
-                                                    <h4 class="font-bold text-sm text-slate-700" x-text="service.name"></h4>
-                                                    <p class="text-xs text-accent font-bold mt-1">Rs. <span x-text="service.base_price"></span></p>
+                                                    <p class="font-semibold text-sm text-slate-700" x-text="service.name"></p>
+                                                    <p class="text-xs text-accent font-bold">Rs. <span x-text="service.base_price"></span></p>
                                                 </div>
-                                                <div class="flex items-center gap-3 bg-slate-100 rounded-lg p-1">
-                                                    <button type="button" @click="removeFromCart(service)" class="w-8 h-8 flex items-center justify-center rounded bg-white text-slate-600 hover:text-red-500 shadow-sm transition-colors">
+                                                <div class="flex items-center gap-2 bg-slate-100 rounded-lg p-0.5">
+                                                    <button type="button" @click="removeFromCart(service)" class="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-600 hover:text-red-500 shadow-sm transition-colors">
                                                         <i class="fa-solid fa-minus text-xs"></i>
                                                     </button>
                                                     <span class="font-bold w-4 text-center text-sm" x-text="getQuantity(service.id)"></span>
-                                                    <button type="button" @click="addToCart(service)" class="w-8 h-8 flex items-center justify-center rounded bg-white text-slate-600 hover:text-accent shadow-sm transition-colors">
+                                                    <button type="button" @click="addToCart(service)" class="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-600 hover:text-accent shadow-sm transition-colors">
                                                         <i class="fa-solid fa-plus text-xs"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                         </template>
-                                        <div x-show="category.services.length === 0" class="text-sm text-slate-500 italic p-2 text-center">
+                                        <div x-show="category.services.length === 0" class="text-xs text-slate-500 italic p-3 text-center">
                                             No services available in this category.
                                         </div>
                                     </div>
@@ -170,98 +168,99 @@
                         </template>
                     </div>
 
-                    <!-- Additional Notes -->
-                    <div class="mt-6">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Special Instructions / Additional Notes</label>
-                        <textarea name="notes" rows="2" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium shadow-sm placeholder-slate-400" placeholder="E.g., Please fold shirts carefully, heavy stains on collar..."></textarea>
+                    <div class="mt-3">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Special Instructions</label>
+                        <textarea name="notes" rows="2" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400" placeholder="E.g., Please fold shirts carefully..."></textarea>
                     </div>
                 </div>
 
                 <!-- 3. Pickup Details -->
-                <h3 class="text-xl font-black text-brand mb-4 flex items-center gap-3 border-b border-slate-100 pb-2">
-                    <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-truck-pickup"></i></span> 
-                    Pickup Location & Time
-                </h3>
-                <div class="mb-10 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <div class="mb-6">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Pickup Date & Time</label>
-                        <input type="datetime-local" name="pickup_scheduled_at" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium shadow-sm">
-                    </div>
-
-                    <div class="mb-6">
-                        <div class="flex justify-between items-end mb-3">
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700">Pin pickup location on map</label>
-                                <p class="text-xs text-slate-500 font-medium">Move the map to set the exact pin.</p>
-                            </div>
-                            <button type="button" id="btn-find-me" class="bg-white border border-slate-300 hover:bg-slate-100 text-brand px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm flex items-center gap-2">
-                                <i class="fa-solid fa-location-crosshairs"></i> Find Me
-                            </button>
+                <div>
+                    <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-truck-pickup"></i></span>
+                        Pickup Location & Time
+                    </h3>
+                    <div class="space-y-3">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Pickup Date & Time</label>
+                            <input type="datetime-local" name="pickup_scheduled_at" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium">
                         </div>
-                        
-                        <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none">
-                                <div class="text-4xl text-accent drop-shadow-lg pb-8"><i class="fa-solid fa-location-dot"></i></div>
-                            </div>
-                            <div id="pickup_map" class="map-container"></div>
-                        </div>
-                        
-                        <input type="hidden" name="latitude" id="pickup_lat">
-                        <input type="hidden" name="longitude" id="pickup_lng">
-                        <div class="mt-2 text-xs font-mono text-slate-400 text-right" id="pickup_coords_display">Waiting for map...</div>
-                    </div>
 
-                    <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Full Pickup Address</label>
-                        <textarea name="pickup_address" id="pickup_address" required rows="2" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium shadow-sm placeholder-slate-400" placeholder="House no, Street name, City"></textarea>
+                        <div>
+                            <div class="flex justify-between items-center mb-2">
+                                <div>
+                                    <label class="block text-xs font-bold text-slate-700">Pin pickup location on map</label>
+                                    <p class="text-xs text-slate-400">Move the map to set the pin.</p>
+                                </div>
+                                <button type="button" id="btn-find-me" class="bg-white border border-slate-200 hover:bg-slate-50 text-brand px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5">
+                                    <i class="fa-solid fa-location-crosshairs"></i> Find Me
+                                </button>
+                            </div>
+                            
+                            <div class="relative rounded-xl overflow-hidden border border-slate-200">
+                                <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none">
+                                    <div class="text-3xl text-accent drop-shadow-lg pb-6"><i class="fa-solid fa-location-dot"></i></div>
+                                </div>
+                                <div id="pickup_map" class="map-container"></div>
+                            </div>
+                            
+                            <input type="hidden" name="latitude" id="pickup_lat">
+                            <input type="hidden" name="longitude" id="pickup_lng">
+                            <div class="mt-1 text-xs font-mono text-slate-400 text-right" id="pickup_coords_display">Waiting for map...</div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Full Pickup Address</label>
+                            <textarea name="pickup_address" id="pickup_address" required rows="2" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400" placeholder="House no, Street name, City"></textarea>
+                        </div>
                     </div>
                 </div>
 
                 <!-- 4. Delivery Details -->
-                <h3 class="text-xl font-black text-brand mb-4 flex items-center gap-3 border-b border-slate-100 pb-2">
-                    <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-box-open"></i></span> 
-                    Return Delivery
-                </h3>
-                <div class="mb-10 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-box-open"></i></span>
+                        Return Delivery
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
                         <label class="relative cursor-pointer">
                             <input type="radio" name="delivery_preference" value="deliver_to_address" class="custom-radio sr-only" checked onchange="toggleDeliverySection(true)">
-                            <div class="p-4 border-2 border-slate-200 rounded-2xl bg-white hover:border-blue-300 transition-all flex items-center gap-4">
-                                <div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center">
-                                    <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
+                            <div class="p-3 border-2 border-slate-200 rounded-xl bg-white hover:border-blue-300 transition-all flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0">
+                                    <div class="radio-dot w-2 h-2 rounded-full"></div>
                                 </div>
                                 <div>
-                                    <div class="font-bold text-slate-800">Deliver to me</div>
-                                    <div class="text-xs text-slate-500 mt-0.5">Rider will bring it back</div>
+                                    <div class="font-bold text-sm text-slate-800">Deliver to me</div>
+                                    <div class="text-xs text-slate-500">Rider brings it back</div>
                                 </div>
                             </div>
                         </label>
                         <label class="relative cursor-pointer">
                             <input type="radio" name="delivery_preference" value="pickup_from_branch" class="custom-radio sr-only" onchange="toggleDeliverySection(false)">
-                            <div class="p-4 border-2 border-slate-200 rounded-2xl bg-white hover:border-blue-300 transition-all flex items-center gap-4">
-                                <div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center">
-                                    <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
+                            <div class="p-3 border-2 border-slate-200 rounded-xl bg-white hover:border-blue-300 transition-all flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0">
+                                    <div class="radio-dot w-2 h-2 rounded-full"></div>
                                 </div>
                                 <div>
-                                    <div class="font-bold text-slate-800">I will pick up</div>
-                                    <div class="text-xs text-slate-500 mt-0.5">Collect from branch</div>
+                                    <div class="font-bold text-sm text-slate-800">I will pick up</div>
+                                    <div class="text-xs text-slate-500">Collect from branch</div>
                                 </div>
                             </div>
                         </label>
                     </div>
 
-                    <div id="delivery_address_section" class="space-y-6">
-                        <label class="flex items-center gap-3 cursor-pointer p-4 bg-blue-50 border border-blue-100 rounded-2xl">
-                            <input type="checkbox" name="same_as_pickup" id="same_as_pickup" value="1" checked class="w-5 h-5 text-accent rounded border-slate-300 focus:ring-accent">
-                            <span class="font-bold text-sm text-brand">Same as pickup address</span>
+                    <div id="delivery_address_section">
+                        <label class="flex items-center gap-3 cursor-pointer p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                            <input type="checkbox" name="same_as_pickup" id="same_as_pickup" value="1" checked class="w-4 h-4 text-accent rounded border-slate-300 focus:ring-accent">
+                            <span class="font-bold text-xs text-brand">Same as pickup address</span>
                         </label>
 
-                        <div id="custom_delivery_map_section" class="hidden space-y-6 mt-6 pt-6 border-t border-slate-200">
+                        <div id="custom_delivery_map_section" class="hidden space-y-3 mt-3 pt-3 border-t border-slate-200">
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Pin delivery location on map</label>
-                                <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Pin delivery location on map</label>
+                                <div class="relative rounded-xl overflow-hidden border border-slate-200">
                                     <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none">
-                                        <div class="text-4xl text-accent drop-shadow-lg pb-8"><i class="fa-solid fa-location-dot"></i></div>
+                                        <div class="text-3xl text-accent drop-shadow-lg pb-6"><i class="fa-solid fa-location-dot"></i></div>
                                     </div>
                                     <div id="delivery_map" class="map-container"></div>
                                 </div>
@@ -269,57 +268,57 @@
                                 <input type="hidden" name="delivery_lng" id="delivery_lng">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Full Delivery Address</label>
-                                <textarea name="delivery_address" id="delivery_address" rows="2" class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium shadow-sm placeholder-slate-400" placeholder="House no, Street name, City"></textarea>
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Full Delivery Address</label>
+                                <textarea name="delivery_address" id="delivery_address" rows="2" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium placeholder-slate-400" placeholder="House no, Street name, City"></textarea>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- 5. Payment Details -->
-                <h3 class="text-xl font-black text-brand mb-4 flex items-center gap-3 border-b border-slate-100 pb-2">
-                    <span class="bg-blue-100 text-blue-700 w-8 h-8 rounded-xl flex items-center justify-center text-sm"><i class="fa-solid fa-credit-card"></i></span> 
-                    Payment Options
-                </h3>
-                <div class="mb-10 p-6 bg-slate-50 rounded-3xl border border-slate-100">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <h3 class="text-sm font-black text-brand mb-3 flex items-center gap-2 border-b border-slate-100 pb-2">
+                        <span class="bg-blue-100 text-blue-700 w-6 h-6 rounded-lg flex items-center justify-center text-xs"><i class="fa-solid fa-credit-card"></i></span>
+                        Payment Options
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3 mb-3">
                         <label class="relative cursor-pointer">
                             <input type="radio" name="payment_method" value="cash" class="custom-radio sr-only" checked>
-                            <div class="p-4 border-2 border-slate-200 rounded-2xl bg-white hover:border-blue-300 transition-all flex items-center gap-4">
-                                <div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center">
-                                    <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
+                            <div class="p-3 border-2 border-slate-200 rounded-xl bg-white hover:border-blue-300 transition-all flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0">
+                                    <div class="radio-dot w-2 h-2 rounded-full"></div>
                                 </div>
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-money-bill-wave text-green-600 text-xl"></i>
-                                    <div class="font-bold text-slate-800">Cash on Delivery</div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-money-bill-wave text-green-600 text-base"></i>
+                                    <div class="font-bold text-sm text-slate-800">Cash on Delivery</div>
                                 </div>
                             </div>
                         </label>
                         <label class="relative cursor-pointer">
                             <input type="radio" name="payment_method" value="card_or_transfer" class="custom-radio sr-only">
-                            <div class="p-4 border-2 border-slate-200 rounded-2xl bg-white hover:border-blue-300 transition-all flex items-center gap-4">
-                                <div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center">
-                                    <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
+                            <div class="p-3 border-2 border-slate-200 rounded-xl bg-white hover:border-blue-300 transition-all flex items-center gap-3">
+                                <div class="w-4 h-4 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0">
+                                    <div class="radio-dot w-2 h-2 rounded-full"></div>
                                 </div>
-                                <div class="flex items-center gap-3">
-                                    <i class="fa-solid fa-credit-card text-blue-600 text-xl"></i>
-                                    <div class="font-bold text-slate-800">Card / Bank Transfer</div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fa-solid fa-credit-card text-blue-600 text-base"></i>
+                                    <div class="font-bold text-sm text-slate-800">Card / Bank Transfer</div>
                                 </div>
                             </div>
                         </label>
                     </div>
 
-                    <div class="mt-6">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">When will you pay?</label>
-                        <select name="payment_timing" required class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium shadow-sm">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1">When will you pay?</label>
+                        <select name="payment_timing" required class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-accent focus:border-accent transition-all font-medium">
                             <option value="at_pickup">At Pickup</option>
                             <option value="at_delivery">At Delivery</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="mt-8 flex justify-end lg:hidden">
-                    <button type="submit" class="bg-accent text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-blue-700 transition shadow-lg w-full">Confirm Booking</button>
+                <div class="pt-2 lg:hidden">
+                    <button type="submit" class="bg-accent text-white px-6 py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition shadow-lg w-full">Confirm Booking</button>
                 </div>
             </form>
         </div>
