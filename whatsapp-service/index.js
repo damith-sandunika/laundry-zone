@@ -206,7 +206,7 @@ app.post('/api/whatsapp/logout/:branch_id', async (req, res) => {
     }
 });
 
-const PORT = 3001;
+const PORT = 3005;
 app.listen(PORT, async () => {
     console.log(`🚀 Multi-Session WhatsApp Service running on http://localhost:${PORT}`);
     await initDB();
