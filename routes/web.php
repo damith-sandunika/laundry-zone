@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Route;
 
 // ─── App Redirect ───
 Route::redirect('/app', '/stafflogin');
+Route::redirect('/login', '/stafflogin');
 
 // ─── Public Booking Routes (Customer Site) ───
 Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
