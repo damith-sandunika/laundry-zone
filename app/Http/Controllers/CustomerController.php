@@ -52,7 +52,8 @@ class CustomerController extends Controller
     public function search(Request $request)
     {
         $q = $request->input('q', '');
-        $query = Customer::orderBy('name');
+        // withoutGlobalScopes() allows POS to search customers from any branch
+        $query = Customer::withoutGlobalScopes()->orderBy('name');
         if ($q) {
             $query->where(function ($qb) use ($q) {
                 $qb->where('name', 'like', "%{$q}%")->orWhere('phone', 'like', "%{$q}%");
