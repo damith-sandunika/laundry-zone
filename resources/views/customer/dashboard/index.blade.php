@@ -178,24 +178,27 @@
                             
                             if ($isDelivery) {
                                 // 5-step timeline for delivery: Confirmed -> Rider Pick Up -> Working -> Delivering -> Completed
-                                if($order->status === 'received') { 
-                                    $orderProgress = '25%'; $orderStatusLevel = 2; // Order created means rider has already arrived and picked up
-                                }
-                                elseif(in_array($order->status, ['dispatched_to_workshop', 'processing', 'returned_from_workshop'])) { 
+                                // Once order is created (received), rider has already picked it up, so it is in Working state.
+                                if(in_array($order->status, ['received', 'dispatched_to_workshop', 'processing'])) { 
                                     $orderProgress = '50%'; $orderStatusLevel = 3; 
                                 }
-                                elseif($order->status === 'done') { 
+                                elseif(in_array($order->status, ['returned_from_workshop', 'ready', 'done', 'out_for_delivery'])) { 
                                     $orderProgress = '75%'; $orderStatusLevel = 4; 
                                 }
                                 elseif($order->status === 'delivered') { 
                                     $orderProgress = '100%'; $orderStatusLevel = 5; 
                                 }
                             } else {
-                                // 4-step timeline for non-delivery: Confirmed -> Working -> Ready -> Completed
-                                if($order->status === 'received') { $orderProgress = '0%'; $orderStatusLevel = 1; }
-                                elseif(in_array($order->status, ['dispatched_to_workshop', 'processing', 'returned_from_workshop'])) { $orderProgress = '33%'; $orderStatusLevel = 2; }
-                                elseif($order->status === 'done') { $orderProgress = '66%'; $orderStatusLevel = 3; }
-                                elseif($order->status === 'delivered') { $orderProgress = '100%'; $orderStatusLevel = 4; }
+                                // 4-step timeline for non-delivery: Confirmed -> Working -> Ready to Pickup -> Completed
+                                if(in_array($order->status, ['received', 'dispatched_to_workshop', 'processing'])) { 
+                                    $orderProgress = '33%'; $orderStatusLevel = 2; 
+                                }
+                                elseif(in_array($order->status, ['returned_from_workshop', 'ready', 'done'])) { 
+                                    $orderProgress = '66%'; $orderStatusLevel = 3; 
+                                }
+                                elseif($order->status === 'delivered') { 
+                                    $orderProgress = '100%'; $orderStatusLevel = 4; 
+                                }
                             }
                         @endphp
                         
