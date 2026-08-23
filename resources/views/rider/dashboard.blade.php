@@ -124,14 +124,16 @@
 
                                     <!-- Action Buttons depending on status -->
                                     <!-- Simplified Action Buttons -->
-                                    @if($task->task_type === 'pickup')
-                                        <a href="{{ route('rider.createOrder', $task->id) }}" style="padding:5px 10px;background:#16a34a;color:white;text-decoration:none;border-radius:8px;font-size:11.5px;font-weight:800;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
-                                            Pick Order
-                                        </a>
-                                    @else
-                                        <button onclick="updateTask({{ $task->id }}, 'complete')" style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
-                                            Deliver Order
-                                        </button>
+                                    @if(!in_array($task->status, ['completed', 'cancelled']))
+                                        @if($task->task_type === 'pickup')
+                                            <a href="{{ route('rider.createOrder', $task->id) }}" style="padding:5px 10px;background:#16a34a;color:white;text-decoration:none;border-radius:8px;font-size:11.5px;font-weight:800;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
+                                                Pick Order
+                                            </a>
+                                        @else
+                                            <button onclick="updateTask({{ $task->id }}, 'complete')" style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
+                                                Deliver Order
+                                            </button>
+                                        @endif
                                     @endif
 
                                 </div>

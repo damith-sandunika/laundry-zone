@@ -173,6 +173,9 @@ class RiderController extends Controller
             'subtotal' => $subtotal,
             'total' => $subtotal, // Delivery fee added later if applicable
             'notes' => $request->notes,
+            'is_delivery_order' => true,
+            'delivery_appointment_id' => $appointment->id,
+            'delivery_address' => $appointment->delivery_address,
         ]);
 
         foreach ($request->items as $item) {

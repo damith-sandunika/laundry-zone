@@ -238,7 +238,7 @@
                                         @else {{ $deliveringLevel }} @endif
                                     </div>
                                     <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $deliveringLevel ? 'text-slate-800' : 'text-slate-400' }}">
-                                        {{ $isDelivery ? 'Delivering' : 'Ready' }}
+                                        {{ $isDelivery ? 'Delivering' : 'Ready to Pickup' }}
                                     </span>
                                 </div>
                                 
