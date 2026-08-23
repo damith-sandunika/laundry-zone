@@ -22,7 +22,8 @@ class DashboardController extends Controller
         // Fetch online bookings (appointments)
         $appointments = $customer->deliveryAppointments()
             ->with('branch')
-            ->whereNotIn('status', ['completed', 'cancelled'])
+            ->whereNotIn('status', ['completed', 'cancelled', 'order_created', 'delivered'])
+            ->whereNull('order_id')
             ->latest()
             ->get();
 

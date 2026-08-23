@@ -123,28 +123,15 @@
                                     </a>
 
                                     <!-- Action Buttons depending on status -->
-                                    @if($task->status === 'assigned')
-                                        <button onclick="updateTask({{ $task->id }}, 'accept')" style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(79,70,229,0.3);">
-                                            Accept
+                                    <!-- Simplified Action Buttons -->
+                                    @if($task->task_type === 'pickup')
+                                        <a href="{{ route('rider.createOrder', $task->id) }}" style="padding:5px 10px;background:#16a34a;color:white;text-decoration:none;border-radius:8px;font-size:11.5px;font-weight:800;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
+                                            Pick Order
+                                        </a>
+                                    @else
+                                        <button onclick="updateTask({{ $task->id }}, 'complete')" style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
+                                            Deliver Order
                                         </button>
-                                    @elseif($task->status === 'accepted')
-                                        <button onclick="updateTask({{ $task->id }}, 'on-way')" style="padding:5px 10px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(29,78,216,0.3);">
-                                            On The Way
-                                        </button>
-                                    @elseif($task->status === 'on_way')
-                                        <button onclick="updateTask({{ $task->id }}, 'arrived')" style="padding:5px 10px;background:#ea580c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,88,12,0.3);">
-                                            Arrived
-                                        </button>
-                                    @elseif($task->status === 'arrived')
-                                        @if($task->task_type === 'pickup')
-                                            <a href="{{ route('rider.createOrder', $task->id) }}" style="padding:5px 10px;background:#16a34a;color:white;text-decoration:none;border-radius:8px;font-size:11.5px;font-weight:800;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
-                                                Create Order
-                                            </a>
-                                        @else
-                                            <button onclick="updateTask({{ $task->id }}, 'complete')" style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
-                                                Mark Delivered
-                                            </button>
-                                        @endif
                                     @endif
 
                                 </div>

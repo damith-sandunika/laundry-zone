@@ -64,72 +64,131 @@
                                 </span>
                                 <h4 class="font-bold text-slate-800">Booking #{{ str_pad($appointment->id, 4, '0', STR_PAD_LEFT) }}</h4>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right flex flex-col items-end gap-2">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
-                                    {{ ucfirst($appointment->status) }}
+                                    {{ ucfirst(str_replace('_', ' ', $appointment->status)) }}
                                 </span>
-                            </div>
-                        </div>
-                        <div class="relative z-10 flex justify-between items-end">
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">{{ \Carbon\Carbon::parse($appointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</p>
-                                <p class="text-xs text-slate-500">Scheduled Pickup</p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <button type="button" onclick="alert('Payment will be activated once the laundry is weighed and the final bill is generated.');" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
-                                    Pay Now
-                                </button>
                                 <a href="{{ route('customer.appointments.show', $appointment->id) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
-                                    View
+                                    View Details
                                 </a>
                             </div>
                         </div>
+
+                        <!-- Timeline for Pickup -->
+                        <div class="mt-6 pt-4 border-t border-slate-100 relative z-10">
+                            <div class="flex items-center justify-between relative">
+                                <div class="absolute left-0 top-3 w-full h-1 bg-slate-100 rounded-full"></div>
+                                @php
+                                    $appProgress = '0%';
+                                    $appLevel = 1;
+                                    if(in_array($appointment->status, ['assigned', 'accepted'])) { $appProgress = '50%'; $appLevel = 2; }
+                                    elseif(in_array($appointment->status, ['on_way', 'arrived'])) { $appProgress = '100%'; $appLevel = 3; }
+                                @endphp
+                                <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $appProgress }}"></div>
+                                
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/3">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-blue-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
+                                    <span class="text-[10px] font-bold text-slate-800 text-center leading-tight">Confirmed</span>
+                                </div>
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/3">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $appLevel >= 2 ? 'bg-blue-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($appLevel >= 2) <i class="fa-solid fa-motorcycle"></i> @else 2 @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $appLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Rider Assigned</span>
+                                </div>
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/3">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $appLevel >= 3 ? 'bg-blue-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($appLevel >= 3) <i class="fa-solid fa-location-dot animate-bounce"></i> @else 3 @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $appLevel >= 3 ? 'text-blue-600' : 'text-slate-400' }}">Arriving</span>
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
                 @endforeach
 
                 <!-- Active Processing Orders -->
                 @foreach($activeOrders as $order)
-                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow">
-                        <div class="flex justify-between items-start mb-4">
+                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+                        <div class="flex justify-between items-start mb-4 relative z-10">
                             <div>
                                 <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md mb-2 inline-block">
                                     {{ $order->order_number }}
                                 </span>
-                                <h4 class="font-bold text-slate-800">{{ $order->items->count() }} Items</h4>
+                                <h4 class="font-bold text-slate-800">{{ $order->items->count() }} Items &middot; <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></h4>
                             </div>
-                            <div class="text-right">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-bold
-                                    @if($order->status === 'pending') bg-yellow-100 text-yellow-700
-                                    @elseif(in_array($order->status, ['processing', 'washing', 'drying', 'ironing'])) bg-blue-100 text-blue-700
-                                    @elseif($order->status === 'ready') bg-green-100 text-green-700
+                            <div class="text-right flex flex-col items-end gap-2">
+                                <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
+                                    @if($order->status === 'received') bg-blue-100 text-blue-700
+                                    @elseif(in_array($order->status, ['processing', 'dispatched_to_workshop', 'returned_from_workshop'])) bg-purple-100 text-purple-700
+                                    @elseif($order->status === 'done') bg-green-100 text-green-700
                                     @endif
                                 ">
-                                    {{ ucfirst($order->status) }}
+                                    {{ str_replace('_', ' ', $order->status) }}
                                 </span>
+                                @if($order->payment_status === 'unpaid')
+                                    <a href="{{ route('customer.orders.pay', $order->id) }}" class="text-[10px] font-bold uppercase tracking-wider text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm animate-pulse">
+                                        Pay Now
+                                    </a>
+                                @else
+                                    <a href="{{ route('customer.orders.show', $order) }}" class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                        View Details
+                                    </a>
+                                @endif
                             </div>
                         </div>
-                        <div class="flex justify-between items-end">
-                            <div>
-                                <p class="text-sm font-bold text-slate-800">LKR {{ number_format($order->total, 2) }}</p>
-                                <p class="text-xs text-slate-500">{{ $order->created_at->format('M d, Y') }}</p>
-                            </div>
-                            @if($order->payment_status === 'unpaid')
-                                <a href="{{ route('customer.orders.pay', $order->id) }}" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors">
-                                    Pay Now
-                                </a>
-                                <a href="{{ route('customer.orders.show', $order) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors ml-2">
-                                    View
-                                </a>
-                            @else
-                                <div class="flex items-center gap-2">
-                                    <span class="text-xs font-bold text-green-600 flex items-center gap-1">
-                                        <i class="fa-solid fa-circle-check"></i> Paid
-                                    </span>
-                                    <a href="{{ route('customer.orders.show', $order) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors">
-                                        View
-                                    </a>
+
+                        <!-- Timeline for Orders -->
+                        @php
+                            $isDelivery = \App\Models\DeliveryAppointment::where('order_id', $order->id)->exists();
+                            
+                            $orderProgress = '0%';
+                            $orderStatusLevel = 1;
+                            if(in_array($order->status, ['dispatched_to_workshop', 'processing', 'returned_from_workshop'])) { $orderProgress = '33%'; $orderStatusLevel = 2; }
+                            elseif($order->status === 'done') { $orderProgress = '66%'; $orderStatusLevel = 3; }
+                            elseif($order->status === 'delivered') { $orderProgress = '100%'; $orderStatusLevel = 4; }
+                        @endphp
+                        
+                        <div class="mt-4 pt-4 border-t border-slate-100 relative z-10">
+                            <div class="flex items-center justify-between relative">
+                                <div class="absolute left-0 top-3 w-full h-1 bg-slate-100 rounded-full"></div>
+                                <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $orderProgress }}"></div>
+                                
+                                <!-- Step 1: Confirmed -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-emerald-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
+                                    <span class="text-[10px] font-bold text-slate-800 leading-tight">Confirmed</span>
                                 </div>
-                            @endif
+                                
+                                <!-- Step 2: Working -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 2 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($orderStatusLevel >= 2) <i class="fa-solid fa-jug-detergent {{ $orderStatusLevel == 2 ? 'fa-spin-pulse' : '' }}"></i> @else 2 @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Working</span>
+                                </div>
+                                
+                                <!-- Step 3: Ready/Delivering -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 3 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($orderStatusLevel >= 3) 
+                                            <i class="fa-solid {{ $isDelivery ? 'fa-motorcycle' : 'fa-box' }} {{ $orderStatusLevel == 3 ? 'fa-bounce' : '' }}"></i> 
+                                        @else 3 @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 3 ? 'text-slate-800' : 'text-slate-400' }}">
+                                        {{ $isDelivery ? 'Delivering' : 'Ready' }}
+                                    </span>
+                                </div>
+                                
+                                <!-- Step 4: Completed -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 4 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($orderStatusLevel >= 4) <i class="fa-solid fa-flag-checkered"></i> @else 4 @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 4 ? 'text-slate-800' : 'text-slate-400' }}">Completed</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 @endforeach
