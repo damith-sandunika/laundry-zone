@@ -8,6 +8,7 @@ use App\Providers\WhatsAppServiceProvider;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Support\Facades\Auth;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,6 +23,20 @@ return Application::configure(basePath: dirname(__DIR__))
             'rider' => RiderMiddleware::class,
             'workshop' => WorkshopMiddleware::class,
         ]);
+        
+        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('customer/*') || $request->is('book')) {
+                return '/customer/login';
+            }
+            return '/stafflogin';
+        });
+
+        $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
+            if (Auth::guard('customer')->check() && $request->is('customer/*')) {
+                return '/customer/dashboard';
+            }
+            return '/dashboard';
+        });
     })
     ->withProviders([
         WhatsAppServiceProvider::class,
