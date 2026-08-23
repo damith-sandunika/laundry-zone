@@ -2,49 +2,53 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Branch;
-use App\Models\PaymentSetting;
+use App\Models\PaymentMethod;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 
 class PaymentSettingsController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403, 'Only Super Admin can manage payment methods.');
 
-        $branches = Branch::regularBranches()->get();
-        $selectedBranchId = $request->branch_id ?? ($branches->first()->id ?? 1);
+        $methods = PaymentMethod::all();
+        
+        $bankDetails = [
+            'bank_name' => Setting::get('bank_name', ''),
+            'bank_account_name' => Setting::get('bank_account_name', ''),
+            'bank_account_number' => Setting::get('bank_account_number', ''),
+            'bank_branch' => Setting::get('bank_branch', ''),
+        ];
 
-        $settings = PaymentSetting::where('branch_id', $selectedBranchId)->get()->keyBy('method');
-        $allMethods = PaymentSetting::allMethods();
-
-        return view('settings.payment-methods', compact('settings', 'allMethods', 'branches', 'selectedBranchId'));
+        return view('settings.payment-methods', compact('methods', 'bankDetails'));
     }
 
     public function update(Request $request)
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403, 'Only Super Admin can manage payment methods.');
 
-        $branchId = $request->branch_id;
-
         $request->validate([
-            'methods' => 'required|array',
-            'methods.*.is_enabled' => 'nullable|boolean',
-            'methods.*.display_name' => 'nullable|string|max:255',
-            'methods.*.instructions' => 'nullable|string',
+            'is_active' => 'array',
+            'bank_name' => 'nullable|string|max:255',
+            'bank_account_name' => 'nullable|string|max:255',
+            'bank_account_number' => 'nullable|string|max:255',
+            'bank_branch' => 'nullable|string|max:255',
         ]);
 
-        foreach ($request->methods as $method => $data) {
-            PaymentSetting::updateOrCreate(
-                ['branch_id' => $branchId, 'method' => $method],
-                [
-                    'is_enabled' => isset($data['is_enabled']) ? true : false,
-                    'display_name' => $data['display_name'] ?? PaymentSetting::allMethods()[$method],
-                    'instructions' => $data['instructions'] ?? null,
-                ]
-            );
+        // Update active statuses
+        $activeIds = $request->input('is_active', []);
+        PaymentMethod::query()->update(['is_active' => false]);
+        if (!empty($activeIds)) {
+            PaymentMethod::whereIn('id', array_keys($activeIds))->update(['is_active' => true]);
         }
 
-        return redirect()->back()->with('success', 'Payment methods updated successfully.');
+        // Save bank details
+        Setting::set('bank_name', $request->input('bank_name'));
+        Setting::set('bank_account_name', $request->input('bank_account_name'));
+        Setting::set('bank_account_number', $request->input('bank_account_number'));
+        Setting::set('bank_branch', $request->input('bank_branch'));
+
+        return redirect()->route('settings.payment-methods.index')->with('success', 'Payment methods updated successfully.');
     }
 }

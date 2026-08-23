@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', 'Laundry Zone') }}</title>
+    <title>{{ config('app.name', 'RAPID Laundromat') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -15,7 +15,7 @@
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
                 <img src="{{ asset('images/admin_logo.png') }}" alt="Logo" class="h-10" onerror="this.style.display='none'">
-                <span class="text-xl font-black text-blue-900 tracking-tight">Laundry Zone</span>
+                <span class="text-xl font-black text-blue-900 tracking-tight">RAPID Laundromat</span>
             </div>
             
             <div class="flex items-center gap-4">
@@ -73,7 +73,7 @@
     <!-- Footer -->
     <footer class="border-t border-slate-200/60 bg-white/50 backdrop-blur-xl relative z-10">
         <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">&copy; {{ date('Y') }} Laundry Zone. All rights reserved.</p>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">&copy; {{ date('Y') }} RAPID Laundromat. All rights reserved.</p>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Software by DSRZone</p>
         </div>
     </footer>

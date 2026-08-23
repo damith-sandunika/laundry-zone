@@ -27,9 +27,6 @@ use Illuminate\Support\Facades\Route;
 
 // ─── Public Booking Routes (Customer Site) ───
 Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
-Route::get('/book', [CustomerSiteController::class, 'booking'])->name('booking.page');
-Route::post('/book', [CustomerSiteController::class, 'store'])->name('booking.store');
-Route::get('/book/success/{appointment}', [CustomerSiteController::class, 'success'])->name('site.success');
 
 // ─── Customer Auth & Dashboard Routes ───
 Route::get('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'showLogin'])->name('customer.login');
@@ -41,6 +38,17 @@ Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::
 Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
+    Route::get('/orders/{order}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
+    Route::get('/orders/{order}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
+    Route::post('/orders/{order}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'processPayment'])->name('orders.pay.process');
+    
+    // Appointments
+    Route::get('/appointments/{appointment}', [\App\Http\Controllers\Customer\DashboardController::class, 'showAppointment'])->name('appointments.show');
+    
+    // Customer Booking
+    Route::get('/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('booking');
+    Route::post('/book', [\App\Http\Controllers\CustomerSiteController::class, 'store'])->name('booking.store');
+    Route::get('/book/success/{appointment}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('booking.success');
 });
 
 // ─── Public Order Tracking (QR Code link) ───

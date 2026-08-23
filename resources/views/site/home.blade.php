@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Laundry Zone - Premium Laundry Delivery</title>
+    <title>RAPID Laundromat - Premium Laundry Delivery</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,7 +40,7 @@
             <!-- Logo + Brand Name: left on all sizes -->
             <div class="flex items-center gap-2">
                 <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto">
-                <span class="font-black text-xl tracking-tight text-brand">Laundry Zone</span>
+                <span class="font-black text-xl tracking-tight text-brand">RAPID Laundromat</span>
             </div>
             
             <!-- Desktop Menu -->
@@ -54,8 +54,8 @@
             </div>
 
             <div class="hidden md:flex items-center space-x-4">
-                <a href="{{ route('login') }}" class="text-slate-600 font-medium hover:text-blue-600 transition text-sm">Sign In</a>
-                <a href="{{ route('booking.page') }}" class="bg-blue-600 text-white px-6 py-2.5 rounded-full font-bold hover:bg-blue-700 hover:shadow-lg transition-all text-sm flex items-center gap-2">
+                <a href="{{ route('customer.login') }}" class="text-slate-600 font-medium hover:text-blue-600 transition text-sm">Sign In</a>
+                <a href="{{ route('customer.booking') }}" class="bg-blue-600 text-white px-6 py-2.5 rounded-full font-bold hover:bg-blue-700 hover:shadow-lg transition-all text-sm flex items-center gap-2">
                     Book Now <i class="fa-solid fa-arrow-right text-xs"></i>
                 </a>
             </div>
@@ -81,8 +81,8 @@
             <a href="#how-it-works" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">How It Works</a>
             <a href="#contact" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">Contact</a>
             <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
-                <a href="{{ route('login') }}" class="text-center text-slate-600 font-medium py-2">Sign In</a>
-                <a href="{{ route('booking.page') }}" class="bg-blue-600 text-white px-5 py-3 text-center rounded-xl font-bold">Book Now</a>
+                <a href="{{ route('customer.login') }}" class="text-center text-slate-600 font-medium py-2">Sign In</a>
+                <a href="{{ route('customer.booking') }}" class="bg-blue-600 text-white px-5 py-3 text-center rounded-xl font-bold">Book Now</a>
             </div>
         </div>
     </div>
@@ -103,7 +103,7 @@
                     Professional laundry & dry cleaning services delivered with care right to your door.
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start mb-12">
-                    <a href="{{ route('booking.page') }}" class="bg-accent text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-700 transition-all flex items-center justify-center gap-3">
+                    <a href="{{ route('customer.booking') }}" class="bg-accent text-white px-8 py-4 rounded-full font-bold text-lg shadow-lg shadow-blue-200 hover:shadow-xl hover:-translate-y-1 hover:bg-blue-700 transition-all flex items-center justify-center gap-3">
                         <i class="fa-solid fa-truck-fast"></i> Book a Pickup
                     </a>
                     <a href="#services" class="bg-white text-accent border border-blue-100 px-8 py-4 rounded-full font-bold text-lg hover:bg-blue-50 transition-all flex items-center justify-center gap-3">
@@ -244,7 +244,7 @@
                         <div class="p-6 text-center text-slate-400 text-sm">No services in this category yet.</div>
                     @endif
                     <div class="p-4 border-t border-slate-100">
-                        <a href="{{ route('booking.page') }}" class="block w-full text-center bg-accent text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm">
+                        <a href="{{ route('customer.booking') }}" class="block w-full text-center bg-accent text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm">
                             Book {{ $category->name }} <i class="fa-solid fa-arrow-right ml-1"></i>
                         </a>
                     </div>
@@ -292,7 +292,7 @@
                     </li>
                 </ul>
                 
-                <a href="{{ route('booking.page') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all {{ $index === 1 ? 'bg-accent text-white hover:bg-blue-700 shadow-md' : 'bg-blue-50 text-blue-600 hover:bg-blue-100' }}">
+                <a href="{{ route('customer.booking') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all {{ $index === 1 ? 'bg-accent text-white hover:bg-blue-700 shadow-md' : 'bg-blue-50 text-blue-600 hover:bg-blue-100' }}">
                     Book Now
                 </a>
             </div>
@@ -358,7 +358,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-12 items-center">
             <div class="flex-1">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-brand mb-8">Why Choose Laundry Zone?</h2>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-brand mb-8">Why Choose RAPID Laundromat?</h2>
                 <div class="grid grid-cols-2 gap-8">
                     <div class="text-center lg:text-left">
                         <div class="w-16 h-16 mx-auto lg:mx-0 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4">
@@ -556,7 +556,7 @@
             <div class="col-span-1 md:col-span-1">
                 <div class="flex items-center mb-6">
                     <span class="text-3xl mr-2 text-white"><i class="fa-solid fa-droplet"></i></span>
-                    <span class="font-bold text-2xl text-white">Laundry Zone</span>
+                    <span class="font-bold text-2xl text-white">RAPID Laundromat</span>
                 </div>
                 <p class="text-sm text-slate-400 mb-6">Professional laundry and dry cleaning services with care and convenience.</p>
                 <div class="flex gap-4">
@@ -596,7 +596,10 @@
             </div>
         </div>
         <div class="text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
-            <p>&copy; {{ date('Y') }} Laundry Zone. All Rights Reserved.</p>
+            <div>
+                <p>&copy; {{ date('Y') }} RAPID Laundromat. All Rights Reserved.</p>
+                <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com" target="_blank" class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>
+            </div>
             <div class="flex gap-4">
                 <a href="#" class="hover:text-white transition">Privacy Policy</a>
                 <a href="#" class="hover:text-white transition">Terms of Service</a>

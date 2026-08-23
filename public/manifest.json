@@ -1,6 +1,6 @@
 {
-    "name": "Laundry Zone",
-    "short_name": "Laundry Zone",
+    "name": "RAPID Laundromat",
+    "short_name": "RAPID Laundromat",
     "description": "Smart Laundry Management System",
     "start_url": "/login",
     "display": "standalone",

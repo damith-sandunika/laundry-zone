@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ config('app.name', 'Laundry Zone') }}</title>
+    <title>{{ config('app.name', 'RAPID Laundromat') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/admin_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -43,7 +43,7 @@
                     <img src="{{ asset('images/admin_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
                 <div>
-                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">Laundry Zone</div>
+                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">RAPID Laundromat</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
             </div>
@@ -79,6 +79,11 @@
                     <a href="{{ route('settings.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.index') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                         Global Settings
+                    </a>
+                    
+                    <a href="{{ route('settings.payment-methods.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.payment-methods.index') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                        <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                        Payment Methods
                     </a>
                 @endif
 
@@ -160,7 +165,7 @@
                         Sign Out
                     </button>
                 </form>
-                <div class="text-[10px] font-extrabold text-slate-400/80 tracking-widest mt-4 uppercase">Software by DSRZone</div>
+                <div class="text-[10px] font-extrabold text-slate-400/80 tracking-widest mt-4 uppercase">Powered by DSRZone</div>
             </div>
         </aside>
 
@@ -182,7 +187,7 @@
                         $branch = \App\Models\Branch::find($branchId); 
                     @endphp
                     <div class="flex items-center justify-center lg:justify-start gap-2">
-                        <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ $branch->name ?? 'Laundry Zone' }}</div>
+                        <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ $branch->name ?? 'RAPID Laundromat' }}</div>
                         
                         <!-- Global WhatsApp Status Indicator -->
                         <div x-data="{ waStatus: 'checking' }" 

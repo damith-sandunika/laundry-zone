@@ -30,16 +30,13 @@ class CustomerSiteController extends Controller
         $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
 
-        return view('site.booking', compact('branches', 'paymentMethods', 'categories'));
+        return view('customer.booking.index', compact('branches', 'paymentMethods', 'categories'));
     }
 
     public function store(Request $request, WhatsAppService $waService)
     {
         try {
             $validated = $request->validate([
-                'name' => 'required|string|max:255',
-                'phone' => 'required|string|max:50',
-                'password' => 'nullable|string|min:8',
                 'branch_id' => 'required|exists:branches,id',
                 'pickup_address' => 'required|string|max:255',
                 'map_address' => 'nullable|string',
@@ -80,26 +77,8 @@ class CustomerSiteController extends Controller
         }
 
         $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress, $receiptPath) {
-            // Find or create customer based on phone globally
-            $customer = Customer::where('phone', $request->phone)->first();
-            if (! $customer) {
-                $customer = Customer::create([
-                    'phone' => $request->phone,
-                    'name' => $request->name,
-                    'address' => $request->pickup_address,
-                    'branch_id' => $request->branch_id,
-                    'password' => $request->password ? \Illuminate\Support\Facades\Hash::make($request->password) : null,
-                ]);
-            } elseif ($request->password && empty($customer->password)) {
-                $customer->update([
-                    'password' => \Illuminate\Support\Facades\Hash::make($request->password)
-                ]);
-            }
-
-            // Auto login if not logged in and a password is provided (or just registered)
-            if (!auth('customer')->check() && !empty($customer->password)) {
-                auth('customer')->login($customer);
-            }
+            
+            $customer = auth('customer')->user();
 
             return DeliveryAppointment::create([
                 'customer_id' => $customer->id,
@@ -111,7 +90,7 @@ class CustomerSiteController extends Controller
                 'pickup_scheduled_at' => $request->pickup_scheduled_at,
                 'item_description' => $request->item_description,
                 'notes' => $request->notes,
-                'contact_phone' => $request->phone,
+                'contact_phone' => $customer->phone,
                 'status' => 'pending',
 
                 // New fields

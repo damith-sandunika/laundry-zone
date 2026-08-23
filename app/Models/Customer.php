@@ -33,4 +33,9 @@ class Customer extends Authenticatable
     {
         return $this->hasMany(WhatsappLog::class);
     }
+
+    public function deliveryAppointments()
+    {
+        return $this->hasMany(DeliveryAppointment::class);
+    }
 }
