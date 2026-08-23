@@ -23,16 +23,16 @@
         </div>
 
         <h1 class="text-3xl font-black text-slate-900 tracking-tight mb-3">Booking Received!</h1>
-        <p class="text-slate-500 font-semibold mb-8 leading-relaxed">Thank you, <strong class="text-slate-800">{{ $booking->customer_name }}</strong>. Your laundry pickup has been scheduled successfully.</p>
+        <p class="text-slate-500 font-semibold mb-8 leading-relaxed">Thank you, <strong class="text-slate-800">{{ auth('customer')->user()->name ?? 'Valued Customer' }}</strong>. Your laundry pickup has been scheduled successfully.</p>
         
         <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-8 text-left space-y-4 shadow-inner">
             <div class="flex justify-between items-center pb-4 border-b border-slate-200">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Booking ID</span>
-                <span class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">#{{ str_pad($booking->id, 4, '0', STR_PAD_LEFT) }}</span>
+                <span class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">#{{ str_pad($appointment->id, 4, '0', STR_PAD_LEFT) }}</span>
             </div>
             <div class="flex justify-between items-center pb-4 border-b border-slate-200">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Date</span>
-                <span class="text-sm font-black text-slate-700">{{ $booking->preferred_date->format('d M Y') }}</span>
+                <span class="text-sm font-black text-slate-700">{{ \Carbon\Carbon::parse($appointment->pickup_scheduled_at)->format('d M Y') }}</span>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Status</span>
