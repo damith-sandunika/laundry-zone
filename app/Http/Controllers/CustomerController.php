@@ -9,7 +9,7 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::with('branch')->orderBy('name', 'asc')->get();
+        $customers = Customer::orderBy('name', 'asc')->get();
 
         return view('customers.index', compact('customers'));
     }
