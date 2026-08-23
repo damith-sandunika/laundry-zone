@@ -81,8 +81,14 @@
                                 @php
                                     $appProgress = '0%';
                                     $appLevel = 1;
-                                    if(in_array($appointment->status, ['assigned', 'accepted'])) { $appProgress = '12.5%'; $appLevel = 2; }
-                                    elseif(in_array($appointment->status, ['on_way', 'arrived'])) { $appProgress = '25%'; $appLevel = 2; }
+                                    $pickupTask = $appointment->deliveryTasks()->where('task_type', 'pickup')->latest()->first();
+                                    
+                                    if ($pickupTask) {
+                                        if (in_array($pickupTask->status, ['assigned', 'accepted'])) { $appProgress = '12.5%'; $appLevel = 2; }
+                                        elseif (in_array($pickupTask->status, ['on_way', 'arrived'])) { $appProgress = '25%'; $appLevel = 2; }
+                                    } elseif ($appointment->status === 'rider_assigned') {
+                                        $appProgress = '12.5%'; $appLevel = 2;
+                                    }
                                 @endphp
                                 <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $appProgress }}"></div>
                                 
