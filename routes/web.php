@@ -26,7 +26,7 @@ use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Route;
 
 // ─── App Redirect ───
-Route::redirect('/app', '/login');
+Route::redirect('/app', '/stafflogin');
 
 // ─── Public Booking Routes (Customer Site) ───
 Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
