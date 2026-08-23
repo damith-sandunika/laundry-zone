@@ -123,16 +123,31 @@
                     </div>
                 @endforeach
 
-                <!-- Active Processing Orders -->
-                @foreach($activeOrders as $order)
-                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
-                        <div class="flex justify-between items-start mb-4 relative z-10">
-                            <div>
-                                <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md mb-2 inline-block">
-                                    {{ $order->order_number }}
-                                </span>
-                                <h4 class="font-bold text-slate-800">{{ $order->items->count() }} Items &middot; <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></h4>
-                            </div>
+                        <!-- Active Processing Orders -->
+                        @foreach($activeOrders as $order)
+                            @php
+                                $deliveryAppointment = \App\Models\DeliveryAppointment::where('order_id', $order->id)->first();
+                                $isDelivery = $deliveryAppointment ? true : false;
+                            @endphp
+                            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+                                @if($isDelivery)
+                                    <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-3xl -z-0"></div>
+                                @endif
+                                <div class="flex justify-between items-start mb-4 relative z-10">
+                                    <div>
+                                        @if($isDelivery)
+                                            <span class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded-md mb-2 inline-block">
+                                                <i class="fa-solid fa-truck-pickup"></i> Pickup Request
+                                            </span>
+                                            <h4 class="font-bold text-slate-800 mb-1">Booking #{{ str_pad($deliveryAppointment->id, 4, '0', STR_PAD_LEFT) }}</h4>
+                                            <div class="text-xs font-bold text-slate-500 mb-2">Order {{ $order->order_number }} &middot; {{ $order->items->count() }} Items &middot; <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></div>
+                                        @else
+                                            <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md mb-2 inline-block">
+                                                {{ $order->order_number }}
+                                            </span>
+                                            <h4 class="font-bold text-slate-800">{{ $order->items->count() }} Items &middot; <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></h4>
+                                        @endif
+                                    </div>
                             <div class="text-right flex flex-col items-end gap-2">
                                 <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
                                     @if($order->status === 'received') bg-blue-100 text-blue-700
