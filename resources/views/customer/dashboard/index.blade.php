@@ -81,26 +81,41 @@
                                 @php
                                     $appProgress = '0%';
                                     $appLevel = 1;
-                                    if(in_array($appointment->status, ['assigned', 'accepted'])) { $appProgress = '50%'; $appLevel = 2; }
-                                    elseif(in_array($appointment->status, ['on_way', 'arrived'])) { $appProgress = '100%'; $appLevel = 3; }
+                                    if(in_array($appointment->status, ['assigned', 'accepted'])) { $appProgress = '12.5%'; $appLevel = 2; }
+                                    elseif(in_array($appointment->status, ['on_way', 'arrived'])) { $appProgress = '25%'; $appLevel = 2; }
                                 @endphp
                                 <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $appProgress }}"></div>
                                 
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/3">
+                                <!-- Step 1: Confirmed -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
                                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-blue-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
                                     <span class="text-[10px] font-bold text-slate-800 text-center leading-tight">Confirmed</span>
                                 </div>
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/3">
+                                
+                                <!-- Step 2: Rider Arriving -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
                                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $appLevel >= 2 ? 'bg-blue-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($appLevel >= 2) <i class="fa-solid fa-motorcycle"></i> @else 2 @endif
+                                        @if($appLevel >= 2) <i class="fa-solid fa-motorcycle {{ in_array($appointment->status, ['on_way', 'arrived']) ? 'animate-bounce' : '' }}"></i> @else 2 @endif
                                     </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $appLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Rider Assigned</span>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $appLevel >= 2 ? 'text-blue-600' : 'text-slate-400' }}">Rider Arriving</span>
                                 </div>
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/3">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $appLevel >= 3 ? 'bg-blue-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($appLevel >= 3) <i class="fa-solid fa-location-dot animate-bounce"></i> @else 3 @endif
-                                    </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $appLevel >= 3 ? 'text-blue-600' : 'text-slate-400' }}">Arriving</span>
+                                
+                                <!-- Step 3: Working -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md bg-white border-2 border-slate-200 text-slate-400">3</div>
+                                    <span class="text-[10px] font-bold text-center leading-tight text-slate-400">Working</span>
+                                </div>
+                                
+                                <!-- Step 4: Delivering -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md bg-white border-2 border-slate-200 text-slate-400">4</div>
+                                    <span class="text-[10px] font-bold text-center leading-tight text-slate-400">Delivering</span>
+                                </div>
+                                
+                                <!-- Step 5: Completed -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md bg-white border-2 border-slate-200 text-slate-400">5</div>
+                                    <span class="text-[10px] font-bold text-center leading-tight text-slate-400">Completed</span>
                                 </div>
                             </div>
                         </div>
@@ -145,9 +160,28 @@
                             
                             $orderProgress = '0%';
                             $orderStatusLevel = 1;
-                            if(in_array($order->status, ['dispatched_to_workshop', 'processing', 'returned_from_workshop'])) { $orderProgress = '33%'; $orderStatusLevel = 2; }
-                            elseif($order->status === 'done') { $orderProgress = '66%'; $orderStatusLevel = 3; }
-                            elseif($order->status === 'delivered') { $orderProgress = '100%'; $orderStatusLevel = 4; }
+                            
+                            if ($isDelivery) {
+                                // 5-step timeline for delivery: Confirmed -> Rider Pick Up -> Working -> Delivering -> Completed
+                                if($order->status === 'received') { 
+                                    $orderProgress = '25%'; $orderStatusLevel = 2; // Order created means rider has already arrived and picked up
+                                }
+                                elseif(in_array($order->status, ['dispatched_to_workshop', 'processing', 'returned_from_workshop'])) { 
+                                    $orderProgress = '50%'; $orderStatusLevel = 3; 
+                                }
+                                elseif($order->status === 'done') { 
+                                    $orderProgress = '75%'; $orderStatusLevel = 4; 
+                                }
+                                elseif($order->status === 'delivered') { 
+                                    $orderProgress = '100%'; $orderStatusLevel = 5; 
+                                }
+                            } else {
+                                // 4-step timeline for non-delivery: Confirmed -> Working -> Ready -> Completed
+                                if($order->status === 'received') { $orderProgress = '0%'; $orderStatusLevel = 1; }
+                                elseif(in_array($order->status, ['dispatched_to_workshop', 'processing', 'returned_from_workshop'])) { $orderProgress = '33%'; $orderStatusLevel = 2; }
+                                elseif($order->status === 'done') { $orderProgress = '66%'; $orderStatusLevel = 3; }
+                                elseif($order->status === 'delivered') { $orderProgress = '100%'; $orderStatusLevel = 4; }
+                            }
                         @endphp
                         
                         <div class="mt-4 pt-4 border-t border-slate-100 relative z-10">
@@ -156,37 +190,50 @@
                                 <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $orderProgress }}"></div>
                                 
                                 <!-- Step 1: Confirmed -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
                                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-emerald-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
                                     <span class="text-[10px] font-bold text-slate-800 leading-tight">Confirmed</span>
                                 </div>
                                 
-                                <!-- Step 2: Working -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
+                                @if($isDelivery)
+                                <!-- Step 2: Pick Up (Delivery Only) -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
                                     <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 2 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($orderStatusLevel >= 2) <i class="fa-solid fa-jug-detergent {{ $orderStatusLevel == 2 ? 'fa-spin-pulse' : '' }}"></i> @else 2 @endif
+                                        @if($orderStatusLevel >= 2) <i class="fa-solid fa-motorcycle"></i> @else 2 @endif
                                     </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Working</span>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Rider Arriving</span>
+                                </div>
+                                @endif
+                                
+                                <!-- Step 3/2: Working -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
+                                    @php $workingLevel = $isDelivery ? 3 : 2; @endphp
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $workingLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($orderStatusLevel >= $workingLevel) <i class="fa-solid fa-jug-detergent {{ $orderStatusLevel == $workingLevel ? 'fa-spin-pulse' : '' }}"></i> @else {{ $workingLevel }} @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $workingLevel ? 'text-slate-800' : 'text-slate-400' }}">Working</span>
                                 </div>
                                 
-                                <!-- Step 3: Ready/Delivering -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 3 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($orderStatusLevel >= 3) 
-                                            <i class="fa-solid {{ $isDelivery ? 'fa-motorcycle' : 'fa-box' }} {{ $orderStatusLevel == 3 ? 'fa-bounce' : '' }}"></i> 
-                                        @else 3 @endif
+                                <!-- Step 4/3: Ready/Delivering -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
+                                    @php $deliveringLevel = $isDelivery ? 4 : 3; @endphp
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $deliveringLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($orderStatusLevel >= $deliveringLevel) 
+                                            <i class="fa-solid {{ $isDelivery ? 'fa-motorcycle' : 'fa-box' }} {{ $orderStatusLevel == $deliveringLevel ? 'fa-bounce' : '' }}"></i> 
+                                        @else {{ $deliveringLevel }} @endif
                                     </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 3 ? 'text-slate-800' : 'text-slate-400' }}">
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $deliveringLevel ? 'text-slate-800' : 'text-slate-400' }}">
                                         {{ $isDelivery ? 'Delivering' : 'Ready' }}
                                     </span>
                                 </div>
                                 
-                                <!-- Step 4: Completed -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/4">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 4 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($orderStatusLevel >= 4) <i class="fa-solid fa-flag-checkered"></i> @else 4 @endif
+                                <!-- Step 5/4: Completed -->
+                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
+                                    @php $completedLevel = $isDelivery ? 5 : 4; @endphp
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $completedLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($orderStatusLevel >= $completedLevel) <i class="fa-solid fa-flag-checkered"></i> @else {{ $completedLevel }} @endif
                                     </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 4 ? 'text-slate-800' : 'text-slate-400' }}">Completed</span>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $completedLevel ? 'text-slate-800' : 'text-slate-400' }}">Completed</span>
                                 </div>
                             </div>
                         </div>
