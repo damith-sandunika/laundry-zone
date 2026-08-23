@@ -2,7 +2,7 @@
     "name": "RAPID Laundromat",
     "short_name": "RAPID Laundromat",
     "description": "Smart Laundry Management System",
-    "start_url": "/login",
+    "start_url": "/stafflogin",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#1d4ed8",

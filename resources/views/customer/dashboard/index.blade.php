@@ -141,7 +141,7 @@
                 </div>
                 <h4 class="font-bold text-slate-700 mb-1">No active orders</h4>
                 <p class="text-sm text-slate-500 mb-4">You don't have any ongoing laundry orders at the moment.</p>
-                <a href="{{ route('booking.page') }}" class="inline-block bg-white text-blue-600 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 px-4 py-2 rounded-xl text-sm font-bold transition-all">
+                <a href="{{ route('booking') }}" class="inline-block bg-white text-blue-600 border border-blue-200 hover:border-blue-300 hover:bg-blue-50 px-4 py-2 rounded-xl text-sm font-bold transition-all">
                     Book a Pickup
                 </a>
             </div>

@@ -43,8 +43,8 @@
             </div>
         </div>
 
-        <a href="{{ route('booking.page') }}" class="inline-flex w-full justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300">
-            Book Another Order
+        <a href="{{ route('booking') }}" class="inline-flex w-full justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300">
+            Book Another Pickup
         </a>
         
         <p class="mt-6 text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
