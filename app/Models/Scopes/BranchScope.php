@@ -17,6 +17,11 @@ class BranchScope implements Scope
         if (Auth::hasUser()) {
             $user = Auth::user();
 
+            // Skip scope for Customer model instances (they are not branch-scoped staff users)
+            if ($user instanceof \App\Models\Customer) {
+                return;
+            }
+
             // Allow super_admin to see all branches' data
             if ($user->role !== 'super_admin') {
                 $builder->where($model->getTable().'.branch_id', $user->branch_id);
