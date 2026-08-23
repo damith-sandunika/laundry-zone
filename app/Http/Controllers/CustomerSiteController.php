@@ -116,11 +116,11 @@ class CustomerSiteController extends Controller
         // WhatsApp notification
         $waService->notifyBookingReceived($appointment);
 
-        return redirect()->route('site.success', $appointment->id);
+        return redirect()->route('customer.booking.success', $appointment->id);
     }
 
     public function success(DeliveryAppointment $appointment)
     {
-        return view('site.success', compact('appointment'));
+        return view('booking.success', compact('appointment'));
     }
 }
