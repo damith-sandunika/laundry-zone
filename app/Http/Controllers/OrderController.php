@@ -20,6 +20,32 @@ use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
 {
+    public function search(Request $request)
+    {
+        $q = $request->input('q', '');
+        if (strlen($q) < 2) return response()->json([]);
+
+        $orders = Order::with('customer')
+            ->where(function($query) use ($q) {
+                $query->where('order_number', 'like', "%{$q}%")
+                      ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$q}%")
+                          ->orWhere('phone', 'like', "%{$q}%"));
+            })
+            ->orderBy('created_at', 'desc')
+            ->limit(8)
+            ->get(['id', 'order_number', 'status', 'total', 'customer_id', 'created_at']);
+
+        return response()->json($orders->map(fn($o) => [
+            'id'           => $o->id,
+            'order_number' => $o->order_number,
+            'status'       => $o->status,
+            'status_label' => str_replace('_', ' ', ucfirst($o->status)),
+            'total'        => number_format($o->total, 2),
+            'customer'     => $o->customer?->name ?? 'Walk-in',
+            'url'          => route('orders.show', $o->id),
+        ]));
+    }
+
     public function index(Request $request)
     {
         $branchId = auth()->user()->branch_id;

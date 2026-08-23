@@ -211,15 +211,70 @@
 
                 <!-- Right Side Actions -->
                 <div class="flex items-center gap-3 lg:gap-6 ml-auto">
-                    <!-- Quick Action Buttons (Desktop only) -->
-                    <div class="hidden lg:flex items-center gap-3">
-                        <a href="{{ route('customers.index') }}" class="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full text-xs font-extrabold shadow-lg shadow-red-500/30 hover:-translate-y-0.5 hover:shadow-red-500/40 transition-all duration-300">
-                            <span class="text-base leading-none mb-0.5">+</span> New Customer
-                        </a>
+
+                    {{-- Order Quick Search (visible on desktop, branch roles) --}}
+                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'admin', 'staff', 'super_admin']))
+                    <div class="hidden lg:block relative" x-data="orderSearch()" @click.away="close()">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+                            <input
+                                type="text"
+                                x-model="query"
+                                @input.debounce.300ms="fetchResults()"
+                                @focus="if(results.length) open=true"
+                                @keydown.escape="close()"
+                                placeholder="Search orders..."
+                                class="w-56 pl-9 pr-4 py-2 text-[12.5px] font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:bg-white focus:w-72 transition-all duration-300 placeholder-slate-400"
+                            >
+                            <div x-show="loading" x-cloak class="absolute right-3 top-1/2 -translate-y-1/2">
+                                <svg class="w-3.5 h-3.5 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                            </div>
+                        </div>
+
+                        <!-- Dropdown Results -->
+                        <div x-show="open && results.length > 0" x-cloak x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" class="absolute left-0 top-[calc(100%+6px)] w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                            <div class="px-3 py-2 border-b border-slate-100 bg-slate-50/60">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Quick Results</span>
+                            </div>
+                            <template x-for="order in results" :key="order.id">
+                                <a :href="order.url" @click="close()" class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-blue-50 border-b border-slate-50 last:border-0 transition-colors group">
+                                    <div class="flex items-center gap-3 min-w-0">
+                                        <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                        </div>
+                                        <div class="min-w-0">
+                                            <div class="text-[13px] font-bold text-slate-800 group-hover:text-blue-700" x-text="order.order_number"></div>
+                                            <div class="text-[11px] text-slate-400 font-medium truncate" x-text="order.customer"></div>
+                                        </div>
+                                    </div>
+                                    <div class="text-right flex-shrink-0">
+                                        <div class="text-[12px] font-black text-slate-700" x-text="'LKR ' + order.total"></div>
+                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-md"
+                                            :class="{
+                                                'bg-green-100 text-green-700': order.status === 'done' || order.status === 'delivered',
+                                                'bg-blue-100 text-blue-700': order.status === 'received',
+                                                'bg-purple-100 text-purple-700': order.status === 'processing' || order.status === 'dispatched_to_workshop',
+                                                'bg-amber-100 text-amber-700': order.status === 'returned_from_workshop',
+                                                'bg-slate-100 text-slate-500': order.status === 'cancelled',
+                                            }"
+                                            x-text="order.status_label">
+                                        </span>
+                                    </div>
+                                </a>
+                            </template>
+                        </div>
+                    </div>
+                    @endif
+
+                    <!-- Quick Action Button (Desktop only) -->
+                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'admin', 'staff', 'super_admin']))
+                    <div class="hidden lg:flex items-center">
                         <a href="{{ route('pos.index') }}" class="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-xs font-extrabold shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 hover:shadow-blue-500/40 transition-all duration-300">
-                            <span class="text-base leading-none mb-0.5">+</span> New Order
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                            New Order
                         </a>
                     </div>
+                    @endif
 
                     <!-- Notifications Dropdown -->
                     @php
@@ -369,6 +424,40 @@
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) NProgress.done();
         });
+
+        // ─── Order Quick Search Alpine Component ───
+        function orderSearch() {
+            return {
+                query: '',
+                results: [],
+                open: false,
+                loading: false,
+                async fetchResults() {
+                    if (this.query.length < 2) {
+                        this.results = [];
+                        this.open = false;
+                        return;
+                    }
+                    this.loading = true;
+                    try {
+                        const res = await fetch(`/orders/search?q=${encodeURIComponent(this.query)}`, {
+                            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                        });
+                        this.results = await res.json();
+                        this.open = this.results.length > 0;
+                    } catch(e) {
+                        this.results = [];
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                close() {
+                    this.open = false;
+                    this.query = '';
+                    this.results = [];
+                }
+            };
+        }
     </script>
 </body>
 </html>

@@ -92,6 +92,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/dispatch-workshop', [WorkshopController::class, 'dispatch'])->name('orders.dispatchWorkshop');
     Route::post('/orders/workshop/bulk-dispatch', [WorkshopController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
     Route::get('/orders/{order}/workshop-tracking', [WorkshopController::class, 'tracking'])->name('orders.workshopTracking');
+    Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 
     Route::post('/packages/{customerPackage}/mark-paid', [PackageController::class, 'markPaid'])->name('packages.markPaid');
