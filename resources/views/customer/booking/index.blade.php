@@ -275,8 +275,19 @@
                             <!-- Bank Transfer Receipt Upload -->
                             <div x-show="selectedPaymentMethod === 'bank_transfer'" x-transition class="mb-4 bg-purple-50 p-5 rounded-2xl border border-purple-100 shadow-inner">
                                 @php $bankMethod = $paymentMethods->where('type', 'bank_transfer')->first(); @endphp
-                                @if($bankMethod && $bankMethod->instructions)
-                                    <div class="text-xs text-purple-800 whitespace-pre-line mb-4 font-bold bg-white p-3 rounded-lg border border-purple-100">{{ $bankMethod->instructions }}</div>
+                                @php
+                                    $bankName = \App\Models\Setting::get('bank_name', '');
+                                    $bankAccountName = \App\Models\Setting::get('bank_account_name', '');
+                                    $bankAccountNumber = \App\Models\Setting::get('bank_account_number', '');
+                                    $bankBranch = \App\Models\Setting::get('bank_branch', '');
+                                @endphp
+                                @if($bankName && $bankAccountNumber)
+                                    <div class="text-xs text-purple-800 whitespace-pre-line mb-4 font-bold bg-white p-3 rounded-lg border border-purple-100">
+                                        Bank: {{ $bankName }}<br>
+                                        Branch: {{ $bankBranch }}<br>
+                                        Acc Name: {{ $bankAccountName }}<br>
+                                        Acc No: {{ $bankAccountNumber }}
+                                    </div>
                                 @endif
                                 <label class="block text-xs font-black text-purple-900 mb-2">Upload Receipt (Optional for now)</label>
                                 <input type="file" name="receipt_image" accept="image/*" class="w-full text-xs text-purple-600 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:bg-white file:text-purple-700 hover:file:bg-purple-100 file:shadow-sm file:cursor-pointer">
