@@ -43,9 +43,15 @@
             </div>
         </div>
 
-        <a href="{{ route('customer.booking') }}" class="inline-flex w-full justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300">
-            Book Another Pickup
-        </a>
+        <div class="flex flex-col gap-3 w-full">
+            <a href="{{ route('customer.booking') }}" class="inline-flex w-full justify-center px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-sm rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-1 transition-all duration-300">
+                + Book Another Pickup
+            </a>
+            <a href="{{ route('customer.dashboard') }}" class="inline-flex w-full justify-center items-center gap-2 px-8 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl transition-all duration-300">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Back to Dashboard
+            </a>
+        </div>
         
         <p class="mt-6 text-xs font-bold text-slate-400 flex items-center justify-center gap-2">
             <span>📞</span> You will receive a WhatsApp message shortly.
