@@ -25,7 +25,6 @@
                         <th class="px-6 py-3 font-semibold">Phone</th>
                         <th class="px-6 py-3 font-semibold">Loyalty Points</th>
                         <th class="px-6 py-3 font-semibold">Address</th>
-                        <th class="px-6 py-3 font-semibold">Branch</th>
                         <th class="px-6 py-3 font-semibold text-center">Status</th>
                         <th class="px-6 py-3 font-semibold text-center">Actions</th>
                     </tr>
@@ -37,7 +36,6 @@
                             <td class="px-6 py-4 text-gray-600">{{ $customer->phone }}</td>
                             <td class="px-6 py-4 font-semibold text-blue-600">{{ $customer->loyalty_points }} pts</td>
                             <td class="px-6 py-4 text-gray-500">{{ $customer->address ?? '-' }}</td>
-                            <td class="px-6 py-4 text-gray-500">{{ $customer->branch->name ?? '-' }}</td>
                             <td class="px-6 py-4 text-center">
                                 @if($customer->is_active)
                                     <span class="px-2 py-1 text-xs font-semibold rounded bg-green-100 text-green-700">Active</span>
@@ -58,7 +56,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-10 text-center text-gray-500">No customers found.</td>
+                            <td colspan="5" class="px-6 py-10 text-center text-gray-500">No customers found.</td>
                         </tr>
                     @endforelse
                 </tbody>

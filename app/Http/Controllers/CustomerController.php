@@ -9,8 +9,7 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        // withoutGlobalScopes() so all branches' customers are visible to any branch admin
-        $customers = Customer::withoutGlobalScopes()->with('branch')->orderBy('name', 'asc')->get();
+        $customers = Customer::with('branch')->orderBy('name', 'asc')->get();
 
         return view('customers.index', compact('customers'));
     }
@@ -31,10 +30,7 @@ class CustomerController extends Controller
             return redirect()->back()->withErrors(['phone' => 'You are already in our system. Please search and add!'])->withInput();
         }
 
-        $branchId = auth()->user()->branch_id ?? 1;
-
         $customer = Customer::create([
-            'branch_id' => $branchId,
             'name' => $request->name,
             'phone' => $request->phone,
             'address' => $request->address ?? null,
@@ -52,8 +48,7 @@ class CustomerController extends Controller
     public function search(Request $request)
     {
         $q = $request->input('q', '');
-        // withoutGlobalScopes() allows POS to search customers from any branch
-        $query = Customer::withoutGlobalScopes()->orderBy('name');
+        $query = Customer::orderBy('name');
         if ($q) {
             $query->where(function ($qb) use ($q) {
                 $qb->where('name', 'like', "%{$q}%")->orWhere('phone', 'like', "%{$q}%");

@@ -2,16 +2,15 @@
 
 namespace App\Models;
 
-use App\Traits\BelongsToBranch;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class Customer extends Authenticatable
 {
-    use BelongsToBranch, Notifiable;
+    use Notifiable;
 
     protected $fillable = [
-        'branch_id', 'name', 'phone', 'email', 'password', 'remember_token', 'address', 'loyalty_points', 'is_active',
+        'name', 'phone', 'email', 'password', 'remember_token', 'address', 'loyalty_points', 'is_active',
     ];
 
     protected $hidden = [
