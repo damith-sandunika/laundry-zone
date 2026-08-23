@@ -9,7 +9,8 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::with('branch')->orderBy('name', 'asc')->get();
+        // withoutGlobalScopes() so all branches' customers are visible to any branch admin
+        $customers = Customer::withoutGlobalScopes()->with('branch')->orderBy('name', 'asc')->get();
 
         return view('customers.index', compact('customers'));
     }
@@ -81,10 +82,18 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
             'address' => 'nullable|string|max:255',
+            'password' => 'nullable|string|min:6|confirmed',
         ]);
-        $customer->update($request->only(['name', 'phone', 'address']));
 
-        return redirect()->route('customers.show', $customer)->with('success', 'Customer updated.');
+        $data = $request->only(['name', 'phone', 'address']);
+
+        if ($request->filled('password')) {
+            $data['password'] = bcrypt($request->password);
+        }
+
+        $customer->update($data);
+
+        return redirect()->route('customers.show', $customer)->with('success', 'Customer updated successfully.');
     }
 
     public function destroy(Customer $customer)
