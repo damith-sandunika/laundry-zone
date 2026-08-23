@@ -32,7 +32,16 @@ class SettingsController extends Controller
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
         $packages = Package::with('services.serviceType')->get();
-        $paymentMethods = \App\Models\PaymentMethod::all();
+        $paymentMethods = collect();
+        if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
+            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
+        }
 
         return view('settings.index', compact('branch', 'serviceCategories', 'services', 'cubbies', 'inventoryItems', 'packages', 'paymentMethods'));
     }

@@ -137,7 +137,16 @@ class DashboardController extends Controller
             return redirect()->route('customer.orders.show', $order)->with('error', 'This order is already paid.');
         }
 
-        $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
+        $paymentMethods = collect();
+        if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
+            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
+        }
 
         return view('customer.dashboard.pay', compact('customer', 'order', 'paymentMethods'));
     }

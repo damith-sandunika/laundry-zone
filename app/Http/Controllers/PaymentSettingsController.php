@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PaymentMethod;
 use App\Models\Setting;
 use Illuminate\Http\Request;
 
@@ -12,7 +11,26 @@ class PaymentSettingsController extends Controller
     {
         abort_unless(auth()->user()->isSuperAdmin(), 403, 'Only Super Admin can manage payment methods.');
 
-        $methods = PaymentMethod::all();
+        $methods = [
+            (object) [
+                'id' => 'bank_transfer',
+                'name' => 'Bank Transfer',
+                'type' => 'bank_transfer',
+                'is_active' => Setting::get('payment_bank_transfer_active', '1') == '1',
+            ],
+            (object) [
+                'id' => 'online_payment',
+                'name' => 'Online Payment',
+                'type' => 'card_transfer',
+                'is_active' => Setting::get('payment_online_active', '0') == '1',
+            ],
+            (object) [
+                'id' => 'cash_on_delivery',
+                'name' => 'Cash on Delivery',
+                'type' => 'cash_on_delivery',
+                'is_active' => Setting::get('payment_cod_active', '1') == '1',
+            ],
+        ];
         
         $bankDetails = [
             'bank_name' => Setting::get('bank_name', ''),
@@ -36,12 +54,12 @@ class PaymentSettingsController extends Controller
             'bank_branch' => 'nullable|string|max:255',
         ]);
 
-        // Update active statuses
+        // Update active statuses in Settings
         $activeIds = $request->input('is_active', []);
-        PaymentMethod::query()->update(['is_active' => false]);
-        if (!empty($activeIds)) {
-            PaymentMethod::whereIn('id', array_keys($activeIds))->update(['is_active' => true]);
-        }
+        
+        Setting::set('payment_bank_transfer_active', isset($activeIds['bank_transfer']) ? '1' : '0');
+        Setting::set('payment_online_active', isset($activeIds['online_payment']) ? '1' : '0');
+        Setting::set('payment_cod_active', isset($activeIds['cash_on_delivery']) ? '1' : '0');
 
         // Save bank details
         Setting::set('bank_name', $request->input('bank_name'));

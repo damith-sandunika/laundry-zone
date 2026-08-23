@@ -27,7 +27,16 @@ class CustomerSiteController extends Controller
     public function booking()
     {
         $branches = Branch::regularBranches()->where('is_active', true)->get();
-        $paymentMethods = \App\Models\PaymentMethod::where('is_active', true)->get();
+        $paymentMethods = collect();
+        if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
+            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
+        }
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
 
         return view('customer.booking.index', compact('branches', 'paymentMethods', 'categories'));
