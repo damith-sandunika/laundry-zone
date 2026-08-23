@@ -15,7 +15,8 @@ class Order extends Model
         'status', 'subtotal', 'discount', 'additional', 'total', 'paid_amount',
         'payment_status', 'payment_method', 'loyalty_points_used',
         'loyalty_points_earned', 'due_date', 'notes', 'is_online_booking',
-        'ready_at', 'delivered_at',
+        'ready_at', 'delivered_at', 'is_delivery_order', 'delivery_appointment_id',
+        'delivery_address',
     ];
 
     protected $casts = [
