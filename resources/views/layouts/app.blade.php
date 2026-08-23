@@ -211,57 +211,35 @@
 
                 <!-- Right Side Actions -->
                 <div class="flex items-center gap-3 lg:gap-6 ml-auto">
-
-
-                    <!-- Quick Action Button (Desktop only) -->
+                    {{-- Order Quick Search Box (right corner, desktop) --}}
                     @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'admin', 'staff', 'super_admin']))
-                    <div class="hidden lg:flex items-center">
-                        <a href="{{ route('pos.index') }}" class="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full text-xs font-extrabold shadow-lg shadow-blue-500/30 hover:-translate-y-0.5 hover:shadow-blue-500/40 transition-all duration-300">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                            New Order
-                        </a>
-                    </div>
-                    @endif
-
-                    {{-- Order Quick Search Icon (right corner, desktop) --}}
-                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'admin', 'staff', 'super_admin']))
-                    <div class="relative" x-data="orderSearch()" @click.away="close()">
-                        {{-- Search toggle icon button --}}
-                        <button @click="expanded = !expanded; if(expanded) $nextTick(() => $refs.searchInput.focus())"
-                            class="flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border-2 border-slate-100 hover:bg-slate-100 hover:border-slate-200 transition-colors text-slate-500 hover:text-blue-600"
-                            title="Search Orders">
-                            <svg class="w-[20px] h-[20px]" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-4.35-4.35"/></svg>
-                        </button>
-
-                        {{-- Floating search panel --}}
-                        <div x-show="expanded" x-cloak
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 scale-95 translate-x-4"
-                            x-transition:enter-end="opacity-100 scale-100 translate-x-0"
-                            x-transition:leave="transition ease-in duration-150"
-                            x-transition:leave-start="opacity-100 scale-100"
-                            x-transition:leave-end="opacity-0 scale-95"
-                            class="absolute right-0 top-[52px] z-50 w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl overflow-hidden">
-
-                            {{-- Search Input --}}
-                            <div class="relative p-3 border-b border-slate-100">
-                                <svg class="absolute left-6 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
-                                <input
-                                    x-ref="searchInput"
-                                    type="text"
-                                    x-model="query"
-                                    @input.debounce.300ms="fetchResults()"
-                                    @keydown.escape="close()"
-                                    placeholder="Order number, customer..."
-                                    class="w-full pl-9 pr-8 py-2.5 text-[13px] font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:bg-white transition-all placeholder-slate-400"
-                                >
-                                <div x-show="loading" x-cloak class="absolute right-6 top-1/2 -translate-y-1/2">
-                                    <svg class="w-3.5 h-3.5 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                                </div>
+                    <div class="hidden lg:block relative" x-data="orderSearch()" @click.away="close()">
+                        <div class="relative">
+                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+                            <input
+                                type="text"
+                                x-model="query"
+                                @input.debounce.300ms="fetchResults()"
+                                @focus="if(results.length > 0) open = true"
+                                @keydown.escape="close()"
+                                placeholder="Search orders..."
+                                class="w-52 pl-9 pr-4 py-2 text-[12.5px] font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:bg-white focus:w-72 transition-all duration-300 placeholder-slate-400"
+                            >
+                            <div x-show="loading" x-cloak class="absolute right-3 top-1/2 -translate-y-1/2">
+                                <svg class="w-3.5 h-3.5 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                             </div>
+                        </div>
 
-                            {{-- Results --}}
-                            <div x-show="results.length > 0" x-cloak class="max-h-72 overflow-y-auto">
+                        {{-- Dropdown Results --}}
+                        <div x-show="open && results.length > 0" x-cloak
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 translate-y-1"
+                            x-transition:enter-end="opacity-100 translate-y-0"
+                            class="absolute right-0 top-[calc(100%+6px)] w-80 bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                            <div class="px-3 py-2 border-b border-slate-100 bg-slate-50/60">
+                                <span class="text-[10px] font-black text-slate-400 uppercase tracking-wider">Quick Results</span>
+                            </div>
+                            <div class="max-h-72 overflow-y-auto">
                                 <template x-for="order in results" :key="order.id">
                                     <a :href="order.url" @click="close()" class="flex items-center justify-between gap-3 px-4 py-3 hover:bg-blue-50 border-b border-slate-50 last:border-0 transition-colors group">
                                         <div class="flex items-center gap-3 min-w-0">
@@ -289,8 +267,8 @@
                                     </a>
                                 </template>
                             </div>
-                            <div x-show="query.length >= 2 && results.length === 0 && !loading" x-cloak class="px-4 py-6 text-center text-[12px] font-semibold text-slate-400">
-                                No orders found for "<span x-text="query" class="text-slate-600"></span>"
+                            <div x-show="query.length >= 2 && results.length === 0 && !loading" x-cloak class="px-4 py-5 text-center text-[12px] font-semibold text-slate-400">
+                                No orders found.
                             </div>
                         </div>
                     </div>
