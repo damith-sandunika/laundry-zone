@@ -13,7 +13,7 @@ class DeliveryAppointment extends Model
         'latitude', 'longitude', 'map_address', 'item_description',
         'pickup_scheduled_at', 'delivery_scheduled_at', 'status', 'notes', 'contact_phone',
         'order_id', 'picked_up_at', 'payment_method', 'payment_timing', 'delivery_preference',
-        'delivery_lat', 'delivery_lng',
+        'delivery_lat', 'delivery_lng', 'delivery_cost', 'receipt_path', 'cart_json'
     ];
 
     protected $casts = [

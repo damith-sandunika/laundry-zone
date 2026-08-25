@@ -1,255 +1,404 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex flex-wrap justify-between items-start gap-3">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 animate-slide-up">
             <div>
-                <h2 class="ph-title">Workshop Dashboard</h2>
-                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage incoming orders, processing, and dispatches</p>
+                <h2 class="text-2xl font-black text-slate-900 tracking-tight leading-tight">Dashboard</h2>
+                <p class="text-[13px] font-bold text-slate-500 mt-1">Today's updates and key metrics for <strong class="text-slate-700">{{ $branchName }}</strong></p>
             </div>
-            <a href="{{ route('workshop.history') }}" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200">View History</a>
+            @if($activeSession)
+                <div class="flex flex-row flex-wrap items-center gap-2 sm:gap-3 w-full md:w-auto justify-end mt-3 md:mt-0">
+                    <div class="flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 bg-green-50 border border-green-200 rounded-xl h-9 sm:h-10 shadow-sm flex-1 sm:flex-none">
+                        <span class="relative flex h-2 w-2">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                        </span>
+                        <span class="text-[10px] sm:text-xs font-bold text-green-700 tracking-wide uppercase whitespace-nowrap">Shift Active</span>
+                    </div>
+                    <a href="{{ route('workshop.operations') }}" class="flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] sm:text-[13px] font-extrabold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 h-9 sm:h-10 flex-1 sm:flex-none whitespace-nowrap">
+                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Operations
+                    </a>
+                    <div x-data="{ showCloseShiftModal: false }">
+                        <button @click="showCloseShiftModal = true" class="flex items-center justify-center w-full px-3 sm:px-5 py-2 bg-white text-slate-600 text-[11px] sm:text-[13px] font-bold border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors h-9 sm:h-10 shadow-sm whitespace-nowrap">
+                            Close Shift
+                        </button>
+
+                        <!-- Close Shift Modal -->
+                        <template x-teleport="body">
+                            <div x-show="showCloseShiftModal" class="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4" x-cloak>
+                                <div @click.away="showCloseShiftModal = false" x-show="showCloseShiftModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+                                    <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                        <h3 class="text-lg font-black text-slate-900">Close Today's Shift</h3>
+                                        <button @click="showCloseShiftModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+                                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                    <div class="p-6">
+                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span class="text-[13px] font-bold text-slate-500">Total Sale</span>
+                                            <span class="text-base font-black text-slate-900">Rs.{{ number_format($stats['total_sale'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span class="text-[13px] font-bold text-slate-500">Total Cash Balance</span>
+                                            <span class="text-base font-black text-emerald-600">Rs.{{ number_format($stats['cash_balance'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span class="text-[13px] font-bold text-slate-500">Total Card Balance</span>
+                                            <span class="text-base font-black text-blue-600">Rs.{{ number_format($stats['card_payments_amount'] ?? 0, 0) }}</span>
+                                        </div>
+                                        
+                                        <div class="mt-6 flex flex-col gap-3">
+                                            <a href="{{ route('reports.closeShift', ['action' => 'print']) }}" target="_blank" class="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 text-[13px] font-extrabold rounded-xl hover:bg-slate-200 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                                                Get Receipt
+                                            </a>
+                                            <form action="{{ route('shifts.close') }}" method="POST" onsubmit="return confirm('Are you sure you want to close this shift?')">
+                                                @csrf
+                                                <button type="submit" class="w-full py-3 bg-red-500 text-white text-[13px] font-extrabold rounded-xl hover:bg-red-600 transition-colors">
+                                                    Close Branch
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            @endif
         </div>
     </x-slot>
 
-    <div x-data="{ 
-        currentTab: 'arrival_processing',
-        selectedBranch: '',
-        selectedDispatches: [],
-        showBulkModal: false,
-        bulkStatus: '',
-        dispatchesList: JSON.parse(atob('{{ base64_encode(json_encode($dispatches)) }}')),
-        
-        toggleSelectAll(e) {
-            if (e.target.checked) {
-                this.selectedDispatches = this.filteredDispatches.map(d => d.id);
-            } else {
-                this.selectedDispatches = [];
-            }
-        },
-        
-        get filteredDispatches() {
-            let list = this.dispatchesList;
-            if (this.selectedBranch !== '') {
-                list = list.filter(d => d.branch_id == this.selectedBranch);
-            }
-            if (this.currentTab === 'arrival_processing') {
-                return list.filter(d => d.status === 'dispatched_to_workshop' || d.status === 'processing');
-            }
-            return list.filter(d => d.status === this.currentTab);
-        },
+    @if(session('success'))
+        <div class="flex items-center gap-3 bg-green-50 border border-green-200 rounded-xl p-4 mb-6 animate-fade-in shadow-sm">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+            <span class="text-[13px] font-bold text-green-800">{{ session('success') }}</span>
+        </div>
+    @endif
 
-        get counts() {
-            let list = this.dispatchesList;
-            if (this.selectedBranch !== '') {
-                list = list.filter(d => d.branch_id == this.selectedBranch);
-            }
-            return {
-                arrival_processing: list.filter(d => d.status === 'dispatched_to_workshop' || d.status === 'processing').length,
-                done: list.filter(d => d.status === 'completed_at_workshop').length,
-                returned: list.filter(d => d.status === 'returned_to_branch').length
+    @if(session('error'))
+        <div class="flex items-center gap-3 bg-red-50 border border-red-200 rounded-xl p-4 mb-6 animate-fade-in shadow-sm">
+            <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            <span class="text-[13px] font-bold text-red-800">{{ session('error') }}</span>
+        </div>
+    @endif
+
+    @if(!$activeSession)
+        {{-- ── Shift Closed Card ── --}}
+        <div class="flex justify-center py-10 px-4 animate-slide-up">
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200 p-8 md:p-12 w-full max-w-md text-center shadow-xl shadow-slate-200/50">
+                <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-6 ring-8 ring-blue-50/50">
+                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                </div>
+                <h3 class="text-xl font-black text-slate-900 mb-2 tracking-tight">Shift is Closed</h3>
+                <p class="text-[13px] font-medium text-slate-500 mb-8 leading-relaxed">Open the branch shift register with your starting cash to begin processing orders today.</p>
+                <form action="{{ route('shifts.open') }}" method="POST">
+                    @csrf
+                    <div class="text-left mb-5">
+                        <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-widest mb-2">Opening Cash (Rs.)</label>
+                        <input type="number" step="0.01" name="opening_cash" placeholder="e.g. 5000" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400">
+                    </div>
+                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-extrabold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300">
+                        Open Shift Register
+                    </button>
+                </form>
+            </div>
+        </div>
+    @else
+
+        {{-- ── STAT CARDS ── --}}
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+            @php
+                $cards = [
+                    ['label' => 'Received', 'value' => $stats['active_orders'], 'sub' => 'Just Arrived', 'color' => 'text-blue-600', 'bg' => 'bg-blue-50', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
+                    ['label' => 'Processing', 'value' => $stats['pending_deliveries'], 'sub' => 'Washing/Ironing', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
+                    ['label' => 'Done', 'value' => $stats['completed_today'], 'sub' => 'Ready for branch', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'icon' => 'M5 13l4 4L19 7'],
+                    ['label' => 'Total Balance', 'value' => 'Rs.' . number_format($stats['current_balance'], 0), 'sub' => null, 'color' => 'text-violet-600', 'bg' => 'bg-violet-50', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                ];
+            @endphp
+            @foreach($cards as $index => $card)
+                <div class="bg-white/70 backdrop-blur-md rounded-2xl border border-slate-200/60 p-5 flex justify-between items-center shadow-sm hover:shadow-xl hover:shadow-slate-200/50 hover:-translate-y-1 transition-all duration-300 animate-slide-up" style="animation-delay: {{ $index * 50 }}ms;">
+                    <div>
+                        <p class="text-[9px] sm:text-[10.5px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 leading-tight sm:leading-normal whitespace-normal">{{ $card['label'] }}</p>
+                        <p class="text-lg sm:text-3xl font-black text-slate-900 tracking-tight leading-none mb-1 sm:mb-2">{{ $card['value'] }}</p>
+                        @if($card['label'] === 'Total Balance')
+                            <p class="text-[9px] sm:text-[11px] font-bold text-emerald-600 mb-0.5 whitespace-nowrap">Cash: Rs.{{ number_format($stats['cash_balance'], 0) }}</p>
+                            <p class="text-[9px] sm:text-[11px] font-bold text-blue-600 leading-tight">Card: {{ $stats['card_payments'] }} (Rs.{{ number_format($stats['card_payments_amount'], 0) }})</p>
+                        @elseif($card['sub'])
+                            <p class="inline-block px-1.5 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-bold {{ $card['color'] }} {{ $card['bg'] }} rounded-md uppercase tracking-wide leading-tight">{{ $card['sub'] }}</p>
+                        @endif
+                    </div>
+                    <div class="w-8 h-8 sm:w-12 sm:h-12 rounded-xl {{ $card['bg'] }} flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 sm:w-6 sm:h-6 {{ $card['color'] }}" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="{{ $card['icon'] }}" />
+                        </svg>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- ── MAIN GRID ── --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+            {{-- Recent Orders --}}
+            <div class="bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden animate-slide-up" style="animation-delay: 200ms;">
+                <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4 bg-slate-50/50">
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 tracking-tight">Active Items</h3>
+                        <p class="text-[12px] font-semibold text-slate-500">Currently processing in workshop</p>
+                    </div>
+                    <a href="{{ route('workshop.operations') }}" class="flex items-center gap-2 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                        Operations
+                    </a>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-slate-100">
+                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Order</th>
+                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Customer</th>
+                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Due Date</th>
+                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-center whitespace-nowrap">Status</th>
+                                <th class="px-6 py-3.5 text-right"></th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-50/50">
+                            @forelse($recentOrders as $order)
+                                @php
+                                    $sc = ['received' => ['text-slate-600', 'bg-slate-100'], 'washing' => ['text-blue-700', 'bg-blue-50'], 'drying' => ['text-violet-700', 'bg-violet-50'], 'ready' => ['text-emerald-700', 'bg-emerald-50'], 'delivered' => ['text-teal-700', 'bg-teal-50'], 'cancelled' => ['text-red-700', 'bg-red-50']];
+                                    $c = $sc[$order->status] ?? ['text-slate-600', 'bg-slate-100'];
+                                @endphp
+                                <tr class="hover:bg-slate-50/50 transition-colors group">
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        <a href="{{ route('orders.workshopTracking', $order->order_id) }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order->order_number ?? 'N/A' }}</a>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-[13px] font-bold text-slate-700">
+                                        {{ $order->order->customer->name ?? 'N/A' }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap">
+                                        @if($order->order && $order->order->due_date)
+                                            <div class="text-[12px] font-bold text-slate-800">{{ \Carbon\Carbon::parse($order->order->due_date)->format('M d, Y') }}</div>
+                                            <div class="text-[11px] font-semibold text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($order->order->due_date)->format('h:i A') }}</div>
+
+                                        @else
+                                            <span class="text-[12px] font-semibold text-slate-400">N/A</span>
+                                        @endif
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-center">
+                                        <span class="inline-flex px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest {{ $c[0] }} {{ $c[1] }}">{{ $order->status }}</span>
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <a href="{{ route('orders.workshopTracking', $order->order_id) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-10 text-center text-[13px] font-semibold text-slate-400">No active orders</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Chart --}}
+            <div class="bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm p-6 flex flex-col animate-slide-up" style="animation-delay: 250ms;">
+                <div class="flex flex-wrap justify-between items-center gap-4 mb-6">
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 tracking-tight">Order Performance</h3>
+                        <p class="text-[12px] font-semibold text-slate-500">Processing vs Completed</p>
+                    </div>
+                    <div class="flex bg-slate-100 p-1 rounded-xl">
+                        <button data-chart-tab="today" class="chart-tab-btn px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">Today</button>
+                        <button data-chart-tab="weekly" class="chart-tab-btn active-tab px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-800 shadow-sm">Weekly</button>
+                        <button data-chart-tab="monthly" class="chart-tab-btn px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700">Monthly</button>
+                    </div>
+                </div>
+                <div class="relative flex-1 min-h-[220px]">
+                    <canvas id="orderChart"></canvas>
+                </div>
+                <div class="flex justify-center gap-6 mt-6 pt-5 border-t border-slate-100">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span>
+                        <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Processing</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span>
+                        <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest">Completed</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- ── BOTTOM GRID ── --}}
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+            {{-- Inventory Alerts --}}
+            <div x-data="{ showInvModal: false }" class="bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden animate-slide-up" style="animation-delay: 300ms;">
+                <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-slate-900 tracking-tight">Inventory Alerts</h3>
+                            <p class="text-[12px] font-semibold text-slate-500">Low stock warnings</p>
+                        </div>
+                    </div>
+                    <button @click="showInvModal = true" class="px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors">
+                        View Full Inventory
+                    </button>
+                </div>
+                <div class="p-6 flex flex-col gap-3">
+                    @forelse($lowStockItems as $item)
+                        <div class="flex justify-between items-center p-4 bg-red-50/50 border border-red-100 rounded-2xl hover:bg-red-50 transition-colors">
+                            <div>
+                                <p class="text-[13px] font-black text-slate-900 mb-1">{{ $item->name }}</p>
+                                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-widest">Min: {{ $item->min_stock }}</p>
+                            </div>
+                            <div class="text-center bg-white border border-red-100 rounded-xl px-4 py-2 shadow-sm">
+                                <p class="text-xl font-black text-red-600 leading-none">{{ $item->current_stock }}</p>
+                                <p class="text-[9px] font-extrabold text-red-400 uppercase mt-1">{{ $item->unit }}</p>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="flex flex-col items-center justify-center p-8 bg-green-50/50 rounded-2xl text-center border border-green-100">
+                            <div class="w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-3">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                            </div>
+                            <p class="text-sm font-black text-green-700 mb-1">Stock Levels Good</p>
+                            <p class="text-xs font-semibold text-green-600/80">No items are currently running low.</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                <!-- Inventory Modal -->
+                <template x-teleport="body">
+                    <div x-show="showInvModal" class="fixed inset-0 z-[100] flex items-start justify-center pt-16 sm:pt-24 bg-slate-900/40 backdrop-blur-sm p-4" x-cloak>
+                        <div @click.away="showInvModal = false" x-show="showInvModal" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95" class="bg-white rounded-3xl shadow-2xl w-full max-w-xl overflow-hidden max-h-[85vh] flex flex-col">
+                            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                                <h3 class="text-lg font-black text-slate-900">Current Inventory Status</h3>
+                                <button @click="showInvModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+                                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+                            <div class="overflow-y-auto flex-1 p-0">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-slate-50 sticky top-0">
+                                        <tr>
+                                            <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Item Name</th>
+                                            <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Stock Level</th>
+                                            <th class="px-6 py-4 text-[10px] font-extrabold text-slate-500 uppercase tracking-widest border-b border-slate-200">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100">
+                                        @foreach($allInventory as $inv)
+                                            <tr class="hover:bg-slate-50/50">
+                                                <td class="px-6 py-4 text-[13px] font-bold text-slate-900">{{ $inv->name }}</td>
+                                                <td class="px-6 py-4">
+                                                    <span class="text-sm font-black text-blue-700">{{ $inv->current_stock }}</span>
+                                                    <span class="text-[11px] font-bold text-slate-500">{{ $inv->unit }}</span>
+                                                </td>
+                                                <td class="px-6 py-4">
+                                                    @if($inv->current_stock <= $inv->min_stock)
+                                                        <span class="inline-flex px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Low Stock</span>
+                                                    @else
+                                                        <span class="inline-flex px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Good</span>
+                                                    @endif
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            {{-- Shift Register (Dark Card) --}}
+            <div class="bg-slate-900 rounded-3xl overflow-hidden shadow-xl shadow-slate-900/20 animate-slide-up" style="animation-delay: 350ms;">
+                <div class="px-6 py-5 border-b border-slate-700/50 flex items-center gap-4 bg-slate-800/50">
+                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-white tracking-tight">Shift Register</h3>
+                        <p class="text-[12px] font-medium text-slate-400">Current session metrics</p>
+                    </div>
+                </div>
+                <div class="p-6 flex flex-col gap-0 divide-y divide-slate-800">
+                    <div class="flex justify-between items-center py-4">
+                        <span class="text-[13px] font-semibold text-slate-400">Opening Balance</span>
+                        <span class="text-xl font-black text-white tracking-tight">Rs.{{ number_format($activeSession->opening_cash, 0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-4">
+                        <span class="text-[13px] font-semibold text-slate-400">Opened By</span>
+                        <span class="text-[12px] font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-3 py-1 rounded-lg">{{ $activeSession->user->name }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-4">
+                        <span class="text-[13px] font-semibold text-slate-400">Time Started</span>
+                        <span class="text-[13px] font-bold text-slate-300">{{ \Carbon\Carbon::parse($activeSession->opened_at)->format('h:i A') }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    @endif
+
+    <x-slot name="scripts">
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const chartData = {
+                today: { labels: {!! json_encode($chartData['today']['labels']) !!}, pending: {!! json_encode($chartData['today']['pending']) !!}, delivered: {!! json_encode($chartData['today']['delivered']) !!} },
+                weekly: { labels: {!! json_encode($chartData['weekly']['labels']) !!}, pending: {!! json_encode($chartData['weekly']['pending']) !!}, delivered: {!! json_encode($chartData['weekly']['delivered']) !!} },
+                monthly: { labels: {!! json_encode($chartData['monthly']['labels']) !!}, pending: {!! json_encode($chartData['monthly']['pending']) !!}, delivered: {!! json_encode($chartData['monthly']['delivered']) !!} },
             };
-        },
 
-        async workshopAction(dispatchId, action) {
-            try {
-                const res = await fetch(`/workshop/dispatches/${dispatchId}/${action}`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
+            const ctx = document.getElementById('orderChart');
+            let chart = null;
+
+            function renderChart(tab) {
+                const d = chartData[tab];
+                if (chart) chart.destroy();
+                chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: d.labels,
+                        datasets: [
+                            { label: 'Processing', data: d.pending, backgroundColor: '#f59e0b', borderRadius: 6, barPercentage: 0.55 },
+                            { label: 'Completed', data: d.delivered, backgroundColor: '#10b981', borderRadius: 6, barPercentage: 0.55 }
+                        ]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        plugins: { legend: { display: false }, tooltip: { backgroundColor: '#0f172a', padding: 12, cornerRadius: 8 } },
+                        scales: {
+                            y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { color: '#94a3b8', font: { size: 11, weight: '600' } } },
+                            x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 12, weight: '700' } } }
+                        }
                     }
                 });
-                const data = await res.json();
-                if (data.success) window.location.reload();
-            } catch (err) {
-                alert('Connection error');
             }
-        },
-        
-        async submitBulkUpdate() {
-            if (!this.bulkStatus) { alert('Please select an action'); return; }
-            if (this.selectedDispatches.length === 0) { alert('No orders selected'); return; }
-            
-            try {
-                const res = await fetch('{{ route('workshop.bulkStatus') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                    },
-                    body: JSON.stringify({
-                        dispatch_ids: this.selectedDispatches,
-                        status: this.bulkStatus
-                    })
+
+            if (ctx) renderChart('weekly');
+
+            const tabBtns = document.querySelectorAll('.chart-tab-btn');
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    tabBtns.forEach(b => {
+                        b.className = 'chart-tab-btn px-4 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-500 hover:text-slate-700';
+                    });
+                    btn.className = 'chart-tab-btn active-tab px-4 py-1.5 text-xs font-bold rounded-lg transition-all bg-white text-slate-800 shadow-sm ring-1 ring-slate-200/50';
+                    renderChart(btn.dataset.chartTab);
                 });
-                const data = await res.json();
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert('Error updating statuses');
-                }
-            } catch (err) {
-                alert('Connection error');
-            }
-        }
-    }">
+            });
+        </script>
+    </x-slot>
 
-        <!-- STAT CARDS / TABS -->
-        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-4 mb-4">
-            <!-- Arrival & Processing -->
-            <div @click="currentTab = 'arrival_processing'"
-                :class="currentTab === 'arrival_processing' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'arrival_processing' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.arrival_processing"></span>
-                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Arrival & Processing</span>
-            </div>
-
-            <!-- Done -->
-            <div @click="currentTab = 'completed_at_workshop'"
-                :class="currentTab === 'completed_at_workshop' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'completed_at_workshop' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
-                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Done</span>
-            </div>
-
-            <!-- Dispatched Back -->
-            <div @click="currentTab = 'returned_to_branch'"
-                :class="currentTab === 'returned_to_branch' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'returned_to_branch' ? 'text-purple-700' : 'text-gray-900'" x-text="counts.returned"></span>
-                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Dispatched</span>
-            </div>
-        </div>
-
-        <!-- Filter Bar -->
-        <div class="mb-6 flex justify-between items-center">
-            <div>
-                <button x-show="selectedDispatches.length > 0" @click="showBulkModal = true"
-                    class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    Bulk Action (<span x-text="selectedDispatches.length"></span>)
-                </button>
-            </div>
-            <select x-model="selectedBranch" class="px-4 py-2 pr-8 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:border-blue-500">
-                <option value="">All Branches</option>
-                @foreach($branches as $branch)
-                    <option value="{{ $branch->id }}">{{ $branch->name }}</option>
-                @endforeach
-            </select>
-        </div>
-
-        <div class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden mb-8">
-            <div class="overflow-x-auto">
-                <table class="w-full text-sm text-left" style="border-collapse:collapse;">
-                    <thead style="background:#f8fafc;border-bottom:1.5px solid #e2e8f0;">
-                        <tr>
-                            <th style="padding:14px 20px;width:40px;">
-                                <input type="checkbox" @change="toggleSelectAll($event)" :checked="selectedDispatches.length === filteredDispatches.length && filteredDispatches.length > 0" style="cursor:pointer;">
-                            </th>
-                            <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Order Info</th>
-                            <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Dispatch Time</th>
-                            <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Branch</th>
-                            <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Status</th>
-                            <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;text-align:center;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="dispatch in filteredDispatches" :key="dispatch.id">
-                            <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                                <td style="padding:12px 20px;">
-                                    <input type="checkbox" :value="dispatch.id" x-model="selectedDispatches" style="cursor:pointer;">
-                                </td>
-                                <td style="padding:12px 20px;">
-                                    <span style="font-size:13px;font-weight:800;color:#1d4ed8;display:block;" x-text="'#' + dispatch.order.order_number"></span>
-                                    <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
-                                        <span style="font-weight:700;color:#0f172a;" x-text="dispatch.order.customer ? dispatch.order.customer.name : 'Unknown Customer'"></span>
-                                    </div>
-                                </td>
-                                <td style="padding:12px 20px;font-weight:600;color:#475569;">
-                                    <span style="display:block;" x-text="new Date(dispatch.dispatched_at).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})"></span>
-                                    <span style="font-size:11px;color:#94a3b8;font-weight:500;" x-text="new Date(dispatch.dispatched_at).toLocaleTimeString('en-US', {hour:'2-digit', minute:'2-digit'})"></span>
-                                </td>
-                                <td style="padding:12px 20px;font-weight:700;color:#4f46e5;">
-                                    <span x-text="dispatch.branch ? dispatch.branch.name : 'Unknown'"></span>
-                                </td>
-                                <td style="padding:12px 20px;">
-                                    <span :style="
-                                        dispatch.status === 'dispatched_to_workshop' ? 'background:#fef3c7;color:#d97706;border:1px solid #fde68a;' :
-                                        dispatch.status === 'received_at_workshop' ? 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;' :
-                                        dispatch.status === 'processing' ? 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;' :
-                                        dispatch.status === 'completed_at_workshop' ? 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;' :
-                                        dispatch.status === 'returned_to_branch' ? 'background:#f3e8ff;color:#7e22ce;border:1px solid #e9d5ff;' :
-                                        'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;'
-                                    " style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">
-                                        <span x-text="dispatch.status.replace(/_/g, ' ')"></span>
-                                    </span>
-                                </td>
-                                <td style="padding:12px 20px;text-align:center;">
-                                    <div style="display:inline-flex;gap:6px;align-items:center;justify-content:center;width:100%;">
-                                        <!-- Actions based on status -->
-                                        <template x-if="dispatch.status === 'dispatched_to_workshop'">
-                                            <button @click="workshopAction(dispatch.id, 'start-processing')"
-                                                style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;"
-                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                Receive & Start Washing
-                                            </button>
-                                        </template>
-
-                                        <template x-if="dispatch.status === 'processing'">
-                                            <button @click="workshopAction(dispatch.id, 'complete')"
-                                                style="padding:5px 10px;background:#10b981;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.3);transition:transform 0.1s;"
-                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                Mark Done
-                                            </button>
-                                        </template>
-
-                                        <template x-if="dispatch.status === 'completed_at_workshop'">
-                                            <button @click="workshopAction(dispatch.id, 'return')"
-                                                style="padding:5px 10px;background:#8b5cf6;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(139,92,246,0.3);transition:transform 0.1s;"
-                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                Move to Dispatch
-                                            </button>
-                                        </template>
-                                        
-                                        <template x-if="dispatch.status === 'returned_to_branch'">
-                                            <span style="font-size:11px;color:#94a3b8;font-weight:600;">Awaiting Branch...</span>
-                                        </template>
-                                    </div>
-                                </td>
-                            </tr>
-                        </template>
-                        <tr x-show="filteredDispatches.length === 0">
-                            <td colspan="5" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;font-weight:500;">
-                                No records found in this category.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-        <!-- ── Bulk Status Update Modal ── -->
-        <div x-cloak x-show="showBulkModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[4px] p-4">
-            <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" @click.away="showBulkModal = false">
-                <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;">Bulk Action</h3>
-                    <button @click="showBulkModal = false" style="background:none;border:none;cursor:pointer;color:#94a3b8;">✕</button>
-                </div>
-                <div style="padding:20px 24px;display:flex;flex-direction:column;gap:16px;">
-                    <div>
-                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Action to Perform</label>
-                        <select x-model="bulkStatus" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;">
-                            <option value="">-- Select Action --</option>
-                            <option value="processing" x-show="currentTab === 'arrival_processing'">👕 Receive & Start Washing</option>
-                            <option value="completed_at_workshop" x-show="currentTab === 'arrival_processing'">✅ Mark Done</option>
-                            <option value="returned_to_branch" x-show="currentTab === 'completed_at_workshop'">🚚 Move to Dispatch</option>
-                        </select>
-                    </div>
-                    <div style="display:flex;gap:10px;">
-                        <button @click="showBulkModal = false" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
-                        <button @click="submitBulkUpdate" style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Apply Changes</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 </x-app-layout>

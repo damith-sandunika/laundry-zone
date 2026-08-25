@@ -31,6 +31,7 @@ class CustomerController extends Controller
         }
 
         $customer = Customer::create([
+            'branch_id' => auth()->user()->branch_id ?? 1,
             'name' => $request->name,
             'phone' => $request->phone,
             'address' => $request->address ?? null,

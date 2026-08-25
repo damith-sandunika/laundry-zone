@@ -36,19 +36,32 @@
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                         Packages
                     </button>
-                @else
-                    <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')" 
-                        :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    <button @click="activeTab = 'delivery'; localStorage.setItem('settingsActiveTab', 'delivery')" 
+                        :class="activeTab === 'delivery' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                        Stock Locations
+                        Delivery Settings
                     </button>
-                    <button @click="activeTab = 'whatsapp'; localStorage.setItem('settingsActiveTab', 'whatsapp')" 
-                        :class="activeTab === 'whatsapp' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    <button @click="activeTab = 'pickup_times'; localStorage.setItem('settingsActiveTab', 'pickup_times')" 
+                        :class="activeTab === 'pickup_times' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                        WhatsApp API
+                        Pickup Times
                     </button>
-
+                    <button @click="activeTab = 'payment_methods'; localStorage.setItem('settingsActiveTab', 'payment_methods')" 
+                        :class="activeTab === 'payment_methods' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Payment Methods
+                    </button>
                 @endif
+                <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')" 
+                    :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    Stock Locations
+                </button>
+                <button @click="activeTab = 'whatsapp'; localStorage.setItem('settingsActiveTab', 'whatsapp')" 
+                    :class="activeTab === 'whatsapp' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                    WhatsApp API
+                </button>
             </div>
         </div>
 
@@ -74,6 +87,16 @@
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Address</label>
                         <input type="text" name="address" x-model="formAddress" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Latitude</label>
+                            <input type="text" name="latitude" value="{{ old('latitude', $branch->latitude) }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Longitude</label>
+                            <input type="text" name="longitude" value="{{ old('longitude', $branch->longitude) }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                        </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
                         <div>
@@ -328,7 +351,11 @@
                     <div x-data="{ expanded: true }" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div @click="expanded = !expanded" class="category-group-header flex justify-between items-center p-4 border-b border-gray-100 transition-colors">
                             <div class="flex items-center gap-3">
-                                <svg :class="expanded ? 'rotate-90' : 'rotate-0'" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                @if($category->image_path)
+                                    <img src="{{ asset($category->image_path) }}" alt="{{ $category->name }}" class="w-8 h-8 object-cover rounded-md border border-gray-200">
+                                @else
+                                    <svg :class="expanded ? 'rotate-90' : 'rotate-0'" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                @endif
                                 <h4 class="font-bold text-gray-800">{{ $category->name }}</h4>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $category->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">{{ $category->is_active ? 'Active' : 'Inactive' }}</span>
                             </div>
@@ -520,10 +547,259 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-full py-6 text-center text-gray-500">No stock locations found.</div>
+                        <div class="col-span-full p-4 border rounded-md text-center bg-gray-50 border-gray-200">
+                            <span class="text-gray-500 text-sm font-medium">No cubbies added yet.</span>
+                        </div>
                     @endforelse
                 </div>
             </div>
+
+            <!-- DELIVERY SETTINGS TAB -->
+            @if(auth()->user()->role === 'super_admin')
+            <div x-show="activeTab === 'delivery'" style="display: none;">
+                
+                <!-- Global Delivery Settings -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8 p-6">
+                    <h3 class="text-sm font-semibold text-gray-800 mb-4 border-b pb-2">Global Delivery Settings</h3>
+                    <form action="{{ route('settings.updateDeliverySettings') }}" method="POST">
+                        @csrf
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 mb-1 uppercase">Minimum Delivery Cost (Rs.)</label>
+                                <input type="number" step="0.01" name="minimum_delivery_cost" value="{{ $minimumDeliveryCost }}" class="w-full text-sm border-gray-300 rounded-md p-2">
+                                <p class="text-xs text-gray-500 mt-1">If the calculated cost is lower than this, this amount will be charged.</p>
+                            </div>
+                        </div>
+
+                        <h4 class="text-xs font-bold text-gray-800 mt-6 mb-2 uppercase">Workshop Locations (Used for distance calculation)</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @foreach($workshops as $ws)
+                                <div class="p-3 border rounded-lg bg-gray-50">
+                                    <h5 class="font-bold text-sm text-gray-800 mb-2">{{ $ws->name }}</h5>
+                                    <div class="grid grid-cols-2 gap-2">
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-gray-600 uppercase">Latitude</label>
+                                            <input type="text" name="workshops[{{ $ws->id }}][latitude]" value="{{ $ws->latitude }}" class="w-full text-xs border-gray-300 rounded p-1.5" placeholder="e.g. 6.9271">
+                                        </div>
+                                        <div>
+                                            <label class="block text-[10px] font-semibold text-gray-600 uppercase">Longitude</label>
+                                            <input type="text" name="workshops[{{ $ws->id }}][longitude]" value="{{ $ws->longitude }}" class="w-full text-xs border-gray-300 rounded p-1.5" placeholder="e.g. 79.8612">
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+
+                        <div class="mt-4 flex justify-end">
+                            <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-700">Save Settings</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    <h3 class="text-sm font-semibold text-gray-800">Delivery Ranges & Cost Calculation</h3>
+                    <button onclick="document.getElementById('add-delivery-range-modal').style.display='flex'" class="px-4 py-2 bg-slate-800 text-white text-xs font-semibold rounded hover:bg-slate-900 transition-colors">
+                        + Add Delivery Range
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left font-bold text-gray-500 uppercase tracking-wider">Distance Range (km)</th>
+                                <th class="px-6 py-3 text-left font-bold text-gray-500 uppercase tracking-wider">Delivery Cost (Rs.)</th>
+                                <th class="px-6 py-3 text-right font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($deliveryRanges ?? [] as $range)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-800">
+                                        {{ $range->min_distance_km }} - {{ $range->max_distance_km }} km
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-bold text-blue-600">
+                                        Rs. {{ number_format($range->cost, 2) }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <form method="POST" action="{{ route('settings.deleteDeliveryRange', $range) }}" onsubmit="return confirm('Are you sure you want to delete this range?')" class="inline-block m-0">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 rounded">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-6 py-6 text-center text-gray-500 font-medium">No delivery ranges set.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            <!-- PICKUP TIMES TAB -->
+            @if(auth()->user()->role === 'super_admin')
+            <div x-show="activeTab === 'pickup_times'" style="display: none;">
+                <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                    <h3 class="text-sm font-semibold text-gray-800">Pickup Time Periods</h3>
+                    <button onclick="document.getElementById('add-pickup-time-modal').style.display='flex'" class="px-4 py-2 bg-slate-800 text-white text-xs font-semibold rounded hover:bg-slate-900 transition-colors">
+                        + Add Time Period
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8">
+                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-left font-bold text-gray-500 uppercase tracking-wider">Label</th>
+                                <th class="px-6 py-3 text-left font-bold text-gray-500 uppercase tracking-wider">Time Range</th>
+                                <th class="px-6 py-3 text-right font-bold text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            @forelse($pickupTimePeriods ?? [] as $period)
+                                <tr>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-800">
+                                        {{ $period->label }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap font-semibold text-gray-600">
+                                        {{ \Carbon\Carbon::parse($period->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($period->end_time)->format('h:i A') }}
+                                    </td>
+                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                        <form method="POST" action="{{ route('settings.deletePickupTimePeriod', $period) }}" onsubmit="return confirm('Are you sure you want to delete this period?')" class="inline-block m-0">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 rounded">Delete</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="3" class="px-6 py-6 text-center text-gray-500 font-medium">No pickup time periods set.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @endif
+
+            <!-- PAYMENT METHODS TAB -->
+            @if(auth()->user()->role === 'super_admin')
+            <div x-show="activeTab === 'payment_methods'" style="display: none;">
+                <form action="{{ route('settings.payment-methods.update') }}" method="POST">
+                    @csrf
+                    
+                    <!-- Payment Methods Toggles -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-lg font-black text-slate-800">Available Payment Methods</h3>
+                            <p class="text-sm text-slate-500 font-medium">Enable or disable payment options for your customers.</p>
+                        </div>
+                        
+                        <div class="divide-y divide-slate-100">
+                            @foreach($paymentMethodsList as $method)
+                                <div class="p-6 flex items-center justify-between hover:bg-slate-50/50 transition-colors">
+                                    <div class="flex items-center gap-4">
+                                        <div class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0
+                                            {{ $method->type === 'bank_transfer' ? 'bg-blue-50 text-blue-600' : '' }}
+                                            {{ $method->type === 'card_transfer' ? 'bg-purple-50 text-purple-600' : '' }}
+                                            {{ $method->type === 'cash_on_delivery' ? 'bg-green-50 text-green-600' : '' }}
+                                        ">
+                                            @if($method->type === 'bank_transfer')
+                                                <i class="fa-solid fa-building-columns text-xl"></i>
+                                            @elseif($method->type === 'card_transfer')
+                                                <i class="fa-solid fa-credit-card text-xl"></i>
+                                            @else
+                                                <i class="fa-solid fa-money-bill-wave text-xl"></i>
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <h4 class="font-black text-slate-800 flex items-center gap-2">
+                                                {{ $method->name }}
+                                                @if($method->type === 'card_transfer')
+                                                    <span class="text-[10px] font-bold uppercase tracking-wider bg-orange-100 text-orange-600 px-2 py-0.5 rounded-md">Mock Gateway Integration</span>
+                                                @endif
+                                            </h4>
+                                            <p class="text-sm font-medium text-slate-500">
+                                                @if($method->type === 'bank_transfer')
+                                                    Customers will see your bank details and upload a receipt.
+                                                @elseif($method->type === 'card_transfer')
+                                                    Customers pay securely online via Mock Credit/Debit card page.
+                                                @else
+                                                    Customers pay in cash when the order is delivered.
+                                                @endif
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="relative inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" name="is_active[{{ $method->id }}]" value="1" class="sr-only peer" {{ $method->is_active ? 'checked' : '' }}>
+                                            <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <!-- Bank Details Form -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-lg font-black text-slate-800">Bank Transfer Details</h3>
+                            <p class="text-sm text-slate-500 font-medium">These details will be displayed to customers when they select Bank Transfer during checkout.</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">Bank Name</label>
+                                    <input type="text" name="bank_name" value="{{ old('bank_name', $bankDetails['bank_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. Commercial Bank">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">Branch Name</label>
+                                    <input type="text" name="bank_branch" value="{{ old('bank_branch', $bankDetails['bank_branch']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. Colombo 07">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">Account Name</label>
+                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. 360 Laundry">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">Account Number</label>
+                                    <input type="text" name="bank_account_number" value="{{ old('bank_account_number', $bankDetails['bank_account_number']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold font-mono" placeholder="e.g. 1234567890">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mock Payment Gateway Settings -->
+                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
+                        <div class="p-6 border-b border-slate-100 bg-slate-50/50">
+                            <h3 class="text-lg font-black text-slate-800">Online Payment Gateway Settings (Mock)</h3>
+                            <p class="text-sm text-slate-500 font-medium">Enter the API credentials provided by your bank or payment gateway provider.</p>
+                        </div>
+                        <div class="p-6">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">Merchant ID</label>
+                                    <input type="text" name="gateway_merchant_id" value="{{ old('gateway_merchant_id', $gatewayDetails['gateway_merchant_id']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. 123456789">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">Secret Key / API Password</label>
+                                    <input type="password" name="gateway_secret_key" value="{{ old('gateway_secret_key', $gatewayDetails['gateway_secret_key']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="********">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-end">
+                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-xl font-bold shadow-md shadow-blue-200 transition-all flex items-center gap-2">
+                            <i class="fa-solid fa-floppy-disk"></i> Save Payment Settings
+                        </button>
+                    </div>
+                </form>
+            </div>
+            @endif
 
             <!-- WHATSAPP API TAB -->
             <div x-show="activeTab === 'whatsapp'" style="display: none;" x-data="whatsappAPI()" x-init="init()">
@@ -1193,8 +1469,13 @@
                     <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <form method="POST" action="{{ route('settings.storeServiceCategory') }}" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+            <form method="POST" action="{{ route('settings.storeServiceCategory') }}" enctype="multipart/form-data" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
                 @csrf
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category Image (Optional)</label>
+                    <input type="file" name="image" accept="image/*"
+                        style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                </div>
                 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category Name</label>
                     <input type="text" name="name" required placeholder="e.g. Wash & Fold"
@@ -1225,8 +1506,14 @@
                     <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
             </div>
-            <form id="edit-category-form" method="POST" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+            <form id="edit-category-form" method="POST" enctype="multipart/form-data" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
                 @csrf @method('PUT')
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category Image (Optional)</label>
+                    <input type="file" name="image" accept="image/*"
+                        style="width:100%;padding:8px 10px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                    <p style="font-size:10px;color:#64748b;margin-top:4px;">Leave blank to keep existing image</p>
+                </div>
                 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category Name</label>
                     <input type="text" id="edit-category-name" name="name" required
@@ -1252,6 +1539,92 @@
             </form>
         </div>
     </div>
+    <!-- ── Add Delivery Range Modal ── -->
+    <div id="add-delivery-range-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Add Delivery Range</h3>
+                </div>
+                <button onclick="document.getElementById('add-delivery-range-modal').style.display='none'"
+                    style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('settings.storeDeliveryRange') }}" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+                @csrf
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Min Distance (km)</label>
+                        <input type="number" name="min_distance_km" required step="0.01" min="0" value="0"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Max Distance (km)</label>
+                        <input type="number" name="max_distance_km" required step="0.01" min="0.1"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Delivery Cost (Rs.)</label>
+                    <input type="number" name="cost" required step="0.01" min="0"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                </div>
+                
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button type="button" onclick="document.getElementById('add-delivery-range-modal').style.display='none'"
+                        style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;"
+                        onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">Save Range</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ── Add Pickup Time Modal ── -->
+    <div id="add-pickup-time-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Add Pickup Time Period</h3>
+                </div>
+                <button onclick="document.getElementById('add-pickup-time-modal').style.display='none'"
+                    style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('settings.storePickupTimePeriod') }}" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+                @csrf
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Label (e.g. Morning)</label>
+                    <input type="text" name="label" required
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Start Time</label>
+                        <input type="time" name="start_time" required
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">End Time</label>
+                        <input type="time" name="end_time" required
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
+                    </div>
+                </div>
+                
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button type="button" onclick="document.getElementById('add-pickup-time-modal').style.display='none'"
+                        style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;"
+                        onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 <script>
                 function openEditModal(id, name, price, priceType, isActive, icon, color, categoryId) {
             document.getElementById('edit-name').value = name;
@@ -1286,6 +1659,12 @@
             if(e.target === this) this.style.display = 'none';
         });
         document.getElementById('edit-category-modal').addEventListener('click', function(e) {
+            if(e.target === this) this.style.display = 'none';
+        });
+        document.getElementById('add-delivery-range-modal').addEventListener('click', function(e) {
+            if(e.target === this) this.style.display = 'none';
+        });
+        document.getElementById('add-pickup-time-modal').addEventListener('click', function(e) {
             if(e.target === this) this.style.display = 'none';
         });
     </script>

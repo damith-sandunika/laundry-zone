@@ -43,6 +43,11 @@
                                 <!-- Category Filters -->
                 <div class="px-5 py-2 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 overflow-x-auto scrollbar-none">
                     <div class="flex gap-2 w-max">
+                        <button @click="activeCategory = null" 
+                            :class="activeCategory === null ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
+                            All
+                        </button>
                         <template x-for="cat in allCategories" :key="cat.id">
                             <button @click="activeCategory = cat.id" 
                                 :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
@@ -537,13 +542,13 @@
     </div>
 
     <script>
-        document.addEventListener('alpine:init', () => {
-                        Alpine.data('posSystem', () => ({
+        window.posSystem = function() {
+            return {
                 allServices: @json($services),
                 allCategories: @json($categories),
                 allCustomers: @json($customers),
                 allCustomerPackages: @json($customerPackages),
-                activeCategory: {{ $categories->first() ? $categories->first()->id : "'uncategorized'" }},
+                activeCategory: null,
                 searchQuery: '',
                 customerSearch: '',
                 filteredCustomers: [],
@@ -771,8 +776,8 @@
                     }
                     finally { this.isPlacingOrder = false; }
                 }
-            }));
-        });
+            };
+        };
 
         // The save-customer-btn listener is mostly handled by Alpine now, but we keep this just in case or we can rely fully on alpine
         // Wait, the new customer modal Alpine scope already handles it. So we can remove the vanilla JS listener to prevent duplication.

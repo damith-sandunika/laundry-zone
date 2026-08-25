@@ -9,6 +9,7 @@ use App\Models\DeliveryTask;
 use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Models\User;
+use App\Models\WorkshopDispatch;
 use App\Services\WhatsAppService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -101,8 +102,16 @@ class DeliveryController extends Controller
     public function assignRider(Request $request, DeliveryAppointment $appointment, WhatsAppService $waService)
     {
         $request->validate([
-            'rider_id' => 'required|exists:users,id',
+            'delivery_method' => 'nullable|string|in:in_house,pickme_flash',
+            'rider_id' => 'required_if:delivery_method,in_house',
         ]);
+
+        $deliveryMethod = $request->delivery_method ?? 'in_house';
+
+        if ($deliveryMethod === 'pickme_flash') {
+            $appointment->update(['status' => 'picked_up']);
+            return redirect()->route('delivery.index')->with('success', "PickMe Flash assigned. Waiting to receive at workshop.");
+        }
 
         $rider = User::findOrFail($request->rider_id);
 
@@ -114,7 +123,7 @@ class DeliveryController extends Controller
             'task_type' => 'pickup',
             'status' => 'assigned',
             'pickup_location' => $appointment->pickup_address,
-            'dropoff_location' => Branch::find($appointment->branch_id)->address ?? 'Branch',
+            'dropoff_location' => Branch::find($appointment->branch_id)->address ?? 'Workshop',
         ]);
 
         $appointment->update(['status' => 'rider_assigned']);
@@ -126,9 +135,20 @@ class DeliveryController extends Controller
     }
 
     // ─── Branch Admin: Mark order received at branch, assign delivery rider ───
-    public function markAtBranch(DeliveryAppointment $appointment, WhatsAppService $waService)
+    public function markAtBranch(Request $request, DeliveryAppointment $appointment, WhatsAppService $waService)
     {
         $appointment->update(['status' => 'at_branch']);
+
+        if ($request->filled('pickme_flash_cost')) {
+            \App\Models\Expense::create([
+                'branch_id' => auth()->user()->branch_id, // Workshop's branch
+                'category' => 'PickMe Flash',
+                'description' => 'PickMe Flash payment for pickup delivery #' . $appointment->id,
+                'amount' => $request->pickme_flash_cost,
+                'expense_date' => now(),
+                'created_by' => auth()->id(),
+            ]);
+        }
 
         // Create the official Order stub for the Workshop
         if (! $appointment->order_id) {
@@ -142,16 +162,56 @@ class DeliveryController extends Controller
                 'paid_amount' => 0,
                 'payment_status' => 'pending',
                 'payment_method' => $appointment->payment_method ?? 'cash',
-                'due_date' => Carbon::now()->addDays(2), // Default 2 days
+                'due_date' => \Carbon\Carbon::now()->addDays(2), // Default 2 days
+                'created_by' => auth()->id(),
+                'is_delivery_order' => true,
             ]);
 
             $appointment->update(['order_id' => $order->id]);
+
+            if ($appointment->cart_json) {
+                $cart = json_decode($appointment->cart_json, true);
+                if (is_array($cart)) {
+                    $subtotal = 0;
+                    foreach ($cart as $item) {
+                        if (isset($item['service']['id']) && isset($item['quantity'])) {
+                            $qty = $item['quantity'];
+                            $price = $item['service']['base_price'] ?? 0;
+                            
+                            \App\Models\OrderItem::create([
+                                'order_id' => $order->id,
+                                'service_type_id' => $item['service']['id'],
+                                'item_description' => $item['service']['name'] ?? '',
+                                'quantity' => $qty,
+                                'unit_price' => $price,
+                                'total_price' => $qty * $price,
+                            ]);
+                            $subtotal += $qty * $price;
+                        }
+                    }
+                    $order->update([
+                        'subtotal' => $subtotal,
+                        'total' => $subtotal, // We might need to handle delivery cost later if needed
+                    ]);
+                }
+            }
+
+            WorkshopDispatch::create([
+                'order_id' => $order->id,
+                'branch_id' => $appointment->branch_id,
+                'workshop_branch_id' => $appointment->branch_id,
+                'dispatched_by' => auth()->id(),
+                'dispatched_at' => now(),
+                'status' => 'received_at_workshop',
+                'received_by' => auth()->id(),
+                'received_at_workshop_at' => now(),
+            ]);
 
             // Notify customer that order is at branch
             // $waService->notifyOrderReceived($order);
         }
 
-        return redirect()->back()->with('success', 'Order received at branch and moved to Workshop Orders.');
+        return redirect()->route('workshop.operations')->with('success', 'Delivery arrived! Order has been moved directly to Arrival & Processing.');
     }
 
     public function assignDeliveryRider(Request $request, DeliveryAppointment $appointment)

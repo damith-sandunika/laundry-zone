@@ -26,7 +26,6 @@ class CustomerSiteController extends Controller
 
     public function booking()
     {
-        $branches = Branch::regularBranches()->where('is_active', true)->get();
         $paymentMethods = collect();
         if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
             $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
@@ -38,20 +37,25 @@ class CustomerSiteController extends Controller
             $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
         }
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
+        $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
 
-        return view('customer.booking.index', compact('branches', 'paymentMethods', 'categories'));
+        return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods'));
     }
 
     public function store(Request $request, WhatsAppService $waService)
     {
+        if (!auth('customer')->check()) {
+            return redirect()->route('customer.booking')->withErrors(['error' => 'Please login or register to complete your booking.']);
+        }
+
         try {
             $validated = $request->validate([
-                'branch_id' => 'required|exists:branches,id',
                 'pickup_address' => 'required|string|max:255',
                 'map_address' => 'nullable|string',
                 'latitude' => 'nullable|numeric',
                 'longitude' => 'nullable|numeric',
-                'pickup_scheduled_at' => 'required|date|after:now',
+                'pickup_date' => 'required|date|after_or_equal:today',
+                'pickup_time_period_id' => 'required|exists:pickup_time_periods,id',
                 'item_description' => 'nullable|string',
                 'notes' => 'nullable|string',
 
@@ -70,6 +74,9 @@ class CustomerSiteController extends Controller
             throw $e;
         }
 
+        $pickupPeriod = \App\Models\PickupTimePeriod::find($request->pickup_time_period_id);
+        $pickupScheduledAt = \Carbon\Carbon::parse($request->pickup_date . ' ' . $pickupPeriod->start_time);
+
         $deliveryLat = $request->delivery_lat;
         $deliveryLng = $request->delivery_lng;
         $deliveryAddress = $request->delivery_address;
@@ -85,19 +92,85 @@ class CustomerSiteController extends Controller
             $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
         }
 
-        $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress, $receiptPath) {
+        $deliveryCost = 0;
+        $workshops = Branch::workshops()->where('is_active', true)->get();
+        $closestWorkshop = null;
+        $shortestDistance = PHP_FLOAT_MAX;
+        $totalDistance = 0;
+
+        // Haversine formula function
+        $calculateDistance = function($lat1, $lon1, $lat2, $lon2) {
+            if (!$lat1 || !$lon1 || !$lat2 || !$lon2) return 0;
+            $earthRadius = 6371; // km
+            $latDelta = deg2rad($lat2 - $lat1);
+            $lonDelta = deg2rad($lon2 - $lon1);
+            $a = sin($latDelta / 2) * sin($latDelta / 2) + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($lonDelta / 2) * sin($lonDelta / 2);
+            return $earthRadius * (2 * atan2(sqrt($a), sqrt(1 - $a)));
+        };
+
+        // Find the closest workshop based on pickup coordinates
+        if ($request->latitude && $request->longitude) {
+            foreach ($workshops as $ws) {
+                if ($ws->latitude && $ws->longitude) {
+                    $dist = $calculateDistance($ws->latitude, $ws->longitude, $request->latitude, $request->longitude);
+                    if ($dist < $shortestDistance) {
+                        $shortestDistance = $dist;
+                        $closestWorkshop = $ws;
+                    }
+                }
+            }
+        }
+
+        // Fallback to first workshop if none matched coordinates
+        if (!$closestWorkshop) {
+            $closestWorkshop = $workshops->first();
+        }
+
+        if ($closestWorkshop && $closestWorkshop->latitude && $closestWorkshop->longitude) {
+            $totalDistance += $shortestDistance == PHP_FLOAT_MAX ? 0 : $shortestDistance;
+
+            // Calculate distance for delivery if different from pickup
+            if ($request->delivery_preference === 'deliver_to_address') {
+                if ($request->has('same_as_pickup')) {
+                    if ($request->latitude && $request->longitude) {
+                        $totalDistance += $calculateDistance($closestWorkshop->latitude, $closestWorkshop->longitude, $request->latitude, $request->longitude);
+                    }
+                } else if ($deliveryLat && $deliveryLng) {
+                    $totalDistance += $calculateDistance($closestWorkshop->latitude, $closestWorkshop->longitude, $deliveryLat, $deliveryLng);
+                }
+            }
+
+            // Find applicable delivery range for the closest workshop
+            $deliveryRange = \App\Models\DeliveryRange::where(function($q) use ($closestWorkshop) {
+                    $q->where('branch_id', $closestWorkshop->id)->orWhereNull('branch_id');
+                })
+                ->where('min_distance_km', '<=', $totalDistance)
+                ->where('max_distance_km', '>=', $totalDistance)
+                ->orderBy('cost', 'asc')
+                ->first();
+                
+            if ($deliveryRange) {
+                $deliveryCost = $deliveryRange->cost;
+            }
+        }
+
+        $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
+        $deliveryCost = max($deliveryCost, $minimumDeliveryCost);
+
+        $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress, $receiptPath, $deliveryCost, $pickupScheduledAt, $closestWorkshop) {
             
             $customer = auth('customer')->user();
 
             return DeliveryAppointment::create([
                 'customer_id' => $customer->id,
-                'branch_id' => $request->branch_id,
+                'branch_id' => $closestWorkshop->id,
                 'pickup_address' => $request->pickup_address,
                 'map_address' => $request->map_address,
                 'latitude' => $request->latitude,
                 'longitude' => $request->longitude,
-                'pickup_scheduled_at' => $request->pickup_scheduled_at,
+                'pickup_scheduled_at' => $pickupScheduledAt,
                 'item_description' => $request->item_description,
+                'cart_json' => $request->cart_json,
                 'notes' => $request->notes,
                 'contact_phone' => $customer->phone,
                 'status' => 'pending',
@@ -110,6 +183,7 @@ class CustomerSiteController extends Controller
                 'delivery_lng' => $deliveryLng,
                 'delivery_address' => $deliveryAddress,
                 'receipt_path' => $receiptPath,
+                'delivery_cost' => $deliveryCost,
             ]);
         });
 

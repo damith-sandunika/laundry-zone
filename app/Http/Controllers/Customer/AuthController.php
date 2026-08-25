@@ -69,4 +69,59 @@ class AuthController extends Controller
 
         return redirect()->route('home');
     }
+
+    public function ajaxLogin(Request $request)
+    {
+        $credentials = $request->validate([
+            'phone' => 'required|string',
+            'password' => 'required|string',
+        ]);
+
+        if (Auth::guard('customer')->attempt($credentials)) {
+            $request->session()->regenerate();
+            return response()->json([
+                'success' => true,
+                'customer' => Auth::guard('customer')->user()
+            ]);
+        }
+
+        return response()->json([
+            'success' => false,
+            'message' => 'The provided credentials do not match our records.'
+        ], 401);
+    }
+
+    public function ajaxRegister(Request $request)
+    {
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'phone' => 'required|string|max:50|unique:customers',
+                'email' => 'nullable|string|email|max:255',
+                'password' => 'required|string|min:8',
+            ]);
+
+            $customer = Customer::create([
+                'name' => $request->name,
+                'phone' => $request->phone,
+                'email' => $request->email,
+                'password' => Hash::make($request->password),
+                'branch_id' => 1,
+            ]);
+
+            Auth::guard('customer')->login($customer);
+            $request->session()->regenerate();
+
+            return response()->json([
+                'success' => true,
+                'customer' => $customer
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->validator->errors()->first(),
+                'errors' => $e->errors()
+            ], 422);
+        }
+    }
 }

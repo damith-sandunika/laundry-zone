@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Branch extends Model
 {
     protected $fillable = [
-        'name', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_path', 'logo_size', 'type', 'is_active', 'auto_close_time',
+        'name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_path', 'logo_size', 'type', 'is_active', 'auto_close_time',
     ];
 
     public function scopeWorkshops($query)

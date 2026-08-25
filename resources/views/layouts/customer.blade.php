@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Dashboard - RAPID Laundromat</title>
+    <title>Customer Dashboard - 360 Laundry</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -24,7 +24,7 @@
             <!-- Logo + Brand Name -->
             <a href="{{ route('home') }}" class="flex items-center gap-2">
                 <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto">
-                <span class="font-black text-xl tracking-tight text-brand">RAPID Laundromat</span>
+                <span class="font-black text-xl tracking-tight text-brand">360 Laundry</span>
             </a>
             
             <!-- Desktop Menu -->
@@ -89,7 +89,7 @@
 <footer class="bg-white border-t border-slate-200 mt-auto py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-            <p class="text-sm font-bold text-brand mb-2">RAPID Laundromat</p>
+            <p class="text-sm font-bold text-brand mb-2">360 Laundry</p>
             <p class="text-xs text-slate-500 mb-4">&copy; {{ date('Y') }} All Rights Reserved.</p>
             <p class="text-[10px] font-extrabold text-slate-400 tracking-widest uppercase">Powered by <a href="https://dsrzone.com" target="_blank" class="text-blue-500 hover:text-blue-400 font-black transition-colors">DSRZone</a></p>
         </div>

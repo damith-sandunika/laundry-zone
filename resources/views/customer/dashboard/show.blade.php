@@ -27,16 +27,18 @@
         @php
             if ($order->is_delivery_order) {
                 $statuses = [
-                    'pending'    => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'yellow'],
-                    'processing' => ['label' => 'Accepted', 'icon' => 'fa-clipboard-check', 'color' => 'blue'],
-                    'washing'    => ['label' => 'Picked Up', 'icon' => 'fa-truck-pickup', 'color' => 'blue'],
-                    'ready'      => ['label' => 'Job Done', 'icon' => 'fa-box-open', 'color' => 'blue'],
-                    'delivered'  => ['label' => 'Delivered', 'icon' => 'fa-truck-fast', 'color' => 'purple'],
-                    'completed'  => ['label' => 'Completed', 'icon' => 'fa-check-double', 'color' => 'green']
+                    'received'         => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'yellow'],
+                    'processing'       => ['label' => 'Accepted', 'icon' => 'fa-clipboard-check', 'color' => 'blue'],
+                    'washing'          => ['label' => 'Picked Up', 'icon' => 'fa-truck-pickup', 'color' => 'blue'],
+                    'ready'            => ['label' => 'Job Done', 'icon' => 'fa-box-open', 'color' => 'blue'],
+                    'out_for_delivery' => ['label' => 'Out for Delivery', 'icon' => 'fa-motorcycle', 'color' => 'blue'],
+                    'delivered'        => ['label' => 'Delivered', 'icon' => 'fa-truck-fast', 'color' => 'purple'],
+                    'completed'        => ['label' => 'Completed', 'icon' => 'fa-check-double', 'color' => 'green']
                 ];
             } else {
                 $statuses = [
-                    'pending'    => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'yellow'],
+                    'received'   => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'yellow'],
+                    'processing' => ['label' => 'Processing', 'icon' => 'fa-spinner', 'color' => 'blue'],
                     'ready'      => ['label' => 'Job Done', 'icon' => 'fa-box-open', 'color' => 'blue'],
                     'completed'  => ['label' => 'Completed', 'icon' => 'fa-check-double', 'color' => 'green']
                 ];
@@ -45,12 +47,21 @@
             $actualStatus = $order->status;
             
             if ($order->is_delivery_order) {
+                if (in_array($actualStatus, ['pending'])) {
+                    $actualStatus = 'received';
+                }
                 if (in_array($actualStatus, ['drying', 'ironing'])) {
                     $actualStatus = 'washing';
                 }
+                if (in_array($actualStatus, ['returned_from_workshop'])) {
+                    $actualStatus = 'ready';
+                }
             } else {
-                if (in_array($actualStatus, ['processing', 'washing', 'drying', 'ironing'])) {
-                    $actualStatus = 'pending';
+                if (in_array($actualStatus, ['pending'])) {
+                    $actualStatus = 'received';
+                }
+                if (in_array($actualStatus, ['washing', 'drying', 'ironing'])) {
+                    $actualStatus = 'processing';
                 }
             }
             
@@ -141,7 +152,7 @@
                                 </div>
                             </div>
                             <div class="font-black text-slate-800">
-                                LKR {{ number_format($item->subtotal, 2) }}
+                                LKR {{ number_format($item->total_price, 2) }}
                             </div>
                         </div>
                     @endforeach

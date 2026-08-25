@@ -39,20 +39,29 @@ Route::get('/customer/register', [\App\Http\Controllers\Customer\AuthController:
 Route::post('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'register'])->name('customer.register.submit');
 Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('customer.logout');
 
+// AJAX Auth for Wizard
+Route::post('/customer/ajax-login', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxLogin'])->name('customer.ajax.login');
+Route::post('/customer/ajax-register', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxRegister'])->name('customer.ajax.register');
+
+// Public Booking Wizard
+Route::get('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('customer.booking');
+Route::post('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'store'])->name('customer.booking.store');
+Route::get('/customer/book/success/{appointment}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('customer.booking.success');
+
 Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
     Route::get('/orders/{order}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
     Route::get('/orders/{order}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
-    Route::post('/orders/{order}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'processPayment'])->name('orders.pay.process');
     
     // Appointments
     Route::get('/appointments/{appointment}', [\App\Http\Controllers\Customer\DashboardController::class, 'showAppointment'])->name('appointments.show');
-    
-    // Customer Booking
-    Route::get('/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('booking');
-    Route::post('/book', [\App\Http\Controllers\CustomerSiteController::class, 'store'])->name('booking.store');
-    Route::get('/book/success/{appointment}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('booking.success');
+    Route::middleware(['auth:customer'])->group(function () {
+        // Payment Gateway Routes
+        Route::get('/orders/{order}/pay', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
+        Route::post('/payment/process', [\App\Http\Controllers\PaymentController::class, 'process'])->name('payment.process');
+        Route::get('/orders/{order}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
+    });
 });
 
 // ─── Public Order Tracking (QR Code link) ───
@@ -99,11 +108,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/packages/{customerPackage}/print', [PackageController::class, 'printReceipt'])->name('packages.print');
     Route::resource('packages', PackageController::class)->except(['create', 'edit', 'update']);
 
-    Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
-    Route::post('/inventory/bulk-restock', [InventoryController::class, 'bulkStockIn'])->name('inventory.bulkStockIn');
-    Route::post('/inventory/bulk-stock-out', [InventoryController::class, 'bulkStockOut'])->name('inventory.bulkStockOut');
-    Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stockOut');
-    Route::delete('/inventory/{item}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
+
 
     Route::resource('payment_methods', \App\Http\Controllers\PaymentMethodController::class)->only(['store', 'update', 'destroy']);
 
@@ -132,19 +137,27 @@ Route::middleware(['auth'])->group(function () {
     // ─── WORKSHOP ROUTES ───
     Route::middleware(['workshop'])->prefix('workshop')->name('workshop.')->group(function () {
         Route::get('/dashboard', [WorkshopController::class, 'dashboard'])->name('dashboard');
+        Route::get('/operations', [WorkshopController::class, 'operations'])->name('operations');
         Route::get('/history', [WorkshopController::class, 'history'])->name('history');
         Route::post('/dispatches/{dispatch}/receive', [WorkshopController::class, 'receive'])->name('receive');
         Route::post('/dispatches/{dispatch}/start-processing', [WorkshopController::class, 'startProcessing'])->name('startProcessing');
         Route::post('/dispatches/{dispatch}/complete', [WorkshopController::class, 'complete'])->name('complete');
         Route::post('/dispatches/{dispatch}/return', [WorkshopController::class, 'returnToBranch'])->name('return');
+        Route::get('/dispatches/{dispatch}/finalize-bill', [WorkshopController::class, 'finalizeBill'])->name('finalizeBill');
+        Route::post('/dispatches/{dispatch}/delivery', [WorkshopController::class, 'dispatchDelivery'])->name('dispatchDelivery');
+        Route::post('/dispatches/{dispatch}/request-payment', [WorkshopController::class, 'requestPayment'])->name('requestPayment');
+        Route::post('/dispatches/{dispatch}/approve-payment', [WorkshopController::class, 'approvePayment'])->name('approvePayment');
         Route::post('/bulk-status', [WorkshopController::class, 'bulkStatus'])->name('bulkStatus');
     });
 
-    // ─── ADMIN ONLY ROUTES ───
-    Route::middleware(['admin'])->group(function () {
-        Route::resource('branches', BranchController::class)->except(['create', 'show', 'edit']);
+    // ─── DELIVERY & INVENTORY (WORKSHOP ADMIN) ───
+    Route::middleware(['workshop'])->group(function () {
+        Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
+        Route::post('/inventory/bulk-restock', [InventoryController::class, 'bulkStockIn'])->name('inventory.bulkStockIn');
+        Route::post('/inventory/bulk-stock-out', [InventoryController::class, 'bulkStockOut'])->name('inventory.bulkStockOut');
+        Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stockOut');
+        Route::delete('/inventory/{item}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
 
-        // ─── Delivery Management (Branch Admin) ───
         Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery.index');
         Route::get('/delivery/{appointment}/confirm', [DeliveryController::class, 'confirm'])->name('delivery.confirm');
         Route::post('/delivery/{appointment}/confirm-action', [DeliveryController::class, 'confirmAction'])->name('delivery.confirmAction');
@@ -153,13 +166,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/delivery/{appointment}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
         Route::post('/delivery/{appointment}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
         Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
+    });
+
+    // ─── ADMIN ONLY ROUTES ───
+    Route::middleware(['admin'])->group(function () {
+        Route::resource('branches', BranchController::class)->except(['create', 'show', 'edit']);
+
         Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
 
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
 
         // Payment Settings
-        Route::get('/settings/payment-methods', [PaymentSettingsController::class, 'index'])->name('settings.payment-methods.index');
         Route::post('/settings/payment-methods', [PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
 
         // WhatsApp Proxy Routes (Server-ready)
@@ -180,6 +198,21 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
             Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
             Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
+            
+            Route::post('/settings/delivery-global', [SettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
+            Route::post('/settings/delivery-ranges', [SettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
+            Route::delete('/settings/delivery-ranges/{deliveryRange}', [SettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
+            
+            Route::post('/settings/pickup-time-periods', [SettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
+            Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [SettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
+            
+            Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+            Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
+            Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
+
+            Route::get('/whatsapp-templates', [WhatsappTemplateController::class, 'index'])->name('whatsapp_templates.index');
+            Route::put('/whatsapp-templates/{whatsappTemplate}', [WhatsappTemplateController::class, 'update'])->name('whatsapp_templates.update');
         });
 
         Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
@@ -188,11 +221,6 @@ Route::middleware(['auth'])->group(function () {
 
         Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
         Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
-
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
-        Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
-        Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
 
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);
@@ -204,9 +232,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
         Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
-
-        Route::get('/whatsapp-templates', [WhatsappTemplateController::class, 'index'])->name('whatsapp_templates.index');
-        Route::put('/whatsapp-templates/{whatsappTemplate}', [WhatsappTemplateController::class, 'update'])->name('whatsapp_templates.update');
     });
 });
 

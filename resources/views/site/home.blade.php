@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RAPID Laundromat - Premium Laundry Delivery</title>
+    <title>360 Laundry - Premium Laundry Delivery</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -40,7 +40,7 @@
             <!-- Logo + Brand Name: left on all sizes -->
             <div class="flex items-center gap-2">
                 <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto">
-                <span class="font-black text-xl tracking-tight text-brand">RAPID Laundromat</span>
+                <span class="font-black text-xl tracking-tight text-brand">360 Laundry</span>
             </div>
             
             <!-- Desktop Menu -->
@@ -358,7 +358,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex flex-col lg:flex-row gap-12 items-center">
             <div class="flex-1">
-                <h2 class="text-3xl md:text-4xl font-extrabold text-brand mb-8">Why Choose RAPID Laundromat?</h2>
+                <h2 class="text-3xl md:text-4xl font-extrabold text-brand mb-8">Why Choose 360 Laundry?</h2>
                 <div class="grid grid-cols-2 gap-8">
                     <div class="text-center lg:text-left">
                         <div class="w-16 h-16 mx-auto lg:mx-0 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4">
@@ -556,7 +556,7 @@
             <div class="col-span-1 md:col-span-1">
                 <div class="flex items-center mb-6">
                     <span class="text-3xl mr-2 text-white"><i class="fa-solid fa-droplet"></i></span>
-                    <span class="font-bold text-2xl text-white">RAPID Laundromat</span>
+                    <span class="font-bold text-2xl text-white">360 Laundry</span>
                 </div>
                 <p class="text-sm text-slate-400 mb-6">Professional laundry and dry cleaning services with care and convenience.</p>
                 <div class="flex gap-4">
@@ -597,7 +597,7 @@
         </div>
         <div class="text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
-                <p>&copy; {{ date('Y') }} RAPID Laundromat. All Rights Reserved.</p>
+                <p>&copy; {{ date('Y') }} 360 Laundry. All Rights Reserved.</p>
                 <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com" target="_blank" class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>
             </div>
             <div class="flex gap-4">

@@ -115,25 +115,42 @@
                                                 </button>
                                             </form>
                                         @elseif($appt->status === 'confirmed')
-                                            <form method="POST" action="{{ route('delivery.assignRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
-                                                @csrf
-                                                <select name="rider_id" required style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
-                                                    <option value="">Select Rider</option>
-                                                    @foreach($riders as $rider)
-                                                        <option value="{{ $rider->id }}">{{ $rider->name }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <button type="submit" style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">
-                                                    Assign
-                                                </button>
-                                            </form>
+                                            <div x-data="{ deliveryMethod: 'in_house' }" style="display:flex;gap:10px;align-items:center;">
+                                                <form method="POST" action="{{ route('delivery.assignRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
+                                                    @csrf
+                                                    <select x-model="deliveryMethod" name="delivery_method" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
+                                                        <option value="in_house">In-house Rider</option>
+                                                        <option value="pickme_flash">PickMe Flash</option>
+                                                    </select>
+
+                                                    <select x-show="deliveryMethod === 'in_house'" name="rider_id" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
+                                                        <option value="">Select Rider</option>
+                                                        @foreach($riders as $rider)
+                                                            <option value="{{ $rider->id }}">{{ $rider->name }}</option>
+                                                        @endforeach
+                                                    </select>
+
+                                                    <button type="submit" style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">
+                                                        Assign
+                                                    </button>
+                                                </form>
+                                            </div>
                                         @elseif($appt->status === 'picked_up')
-                                            <form method="POST" action="{{ route('delivery.atBranch', $appt) }}" style="margin:0;">
-                                                @csrf
-                                                <button type="submit" style="padding:5px 10px;background:#ea580c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,88,12,0.3);">
-                                                    Received at Branch
-                                                </button>
-                                            </form>
+                                            <div x-data="{ showCost: false }" style="display:flex;gap:4px;align-items:center;">
+                                                <form method="POST" action="{{ route('delivery.atBranch', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
+                                                    @csrf
+                                                    
+                                                    <button type="button" @click="showCost = !showCost" title="Add PickMe Flash Cost" style="padding:4px 6px;background:white;color:#ea580c;border:1px solid #ea580c;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">
+                                                        <i class="fa-solid fa-taxi"></i> Cost
+                                                    </button>
+                                                    
+                                                    <input x-show="showCost" type="number" step="0.01" name="pickme_flash_cost" placeholder="Amount" style="width:70px;padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;" x-cloak>
+
+                                                    <button type="submit" style="padding:5px 10px;background:#ea580c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,88,12,0.3);">
+                                                        Received at Workshop
+                                                    </button>
+                                                </form>
+                                            </div>
                                         @else
                                             <span style="font-size:11px;color:#94a3b8;font-weight:600;">No Action</span>
                                         @endif

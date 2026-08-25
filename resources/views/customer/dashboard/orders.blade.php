@@ -75,7 +75,7 @@
                                     @else bg-yellow-100 text-yellow-700
                                     @endif
                                 ">
-                                    {{ ucfirst($orderObj->status) }}
+                                    {{ ucwords(str_replace('_', ' ', $orderObj->status)) }}
                                 </span>
                             </div>
                         </div>

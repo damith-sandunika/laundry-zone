@@ -39,7 +39,12 @@ class PaymentSettingsController extends Controller
             'bank_branch' => Setting::get('bank_branch', ''),
         ];
 
-        return view('settings.payment-methods', compact('methods', 'bankDetails'));
+        $gatewayDetails = [
+            'gateway_merchant_id' => Setting::get('gateway_merchant_id', ''),
+            'gateway_secret_key' => Setting::get('gateway_secret_key', ''),
+        ];
+
+        return view('settings.payment-methods', compact('methods', 'bankDetails', 'gatewayDetails'));
     }
 
     public function update(Request $request)
@@ -52,6 +57,8 @@ class PaymentSettingsController extends Controller
             'bank_account_name' => 'nullable|string|max:255',
             'bank_account_number' => 'nullable|string|max:255',
             'bank_branch' => 'nullable|string|max:255',
+            'gateway_merchant_id' => 'nullable|string|max:255',
+            'gateway_secret_key' => 'nullable|string|max:255',
         ]);
 
         // Update active statuses in Settings
@@ -67,6 +74,10 @@ class PaymentSettingsController extends Controller
         Setting::set('bank_account_number', $request->input('bank_account_number'));
         Setting::set('bank_branch', $request->input('bank_branch'));
 
-        return redirect()->route('settings.payment-methods.index')->with('success', 'Payment methods updated successfully.');
+        // Save gateway details
+        Setting::set('gateway_merchant_id', $request->input('gateway_merchant_id'));
+        Setting::set('gateway_secret_key', $request->input('gateway_secret_key'));
+
+        return redirect()->route('settings.index')->with('success', 'Payment methods updated successfully.');
     }
 }
