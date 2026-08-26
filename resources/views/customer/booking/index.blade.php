@@ -29,7 +29,7 @@
         .radio-dot { transform: scale(0); transition: transform 0.2s ease-in-out; }
     </style>
 
-    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }})" x-init="initData()">
+    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }})" x-init="initData()">
         
         <!-- Wizard Progress Bar -->
         <div class="mb-8">
@@ -158,12 +158,12 @@
                     </div>
                 </div>
                 
-                <!-- Bottom Bar -->
                 <div class="flex justify-between items-center mt-6">
                     <div class="text-lg font-black text-slate-800">
                         Total: <span class="text-blue-600">LKR <span x-text="totalPrice"></span></span>
+                        <div x-show="totalPrice < minLimit" class="text-[10px] text-red-500 font-bold mt-1">Min. order: LKR <span x-text="minLimit"></span></div>
                     </div>
-                    <button type="button" @click="goToStep(2)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
+                    <button type="button" @click="goToStep(2)" :disabled="totalPrice < minLimit || cart.length === 0" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
                         Next Step <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
@@ -403,10 +403,11 @@
 
     <x-slot name="scripts">
         <script>
-            function bookingWizard(categories, isAuth, customer) {
+            function bookingWizard(categories, isAuth, customer, minLimit) {
                 return {
                     step: 1,
                     categories: categories,
+                    minLimit: Number(minLimit || 0),
                     expandedCategory: null,
                     cart: [],
                     
@@ -453,9 +454,15 @@
 
                     goToStep(n) {
                         // Validation logic before moving to next step
-                        if (n === 2 && this.cart.length === 0) {
-                            alert("Please select at least one service before proceeding.");
-                            return;
+                        if (n === 2) {
+                            if (this.cart.length === 0) {
+                                alert("Please select at least one service before proceeding.");
+                                return;
+                            }
+                            if (this.totalPrice < this.minLimit) {
+                                alert("Minimum delivery limit is LKR " + this.minLimit.toFixed(2) + ". Please add more items to proceed.");
+                                return;
+                            }
                         }
                         
                         if (n === 4) {

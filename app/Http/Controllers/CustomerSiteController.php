@@ -38,8 +38,9 @@ class CustomerSiteController extends Controller
         }
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
+        $minimumOrderLimit = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods'));
+        return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods', 'minimumOrderLimit'));
     }
 
     public function store(Request $request, WhatsAppService $waService)

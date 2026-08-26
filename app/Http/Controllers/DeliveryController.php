@@ -109,8 +109,8 @@ class DeliveryController extends Controller
         $deliveryMethod = $request->delivery_method ?? 'in_house';
 
         if ($deliveryMethod === 'pickme_flash') {
-            $appointment->update(['status' => 'picked_up']);
-            return redirect()->route('delivery.index')->with('success', "PickMe Flash assigned. Waiting to receive at workshop.");
+            $appointment->update(['status' => 'rider_assigned']);
+            return redirect()->route('delivery.index')->with('success', "PickMe assigned. Rider is on the way to customer.");
         }
 
         $rider = User::findOrFail($request->rider_id);
@@ -142,8 +142,8 @@ class DeliveryController extends Controller
         if ($request->filled('pickme_flash_cost')) {
             \App\Models\Expense::create([
                 'branch_id' => auth()->user()->branch_id, // Workshop's branch
-                'category' => 'PickMe Flash',
-                'description' => 'PickMe Flash payment for pickup delivery #' . $appointment->id,
+                'category' => 'PickMe',
+                'description' => 'PickMe payment for pickup delivery #' . $appointment->id,
                 'amount' => $request->pickme_flash_cost,
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
@@ -215,8 +215,85 @@ class DeliveryController extends Controller
     public function assignDeliveryRider(Request $request, DeliveryAppointment $appointment)
     {
         $request->validate([
-            'rider_id' => 'required|exists:users,id',
+            'rider_id' => 'required',
             'order_id' => 'required|exists:orders,id',
+        ]);
+
+        if ($request->rider_id === 'pickme_flash') {
+            $order = Order::find($request->order_id);
+            if ($order && $order->paid_amount < $order->total) {
+                return redirect()->back()->with('error', 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.');
+            }
+
+            $appointment->update([
+                'status' => 'delivered', 
+                'delivery_method' => 'pickme_flash',
+                'delivery_cost' => $request->filled('pickme_flash_cost') ? $request->pickme_flash_cost : 0
+            ]);
+            
+            if ($order) {
+                $order->update([
+                    'status' => 'delivered',
+                    'delivered_at' => now(),
+                ]);
+                
+                \App\Models\OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => 'delivered',
+                    'changed_by' => auth()->id(),
+                    'note' => 'Delivered via PickMe',
+                ]);
+                
+                // For PickMe: balance remaining means customer pays COD via PickMe
+                // Do NOT auto-mark as paid - branch admin should handle cash collection
+                // Just record a pending cash transaction if balance > 0
+                $amountToPay = $order->total - $order->paid_amount;
+                if ($amountToPay > 0 && in_array($order->payment_method, ['cash', null])) {
+                    \App\Models\PaymentTransaction::create([
+                        'order_id' => $order->id,
+                        'amount' => $amountToPay,
+                        'payment_method' => 'cash',
+                        'created_by' => auth()->id(),
+                        'collected_from_rider_at' => null, // Admin collects from PickMe
+                        'status' => 'completed',
+                        'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                    ]);
+                    $order->update([
+                        'paid_amount' => $order->total,
+                        'payment_status' => 'paid'
+                    ]);
+                } elseif ($amountToPay <= 0) {
+                    // Already fully paid (bank transfer) - just mark paid
+                    $order->update(['payment_status' => 'paid']);
+                }
+
+                // Log histories to make timeline look complete
+                foreach (['out_for_delivery', 'delivered', 'completed'] as $st) {
+                    \App\Models\OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'status' => $st,
+                        'changed_by' => auth()->id(),
+                        'note' => 'Auto-updated via PickMe/Flash dispatch',
+                    ]);
+                }
+            }
+
+            if ($request->filled('pickme_flash_cost')) {
+                \App\Models\Expense::create([
+                    'branch_id' => $appointment->branch_id,
+                    'category' => 'PickMe',
+                    'description' => 'PickMe payment for delivery dropoff #' . $appointment->id,
+                    'amount' => $request->pickme_flash_cost,
+                    'expense_date' => now(),
+                    'created_by' => auth()->id(),
+                ]);
+            }
+
+            return redirect()->back()->with('success', "Assigned to PickMe/Flash. Order automatically marked as Delivered & Completed.")->with('print_url', route('orders.printChit', $request->order_id));
+        }
+
+        $request->validate([
+            'rider_id' => 'exists:users,id',
         ]);
 
         $rider = User::findOrFail($request->rider_id);
@@ -232,10 +309,10 @@ class DeliveryController extends Controller
             'dropoff_location' => $appointment->delivery_address,
         ]);
 
-        $appointment->update(['status' => 'out_for_delivery']);
+        $appointment->update(['status' => 'out_for_delivery', 'delivery_method' => 'in_house']);
         Order::find($request->order_id)?->update(['status' => 'out_for_delivery']);
 
-        return redirect()->back()->with('success', "Rider {$rider->name} assigned for delivery.");
+        return redirect()->back()->with('success', "Rider {$rider->name} assigned for delivery.")->with('print_url', route('orders.printChit', $request->order_id));
     }
 
     public function collectCash(Request $request, DeliveryAppointment $appointment)
@@ -267,9 +344,18 @@ class DeliveryController extends Controller
                 ]);
             }
         }
+        
+        // Find and complete the rider's task
+        $task = \App\Models\DeliveryTask::where('delivery_appointment_id', $appointment->id)
+            ->where('task_type', 'delivery')
+            ->where('status', 'waiting_for_payment')
+            ->first();
+        if ($task) {
+            $task->update(['status' => 'completed', 'completed_at' => now()]);
+        }
 
-        $appointment->update(['status' => 'completed']);
-        $order->update(['status' => 'completed']);
+        $appointment->update(['status' => 'delivered']);
+        $order->update(['status' => 'delivered']);
 
         return redirect()->back()->with('success', 'Verified and collected cash from rider. Order marked as completed.');
     }

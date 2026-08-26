@@ -40,17 +40,17 @@ class WorkshopDispatch extends Model
 
     public function dispatchedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'dispatched_by');
+        return $this->belongsTo(User::class, 'dispatched_by')->withoutGlobalScopes();
     }
 
     public function receivedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'received_by');
+        return $this->belongsTo(User::class, 'received_by')->withoutGlobalScopes();
     }
 
     public function returnedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'returned_by');
+        return $this->belongsTo(User::class, 'returned_by')->withoutGlobalScopes();
     }
 
     // All steps in the workflow

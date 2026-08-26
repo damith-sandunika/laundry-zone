@@ -33,18 +33,34 @@
                                             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
                                     </div>
-                                    <div class="p-6">
-                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                                            <span class="text-[13px] font-bold text-slate-500">Total Sale</span>
-                                            <span class="text-base font-black text-slate-900">Rs.{{ number_format($stats['total_sale'] ?? 0, 0) }}</span>
+                                    <div class="p-6 flex flex-col gap-0 divide-y divide-slate-100">
+                                        <div class="flex justify-between items-center py-3">
+                                            <span class="text-[13px] font-bold text-slate-500">Opening Balance</span>
+                                            <span class="text-[14px] font-black text-slate-800">Rs.{{ number_format($activeSession->opening_cash ?? 0, 0) }}</span>
                                         </div>
-                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                                            <span class="text-[13px] font-bold text-slate-500">Total Cash Balance</span>
-                                            <span class="text-base font-black text-emerald-600">Rs.{{ number_format($stats['cash_balance'] ?? 0, 0) }}</span>
+                                        <div class="flex justify-between items-center py-3">
+                                            <span class="text-[13px] font-bold text-slate-500">Cash Sales</span>
+                                            <span class="text-[14px] font-black text-slate-800">Rs.{{ number_format($stats['cash_collected'] ?? 0, 0) }}</span>
                                         </div>
-                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
-                                            <span class="text-[13px] font-bold text-slate-500">Total Card Balance</span>
-                                            <span class="text-base font-black text-blue-600">Rs.{{ number_format($stats['card_payments_amount'] ?? 0, 0) }}</span>
+                                        <div class="flex justify-between items-center py-3">
+                                            <span class="text-[13px] font-bold text-slate-500">Card Sales</span>
+                                            <span class="text-[14px] font-black text-slate-800">Rs.{{ number_format($stats['card_payments_amount'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-3">
+                                            <span class="text-[13px] font-bold text-slate-500">Bank Transfers</span>
+                                            <span class="text-[14px] font-black text-slate-800">Rs.{{ number_format($stats['bank_transfers'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-3 bg-blue-50/50 -mx-6 px-6">
+                                            <span class="text-[14px] font-black text-blue-700">Total Sales</span>
+                                            <span class="text-[16px] font-black text-blue-700">Rs.{{ number_format($stats['total_sale'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-3">
+                                            <span class="text-[13px] font-bold text-slate-500">Expenses</span>
+                                            <span class="text-[14px] font-black text-red-500">- Rs.{{ number_format($stats['expenses_logged'] ?? 0, 0) }}</span>
+                                        </div>
+                                        <div class="flex justify-between items-center py-4 bg-emerald-50/50 -mx-6 px-6 border-b-0">
+                                            <span class="text-[14px] font-black text-emerald-700 uppercase tracking-wide">Cash in Drawer</span>
+                                            <span class="text-[20px] font-black text-emerald-700">Rs.{{ number_format($stats['cash_balance'] ?? 0, 0) }}</span>
                                         </div>
                                         
                                         <div class="mt-6 flex flex-col gap-3">
@@ -113,7 +129,7 @@
                     ['label' => 'Active Orders', 'value' => $stats['active_orders'], 'sub' => 'Processing now', 'color' => 'text-blue-600', 'bg' => 'bg-blue-50', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
                     ['label' => 'Pending Pickup', 'value' => $stats['pending_deliveries'], 'sub' => 'Awaiting customer', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                     ['label' => 'Completed Today', 'value' => $stats['completed_today'], 'sub' => 'Delivered orders', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'icon' => 'M5 13l4 4L19 7'],
-                    ['label' => 'Total Balance', 'value' => 'Rs.' . number_format($stats['current_balance'], 0), 'sub' => null, 'color' => 'text-violet-600', 'bg' => 'bg-violet-50', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                    ['label' => 'Total Sales', 'value' => 'Rs.' . number_format($stats['total_sale'] ?? 0, 0), 'sub' => null, 'color' => 'text-violet-600', 'bg' => 'bg-violet-50', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ];
             @endphp
             @foreach($cards as $index => $card)
@@ -121,9 +137,8 @@
                     <div>
                         <p class="text-[9px] sm:text-[10.5px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 leading-tight sm:leading-normal whitespace-normal">{{ $card['label'] }}</p>
                         <p class="text-lg sm:text-3xl font-black text-slate-900 tracking-tight leading-none mb-1 sm:mb-2">{{ $card['value'] }}</p>
-                        @if($card['label'] === 'Total Balance')
-                            <p class="text-[9px] sm:text-[11px] font-bold text-emerald-600 mb-0.5 whitespace-nowrap">Cash: Rs.{{ number_format($stats['cash_balance'], 0) }}</p>
-                            <p class="text-[9px] sm:text-[11px] font-bold text-blue-600 leading-tight">Card: {{ $stats['card_payments'] }} (Rs.{{ number_format($stats['card_payments_amount'], 0) }})</p>
+                        @if($card['label'] === 'Total Sales')
+                            <p class="inline-block px-1.5 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-bold text-violet-600 bg-violet-50 rounded-md uppercase tracking-wide leading-tight">Cash, Card & Bank</p>
                         @elseif($card['sub'])
                             <p class="inline-block px-1.5 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-bold {{ $card['color'] }} {{ $card['bg'] }} rounded-md uppercase tracking-wide leading-tight">{{ $card['sub'] }}</p>
                         @endif
@@ -332,17 +347,41 @@
                     </div>
                 </div>
                 <div class="p-6 flex flex-col gap-0 divide-y divide-slate-800">
-                    <div class="flex justify-between items-center py-4">
-                        <span class="text-[13px] font-semibold text-slate-400">Opening Balance</span>
-                        <span class="text-xl font-black text-white tracking-tight">Rs.{{ number_format($activeSession->opening_cash, 0) }}</span>
+                    <div class="flex justify-between items-center py-3">
+                        <span class="text-[12px] font-semibold text-slate-400">Opening Balance</span>
+                        <span class="text-[14px] font-black text-white tracking-tight">Rs.{{ number_format($activeSession->opening_cash, 0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3">
+                        <span class="text-[12px] font-semibold text-slate-400">Cash Sales</span>
+                        <span class="text-[14px] font-bold text-slate-300">Rs.{{ number_format($stats['cash_collected'] ?? 0, 0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3">
+                        <span class="text-[12px] font-semibold text-slate-400">Card Sales</span>
+                        <span class="text-[14px] font-bold text-slate-300">Rs.{{ number_format($stats['card_payments_amount'] ?? 0, 0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3">
+                        <span class="text-[12px] font-semibold text-slate-400">Bank Transfers</span>
+                        <span class="text-[14px] font-bold text-slate-300">Rs.{{ number_format($stats['bank_transfers'] ?? 0, 0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 bg-slate-800/30 -mx-6 px-6">
+                        <span class="text-[13px] font-bold text-blue-400">Total Sales</span>
+                        <span class="text-[15px] font-black text-blue-400">Rs.{{ number_format($stats['total_sale'] ?? 0, 0) }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3">
+                        <span class="text-[12px] font-semibold text-slate-400">Expenses</span>
+                        <span class="text-[14px] font-bold text-red-400">- Rs.{{ number_format($stats['expenses_logged'] ?? 0, 0) }}</span>
                     </div>
                     <div class="flex justify-between items-center py-4">
-                        <span class="text-[13px] font-semibold text-slate-400">Opened By</span>
-                        <span class="text-[12px] font-bold text-blue-300 bg-blue-500/20 border border-blue-500/30 px-3 py-1 rounded-lg">{{ $activeSession->user->name }}</span>
+                        <span class="text-[13px] font-black text-emerald-400 uppercase tracking-wide">Cash in Drawer</span>
+                        <span class="text-[18px] font-black text-emerald-400">Rs.{{ number_format($stats['cash_balance'] ?? 0, 0) }}</span>
                     </div>
-                    <div class="flex justify-between items-center py-4">
-                        <span class="text-[13px] font-semibold text-slate-400">Time Started</span>
-                        <span class="text-[13px] font-bold text-slate-300">{{ \Carbon\Carbon::parse($activeSession->opened_at)->format('h:i A') }}</span>
+                    <div class="flex justify-between items-center py-3 border-t border-slate-700">
+                        <span class="text-[11px] font-semibold text-slate-500">Opened By</span>
+                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession->user->name }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-3 border-b-0">
+                        <span class="text-[11px] font-semibold text-slate-500">Time Started</span>
+                        <span class="text-[11px] font-bold text-slate-300">{{ \Carbon\Carbon::parse($activeSession->opened_at)->format('h:i A') }}</span>
                     </div>
                 </div>
             </div>

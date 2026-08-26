@@ -19,7 +19,7 @@ class RiderController extends Controller
 
         $activeTasks = DeliveryTask::with(['appointment.customer', 'order'])
             ->where('rider_id', $rider->id)
-            ->whereIn('status', ['assigned', 'accepted', 'on_way', 'arrived'])
+            ->whereIn('status', ['assigned', 'accepted', 'on_way', 'arrived', 'waiting_for_payment'])
             ->orderBy('created_at', 'asc')
             ->get();
 
@@ -88,46 +88,84 @@ class RiderController extends Controller
     {
         $this->authorizeRiderTask($task);
 
-        $task->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-        ]);
-
         $appointment = $task->appointment;
+        $isWaitingForPayment = false;
 
         if ($task->task_type === 'pickup') {
             // Rider picked up from customer, heading to branch
             $appointment->update(['status' => 'picked_up']);
         } elseif ($task->task_type === 'delivery') {
             // Rider delivered to customer
-            $appointment->update(['status' => 'delivered']);
+            $appointment?->update(['status' => 'delivered']);
             $order = Order::find($task->order_id);
             if ($order) {
                 $balance = $order->total - $order->paid_amount;
-                if ($balance > 0) {
-                    \App\Models\PaymentTransaction::create([
+                
+                // Determine the payment method chosen by the rider to settle the balance
+                $paymentMethod = $request->input('payment_method', 'cash');
+                
+                // Only create a cash PaymentTransaction if the customer pays COD (cash)
+                if ($balance > 0 && $paymentMethod === 'cash') {
+                    PaymentTransaction::create([
                         'order_id' => $order->id,
                         'amount' => $balance,
                         'payment_method' => 'cash',
                         'created_by' => auth()->id(),
                         'status' => 'completed',
                         'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                        'collected_from_rider_at' => null // Admin needs to settle this
+                        'collected_from_rider_at' => null // Branch admin needs to collect from rider
                     ]);
 
                     $order->paid_amount += $balance;
                     $order->payment_status = 'paid';
-                    $order->payment_method = 'cash';
+                    // We don't overwrite $order->payment_method because they might have paid advance via bank.
+                    // The transaction itself records the 'cash' method.
+                    
+                    // Rider needs to handover this cash to admin
+                    $isWaitingForPayment = true;
+                } elseif ($balance > 0 && $paymentMethod === 'card') {
+                    // If rider collected via a card terminal
+                    PaymentTransaction::create([
+                        'order_id' => $order->id,
+                        'amount' => $balance,
+                        'payment_method' => 'card',
+                        'created_by' => auth()->id(),
+                        'status' => 'completed',
+                        'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                    ]);
+                    $order->paid_amount += $balance;
+                    $order->payment_status = 'paid';
                 }
 
-                $order->update([
+                $updateData = [
                     'status' => 'delivered',
                     'delivered_at' => now(),
+                ];
+
+                if ($balance > 0) {
+                    $updateData['paid_amount'] = $order->paid_amount;
+                    $updateData['payment_status'] = $order->payment_status;
+                }
+
+                $order->update($updateData);
+
+                \App\Models\OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => 'delivered',
+                    'changed_by' => auth()->id(),
+                    'note' => 'Delivered by rider',
                 ]);
             }
         }
 
-        return response()->json(['success' => true, 'status' => 'completed']);
+        $newStatus = $isWaitingForPayment ? 'waiting_for_payment' : 'completed';
+        
+        $task->update([
+            'status' => $newStatus,
+            'completed_at' => $newStatus === 'completed' ? now() : null,
+        ]);
+
+        return response()->json(['success' => true, 'status' => $newStatus]);
     }
 
     // ─── Rider: Mobile Order Creation ───
@@ -170,7 +208,7 @@ class RiderController extends Controller
             'branch_id' => $branchId,
             'customer_id' => $appointment->customer_id,
             'created_by' => auth()->id(),
-            'status' => 'picked_up',
+            'status' => 'received',
             'subtotal' => $subtotal,
             'total' => $subtotal, // Delivery fee added later if applicable
             'notes' => $request->notes,

@@ -52,6 +52,8 @@ class DashboardController extends Controller
         $cashBalance = 0;
         $cardPayments = 0;
         $cardPaymentsAmount = 0;
+        $bankTransfers = 0;
+        $bankTransfersAmount = 0;
         if ($activeSession) {
             // Calculate total sales revenue paid during shift
             $salesCollected = Order::where('branch_id', $branchId)
@@ -71,6 +73,13 @@ class DashboardController extends Controller
             $cardPayments = $cardTransactionsQuery->count();
             $cardPaymentsAmount = $cardTransactionsQuery->sum('amount');
 
+            // Bank payments via PaymentTransaction
+            $bankTransactionsQuery = PaymentTransaction::whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'bank');
+            $bankTransfers = $bankTransactionsQuery->count();
+            $bankTransfersAmount = $bankTransactionsQuery->sum('amount');
+
             // Also count orders paid by cash (not via credit route) for backward compat
             $directCashOrders = Order::where('branch_id', $branchId)
                 ->where('created_at', '>=', $activeSession->opened_at)
@@ -78,6 +87,14 @@ class DashboardController extends Controller
                 ->whereDoesntHave('paymentTransactions')
                 ->sum('paid_amount');
             $cashCollected += $directCashOrders;
+
+            // Also count orders paid by bank (not via credit route)
+            $directBankOrders = Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'bank')
+                ->whereDoesntHave('paymentTransactions')
+                ->sum('paid_amount');
+            $bankTransfersAmount += $directBankOrders;
 
             // Calculate expenses logged during shift
             $expensesLogged = Expense::where('branch_id', $branchId)
@@ -95,7 +112,7 @@ class DashboardController extends Controller
 
             $totalSale = $totalOrderSales + $totalPackageSales;
 
-            $currentBalance = $activeSession->opening_cash + $cashCollected + $cardPaymentsAmount - $expensesLogged;
+            $currentBalance = $activeSession->opening_cash + $cashCollected + $cardPaymentsAmount + $bankTransfersAmount - $expensesLogged;
             $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
         } else {
             $totalSale = 0;
@@ -108,9 +125,13 @@ class DashboardController extends Controller
             'total_customers' => $totalCustomers->count(),
             'current_balance' => $currentBalance,
             'cash_balance' => $cashBalance,
+            'cash_collected' => $cashCollected ?? 0,
             'card_payments' => $cardPayments,
             'card_payments_amount' => $cardPaymentsAmount,
+            'bank_transfers' => $bankTransfersAmount,
+            'bank_transfers_count' => $bankTransfers,
             'total_sale' => $totalSale ?? 0,
+            'expenses_logged' => $expensesLogged ?? 0,
         ];
 
         // Active orders sorted by nearest due_date first

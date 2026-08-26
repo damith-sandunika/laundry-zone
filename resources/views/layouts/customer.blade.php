@@ -81,6 +81,24 @@
 @endif
 
 <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    @if(session('success'))
+        <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl font-bold flex items-center gap-2 mb-6">
+            <i class="fa-solid fa-circle-check"></i> {{ session('success') }}
+        </div>
+    @endif
+    @if(session('error'))
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl font-bold flex items-center gap-2 mb-6">
+            <i class="fa-solid fa-circle-exclamation"></i> {{ session('error') }}
+        </div>
+    @endif
+    @if($errors->any())
+        <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl font-bold flex flex-col gap-1 mb-6">
+            @foreach($errors->all() as $error)
+                <div class="flex items-center gap-2"><i class="fa-solid fa-xmark"></i> {{ $error }}</div>
+            @endforeach
+        </div>
+    @endif
+
     {{ $slot }}
 </main>
 

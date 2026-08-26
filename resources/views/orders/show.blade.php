@@ -57,85 +57,188 @@
                         <div class="absolute left-[15px] top-4 bottom-4 w-[2px] bg-slate-100"></div>
                         <div class="space-y-5">
                             @php
-                                $history = $order->statusHistory->sortBy('created_at')->values();
-                                // Build steps array
                                 $steps = collect();
+                                $history = $order->statusHistory->sortBy('created_at')->values();
+                                $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
                                 
-                                // Initial step
+                                function getLog($history, $status) {
+                                    return $history->firstWhere('status', $status);
+                                }
+                                
                                 if ($order->is_delivery_order) {
+                                    // 1. Customer Place Order (Appointment)
                                     $steps->push([
-                                        'label' => 'Appointment Booked',
+                                        'label' => 'Customer Order Placed',
                                         'icon' => '📅',
                                         'time' => $order->deliveryAppointment?->created_at,
                                         'user' => $order->customer->name,
-                                        'status' => 'pending'
+                                        'active' => true
                                     ]);
+                                    
+                                    // 2. Order Confirm (Received)
                                     $steps->push([
-                                        'label' => 'Picked Up & Order Created',
-                                        'icon' => '🚚',
+                                        'label' => 'Order Confirmed',
+                                        'icon' => '✅',
                                         'time' => $order->created_at,
                                         'user' => $order->createdBy?->name ?? 'System',
-                                        'status' => 'picked_up'
+                                        'active' => true
                                     ]);
+                                    
+                                    // 3. Rider Assign (Task)
+                                    $pickupTask = \App\Models\DeliveryTask::where('delivery_appointment_id', $order->delivery_appointment_id)->where('task_type', 'pickup')->first();
+                                    $steps->push([
+                                        'label' => 'Rider Assigned',
+                                        'icon' => '🛵',
+                                        'time' => $pickupTask?->created_at,
+                                        'user' => $pickupTask?->rider?->name,
+                                        'active' => $pickupTask != null || $order->deliveryAppointment?->delivery_method === 'pickme_flash'
+                                    ]);
+                                    
+                                    // 4. Workshop Received
+                                    $steps->push([
+                                        'label' => 'Workshop Received',
+                                        'icon' => '📥',
+                                        'time' => $dispatch?->received_at_workshop_at,
+                                        'user' => $dispatch?->receivedBy?->name,
+                                        'active' => $dispatch?->received_at_workshop_at != null
+                                    ]);
+                                    
+                                    // 5. Payment & Start (Processing)
+                                    $firstPayment = $order->paymentTransactions()->orderBy('created_at')->first();
+                                    $processingLog = getLog($history, 'processing');
+                                    
+                                    $payLabel = 'Payment & Processing Started';
+                                    if ($firstPayment) {
+                                        $payLabel .= ' (Paid Rs.' . number_format($firstPayment->amount, 0) . ' at ' . $firstPayment->created_at->format('H:i') . ')';
+                                    }
+                                    
+                                    $steps->push([
+                                        'label' => $payLabel,
+                                        'icon' => '⚙️',
+                                        'time' => $processingLog?->created_at ?? $firstPayment?->created_at,
+                                        'user' => $processingLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'active' => $processingLog != null || $order->status === 'processing' || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
+                                    ]);
+                                    
+                                    // 6. Done (Workshop Completed)
+                                    $doneWorkshopLog = getLog($history, 'completed_at_workshop');
+                                    $steps->push([
+                                        'label' => 'Done',
+                                        'icon' => '✨',
+                                        'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
+                                        'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
+                                    ]);
+                                    
+                                    // 7. Pay Full Payment & Completed (Delivered)
+                                    $completedLog = getLog($history, 'completed');
+                                    $deliveredLog = getLog($history, 'delivered');
+                                    $finalLog = $completedLog ?? $deliveredLog;
+
+                                    $steps->push([
+                                        'label' => 'Full Payment & Completed',
+                                        'icon' => '🤝',
+                                        'time' => $finalLog?->created_at ?? $order->delivered_at,
+                                        'user' => $finalLog?->changedBy?->name ?? 'System',
+                                        'active' => in_array($order->status, ['delivered', 'completed'])
+                                    ]);
+                                    
                                 } else {
+                                    // WALK-IN ORDER FLOW
+                                    
+                                    // 1. Order Received
                                     $steps->push([
                                         'label' => 'Order Received',
                                         'icon' => '📥',
                                         'time' => $order->created_at,
                                         'user' => $order->createdBy?->name ?? 'System',
-                                        'status' => 'received'
+                                        'active' => true
                                     ]);
-                                }
-
-                                foreach ($history as $log) {
-                                    $label = ucwords(str_replace('_', ' ', $log->status));
-                                    $icon = match($log->status) {
-                                        'dispatched_to_workshop' => '📤',
-                                        'processing' => '⚙️',
-                                        'returned_from_workshop' => '🚚',
-                                        'done' => '✅',
-                                        'out_for_delivery' => '🛵',
-                                        'delivered' => '🤝',
-                                        'cancelled' => '❌',
-                                        default => '▶'
-                                    };
+                                    
+                                    // 2. Transfer to Workshop
+                                    $dispatchLog = getLog($history, 'dispatched_to_workshop');
                                     $steps->push([
-                                        'label' => 'Status: ' . $label,
-                                        'icon' => $icon,
-                                        'time' => $log->created_at,
-                                        'user' => $log->changedBy?->name ?? 'System',
-                                        'status' => $log->status
+                                        'label' => 'Transfer to Workshop',
+                                        'icon' => '📤',
+                                        'time' => $dispatchLog?->created_at ?? $dispatch?->dispatched_at,
+                                        'user' => $dispatchLog?->changedBy?->name ?? $dispatch?->dispatchedBy?->name,
+                                        'active' => $dispatch != null
+                                    ]);
+                                    
+                                    // 3. Arrive Workshop & Washing (Processing)
+                                    $arriveLog = getLog($history, 'received_at_workshop');
+                                    $processingLog = getLog($history, 'processing');
+                                    $steps->push([
+                                        'label' => 'Arrive Workshop & Washing',
+                                        'icon' => '⚙️',
+                                        'time' => $arriveLog?->created_at ?? $processingLog?->created_at ?? $dispatch?->received_at_workshop_at,
+                                        'user' => $arriveLog?->changedBy?->name ?? $processingLog?->changedBy?->name ?? $dispatch?->receivedBy?->name,
+                                        'active' => $arriveLog != null || $processingLog != null || $dispatch?->received_at_workshop_at != null || in_array($order->status, ['processing', 'returned_from_workshop', 'done', 'delivered'])
+                                    ]);
+                                    
+                                    // 4. Done (at Workshop)
+                                    $doneWorkshopLog = getLog($history, 'completed_at_workshop');
+                                    $steps->push([
+                                        'label' => 'Done',
+                                        'icon' => '✨',
+                                        'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
+                                        'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
+                                    ]);
+                                    
+                                    // 5. Delivery to Branch (Returning)
+                                    $returnLog = getLog($history, 'returned_from_workshop');
+                                    $steps->push([
+                                        'label' => 'Delivery to Branch',
+                                        'icon' => '🚚',
+                                        'time' => $returnLog?->created_at ?? $dispatch?->returned_at,
+                                        'user' => $returnLog?->changedBy?->name ?? $dispatch?->returnedBy?->name,
+                                        'active' => $returnLog != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
+                                    ]);
+                                    
+                                    // 6. Received to Branch (Done state)
+                                    $doneLog = getLog($history, 'done');
+                                    $steps->push([
+                                        'label' => 'Received to Branch',
+                                        'icon' => '🏢',
+                                        'time' => $doneLog?->created_at ?? $dispatch?->received_at_branch_at,
+                                        'user' => $doneLog?->changedBy?->name ?? 'Branch Admin',
+                                        'active' => $doneLog != null || in_array($order->status, ['done', 'delivered'])
+                                    ]);
+                                    
+                                    // 7. Delivered to Customer
+                                    $completedLog = getLog($history, 'completed');
+                                    $deliveredLog = getLog($history, 'delivered');
+                                    $finalLog = $completedLog ?? $deliveredLog;
+                                    
+                                    $steps->push([
+                                        'label' => 'Delivered to Customer',
+                                        'icon' => '🤝',
+                                        'time' => $finalLog?->created_at ?? $order->delivered_at,
+                                        'user' => $finalLog?->changedBy?->name ?? 'System',
+                                        'active' => in_array($order->status, ['delivered', 'completed'])
                                     ]);
                                 }
                             @endphp
 
                             @foreach($steps as $step)
-                            <div class="flex items-start gap-4 relative">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm z-10 flex-shrink-0 shadow-sm bg-blue-600 text-white border-2 border-white ring-4 ring-blue-50">
+                            <div class="flex items-start gap-4 relative {{ !$step['active'] ? 'opacity-40 grayscale' : '' }}">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm z-10 flex-shrink-0 shadow-sm {{ $step['active'] ? 'bg-blue-600 text-white border-2 border-white ring-4 ring-blue-50' : 'bg-slate-200 text-slate-500 border-2 border-white' }}">
                                     {{ $step['icon'] }}
                                 </div>
-                                <div class="flex-1 pt-1.5">
+                                <div class="flex-1 pt-1.5 pb-5">
                                     <div class="flex items-baseline justify-between gap-2">
-                                        <div class="text-[13px] font-black text-slate-800">{{ $step['label'] }}</div>
+                                        <div class="text-[13px] font-black {{ $step['active'] ? 'text-slate-800' : 'text-slate-500' }}">{{ $step['label'] }}</div>
                                         @if($step['time'])
-                                            <div class="text-[11px] text-slate-400 font-bold whitespace-nowrap">{{ \Carbon\Carbon::parse($step['time'])->format('d M, H:i') }}</div>
+                                            <div class="text-[11px] font-bold whitespace-nowrap {{ $step['active'] ? 'text-blue-600' : 'text-slate-400' }}">{{ \Carbon\Carbon::parse($step['time'])->format('d M, H:i') }}</div>
                                         @endif
                                     </div>
+                                    @if($step['active'] && $step['user'])
                                     <div class="text-[11px] text-slate-500 font-semibold mt-0.5">By {{ $step['user'] }}</div>
+                                    @endif
                                 </div>
                             </div>
                             @endforeach
-                            
-                            @if(!in_array($order->status, ['delivered', 'cancelled']))
-                            <div class="flex items-start gap-4 relative opacity-50">
-                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm z-10 flex-shrink-0 bg-slate-100 text-slate-400 border-2 border-white">
-                                    ⏳
-                                </div>
-                                <div class="flex-1 pt-1.5">
-                                    <div class="text-[13px] font-black text-slate-500 animate-pulse">Waiting for next step...</div>
-                                </div>
-                            </div>
-                            @endif
                         </div>
                     </div>
                 </div>
@@ -176,7 +279,8 @@
                                 <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Payment</label>
                                 <select name="payment_method" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
                                     <option value="cash">💵 Cash</option>
-                                    <option value="card">💳 Card / Transfer</option>
+                                    <option value="card">💳 Card</option>
+                                    <option value="bank">🏦 Bank Transfer</option>
                                     <option value="credit">⏳ Credit</option>
                                 </select>
                             </div>
@@ -303,6 +407,26 @@
                         <span style="color:#64748b;font-weight:600;">Paid Amount</span>
                         <span style="font-weight:800;color:#16a34a;">Rs.{{ number_format($order->paid_amount, 2) }}</span>
                     </div>
+                    @php
+                        $deliveryCost = 0;
+                        $deliveryExpense = \App\Models\Expense::whereIn('category', ['delivery', 'PickMe', 'PickMe Flash'])
+                            ->where(function($q) use ($order) {
+                                $q->where('description', 'like', '%Order #' . $order->order_number . '%')
+                                  ->orWhere('description', 'like', '%delivery dropoff #' . optional($order->deliveryAppointment)->id . '%');
+                            })
+                            ->latest()
+                            ->first();
+                        
+                        if ($deliveryExpense) {
+                            $deliveryCost = $deliveryExpense->amount;
+                        }
+                    @endphp
+                    @if($deliveryCost > 0)
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <span style="color:#64748b;font-weight:600;">Delivery Cost (PickMe)</span>
+                        <span style="font-weight:800;color:#0f172a;">Rs.{{ number_format($deliveryCost, 2) }}</span>
+                    </div>
+                    @endif
                     <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #f1f5f9;">
                         <span style="color:#64748b;font-weight:600;">Balance Due</span>
                         <span style="font-weight:900;color:#dc2626;">Rs.{{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
@@ -323,19 +447,66 @@
                 </div>
             </div>
 
-            <!-- Storage Location / Cubbet -->
+            <!-- Storage Location / Cubby -->
+            @php
+                $receipts = collect();
+                if ($order->receipt_path) {
+                    $receipts->push($order->receipt_path);
+                }
+                if ($order->deliveryAppointment && $order->deliveryAppointment->receipt_path) {
+                    $receipts->push($order->deliveryAppointment->receipt_path);
+                }
+                $txReceipts = \App\Models\PaymentTransaction::where('order_id', $order->id)
+                    ->whereNotNull('receipt_path')
+                    ->pluck('receipt_path');
+                
+                foreach ($txReceipts as $tr) {
+                    $receipts->push($tr);
+                }
+                
+                $receipts = $receipts->unique()->values();
+            @endphp
+
+            @if($receipts->count() > 0)
+            <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
+                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Payment Receipts</h3>
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    @foreach($receipts as $index => $path)
+                    <a href="{{ asset('storage/' . $path) }}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                        <div style="width:32px;height:32px;background:#eef2ff;color:#4f46e5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">
+                            <i class="fa-solid fa-file-invoice"></i>
+                        </div>
+                        <div style="flex:1;">
+                            <p style="font-size:11px;font-weight:800;color:#0f172a;margin:0;">Receipt #{{ $index + 1 }}</p>
+                            <p style="font-size:10px;color:#64748b;margin:0;font-weight:600;">Click to view</p>
+                        </div>
+                        <i class="fa-solid fa-arrow-up-right-from-square" style="color:#94a3b8;font-size:12px;"></i>
+                    </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
             @if($order->cubbies->count())
             <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
                 <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Storage</h3>
-                @foreach($order->cubbies as $oc)
-                    <div style="display:flex;align-items:center;gap:10px;">
+                @foreach($order->cubbies->sortByDesc('assigned_at') as $oc)
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;{{ $oc->released_at ? 'opacity:0.5;' : '' }}">
                         <div style="width:30px;height:30px;background:#eef2ff;color:#4f46e5;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:12px;">
                             {{ $oc->cubby->name ?? '?' }}
                         </div>
-                        <div>
-                            <p style="font-size:12px;font-weight:800;color:#0f172a;margin:0;">Cubbet {{ $oc->cubby->name ?? 'N/A' }}</p>
-                            <p style="font-size:10px;color:#94a3b8;margin:2px 0 0;font-weight:600;">Assigned {{ \Carbon\Carbon::parse($oc->assigned_at)->format('M d, h:i A') }}</p>
+                        <div style="flex:1;">
+                            <p style="font-size:12px;font-weight:800;color:#0f172a;margin:0;">Cubby: {{ $oc->cubby->name ?? 'N/A' }}</p>
+                            <p style="font-size:10px;color:#94a3b8;margin:2px 0 0;font-weight:600;">
+                                Assigned: {{ \Carbon\Carbon::parse($oc->assigned_at)->format('M d, h:i A') }}
+                                &bull; Loc: {{ $oc->cubby->branch->name ?? 'Unknown' }}
+                            </p>
                         </div>
+                        @if($oc->released_at)
+                            <span style="font-size:9px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:2px 6px;border-radius:4px;text-transform:uppercase;">Released</span>
+                        @else
+                            <span style="font-size:9px;font-weight:800;color:#16a34a;background:#f0fdf4;padding:2px 6px;border-radius:4px;text-transform:uppercase;">Active</span>
+                        @endif
                     </div>
                 @endforeach
             </div>

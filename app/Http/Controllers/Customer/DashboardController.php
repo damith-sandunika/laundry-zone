@@ -12,10 +12,10 @@ class DashboardController extends Controller
     {
         $customer = Auth::guard('customer')->user();
         
-        // Fetch active orders (not delivered or cancelled)
+        // Fetch active orders (not delivered, completed or cancelled)
         $activeOrders = $customer->orders()
             ->with(['branch', 'items.serviceType'])
-            ->whereNotIn('status', ['delivered', 'cancelled'])
+            ->whereNotIn('status', ['delivered', 'completed', 'cancelled'])
             ->latest()
             ->get();
 
@@ -27,16 +27,16 @@ class DashboardController extends Controller
             ->latest()
             ->get();
 
-        // Fetch order history (delivered or cancelled)
+        // Fetch order history (delivered, completed or cancelled)
         $orderHistory = $customer->orders()
             ->with(['branch'])
-            ->whereIn('status', ['delivered', 'cancelled'])
+            ->whereIn('status', ['delivered', 'completed', 'cancelled'])
             ->latest()
             ->take(5)
             ->get();
 
         // Calculate stats
-        $totalOrders = $customer->orders()->count() + $customer->deliveryAppointments()->count();
+        $totalOrders = $customer->orders()->count() + $customer->deliveryAppointments()->whereNull('order_id')->count();
         $totalSpent = $customer->orders()->sum('paid_amount');
         $activeCount = $activeOrders->count() + $appointments->count();
 
@@ -190,9 +190,18 @@ class DashboardController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
-            'payment_method' => 'required|in:bank_transfer,gateway',
-            'receipt_image' => 'required_if:payment_method,bank_transfer|image|max:5120',
+            'payment_method' => 'required|in:bank,bank_transfer,gateway',
+            'receipt_image' => 'required_if:payment_method,bank,bank_transfer|image|max:5120',
         ]);
+
+        // Prevent double submission
+        $recentPayment = \App\Models\PaymentTransaction::where('order_id', $order->id)
+            ->where('created_at', '>=', now()->subSeconds(30))
+            ->exists();
+            
+        if ($recentPayment) {
+            return redirect()->back()->with('success', 'Payment received. Please wait a moment before submitting again.');
+        }
 
         $receiptPath = $order->receipt_path;
         if ($request->hasFile('receipt_image')) {
@@ -203,28 +212,40 @@ class DashboardController extends Controller
             // Handle mock payment gateway success
             $order->update([
                 'paid_amount' => $order->paid_amount + $request->amount,
-                'payment_method' => 'card_transfer',
+                'payment_method' => 'card',
             ]);
             
             \App\Models\PaymentTransaction::create([
                 'order_id' => $order->id,
                 'amount' => $request->amount,
-                'payment_method' => 'card_transfer',
+                'payment_method' => 'card',
                 'status' => 'completed',
                 'transaction_id' => 'TXN-' . strtoupper(uniqid()),
             ]);
         } else {
-            // Bank transfer needs approval
+            // Bank transfer uploaded - mark payment_method as 'bank' so riders know not to collect COD
             $order->update([
                 'receipt_path' => $receiptPath,
-                'payment_method' => 'bank_transfer',
+                'payment_method' => 'bank',
+                'paid_amount' => $order->paid_amount + $request->amount,
+            ]);
+
+            \App\Models\PaymentTransaction::create([
+                'order_id' => $order->id,
+                'amount' => $request->amount,
+                'payment_method' => 'bank',
+                'receipt_path' => $request->hasFile('receipt_image') ? $receiptPath : null,
+                'status' => 'completed',
             ]);
         }
         
-        // If paid amount >= total, mark as paid
-        if ($order->paid_amount >= $order->total) {
+        // Reload order to get fresh paid_amount
+        $order->refresh();
+        
+        // If paid amount >= total, mark as paid. Else partial.
+        if ($order->paid_amount >= $order->total && $order->total > 0) {
             $order->update(['payment_status' => 'paid']);
-        } else if ($order->paid_amount > 0) {
+        } elseif ($order->paid_amount > 0) {
             $order->update(['payment_status' => 'partial']);
         }
 

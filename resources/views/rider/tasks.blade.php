@@ -46,6 +46,7 @@
                                 {{ $task->status === 'completed' ? 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;' : '' }}
                                 {{ $task->status === 'cancelled' ? 'background:#fef2f2; color:#dc2626; border:1px solid #fecaca;' : '' }}
                                 {{ in_array($task->status, ['assigned','accepted','on_way','arrived']) ? 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;' : '' }}
+                                {{ $task->status === 'waiting_for_payment' ? 'background:#fef2f2; color:#dc2626; border:1px solid #fecaca;' : '' }}
                             ">
                                 {{ $task->statusLabel() }}
                             </span>
@@ -85,7 +86,11 @@
 
                         <!-- Simplified Action Buttons -->
                         @if(!in_array($task->status, ['completed', 'cancelled']))
-                            @if($task->task_type === 'pickup')
+                            @if($task->status === 'waiting_for_payment')
+                                <div style="flex:2; padding:12px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:12px; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px;">
+                                    Handover Cash to Admin
+                                </div>
+                            @elseif($task->task_type === 'pickup')
                                 <a href="{{ route('rider.createOrder', $task->id) }}" style="flex:2; padding:12px; background:#16a34a; color:white; text-decoration:none; border-radius:12px; font-size:13px; font-weight:800; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                     Pick Order

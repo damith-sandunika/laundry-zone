@@ -300,16 +300,21 @@
 
                     <!-- Sub options for Pay Now -->
                     <div x-show="paymentMode === 'pay_now'" x-transition.opacity
-                        class="grid grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                        class="grid grid-cols-3 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
                         <button @click.stop="paymentMethod = 'cash'"
                             :class="paymentMethod === 'cash' ? 'bg-emerald-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
-                            class="px-4 py-3 rounded-lg text-[13px] font-black transition-all flex items-center justify-center gap-2">
+                            class="px-4 py-3 rounded-lg text-[13px] font-black transition-all flex items-center justify-center gap-1">
                             💵 CASH
                         </button>
                         <button @click.stop="paymentMethod = 'card'"
                             :class="paymentMethod === 'card' ? 'bg-violet-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
-                            class="px-4 py-3 rounded-lg text-[13px] font-black transition-all flex items-center justify-center gap-2">
+                            class="px-4 py-3 rounded-lg text-[13px] font-black transition-all flex items-center justify-center gap-1">
                             💳 CARD
+                        </button>
+                        <button @click.stop="paymentMethod = 'bank'"
+                            :class="paymentMethod === 'bank' ? 'bg-blue-500 text-white shadow-md' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'"
+                            class="px-4 py-3 rounded-lg text-[13px] font-black transition-all flex items-center justify-center gap-1">
+                            🏦 BANK
                         </button>
                     </div>
 

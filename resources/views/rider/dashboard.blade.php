@@ -101,6 +101,7 @@
                                 <span style="display:inline-block;font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;
                                     {{ $task->status === 'assigned' ? 'background:#fef3c7;color:#d97706;border:1px solid #fde68a;' : '' }}
                                     {{ in_array($task->status, ['accepted','on_way','arrived']) ? 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;' : '' }}
+                                    {{ $task->status === 'waiting_for_payment' ? 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;' : '' }}
                                 ">
                                     {{ $task->statusLabel() }}
                                 </span>
@@ -125,7 +126,13 @@
                                     <!-- Action Buttons depending on status -->
                                     <!-- Simplified Action Buttons -->
                                     @if(!in_array($task->status, ['completed', 'cancelled']))
-                                        @if($task->task_type === 'pickup')
+                                        @if($task->status === 'waiting_for_payment')
+                                            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                                                <div style="font-size:10px;font-weight:800;color:#dc2626;background:#fef2f2;padding:2px 6px;border-radius:4px;border:1px solid #fecaca;">
+                                                    Handover Cash to Admin
+                                                </div>
+                                            </div>
+                                        @elseif($task->task_type === 'pickup')
                                             <a href="{{ route('rider.createOrder', $task->id) }}" style="padding:5px 10px;background:#16a34a;color:white;text-decoration:none;border-radius:8px;font-size:11.5px;font-weight:800;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
                                                 Pick Order
                                             </a>

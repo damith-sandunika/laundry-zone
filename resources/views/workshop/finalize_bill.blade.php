@@ -69,8 +69,8 @@
                     <span class="text-sm font-black text-slate-800" x-text="'Rs.' + subtotal.toFixed(2)"></span>
                 </div>
                 <div class="flex justify-between items-center mb-4">
-                    <span class="text-xs font-bold text-slate-500">Total (Min Rs.3000)</span>
-                    <span class="text-lg font-black text-blue-700" x-text="'Rs.' + Math.max(3000, subtotal).toFixed(2)"></span>
+                    <span class="text-xs font-bold text-slate-500">Total (Min Rs.{{ $minimumDeliveryCost }})</span>
+                    <span class="text-lg font-black text-blue-700" x-text="'Rs.' + Math.max({{ $minimumDeliveryCost }}, subtotal).toFixed(2)"></span>
                 </div>
                 <div class="mb-4">
                     <label class="block text-xs font-bold text-slate-700 mb-1">Advance Amount Required (Optional)</label>

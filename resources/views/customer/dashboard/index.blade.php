@@ -83,9 +83,16 @@
                                     $appLevel = 1;
                                     $pickupTask = $appointment->deliveryTasks()->where('task_type', 'pickup')->latest()->first();
                                     
-                                    if ($pickupTask) {
+                                    if (in_array($appointment->status, ['picked_up', 'at_branch', 'processing'])) {
+                                        $appProgress = '50%'; $appLevel = 3;
+                                    } elseif (in_array($appointment->status, ['ready', 'out_for_delivery'])) {
+                                        $appProgress = '75%'; $appLevel = 4;
+                                    } elseif ($appointment->status === 'delivered') {
+                                        $appProgress = '100%'; $appLevel = 5;
+                                    } elseif ($pickupTask) {
                                         if (in_array($pickupTask->status, ['assigned', 'accepted'])) { $appProgress = '12.5%'; $appLevel = 2; }
                                         elseif (in_array($pickupTask->status, ['on_way', 'arrived'])) { $appProgress = '25%'; $appLevel = 2; }
+                                        elseif ($pickupTask->status === 'completed') { $appProgress = '50%'; $appLevel = 3; }
                                     } elseif ($appointment->status === 'rider_assigned') {
                                         $appProgress = '12.5%'; $appLevel = 2;
                                     }
@@ -194,7 +201,7 @@
                             $orderProgress = '0%';
                             $orderStatusLevel = 1;
                             
-                            $isAwaitingPayment = !$order->payment_approved && $order->requested_advance > 0;
+                            $isAwaitingPayment = !$order->payment_approved && ($order->requested_advance - $order->paid_amount) > 0;
                             $logicalStatus = $order->status;
                             if ($isAwaitingPayment && $logicalStatus === 'processing') {
                                 $logicalStatus = 'dispatched_to_workshop'; // Downgrade logical status so timeline doesn't show "Working"
@@ -211,7 +218,7 @@
                                 elseif(in_array($logicalStatus, ['returned_from_workshop', 'ready', 'done', 'out_for_delivery'])) { 
                                     $orderProgress = '75%'; $orderStatusLevel = 4; 
                                 }
-                                elseif($logicalStatus === 'delivered') { 
+                                elseif(in_array($logicalStatus, ['delivered', 'completed'])) { 
                                     $orderProgress = '100%'; $orderStatusLevel = 5; 
                                 }
                             } else {
@@ -225,7 +232,7 @@
                                 elseif(in_array($logicalStatus, ['returned_from_workshop', 'ready', 'done'])) { 
                                     $orderProgress = '66%'; $orderStatusLevel = 3; 
                                 }
-                                elseif($logicalStatus === 'delivered') { 
+                                elseif(in_array($logicalStatus, ['delivered', 'completed'])) { 
                                     $orderProgress = '100%'; $orderStatusLevel = 4; 
                                 }
                             }
@@ -236,7 +243,7 @@
                                 <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow p-5 text-center flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div class="text-left text-white">
                                         <h4 class="font-black text-lg mb-1"><i class="fa-solid fa-circle-exclamation text-yellow-300 animate-pulse mr-1"></i> Action Required</h4>
-                                        <p class="text-blue-100 text-sm font-medium">To start processing your laundry, please pay the requested advance of <strong class="text-white bg-blue-800/50 px-1.5 py-0.5 rounded">LKR {{ number_format($order->requested_advance, 2) }}</strong></p>
+                                        <p class="text-blue-100 text-sm font-medium">To start processing your laundry, please pay the requested advance of <strong class="text-white bg-blue-800/50 px-1.5 py-0.5 rounded">LKR {{ number_format($order->requested_advance - $order->paid_amount, 2) }}</strong></p>
                                     </div>
                                     <a href="{{ route('customer.orders.show', $order) }}" class="shrink-0 w-full sm:w-auto inline-block bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl transition-all">
                                         <i class="fa-solid fa-bolt mr-1"></i> PAY NOW

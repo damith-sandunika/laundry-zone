@@ -100,27 +100,44 @@ class WorkshopController extends Controller
         $bankTransfers = 0;
 
         if ($activeSession) {
-            // Cash collected by workshop admins during this shift (from riders returning to workshop)
             $cashCollected = \App\Models\PaymentTransaction::whereHas('order', function($q) use ($branchId) {
-                    $q->where('workshop_id', $branchId);
+                    $q->where('branch_id', $branchId);
                 })
-                ->where('collected_from_rider_at', '>=', $activeSession->opened_at)
+                ->where(function($q) use ($activeSession) {
+                    $q->where('created_at', '>=', $activeSession->opened_at)
+                      ->orWhere('collected_from_rider_at', '>=', $activeSession->opened_at);
+                })
                 ->where('payment_method', 'cash')
                 ->sum('amount');
 
             $cardPaymentsAmount = \App\Models\PaymentTransaction::whereHas('order', function($q) use ($branchId) {
-                    $q->where('workshop_id', $branchId);
+                    $q->where('branch_id', $branchId);
                 })
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->where('payment_method', 'card')
                 ->sum('amount');
                 
             $bankTransfers = \App\Models\PaymentTransaction::whereHas('order', function($q) use ($branchId) {
-                    $q->where('workshop_id', $branchId);
+                    $q->where('branch_id', $branchId);
                 })
                 ->where('created_at', '>=', $activeSession->opened_at)
-                ->where('payment_method', 'bank_transfer')
+                ->where('payment_method', 'bank')
                 ->sum('amount');
+
+            // Fallback for orders without payment transactions
+            $directCashOrders = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'cash')
+                ->whereDoesntHave('paymentTransactions')
+                ->sum('paid_amount');
+            $cashCollected += $directCashOrders;
+
+            $directBankOrders = \App\Models\Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'bank')
+                ->whereDoesntHave('paymentTransactions')
+                ->sum('paid_amount');
+            $bankTransfers += $directBankOrders;
 
             // Expenses logged by workshop admins
             $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
@@ -144,10 +161,12 @@ class WorkshopController extends Controller
             'total_customers' => 0, // Not highly relevant for workshop
             'current_balance' => $currentBalance,
             'cash_balance' => $cashBalance,
+            'cash_collected' => $cashCollected ?? 0,
             'card_payments' => $cardPayments,
             'card_payments_amount' => $cardPaymentsAmount,
             'bank_transfers' => $bankTransfers,
             'total_sale' => $totalSale,
+            'expenses_logged' => $expensesLogged ?? 0,
         ];
 
         // Recent Dispatches (equivalent to active orders)
@@ -220,7 +239,7 @@ class WorkshopController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $dispatches = WorkshopDispatch::with(['order.customer', 'branch', 'dispatchedBy'])
+        $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'branch', 'dispatchedBy'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
             ->whereNotIn('status', ['received_at_branch', 'returned_to_branch'])
             ->orderByDesc('dispatched_at')
@@ -259,12 +278,23 @@ class WorkshopController extends Controller
     {
         $order = $dispatch->order;
 
+        // For delivery orders: only block if NO payment submitted at all (paid_amount = 0 and no transactions)
         if ($order->is_delivery_order && !$order->payment_approved) {
-            return response()->json(['success' => false, 'message' => 'Payment must be approved before starting processing for delivery orders.'], 403);
+            $hasAnyPayment = $order->paid_amount > 0 || \App\Models\PaymentTransaction::where('order_id', $order->id)->exists();
+            if (!$hasAnyPayment) {
+                return response()->json(['success' => false, 'message' => 'Customer has not submitted any payment yet. Please wait for advance payment before starting processing.'], 403);
+            }
         }
 
         $dispatch->update(['status' => 'processing']);
         $order->update(['status' => 'processing']);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => 'processing',
+            'changed_by' => auth()->id(),
+            'note' => 'Processing started',
+        ]);
 
         return response()->json(['success' => true, 'status' => 'processing']);
     }
@@ -275,6 +305,12 @@ class WorkshopController extends Controller
         $dispatch->update([
             'status' => 'completed_at_workshop',
             'completed_at_workshop_at' => now(),
+        ]);
+
+        $dispatch->order->statusHistory()->create([
+            'status' => 'completed_at_workshop',
+            'note' => 'Completed at Workshop',
+            'changed_by' => auth()->id(),
         ]);
 
         return response()->json(['success' => true, 'status' => 'completed_at_workshop']);
@@ -313,30 +349,24 @@ class WorkshopController extends Controller
     {
         $order = $dispatch->order;
         
-        $amount = $order->requested_advance > 0 ? $order->requested_advance : $order->total;
-        
+        // IMPORTANT: Do NOT add to paid_amount here.
+        // The customer already paid via bank transfer (submitPayment added it).
+        // We are just APPROVING the payment and starting processing.
         $order->update([
             'payment_approved' => true,
-            'paid_amount' => $order->paid_amount + $amount,
         ]);
         
-        if ($order->paid_amount >= $order->total) {
-            $order->update(['payment_status' => 'paid']);
-        } else {
-            $order->update(['payment_status' => 'partial']);
+        // Update payment_status based on current paid_amount vs total
+        $freshOrder = $order->fresh();
+        if ($freshOrder->paid_amount >= $freshOrder->total) {
+            $freshOrder->update(['payment_status' => 'paid']);
+        } elseif ($freshOrder->paid_amount > 0) {
+            $freshOrder->update(['payment_status' => 'partial']);
         }
-        
-        \App\Models\PaymentTransaction::create([
-            'order_id' => $order->id,
-            'amount' => $amount,
-            'payment_method' => 'bank_transfer',
-            'status' => 'completed',
-            'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-        ]);
 
         if (in_array($dispatch->status, ['dispatched_to_workshop', 'received_at_workshop'])) {
             $dispatch->update(['status' => 'processing']);
-            $order->update(['status' => 'processing']);
+            $freshOrder->update(['status' => 'processing']);
             \App\Models\OrderStatusHistory::create([
                 'order_id' => $order->id,
                 'status' => 'processing',
@@ -361,8 +391,9 @@ class WorkshopController extends Controller
                 'qty' => $item->quantity,
             ];
         });
+        $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.finalize_bill', compact('dispatch', 'services', 'cartItems'));
+        return view('workshop.finalize_bill', compact('dispatch', 'services', 'cartItems', 'minimumDeliveryCost'));
     }
 
     // ─── Workshop Admin: Return to branch ───
@@ -400,31 +431,58 @@ class WorkshopController extends Controller
                 'task_type' => 'delivery',
                 'status' => 'assigned',
             ]);
+
+            if ($appointment) {
+                $appointment->update(['status' => 'out_for_delivery']);
+            }
+            $order->update(['status' => 'out_for_delivery']);
+            
+            $dispatch->update([
+                'status' => 'returned_to_branch', // Terminate from workshop view
+                'returned_by' => auth()->id(),
+                'returned_at' => now(),
+            ]);
+
+            return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
+
         } else {
-            // PickMe Flash
+            // PickMe
+            if ($order->paid_amount < $order->total) {
+                return response()->json(['success' => false, 'message' => 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.'], 403);
+            }
+
             \App\Models\Expense::create([
                 'branch_id' => $dispatch->workshop_branch_id,
                 'amount' => $request->pickme_cost,
                 'category' => 'delivery',
-                'description' => 'PickMe Flash Delivery for Order #' . $order->order_number,
+                'description' => 'PickMe Delivery for Order #' . $order->order_number,
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
             ]);
-        }
 
-        if ($appointment) {
-            $appointment->update(['status' => 'out_for_delivery']);
-        }
-        
-        $order->update(['status' => 'out_for_delivery']);
-        
-        $dispatch->update([
-            'status' => 'returned_to_branch', // Terminate from workshop view
-            'returned_by' => auth()->id(),
-            'returned_at' => now(),
-        ]);
+            if ($appointment) {
+                $appointment->update(['status' => 'delivered']);
+            }
+            $order->update([
+                'status' => 'delivered',
+                'delivered_at' => now(),
+            ]);
+            
+            \App\Models\OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => 'delivered',
+                'changed_by' => auth()->id(),
+                'note' => 'Delivered via PickMe',
+            ]);
+            
+            $dispatch->update([
+                'status' => 'returned_to_branch', // Terminate from workshop view
+                'returned_by' => auth()->id(),
+                'returned_at' => now(),
+            ]);
 
-        return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
+            return response()->json(['success' => true, 'status' => 'completed']);
+        }
     }
 
     // ─── Workshop Admin: Bulk Status Update ───

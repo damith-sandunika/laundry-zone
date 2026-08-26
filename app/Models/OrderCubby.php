@@ -22,6 +22,6 @@ class OrderCubby extends Model
 
     public function cubby()
     {
-        return $this->belongsTo(Cubby::class);
+        return $this->belongsTo(Cubby::class)->withoutGlobalScopes();
     }
 }

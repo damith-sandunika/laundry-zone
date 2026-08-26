@@ -55,7 +55,7 @@ class ReportController extends Controller
         $totalCollected = $payments->sum('amount') + $packagePayments->sum('amount');
         $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
         $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        $collectedBank = $payments->where('payment_method', 'bank_transfer')->sum('amount') + $packagePayments->where('payment_method', 'bank_transfer')->sum('amount');
+        $collectedBank = $payments->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
 
         $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
             return max(0, $q->total - $q->paid_amount);
@@ -227,7 +227,7 @@ class ReportController extends Controller
         $totalCollected = $payments->sum('amount') + $totalPackagePayments;
         $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
         $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        $collectedBank = $payments->where('payment_method', 'bank_transfer')->sum('amount') + $packagePayments->where('payment_method', 'bank_transfer')->sum('amount');
+        $collectedBank = $payments->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
 
         $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
             return max(0, $q->total - $q->paid_amount);
@@ -286,7 +286,7 @@ class ReportController extends Controller
 
         $cashPaymentOnly = $orders->where('payment_method', 'cash')->sum('paid_amount');
         $cardPaymentOnly = $orders->where('payment_method', 'card')->sum('paid_amount');
-        $bankPaymentOnly = $orders->where('payment_method', 'bank_transfer')->sum('paid_amount');
+        $bankPaymentOnly = $orders->where('payment_method', 'bank')->sum('paid_amount');
 
         $expenses = Expense::where('branch_id', $branchId)
             ->whereBetween('expense_date', [$startDate, $endDate])
@@ -301,7 +301,7 @@ class ReportController extends Controller
         $totalPackageIncome = $packagePayments->sum('amount');
         $cashPackageIncome = $packagePayments->where('payment_method', 'cash')->sum('amount');
         $cardPackageIncome = $packagePayments->where('payment_method', 'card')->sum('amount');
-        $bankPackageIncome = $packagePayments->where('payment_method', 'bank_transfer')->sum('amount');
+        $bankPackageIncome = $packagePayments->where('payment_method', 'bank')->sum('amount');
 
         $totalCashIn += $totalPackageIncome;
         $cashPaymentOnly += $cashPackageIncome;
@@ -342,7 +342,7 @@ class ReportController extends Controller
     public function approvePackagePayment(Request $request, CustomerPackage $customerPackage)
     {
         $request->validate([
-            'payment_method' => 'required|in:cash,card',
+            'payment_method' => 'required|in:cash,card,bank',
         ]);
 
         if ($customerPackage->payment_status === 'paid') {

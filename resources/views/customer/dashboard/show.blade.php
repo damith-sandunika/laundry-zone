@@ -64,6 +64,9 @@
                 if (in_array($actualStatus, ['washing', 'drying', 'ironing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
                     $actualStatus = 'processing';
                 }
+                if (in_array($actualStatus, ['returned_from_workshop', 'done'])) {
+                    $actualStatus = 'ready';
+                }
             }
             
             if ($actualStatus === 'delivered' && $order->payment_status === 'paid') {
@@ -133,7 +136,7 @@
     @endif
 
     <!-- Action Required: Payment Banner -->
-    @if(!$order->payment_approved && $order->requested_advance > 0)
+    @if(!$order->payment_approved && ($order->requested_advance - $order->paid_amount) > 0)
     <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-lg p-8 mb-6 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
         <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mt-20 -mr-20 pointer-events-none"></div>
         <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -mb-10 -ml-10 pointer-events-none"></div>
@@ -142,7 +145,7 @@
             <h3 class="text-2xl font-black mb-2"><i class="fa-solid fa-circle-exclamation mr-2 text-yellow-300 animate-pulse"></i> Action Required: Advance Payment</h3>
             <p class="text-blue-100 font-medium text-sm md:text-base max-w-2xl">
                 We have inspected your laundry! To start the washing process, please pay the requested advance amount of 
-                <strong class="text-white bg-blue-800/50 px-2 py-1 rounded-lg">LKR {{ number_format($order->requested_advance, 2) }}</strong>. 
+                <strong class="text-white bg-blue-800/50 px-2 py-1 rounded-lg">LKR {{ number_format($order->requested_advance - $order->paid_amount, 2) }}</strong>. 
                 Once paid, our workshop will immediately begin processing your order.
             </p>
         </div>
@@ -210,14 +213,39 @@
                                 <span>Paid Amount</span>
                                 <span>- LKR {{ number_format($order->paid_amount, 2) }}</span>
                             </div>
-                            <div class="pt-3 border-t border-slate-200 flex justify-between items-center mt-2 bg-blue-50 -mx-6 px-6 py-3 border-b border-blue-100">
-                                <span class="font-black text-blue-900">Balance to Pay</span>
-                                <span class="font-black text-xl text-blue-700">LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
+                        @endif
+                        
+                        @if($order->total - $order->paid_amount > 0)
+                            <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center mt-2 bg-blue-50 -mx-6 px-6 py-4 border-b border-blue-100 gap-3">
+                                <div>
+                                    <span class="block font-black text-blue-900">Balance to Pay</span>
+                                    <span class="font-black text-2xl text-blue-700">LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
+                                </div>
+                                <button type="button" x-data @click="$dispatch('open-payment-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors text-sm flex items-center justify-center gap-2 w-full sm:w-auto">
+                                    <i class="fa-solid fa-credit-card"></i> Pay Now
+                                </button>
                             </div>
                         @else
-                            <div class="pt-3 border-t border-slate-200 flex justify-between items-center mt-2 bg-blue-50 -mx-6 px-6 py-3 border-b border-blue-100">
-                                <span class="font-black text-blue-900">Balance to Pay</span>
-                                <span class="font-black text-xl text-blue-700">LKR {{ number_format($order->total, 2) }}</span>
+                            <div class="pt-3 border-t border-slate-200 flex justify-between items-center mt-2 bg-green-50 -mx-6 px-6 py-3 border-b border-green-100">
+                                <span class="font-black text-green-900">Payment Status</span>
+                                <span class="font-black text-lg text-green-700"><i class="fa-solid fa-check-circle mr-1"></i> Fully Paid</span>
+                            </div>
+                        @endif
+                        
+                        @php
+                            $slips = \App\Models\PaymentTransaction::where('order_id', $order->id)->whereNotNull('receipt_path')->get();
+                        @endphp
+                        @if($slips->count() > 0)
+                            <div class="mt-4 pt-4 border-t border-slate-200 space-y-2">
+                                <span class="text-sm font-bold text-slate-500 mb-1 block">Payment Receipts</span>
+                                @foreach($slips as $slip)
+                                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
+                                        <span class="text-xs font-bold text-slate-600">LKR {{ number_format($slip->amount, 2) }} <span class="text-[10px] text-slate-400 font-normal ml-1">{{ $slip->created_at->format('M d, g:i A') }}</span></span>
+                                        <a href="{{ asset('storage/' . $slip->receipt_path) }}" target="_blank" class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-200 transition-colors">
+                                            <i class="fa-solid fa-file-invoice mr-1"></i> View Slip
+                                        </a>
+                                    </div>
+                                @endforeach
                             </div>
                         @endif
                     </div>
@@ -254,8 +282,8 @@
     <!-- Payment Modal -->
     <div x-data="{ 
             showPaymentModal: false, 
-            amountToPay: {{ $order->requested_advance > 0 ? $order->requested_advance : $order->total }},
-            paymentMethod: 'bank_transfer',
+            amountToPay: {{ ($order->requested_advance - $order->paid_amount > 0) ? ($order->requested_advance - $order->paid_amount) : max(0, $order->total - $order->paid_amount) }},
+            paymentMethod: 'bank',
             isSubmitting: false
          }" 
          @open-payment-modal.window="showPaymentModal = true"
@@ -305,7 +333,7 @@
                                     <label class="block text-sm font-bold text-slate-700 mb-2">Payment Method</label>
                                     <div class="grid grid-cols-2 gap-3">
                                         <label class="relative cursor-pointer">
-                                            <input type="radio" name="payment_method" value="bank_transfer" x-model="paymentMethod" class="peer sr-only">
+                                            <input type="radio" name="payment_method" value="bank" x-model="paymentMethod" class="peer sr-only">
                                             <div class="p-3 border-2 border-slate-200 rounded-xl text-center peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
                                                 <i class="fa-solid fa-building-columns text-slate-400 peer-checked:text-blue-600 mb-1 text-lg"></i>
                                                 <div class="text-xs font-black text-slate-700 peer-checked:text-blue-700">Bank Transfer</div>
@@ -321,9 +349,9 @@
                                     </div>
                                 </div>
                                 
-                                <div x-show="paymentMethod === 'bank_transfer'" x-collapse>
+                                <div x-show="paymentMethod === 'bank'" x-collapse>
                                     <label class="block text-sm font-bold text-slate-700 mb-2">Upload Bank Slip</label>
-                                    <input type="file" name="receipt_image" accept="image/*" :required="paymentMethod === 'bank_transfer'" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all border border-slate-200 rounded-xl p-1 bg-slate-50">
+                                    <input type="file" name="receipt_image" accept="image/*" :required="paymentMethod === 'bank'" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all border border-slate-200 rounded-xl p-1 bg-slate-50">
                                 </div>
                             </div>
                         </div>

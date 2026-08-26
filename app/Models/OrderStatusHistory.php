@@ -19,6 +19,6 @@ class OrderStatusHistory extends Model
 
     public function changedBy()
     {
-        return $this->belongsTo(User::class, 'changed_by');
+        return $this->belongsTo(User::class, 'changed_by')->withoutGlobalScopes();
     }
 }

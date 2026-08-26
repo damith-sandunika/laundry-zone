@@ -111,6 +111,10 @@
                                         <div style="margin-top:4px;font-size:11px;font-weight:700;color:#64748b;">
                                             Rider: {{ $riderTask->rider->name ?? 'Unknown' }}
                                         </div>
+                                    @elseif(in_array($appt->status, ['rider_assigned', 'picked_up', 'at_branch']))
+                                        <div style="margin-top:4px;font-size:11px;font-weight:800;color:#eab308;">
+                                            PickMe/Flash (Pickup)
+                                        </div>
                                     @endif
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;">
@@ -128,7 +132,7 @@
                                                     @csrf
                                                     <select x-model="deliveryMethod" name="delivery_method" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
                                                         <option value="in_house">In-house Rider</option>
-                                                        <option value="pickme_flash">PickMe Flash</option>
+                                                        <option value="pickme_flash">PickMe</option>
                                                     </select>
 
                                                     <select x-show="deliveryMethod === 'in_house'" name="rider_id" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
@@ -143,12 +147,12 @@
                                                     </button>
                                                 </form>
                                             </div>
-                                        @elseif(in_array($appt->status, ['picked_up', 'order_created']))
+                                        @elseif(in_array($appt->status, ['picked_up', 'order_created']) || ($appt->status === 'rider_assigned' && !isset($riderTask)))
                                             <div x-data="{ showCost: false }" style="display:flex;gap:4px;align-items:center;">
                                                 <form method="POST" action="{{ route('delivery.atBranch', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                     @csrf
                                                     
-                                                    <button type="button" @click="showCost = !showCost" title="Add PickMe Flash Cost" style="padding:4px 6px;background:white;color:#ea580c;border:1px solid #ea580c;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">
+                                                    <button type="button" @click="showCost = !showCost" title="Add PickMe Cost" style="padding:4px 6px;background:white;color:#ea580c;border:1px solid #ea580c;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">
                                                         <i class="fa-solid fa-taxi"></i> Cost
                                                     </button>
                                                     
@@ -208,12 +212,14 @@
                                     @php 
                                         $order = $appt->order; 
                                         $pendingCashTx = false;
+                                        $pendingCashAmount = 0;
                                         if ($order) {
-                                            $pendingCashTx = \App\Models\PaymentTransaction::where('order_id', $order->id)
+                                            $pendingCashAmount = \App\Models\PaymentTransaction::where('order_id', $order->id)
                                                 ->where('payment_method', 'cash')
                                                 ->whereNull('collected_from_rider_at')
                                                 ->whereNotNull('created_by')
-                                                ->exists();
+                                                ->sum('amount');
+                                            $pendingCashTx = $pendingCashAmount > 0;
                                         }
                                     @endphp
                                     @if($order)
@@ -224,7 +230,7 @@
                                         </span>
                                         @if($pendingCashTx)
                                             <div style="margin-top:6px;">
-                                                <span style="font-size:10px;font-weight:800;color:#d97706;background:#fef3c7;padding:2px 6px;border-radius:4px;border:1px solid #fde68a;">⏳ Waiting for Cash</span>
+                                                <span style="font-size:10px;font-weight:800;color:#d97706;background:#fef3c7;padding:2px 6px;border-radius:4px;border:1px solid #fde68a;">⏳ Waiting for Rs. {{ number_format($pendingCashAmount, 2) }} Cash</span>
                                             </div>
                                         @endif
                                     @else
@@ -240,7 +246,11 @@
                                         {{ str_replace('_', ' ', $appt->status) }}
                                     </span>
                                     @php $riderTask = $appt->deliveryTasks->where('task_type', 'delivery')->last(); @endphp
-                                    @if($riderTask)
+                                    @if($appt->delivery_method === 'pickme_flash')
+                                        <div style="margin-top:4px;font-size:11px;font-weight:800;color:#eab308;">
+                                            PickMe/Flash: Rs. {{ number_format($appt->delivery_cost ?? 0, 2) }}
+                                        </div>
+                                    @elseif($riderTask)
                                         <div style="margin-top:4px;font-size:11px;font-weight:700;color:#64748b;">
                                             Rider: {{ $riderTask->rider->name ?? 'Unknown' }}
                                         </div>
@@ -252,21 +262,32 @@
                                             <form method="POST" action="{{ route('delivery.assignDeliveryRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                 @csrf
                                                 <input type="hidden" name="order_id" value="{{ $appt->order_id }}">
-                                                <select name="rider_id" required style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
+                                                <select name="rider_id" required onchange="this.value === 'pickme_flash' ? this.nextElementSibling.style.display = 'block' : this.nextElementSibling.style.display = 'none'" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
                                                     <option value="">Select Rider</option>
+                                                    @if($order && $order->paid_amount < $order->total)
+                                                        <option value="pickme_flash" disabled title="Requires full payment">PickMe / Flash (Requires Full Payment)</option>
+                                                    @else
+                                                        <option value="pickme_flash">PickMe / Flash</option>
+                                                    @endif
                                                     @foreach($riders as $rider)
                                                         <option value="{{ $rider->id }}">{{ $rider->name }}</option>
                                                     @endforeach
                                                 </select>
+                                                <input type="number" name="pickme_flash_cost" placeholder="Cost (Rs)" style="display:none;padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:70px;">
                                                 <button type="submit" style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">
                                                     Assign
                                                 </button>
                                             </form>
+                                            @if(session('print_url'))
+                                                <script>
+                                                    window.open("{{ session('print_url') }}", "_blank");
+                                                </script>
+                                            @endif
                                         @elseif($appt->status === 'out_for_delivery')
                                             <span style="font-size:11px;color:#94a3b8;font-weight:600;">Awaiting Rider</span>
                                         @elseif($appt->status === 'delivered')
                                             @if($pendingCashTx)
-                                                <button type="button" @click="openCashModal({{ $appt->id }}, '{{ $order->order_number }}', {{ $order->total }}, {{ $order->paid_amount }}, {{ max(0, $order->total - $order->paid_amount) }})" style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(234,179,8,0.3);">
+                                                <button type="button" @click="openCashModal({{ $appt->id }}, '{{ $order->order_number }}', {{ $order->total }}, {{ max(0, $order->paid_amount - $pendingCashAmount) }}, {{ $pendingCashAmount }})" style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(234,179,8,0.3);">
                                                     Cash Received
                                                 </button>
                                             @else

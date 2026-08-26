@@ -72,6 +72,9 @@
             if (this.currentTab === 'done') {
                 return this.ordersList.filter(o => o.status === 'done' || o.status === 'returned_from_workshop');
             }
+            if (this.currentTab === 'delivered') {
+                return this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed');
+            }
             return this.ordersList.filter(o => o.status === this.currentTab);
         },
 
@@ -81,7 +84,7 @@
                 received: this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop').length,
                 processing: this.ordersList.filter(o => o.status === 'processing').length,
                 done: this.ordersList.filter(o => o.status === 'done' || o.status === 'returned_from_workshop').length,
-                delivered: this.ordersList.filter(o => o.status === 'delivered').length
+                delivered: this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed').length
             };
         },
 
@@ -391,7 +394,7 @@
                             order.status === 'dispatched_to_workshop' ? 'background:#eff6ff;border-bottom:1px solid #bfdbfe;' :
                             order.status === 'done' ? 'background:#f0fdf4;border-bottom:1px solid #bbf7d0;' :
                             order.status === 'returned_from_workshop' ? 'background:#fdf4ff;border-bottom:1px solid #f5d0fe;' :
-                            order.status === 'delivered' ? 'background:#f8fafc;border-bottom:1px solid #e2e8f0;' :
+                            (order.status === 'delivered' || order.status === 'completed') ? 'background:#f8fafc;border-bottom:1px solid #e2e8f0;' :
                             'background:white;border-bottom:1px solid #f1f5f9;'
                         " style="transition:all 0.1s;" onmouseover="this.style.opacity='0.85'"
                                 onmouseout="this.style.opacity='1'">
@@ -436,7 +439,7 @@
                                     order.status === 'dispatched_to_workshop' ? 'background:#dbeafe;color:#1d4ed8;border:1px solid #bfdbfe;' :
                                     order.status === 'done' ? 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;' :
                                     order.status === 'returned_from_workshop' ? 'background:#fae8ff;color:#a21caf;border:1px solid #f5d0fe;' :
-                                    order.status === 'delivered' ? 'background:#e2e8f0;color:#475569;border:1px solid #cbd5e1;' :
+                                    (order.status === 'delivered' || order.status === 'completed') ? 'background:#e2e8f0;color:#475569;border:1px solid #cbd5e1;' :
                                     'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;'
                                 " style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;display:inline-block;">
                                         <template x-if="order.status === 'dispatched_to_workshop'">

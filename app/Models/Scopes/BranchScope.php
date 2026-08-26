@@ -24,7 +24,14 @@ class BranchScope implements Scope
 
             // Allow super_admin to see all branches' data
             if ($user->role !== 'super_admin') {
-                $builder->where($model->getTable().'.branch_id', $user->branch_id);
+                if ($model instanceof \App\Models\Order) {
+                    $builder->where(function($q) use ($model, $user) {
+                        $q->where($model->getTable().'.branch_id', $user->branch_id)
+                          ->orWhere($model->getTable().'.workshop_id', $user->branch_id);
+                    });
+                } else {
+                    $builder->where($model->getTable().'.branch_id', $user->branch_id);
+                }
             }
         }
     }

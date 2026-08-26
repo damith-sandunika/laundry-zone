@@ -55,7 +55,10 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc');
 
         if ($branchId) {
-            $query->where('branch_id', $branchId);
+            $query->where(function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                  ->orWhere('workshop_id', $branchId);
+            });
         }
 
         if ($q) {
@@ -346,9 +349,20 @@ class OrderController extends Controller
                     } else {
                         // Mark previously uncollected transactions from rider as collected
                         PaymentTransaction::where('order_id', $order->id)
+                            ->where('payment_method', 'cash')
                             ->whereNull('collected_from_rider_at')
                             ->update(['collected_from_rider_at' => now()]);
                     }
+                }
+
+                // Log the status change so timeline shows correct user
+                if (in_array($request->status, ['delivered', 'completed', 'done'])) {
+                    \App\Models\OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'status' => $request->status,
+                        'changed_by' => auth()->id(),
+                        'note' => 'Status updated to ' . $request->status,
+                    ]);
                 }
 
                 $order->save();
