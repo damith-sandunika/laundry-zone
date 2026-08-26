@@ -37,7 +37,7 @@ class DashboardController extends Controller
 
         // Calculate stats
         $totalOrders = $customer->orders()->count() + $customer->deliveryAppointments()->count();
-        $totalSpent = $customer->orders()->where('payment_status', 'paid')->sum('total');
+        $totalSpent = $customer->orders()->sum('paid_amount');
         $activeCount = $activeOrders->count() + $appointments->count();
 
         return view('customer.dashboard.index', compact('customer', 'activeOrders', 'appointments', 'orderHistory', 'totalOrders', 'totalSpent', 'activeCount'));
@@ -184,5 +184,50 @@ class DashboardController extends Controller
         }
 
         return back()->with('error', 'Invalid payment method selected.');
+    }
+
+    public function submitPayment(Request $request, \App\Models\Order $order)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'payment_method' => 'required|in:bank_transfer,gateway',
+            'receipt_image' => 'required_if:payment_method,bank_transfer|image|max:5120',
+        ]);
+
+        $receiptPath = $order->receipt_path;
+        if ($request->hasFile('receipt_image')) {
+            $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
+        }
+
+        if ($request->payment_method === 'gateway') {
+            // Handle mock payment gateway success
+            $order->update([
+                'paid_amount' => $order->paid_amount + $request->amount,
+                'payment_method' => 'card_transfer',
+            ]);
+            
+            \App\Models\PaymentTransaction::create([
+                'order_id' => $order->id,
+                'amount' => $request->amount,
+                'payment_method' => 'card_transfer',
+                'status' => 'completed',
+                'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+            ]);
+        } else {
+            // Bank transfer needs approval
+            $order->update([
+                'receipt_path' => $receiptPath,
+                'payment_method' => 'bank_transfer',
+            ]);
+        }
+        
+        // If paid amount >= total, mark as paid
+        if ($order->paid_amount >= $order->total) {
+            $order->update(['payment_status' => 'paid']);
+        } else if ($order->paid_amount > 0) {
+            $order->update(['payment_status' => 'partial']);
+        }
+
+        return redirect()->back()->with('success', 'Payment submitted successfully. Thank you!');
     }
 }

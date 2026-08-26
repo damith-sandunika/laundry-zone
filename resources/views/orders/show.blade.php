@@ -51,44 +51,97 @@
 
             <!-- Status Progress -->
             <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
-                @php
-                    $stages = [
-                        'received' => ['label' => 'Received', 'icon' => '📥'],
-                        'done'     => ['label' => 'Done', 'icon' => '✅'],
-                        'delivered'=> ['label' => 'Delivered', 'icon' => '🚚'],
-                    ];
-                    $statusOrder = ['received', 'done', 'delivered'];
-                    $currentIndex = array_search($order->status, $statusOrder);
-                @endphp
+                <div class="mb-4 px-2">
+                    <h3 class="text-sm font-black text-slate-800 mb-4">Order Journey</h3>
+                    <div class="relative">
+                        <div class="absolute left-[15px] top-4 bottom-4 w-[2px] bg-slate-100"></div>
+                        <div class="space-y-5">
+                            @php
+                                $history = $order->statusHistory->sortBy('created_at')->values();
+                                // Build steps array
+                                $steps = collect();
+                                
+                                // Initial step
+                                if ($order->is_delivery_order) {
+                                    $steps->push([
+                                        'label' => 'Appointment Booked',
+                                        'icon' => '📅',
+                                        'time' => $order->deliveryAppointment?->created_at,
+                                        'user' => $order->customer->name,
+                                        'status' => 'pending'
+                                    ]);
+                                    $steps->push([
+                                        'label' => 'Picked Up & Order Created',
+                                        'icon' => '🚚',
+                                        'time' => $order->created_at,
+                                        'user' => $order->createdBy?->name ?? 'System',
+                                        'status' => 'picked_up'
+                                    ]);
+                                } else {
+                                    $steps->push([
+                                        'label' => 'Order Received',
+                                        'icon' => '📥',
+                                        'time' => $order->created_at,
+                                        'user' => $order->createdBy?->name ?? 'System',
+                                        'status' => 'received'
+                                    ]);
+                                }
 
-                <div style="display:flex;justify-content:space-between;align-items:center;position:relative;margin-bottom:16px;padding:0 20px;">
-                    @foreach($stages as $key => $stage)
-                        @php
-                            $idx = array_search($key, $statusOrder);
-                            $isDone = $idx <= ($currentIndex ?? -1);
-                            $isCurrent = $key === $order->status;
-                        @endphp
-                        <div style="flex:1;display:flex;flex-direction:column;align-items:center;position:relative;z-index:2;">
-                            <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;transition:all 0.15s;
-                                {{ $isCurrent ? 'background:#1d4ed8;color:white;box-shadow:0 0 0 3px #dbeafe;' : ($isDone ? 'background:#16a34a;color:white;' : 'background:#f1f5f9;color:#94a3b8;') }}">
-                                {{ $stage['icon'] }}
+                                foreach ($history as $log) {
+                                    $label = ucwords(str_replace('_', ' ', $log->status));
+                                    $icon = match($log->status) {
+                                        'dispatched_to_workshop' => '📤',
+                                        'processing' => '⚙️',
+                                        'returned_from_workshop' => '🚚',
+                                        'done' => '✅',
+                                        'out_for_delivery' => '🛵',
+                                        'delivered' => '🤝',
+                                        'cancelled' => '❌',
+                                        default => '▶'
+                                    };
+                                    $steps->push([
+                                        'label' => 'Status: ' . $label,
+                                        'icon' => $icon,
+                                        'time' => $log->created_at,
+                                        'user' => $log->changedBy?->name ?? 'System',
+                                        'status' => $log->status
+                                    ]);
+                                }
+                            @endphp
+
+                            @foreach($steps as $step)
+                            <div class="flex items-start gap-4 relative">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm z-10 flex-shrink-0 shadow-sm bg-blue-600 text-white border-2 border-white ring-4 ring-blue-50">
+                                    {{ $step['icon'] }}
+                                </div>
+                                <div class="flex-1 pt-1.5">
+                                    <div class="flex items-baseline justify-between gap-2">
+                                        <div class="text-[13px] font-black text-slate-800">{{ $step['label'] }}</div>
+                                        @if($step['time'])
+                                            <div class="text-[11px] text-slate-400 font-bold whitespace-nowrap">{{ \Carbon\Carbon::parse($step['time'])->format('d M, H:i') }}</div>
+                                        @endif
+                                    </div>
+                                    <div class="text-[11px] text-slate-500 font-semibold mt-0.5">By {{ $step['user'] }}</div>
+                                </div>
                             </div>
-                            <span style="font-size:11px;font-weight:800;margin-top:6px;
-                                {{ $isCurrent ? 'color:#1d4ed8;' : ($isDone ? 'color:#16a34a;' : 'color:#94a3b8;') }}">
-                                {{ $stage['label'] }}
-                            </span>
+                            @endforeach
+                            
+                            @if(!in_array($order->status, ['delivered', 'cancelled']))
+                            <div class="flex items-start gap-4 relative opacity-50">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center text-sm z-10 flex-shrink-0 bg-slate-100 text-slate-400 border-2 border-white">
+                                    ⏳
+                                </div>
+                                <div class="flex-1 pt-1.5">
+                                    <div class="text-[13px] font-black text-slate-500 animate-pulse">Waiting for next step...</div>
+                                </div>
+                            </div>
+                            @endif
                         </div>
-                    @endforeach
-
-                    <!-- Progress bar line behind steps -->
-                    <div style="position:absolute;left:15%;right:15%;top:15px;height:2px;background:#e2e8f0;z-index:1;">
-                        <div style="height:100%;background:#1d4ed8;transition:width 0.2s;
-                            width: {{ $currentIndex == 1 ? '50%' : ($currentIndex == 2 ? '100%' : '0%') }}"></div>
                     </div>
                 </div>
 
                 <!-- Update Status Form -->
-                @if($order->status !== 'delivered' && $order->status !== 'cancelled')
+                @if($order->status !== 'completed' && $order->status !== 'cancelled')
                     <div style="border-top:1px solid #f1f5f9;padding-top:12px;">
                         <form id="statusForm" action="{{ route('orders.updateStatus', $order->id) }}" method="POST" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:0;">
                             @csrf
@@ -99,8 +152,10 @@
                                         <option value="done">✅ Done</option>
                                         <option value="cancelled">❌ Cancel</option>
                                     @elseif($order->status === 'done')
-                                        <option value="delivered">🚚 Delivered</option>
+                                        <option value="delivered">🚚 Delivered (Walk-in)</option>
                                         <option value="cancelled">❌ Cancel</option>
+                                    @elseif($order->status === 'delivered')
+                                        <option value="completed">💰 Settle & Complete</option>
                                     @endif
                                 </select>
                             </div>
@@ -139,7 +194,7 @@
                                 function updateVisibility() {
                                     var val = sel ? sel.value : '';
                                     if (cubbyWrap) cubbyWrap.style.display = val === 'done' ? 'flex' : 'none';
-                                    if (payWrap) payWrap.style.display = val === 'delivered' ? 'flex' : 'none';
+                                    if (payWrap) payWrap.style.display = (val === 'delivered' || val === 'completed') ? 'flex' : 'none';
                                 }
                                 if (sel) {
                                     sel.addEventListener('change', updateVisibility);
@@ -194,23 +249,7 @@
                 </table>
             </div>
 
-            <!-- Activity Log Card -->
-            <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
-                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 12px;text-transform:uppercase;letter-spacing:0.05em;">Activity Log</h3>
-                <div style="display:flex;flex-direction:column;gap:8px;">
-                    @foreach($order->statusHistory as $log)
-                        <div style="display:flex;align-items:flex-start;gap:10px;">
-                            <div style="width:6px;height:6px;border-radius:50%;background:#3b82f6;margin-top:5px;"></div>
-                            <div>
-                                <p style="font-size:12px;font-weight:700;color:#0f172a;margin:0;">Status changed to <span style="color:#1d4ed8;text-transform:uppercase;font-size:10.5px;">{{ $log->status }}</span></p>
-                                <p style="font-size:10px;color:#94a3b8;margin:2px 0 0;font-weight:600;">
-                                    By {{ $log->changedBy->name ?? 'System' }} &bull; {{ \Carbon\Carbon::parse($log->created_at)->format('M d, Y h:i A') }}
-                                </p>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
+
         </div>
 
         <!-- ======= RIGHT COLUMN: Payment & Customer ======= -->

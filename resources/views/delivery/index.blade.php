@@ -14,7 +14,15 @@
         </div>
     @endif
 
-    <div x-data="{ currentTab: 'pickups' }">
+    <div x-data="{ 
+        currentTab: 'pickups',
+        showCashModal: false,
+        cashData: null,
+        openCashModal(apptId, orderNumber, total, paid, pending) {
+            this.cashData = { id: apptId, orderNumber, total, paid, pending };
+            this.showCashModal = true;
+        }
+    }">
         <!-- STAT CARDS / TABS -->
         <div class="grid grid-cols-2 gap-4 mb-6" style="max-width:400px;">
             <!-- Incoming Pickups -->
@@ -93,7 +101,7 @@
                                     <span style="display:inline-block;font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;
                                         {{ $appt->status === 'pending' ? 'background:#fef3c7;color:#d97706;border:1px solid #fde68a;' : '' }}
                                         {{ in_array($appt->status, ['confirmed', 'rider_assigned']) ? 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;' : '' }}
-                                        {{ $appt->status === 'picked_up' ? 'background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;' : '' }}
+                                        {{ in_array($appt->status, ['picked_up', 'order_created']) ? 'background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;' : '' }}
                                         {{ $appt->status === 'cancelled' ? 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;' : '' }}
                                     ">
                                         {{ str_replace('_', ' ', $appt->status) }}
@@ -135,7 +143,7 @@
                                                     </button>
                                                 </form>
                                             </div>
-                                        @elseif($appt->status === 'picked_up')
+                                        @elseif(in_array($appt->status, ['picked_up', 'order_created']))
                                             <div x-data="{ showCost: false }" style="display:flex;gap:4px;align-items:center;">
                                                 <form method="POST" action="{{ route('delivery.atBranch', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                     @csrf
@@ -258,12 +266,9 @@
                                             <span style="font-size:11px;color:#94a3b8;font-weight:600;">Awaiting Rider</span>
                                         @elseif($appt->status === 'delivered')
                                             @if($pendingCashTx)
-                                                <form method="POST" action="{{ route('delivery.collectCash', $appt) }}" style="margin:0;">
-                                                    @csrf
-                                                    <button type="submit" style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(234,179,8,0.3);">
-                                                        Cash Received
-                                                    </button>
-                                                </form>
+                                                <button type="button" @click="openCashModal({{ $appt->id }}, '{{ $order->order_number }}', {{ $order->total }}, {{ $order->paid_amount }}, {{ max(0, $order->total - $order->paid_amount) }})" style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(234,179,8,0.3);">
+                                                    Cash Received
+                                                </button>
                                             @else
                                                 <span style="font-size:11px;color:#16a34a;font-weight:700;">Delivered</span>
                                             @endif
@@ -282,5 +287,52 @@
                 </table>
             </div>
         </div>
+
+        <!-- ── Cash Received Modal ── -->
+        <div x-cloak x-show="showCashModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
+            <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:400px;overflow:hidden;" @click.away="showCashModal = false">
+                <div style="padding:24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#fffbeb;">
+                    <div>
+                        <h3 style="font-size:18px;font-weight:900;color:#d97706;margin:0;">Verify Cash Collection</h3>
+                        <p style="font-size:12px;color:#b45309;margin:2px 0 0;font-weight:600;" x-text="'Order ' + (cashData?.orderNumber || '')"></p>
+                    </div>
+                    <button @click="showCashModal = false" style="background:none;border:none;cursor:pointer;color:#d97706;font-size:20px;">✕</button>
+                </div>
+                
+                <form :action="`/delivery/${cashData?.id}/collect-cash`" method="POST" style="margin:0;">
+                    @csrf
+                    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+                        
+                        <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                <span style="font-size:13px;font-weight:700;color:#64748b;">Total Balance</span>
+                                <span style="font-size:13px;font-weight:800;color:#334155;" x-text="'LKR ' + Number(cashData?.total || 0).toFixed(2)"></span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                                <span style="font-size:13px;font-weight:700;color:#16a34a;">Received Balance</span>
+                                <span style="font-size:13px;font-weight:800;color:#16a34a;" x-text="'- LKR ' + Number(cashData?.paid || 0).toFixed(2)"></span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;margin-top:12px;padding-top:12px;border-top:1.5px dashed #cbd5e1;">
+                                <span style="font-size:14px;font-weight:900;color:#ea580c;">Pending Payment</span>
+                                <span style="font-size:16px;font-weight:900;color:#ea580c;" x-text="'LKR ' + Number(cashData?.pending || 0).toFixed(2)"></span>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="display:block;font-size:11.5px;font-weight:800;color:#334155;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Cash Count by Rider (Rs.)</label>
+                            <input type="number" step="0.01" name="cash_collected" :value="cashData?.pending" required style="width:100%;padding:14px;border:2px solid #e2e8f0;border-radius:12px;font-size:18px;font-weight:900;color:#0f172a;outline:none;text-align:center;" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+
+                        <div style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="button" @click="showCashModal = false" style="flex:1;padding:14px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:14px;cursor:pointer;">Cancel</button>
+                            <button type="submit" style="flex:1;padding:14px;background:#f59e0b;color:white;font-size:14px;font-weight:900;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 12px rgba(245,158,11,0.3);">
+                                Confirm Cash
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
     </div>
 </x-app-layout>

@@ -87,7 +87,7 @@
                             
                             <div class="flex items-center gap-2">
                                 @if($orderObj->payment_status === 'unpaid' && !in_array($orderObj->status, ['delivered', 'cancelled']))
-                                    <a href="{{ route('customer.orders.pay', $orderObj->id) }}" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                    <a href="{{ route('customer.orders.show', $orderObj->id) }}" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                         Pay Now
                                     </a>
                                 @elseif($orderObj->payment_status === 'paid')

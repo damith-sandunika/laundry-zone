@@ -342,17 +342,31 @@
                                                 </a>
                                                 
                                                 <template x-if="dispatch.order && dispatch.order.is_delivery_order && !dispatch.order.payment_approved">
-                                                    <div style="display:flex;gap:4px;">
-                                                        <button @click="openPaymentModal(dispatch)"
-                                                            style="padding:5px 10px;background:#14b8a6;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(20,184,166,0.3);transition:transform 0.1s;"
-                                                            onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                            Req Payment
-                                                        </button>
-                                                        <button @click="approvePaymentAction(dispatch.id)"
-                                                            style="padding:5px 10px;background:#10b981;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.3);transition:transform 0.1s;"
-                                                            onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                            Approve
-                                                        </button>
+                                                    <div style="display:flex;gap:4px;flex-direction:column;align-items:center;">
+                                                        <div style="font-size:10px;font-weight:700;color:#64748b;">
+                                                            Paid: LKR <span x-text="dispatch.order.paid_amount"></span> / <span x-text="dispatch.order.total"></span>
+                                                        </div>
+                                                        <div style="display:flex;gap:4px;">
+                                                            <template x-if="dispatch.order.receipt_path">
+                                                                <a :href="'/storage/' + dispatch.order.receipt_path" target="_blank"
+                                                                    style="padding:5px 10px;background:#6366f1;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;text-decoration:none;box-shadow:0 2px 4px rgba(99,102,241,0.3);transition:transform 0.1s;"
+                                                                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                                    View Slip
+                                                                </a>
+                                                            </template>
+                                                            <template x-if="!dispatch.order.receipt_path">
+                                                                <button @click="openPaymentModal(dispatch)"
+                                                                    style="padding:5px 10px;background:#14b8a6;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(20,184,166,0.3);transition:transform 0.1s;"
+                                                                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                                    Req Payment
+                                                                </button>
+                                                            </template>
+                                                            <button @click="approvePaymentAction(dispatch.id)"
+                                                                style="padding:5px 10px;background:#10b981;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.3);transition:transform 0.1s;"
+                                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                                Approve
+                                                            </button>
+                                                        </div>
                                                     </div>
                                                 </template>
 
@@ -469,7 +483,7 @@
                         </div>
                     </div>
 
-                    <div x-show="paymentAmountType === 'custom'" x-collapse>
+                    <div x-show="paymentAmountType === 'custom'" style="display: none;">
                         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Enter Custom Amount (Rs.)</label>
                         <input type="number" x-model="customPaymentAmount" placeholder="e.g. 1500" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#14b8a6'" onblur="this.style.borderColor='#e2e8f0'">
                     </div>
@@ -507,7 +521,7 @@
                         </div>
                     </div>
 
-                    <div x-show="deliveryMethod === 'rider'" x-collapse>
+                    <div x-show="deliveryMethod === 'rider'" style="display: none;">
                         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Select Rider</label>
                         <select x-model="deliveryRiderId" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                             <option value="">-- Choose Rider --</option>
@@ -517,7 +531,7 @@
                         </select>
                     </div>
 
-                    <div x-show="deliveryMethod === 'pickme_flash'" x-collapse>
+                    <div x-show="deliveryMethod === 'pickme_flash'" style="display: none;">
                         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">PickMe Flash Cost (Rs.)</label>
                         <input type="number" x-model="deliveryPickmeCost" placeholder="e.g. 500" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                         <p style="font-size:11px;color:#64748b;margin-top:6px;font-weight:600;">This will automatically be added as a Workshop Expense.</p>

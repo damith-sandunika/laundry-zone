@@ -1,9 +1,11 @@
 <x-customer-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center flex-wrap gap-3">
-            <div>
-                <h2 class="font-black text-2xl text-slate-800 tracking-tight">Book a Pickup</h2>
-                <p class="text-sm text-slate-500 font-medium mt-1">Schedule a laundry pickup right to your doorstep.</p>
+            <div class="flex items-center gap-4">
+                <div>
+                    <h2 class="font-black text-xl sm:text-2xl text-slate-800 tracking-tight">Book a Pickup</h2>
+                    <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1 hidden sm:block">Schedule a laundry pickup right to your doorstep.</p>
+                </div>
             </div>
             <a href="{{ route('customer.dashboard') }}" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center gap-2">
                 <i class="fa-solid fa-arrow-left"></i> Back to Dashboard
@@ -74,48 +76,80 @@
                     </h3>
                     <p class="text-sm text-slate-500 mb-6 font-medium">Choose the items you want us to clean.</p>
                     
-                    <div class="space-y-3">
-                        <template x-for="category in categories" :key="category.id">
-                            <div class="bg-slate-50 rounded-xl border border-slate-200 overflow-hidden transition-all duration-200" :class="expandedCategory === category.id ? 'ring-2 ring-blue-100' : ''">
-                                <div @click="expandedCategory = expandedCategory === category.id ? null : category.id" class="px-5 py-4 flex justify-between items-center cursor-pointer hover:bg-slate-100 transition-colors">
-                                    <div class="flex items-center gap-4">
-                                        <div class="w-10 h-10 rounded-xl bg-white shadow-sm text-blue-600 flex items-center justify-center border border-slate-100">
-                                            <i class="fa-solid fa-layer-group" x-show="category.name !== 'Wash & Fold' && category.name !== 'Dry Cleaning' && category.name !== 'Ironing'"></i>
-                                            <i class="fa-solid fa-soap" x-show="category.name === 'Wash & Fold'"></i>
-                                            <i class="fa-solid fa-shirt" x-show="category.name === 'Dry Cleaning'"></i>
-                                            <i class="fa-solid fa-fire-burner" x-show="category.name === 'Ironing'"></i>
-                                        </div>
-                                        <span class="font-bold text-base text-slate-800" x-text="category.name"></span>
+                    <!-- Category Cards Grid with Inline Expansion -->
+                    <div x-data="{ cols: window.innerWidth >= 768 ? 4 : 3, expandedIndex: 0 }" 
+                         @resize.window="cols = window.innerWidth >= 768 ? 4 : 3"
+                         class="grid grid-cols-3 md:grid-cols-4 gap-3 sm:gap-4 mb-6">
+                         
+                        <template x-for="(category, index) in categories" :key="category.id">
+                            <div @click="expandedCategory = expandedCategory === category.id ? null : category.id; expandedIndex = index"
+                                 class="relative cursor-pointer rounded-2xl overflow-hidden shadow-sm transition-all aspect-square group"
+                                 :class="expandedCategory === category.id ? 'ring-4 ring-blue-500 shadow-md scale-95' : 'hover:shadow-md'"
+                                 :style="`order: ${(index + 1) * 10}`">
+                                
+                                <!-- Category Image -->
+                                <template x-if="category.image_path">
+                                    <img :src="'/' + category.image_path" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Category">
+                                </template>
+                                <template x-if="!category.image_path">
+                                    <div class="w-full h-full bg-slate-200 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">
+                                        <i class="fa-solid fa-image text-3xl text-slate-400"></i>
                                     </div>
-                                    <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300" :class="expandedCategory === category.id ? 'rotate-180' : ''"></i>
+                                </template>
+                                
+                                <!-- Overlay and Title -->
+                                <div class="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/20 to-transparent flex flex-col justify-end p-2 sm:p-4 text-center">
+                                    <h4 class="text-white text-xs sm:text-lg font-black drop-shadow-md leading-tight" x-text="category.name"></h4>
                                 </div>
                                 
-                                <div x-show="expandedCategory === category.id" x-collapse>
-                                    <div class="border-t border-slate-200 divide-y divide-slate-100 bg-white">
+                                <!-- Selected Checkmark -->
+                                <div x-show="expandedCategory === category.id" class="absolute top-2 right-2 w-5 h-5 sm:w-6 sm:h-6 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-sm">
+                                    <i class="fa-solid fa-check text-[10px] sm:text-xs"></i>
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Services List for Selected Category (Inline Expanded Row) -->
+                        <div x-show="expandedCategory" x-collapse 
+                             class="col-span-3 md:col-span-4 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden"
+                             :style="`order: ${ (Math.floor(expandedIndex / cols) + 1) * cols * 10 + 5 }`">
+                            <template x-for="category in categories" :key="category.id">
+                                <div x-show="expandedCategory === category.id">
+                                    <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                                        <h4 class="font-black text-slate-800 text-lg flex items-center gap-2">
+                                            <i class="fa-solid fa-list-check text-blue-600"></i>
+                                            <span x-text="category.name + ' Services'"></span>
+                                        </h4>
+                                        <button type="button" @click="expandedCategory = null" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 hover:text-slate-700 transition-colors">
+                                            <i class="fa-solid fa-xmark text-sm"></i>
+                                        </button>
+                                    </div>
+                                    <div class="divide-y divide-slate-100">
                                         <template x-for="service in category.services" :key="service.id">
-                                            <div class="flex items-center justify-between px-5 py-4 hover:bg-slate-50 transition-colors">
-                                                <div>
-                                                    <p class="font-bold text-slate-700" x-text="service.name"></p>
-                                                    <p class="text-sm text-blue-600 font-bold mt-0.5">LKR <span x-text="service.base_price"></span></p>
+                                            <div class="flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-slate-50 transition-colors gap-2">
+                                                <div class="flex-1 min-w-0 pr-2">
+                                                    <p class="font-bold text-slate-800 text-sm truncate" x-text="service.name"></p>
+                                                    <p class="text-xs text-blue-600 font-extrabold">LKR <span x-text="service.base_price"></span></p>
                                                 </div>
-                                                <div class="flex items-center gap-4 bg-slate-100 rounded-xl p-1.5 border border-slate-200 shadow-sm">
-                                                    <button type="button" @click="removeFromCart(service)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-white text-slate-600 hover:text-red-500 shadow-sm transition-colors border border-slate-200">
-                                                        <i class="fa-solid fa-minus text-xs"></i>
+                                                <div class="flex items-center gap-2 bg-slate-100 rounded-lg p-1 border border-slate-200 shadow-sm shrink-0">
+                                                    <button type="button" @click="removeFromCart(service)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-white text-slate-600 hover:text-red-500 shadow-sm transition-colors border border-slate-200">
+                                                        <i class="fa-solid fa-minus text-[10px]"></i>
                                                     </button>
-                                                    <span class="font-black w-6 text-center text-slate-800" x-text="getQuantity(service.id)"></span>
-                                                    <button type="button" @click="addToCart(service)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-colors border border-blue-700">
-                                                        <i class="fa-solid fa-plus text-xs"></i>
+                                                    <span class="font-black w-4 sm:w-5 text-center text-slate-800 text-xs sm:text-sm" x-text="getQuantity(service.id)"></span>
+                                                    <button type="button" @click="addToCart(service)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-colors border border-blue-700">
+                                                        <i class="fa-solid fa-plus text-[10px]"></i>
                                                     </button>
                                                 </div>
                                             </div>
                                         </template>
-                                        <div x-show="category.services.length === 0" class="text-sm font-bold text-slate-400 p-5 text-center">
+                                        <div x-show="category.services.length === 0" class="text-sm font-bold text-slate-400 p-8 text-center bg-slate-50">
+                                            <i class="fa-solid fa-box-open text-3xl mb-3 text-slate-300 block"></i>
                                             No services available in this category.
                                         </div>
                                     </div>
                                 </div>
-                            </div>
-                        </template>
+                            </template>
+                        </div>
                     </div>
 
                     <div class="mt-6 pt-6 border-t border-slate-100">
@@ -343,52 +377,15 @@
                         </div>
                     </div>
 
-                    <!-- Payment Section -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                        <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
-                            <span class="bg-indigo-50 text-indigo-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-credit-card"></i></span>
-                            Payment
-                        </h3>
-                        <p class="text-sm text-slate-500 mb-6 font-medium">How would you like to pay?</p>
-
-                        <div class="grid sm:grid-cols-3 gap-3 mb-6">
-                            @foreach($paymentMethods as $method)
-                                <label class="relative cursor-pointer">
-                                    <input type="radio" name="payment_method" value="{{ $method->type }}" class="custom-radio sr-only" x-model="selectedPaymentMethod">
-                                    <div class="p-4 border-2 border-slate-200 rounded-xl bg-slate-50 text-center transition-all">
-                                        <div class="text-2xl mb-2 text-slate-600">
-                                            @if($method->type == 'cash_on_delivery') <i class="fa-solid fa-money-bill-wave"></i>
-                                            @elseif($method->type == 'card_transfer') <i class="fa-solid fa-credit-card"></i>
-                                            @elseif($method->type == 'bank_transfer') <i class="fa-solid fa-building-columns"></i>
-                                            @endif
-                                        </div>
-                                        <div class="font-black text-sm text-slate-800">{{ $method->name }}</div>
-                                    </div>
-                                </label>
-                            @endforeach
+                    <!-- Payment Information -->
+                    <div class="bg-indigo-50 rounded-2xl shadow-sm border border-indigo-100 p-6 sm:p-8 text-center">
+                        <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-indigo-500 mx-auto mb-4 shadow-sm text-2xl">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
                         </div>
-
-                        <!-- Payment Timing -->
-                        <div class="bg-slate-50 border border-slate-200 p-4 rounded-xl">
-                            <label class="block text-sm font-bold text-slate-700 mb-3">When will you pay?</label>
-                            <div class="flex gap-6">
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="payment_timing" value="at_pickup" checked class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300">
-                                    <span class="text-sm font-bold text-slate-700">At Pickup</span>
-                                </label>
-                                <label class="flex items-center gap-2 cursor-pointer">
-                                    <input type="radio" name="payment_timing" value="at_delivery" class="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300">
-                                    <span class="text-sm font-bold text-slate-700">At Delivery</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <!-- Receipt Upload for Bank Transfer -->
-                        <div x-show="selectedPaymentMethod === 'bank_transfer'" x-collapse class="mt-4 pt-4 border-t border-slate-100">
-                            <label class="block text-sm font-bold text-slate-700 mb-2">Upload Transfer Receipt (Optional)</label>
-                            <input type="file" name="receipt_image" accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all cursor-pointer">
-                            <p class="text-[11px] text-slate-400 mt-2 font-semibold">You can also provide the receipt to our rider during pickup.</p>
-                        </div>
+                        <h3 class="text-lg font-black text-indigo-900 mb-2">Payment Details</h3>
+                        <p class="text-sm text-indigo-700 font-medium max-w-md mx-auto">
+                            Payment will be requested after your laundry has been inspected and the total bill is finalized by our workshop. You will be notified via WhatsApp with the exact amount.
+                        </p>
                     </div>
                 </div>
 

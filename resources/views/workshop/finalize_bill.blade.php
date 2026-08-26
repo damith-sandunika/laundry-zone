@@ -30,8 +30,17 @@
 
         <!-- Order Cart -->
         <div class="w-full lg:w-[400px] bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
-            <div class="p-4 border-b border-slate-100 bg-slate-50">
-                <h3 class="font-black text-slate-800">Order Items</h3>
+            <div class="p-4 border-b border-slate-100 bg-slate-50 flex flex-col gap-3">
+                <div>
+                    <h3 class="font-black text-slate-800 text-base">{{ $dispatch->order->customer->name ?? 'Unknown Customer' }}</h3>
+                    <p class="text-[11px] font-bold text-slate-500">{{ $dispatch->order->customer->phone ?? 'No Phone' }}</p>
+                    @if($dispatch->order->notes)
+                        <div class="mt-2 p-2 bg-yellow-50 text-yellow-800 text-xs font-bold rounded-lg border border-yellow-200">
+                            <i class="fa-solid fa-note-sticky mr-1"></i> {{ $dispatch->order->notes }}
+                        </div>
+                    @endif
+                </div>
+                <h3 class="font-black text-slate-800 border-t border-slate-200 pt-3">Order Items</h3>
             </div>
             
             <div class="flex-1 overflow-y-auto p-4 flex flex-col gap-3 custom-scrollbar">
@@ -41,12 +50,12 @@
                             <div class="text-xs font-black text-slate-800 truncate" x-text="item.name"></div>
                             <div class="text-[10px] font-bold text-slate-500" x-text="'Rs.' + item.base_price"></div>
                         </div>
-                        <div class="flex items-center gap-1">
-                            <button @click="if(item.qty > 1) item.qty--" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center">-</button>
-                            <input type="number" x-model.number="item.qty" class="w-12 text-center text-xs font-black bg-transparent border-none outline-none py-1" min="1">
-                            <button @click="item.qty++" class="w-6 h-6 rounded bg-slate-200 text-slate-600 font-bold flex items-center justify-center">+</button>
+                        <div class="flex items-center gap-2">
+                            <input type="number" step="any" x-model.number="item.qty" class="w-20 text-center text-sm font-black bg-white border border-slate-300 rounded-lg outline-none py-1.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-200" min="0">
+                            <button @click="cart.splice(index, 1)" class="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
                         </div>
-                        <button @click="cart.splice(index, 1)" class="p-1 text-red-400 hover:text-red-600">✕</button>
                     </div>
                 </template>
                 <div x-show="cart.length === 0" class="text-center py-8 text-sm font-bold text-slate-400">
@@ -63,11 +72,25 @@
                     <span class="text-xs font-bold text-slate-500">Total (Min Rs.3000)</span>
                     <span class="text-lg font-black text-blue-700" x-text="'Rs.' + Math.max(3000, subtotal).toFixed(2)"></span>
                 </div>
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-slate-700 mb-1">Advance Amount Required (Optional)</label>
+                    <div class="relative">
+                        <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rs.</span>
+                        <input type="number" x-model.number="requestedAdvance" class="w-full pl-9 pr-4 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0.00" min="0">
+                    </div>
+                    <p class="text-[10px] text-slate-500 mt-1 font-semibold">Leave empty to request the full amount.</p>
+                </div>
                 
-                <button @click="saveOrder()" :disabled="isSaving"
-                    class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-sm rounded-xl transition-colors shadow-lg shadow-blue-500/30">
-                    <span x-text="isSaving ? 'Saving...' : 'Finalize Bill'"></span>
-                </button>
+                <div class="grid grid-cols-2 gap-2">
+                    <button @click="saveOrder('request_payment')" :disabled="isSaving"
+                        class="w-full py-2.5 bg-white border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-black text-xs rounded-xl transition-colors">
+                        <span x-text="isSaving ? '...' : 'Save & Request Payment'"></span>
+                    </button>
+                    <button @click="saveOrder('start_processing')" :disabled="isSaving"
+                        class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl transition-colors shadow-md shadow-blue-500/30">
+                        <span x-text="isSaving ? '...' : 'Save & Start Processing'"></span>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -78,6 +101,7 @@
                 services: @json($services),
                 search: '',
                 cart: @json($cartItems),
+                requestedAdvance: null,
                 isSaving: false,
                 orderId: {{ $dispatch->order_id }},
                 
@@ -104,7 +128,7 @@
                     }
                 },
                 
-                async saveOrder() {
+                async saveOrder(action) {
                     if(this.cart.length === 0) return alert('Cart is empty!');
                     this.isSaving = true;
                     
@@ -117,7 +141,9 @@
                             },
                             body: JSON.stringify({
                                 cart: this.cart,
-                                discount_percentage: 0
+                                discount_percentage: 0,
+                                requested_advance: this.requestedAdvance,
+                                next_action: action
                             })
                         });
                         const data = await res.json();

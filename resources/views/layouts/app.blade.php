@@ -40,7 +40,7 @@
             <!-- Brand & Logo -->
             <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50">
                 <div class="w-20 h-20 rounded-[1.25rem] bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 mb-3 ring-4 ring-white transition-transform hover:scale-105 duration-300">
-                    <img src="{{ asset('images/admin_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
+                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
                 <div>
                     <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">360 Laundry</div>

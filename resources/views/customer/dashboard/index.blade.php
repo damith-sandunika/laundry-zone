@@ -146,12 +146,24 @@
                                                 <i class="fa-solid fa-truck-pickup"></i> Pickup Request
                                             </span>
                                             <h4 class="font-bold text-slate-800 mb-1">Booking #{{ str_pad($deliveryAppointment->id, 4, '0', STR_PAD_LEFT) }}</h4>
-                                            <div class="text-xs font-bold text-slate-500 mb-2">Order {{ $order->order_number }} &middot; {{ $order->items->count() }} Items &middot; <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></div>
+                                            <div class="text-xs font-bold text-slate-500 mb-2">Order {{ $order->order_number }} &middot; {{ $order->items->count() }} Items &middot; 
+                                                @if($order->paid_amount > 0)
+                                                    <span class="text-blue-600">Bal: LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span> <span class="text-slate-400 font-medium text-[10px]">(Total: {{ number_format($order->total, 2) }})</span>
+                                                @else
+                                                    <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span>
+                                                @endif
+                                            </div>
                                         @else
                                             <span class="text-xs font-bold bg-slate-100 text-slate-600 px-2 py-1 rounded-md mb-2 inline-block">
                                                 {{ $order->order_number }}
                                             </span>
-                                            <h4 class="font-bold text-slate-800">{{ $order->items->count() }} Items &middot; <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></h4>
+                                            <h4 class="font-bold text-slate-800">{{ $order->items->count() }} Items &middot; 
+                                                @if($order->paid_amount > 0)
+                                                    <span class="text-blue-600">Bal: LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span> <span class="text-slate-400 font-medium text-[10px]">(Total: {{ number_format($order->total, 2) }})</span>
+                                                @else
+                                                    <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span>
+                                                @endif
+                                            </h4>
                                         @endif
                                     </div>
                             <div class="text-right flex flex-col items-end gap-2">
@@ -163,8 +175,8 @@
                                 ">
                                     {{ str_replace('_', ' ', $order->status) }}
                                 </span>
-                                @if($order->payment_status === 'unpaid')
-                                    <a href="{{ route('customer.orders.pay', $order->id) }}" class="text-[10px] font-bold uppercase tracking-wider text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm animate-pulse">
+                                @if(!$order->payment_approved && $order->requested_advance > 0 || in_array($order->payment_status, ['unpaid', 'pending', 'partial']))
+                                    <a href="{{ route('customer.orders.show', $order) }}" class="text-[10px] font-bold uppercase tracking-wider text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm animate-pulse">
                                         Pay Now
                                     </a>
                                 @else
@@ -182,85 +194,110 @@
                             $orderProgress = '0%';
                             $orderStatusLevel = 1;
                             
+                            $isAwaitingPayment = !$order->payment_approved && $order->requested_advance > 0;
+                            $logicalStatus = $order->status;
+                            if ($isAwaitingPayment && $logicalStatus === 'processing') {
+                                $logicalStatus = 'dispatched_to_workshop'; // Downgrade logical status so timeline doesn't show "Working"
+                            }
+                            
                             if ($isDelivery) {
                                 // 5-step timeline for delivery: Confirmed -> Rider Pick Up -> Working -> Delivering -> Completed
-                                // Once order is created (received), rider has already picked it up, so it is in Working state.
-                                if(in_array($order->status, ['received', 'dispatched_to_workshop', 'processing'])) { 
+                                if(in_array($logicalStatus, ['received', 'dispatched_to_workshop'])) { 
+                                    $orderProgress = '25%'; $orderStatusLevel = 2; // Rider Pick Up / Awaiting Payment
+                                }
+                                elseif($logicalStatus === 'processing') { 
                                     $orderProgress = '50%'; $orderStatusLevel = 3; 
                                 }
-                                elseif(in_array($order->status, ['returned_from_workshop', 'ready', 'done', 'out_for_delivery'])) { 
+                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'ready', 'done', 'out_for_delivery'])) { 
                                     $orderProgress = '75%'; $orderStatusLevel = 4; 
                                 }
-                                elseif($order->status === 'delivered') { 
+                                elseif($logicalStatus === 'delivered') { 
                                     $orderProgress = '100%'; $orderStatusLevel = 5; 
                                 }
                             } else {
                                 // 4-step timeline for non-delivery: Confirmed -> Working -> Ready to Pickup -> Completed
-                                if(in_array($order->status, ['received', 'dispatched_to_workshop', 'processing'])) { 
+                                if(in_array($logicalStatus, ['received', 'dispatched_to_workshop'])) { 
+                                    $orderProgress = '0%'; $orderStatusLevel = 1; // Not working yet
+                                }
+                                elseif($logicalStatus === 'processing') { 
                                     $orderProgress = '33%'; $orderStatusLevel = 2; 
                                 }
-                                elseif(in_array($order->status, ['returned_from_workshop', 'ready', 'done'])) { 
+                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'ready', 'done'])) { 
                                     $orderProgress = '66%'; $orderStatusLevel = 3; 
                                 }
-                                elseif($order->status === 'delivered') { 
+                                elseif($logicalStatus === 'delivered') { 
                                     $orderProgress = '100%'; $orderStatusLevel = 4; 
                                 }
                             }
                         @endphp
                         
-                        <div class="mt-4 pt-4 border-t border-slate-100 relative z-10">
-                            <div class="flex items-center justify-between relative">
-                                <div class="absolute left-0 top-3 w-full h-1 bg-slate-100 rounded-full"></div>
-                                <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $orderProgress }}"></div>
-                                
-                                <!-- Step 1: Confirmed -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-emerald-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
-                                    <span class="text-[10px] font-bold text-slate-800 leading-tight">Confirmed</span>
-                                </div>
-                                
-                                @if($isDelivery)
-                                <!-- Step 2: Pick Up (Delivery Only) -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 2 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($orderStatusLevel >= 2) <i class="fa-solid fa-motorcycle"></i> @else 2 @endif
+                        @if($isAwaitingPayment)
+                            <div class="mt-4 pt-5 border-t border-slate-100 relative z-10">
+                                <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow p-5 text-center flex flex-col sm:flex-row items-center justify-between gap-4">
+                                    <div class="text-left text-white">
+                                        <h4 class="font-black text-lg mb-1"><i class="fa-solid fa-circle-exclamation text-yellow-300 animate-pulse mr-1"></i> Action Required</h4>
+                                        <p class="text-blue-100 text-sm font-medium">To start processing your laundry, please pay the requested advance of <strong class="text-white bg-blue-800/50 px-1.5 py-0.5 rounded">LKR {{ number_format($order->requested_advance, 2) }}</strong></p>
                                     </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Rider Arriving</span>
-                                </div>
-                                @endif
-                                
-                                <!-- Step 3/2: Working -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
-                                    @php $workingLevel = $isDelivery ? 3 : 2; @endphp
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $workingLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($orderStatusLevel >= $workingLevel) <i class="fa-solid fa-jug-detergent {{ $orderStatusLevel == $workingLevel ? 'fa-spin-pulse' : '' }}"></i> @else {{ $workingLevel }} @endif
-                                    </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $workingLevel ? 'text-slate-800' : 'text-slate-400' }}">Working</span>
-                                </div>
-                                
-                                <!-- Step 4/3: Ready/Delivering -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
-                                    @php $deliveringLevel = $isDelivery ? 4 : 3; @endphp
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $deliveringLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($orderStatusLevel >= $deliveringLevel) 
-                                            <i class="fa-solid {{ $isDelivery ? 'fa-motorcycle' : 'fa-box' }} {{ $orderStatusLevel == $deliveringLevel ? 'fa-bounce' : '' }}"></i> 
-                                        @else {{ $deliveringLevel }} @endif
-                                    </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $deliveringLevel ? 'text-slate-800' : 'text-slate-400' }}">
-                                        {{ $isDelivery ? 'Delivering' : 'Ready to Pickup' }}
-                                    </span>
-                                </div>
-                                
-                                <!-- Step 5/4: Completed -->
-                                <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
-                                    @php $completedLevel = $isDelivery ? 5 : 4; @endphp
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $completedLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                        @if($orderStatusLevel >= $completedLevel) <i class="fa-solid fa-flag-checkered"></i> @else {{ $completedLevel }} @endif
-                                    </div>
-                                    <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $completedLevel ? 'text-slate-800' : 'text-slate-400' }}">Completed</span>
+                                    <a href="{{ route('customer.orders.show', $order) }}" class="shrink-0 w-full sm:w-auto inline-block bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl transition-all">
+                                        <i class="fa-solid fa-bolt mr-1"></i> PAY NOW
+                                    </a>
                                 </div>
                             </div>
-                        </div>
+                        @else
+                            <div class="mt-4 pt-4 border-t border-slate-100 relative z-10">
+                                <div class="flex items-center justify-between relative">
+                                    <div class="absolute left-0 top-3 w-full h-1 bg-slate-100 rounded-full"></div>
+                                    <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $orderProgress }}"></div>
+                                    
+                                    <!-- Step 1: Confirmed -->
+                                    <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-emerald-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
+                                        <span class="text-[10px] font-bold text-slate-800 leading-tight">Confirmed</span>
+                                    </div>
+                                    
+                                    @if($isDelivery)
+                                    <!-- Step 2: Pick Up (Delivery Only) -->
+                                    <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 2 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                            @if($orderStatusLevel >= 2) <i class="fa-solid fa-motorcycle"></i> @else 2 @endif
+                                        </div>
+                                        <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Rider Arriving</span>
+                                    </div>
+                                    @endif
+                                    
+                                    <!-- Step 3/2: Working -->
+                                    <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
+                                        @php $workingLevel = $isDelivery ? 3 : 2; @endphp
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $workingLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                            @if($orderStatusLevel >= $workingLevel) <i class="fa-solid fa-jug-detergent {{ $orderStatusLevel == $workingLevel ? 'fa-spin-pulse' : '' }}"></i> @else {{ $workingLevel }} @endif
+                                        </div>
+                                        <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $workingLevel ? 'text-slate-800' : 'text-slate-400' }}">Working</span>
+                                    </div>
+                                    
+                                    <!-- Step 4/3: Ready/Delivering -->
+                                    <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
+                                        @php $deliveringLevel = $isDelivery ? 4 : 3; @endphp
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $deliveringLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                            @if($orderStatusLevel >= $deliveringLevel) 
+                                                <i class="fa-solid {{ $isDelivery ? 'fa-motorcycle' : 'fa-box' }} {{ $orderStatusLevel == $deliveringLevel ? 'fa-bounce' : '' }}"></i> 
+                                            @else {{ $deliveringLevel }} @endif
+                                        </div>
+                                        <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $deliveringLevel ? 'text-slate-800' : 'text-slate-400' }}">
+                                            {{ $isDelivery ? 'Delivering' : 'Ready to Pickup' }}
+                                        </span>
+                                    </div>
+                                    
+                                    <!-- Step 5/4: Completed -->
+                                    <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
+                                        @php $completedLevel = $isDelivery ? 5 : 4; @endphp
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= $completedLevel ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                            @if($orderStatusLevel >= $completedLevel) <i class="fa-solid fa-flag-checkered"></i> @else {{ $completedLevel }} @endif
+                                        </div>
+                                        <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= $completedLevel ? 'text-slate-800' : 'text-slate-400' }}">Completed</span>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 @endforeach
             </div>

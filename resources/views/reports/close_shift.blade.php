@@ -105,6 +105,12 @@
 
     <div class="divider-thick"></div>
 
+    <div class="section-head">NON-CASH COLLECTIONS</div>
+    <div class="row"><span>Card Payments</span><span>Rs.{{ number_format($cardPaymentOnly ?? 0, 2) }}</span></div>
+    <div class="row"><span>Bank Transfers</span><span>Rs.{{ number_format($bankPaymentOnly ?? 0, 2) }}</span></div>
+    
+    <div class="divider-thick"></div>
+
     <div class="section-head">CASH DRAWER BALANCE</div>
     <div class="row"><span>Opening Cash</span><span>Rs.{{ number_format($openingBalance, 2) }}</span></div>
     <div class="row"><span>(+) Cash In (All)</span><span>Rs.{{ number_format($cashPaymentOnly ?? 0, 2) }}</span></div>

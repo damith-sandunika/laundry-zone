@@ -12,7 +12,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number', 'branch_id', 'customer_id', 'created_by', 'workshop_id',
-        'status', 'subtotal', 'discount', 'additional', 'total', 'paid_amount',
+        'status', 'subtotal', 'discount', 'additional', 'total', 'paid_amount', 'requested_advance',
         'payment_status', 'payment_method', 'loyalty_points_used',
         'loyalty_points_earned', 'due_date', 'notes', 'is_online_booking',
         'ready_at', 'delivered_at', 'is_delivery_order', 'delivery_appointment_id',
@@ -114,5 +114,10 @@ class Order extends Model
     public function isPackageOrder()
     {
         return $this->items()->where('item_description', 'like', '%via Package%')->exists();
+    }
+
+    public function deliveryAppointment()
+    {
+        return $this->hasOne(DeliveryAppointment::class, 'order_id');
     }
 }

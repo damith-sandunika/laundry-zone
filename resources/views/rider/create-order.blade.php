@@ -12,19 +12,36 @@
                 <div class="text-sm font-bold text-slate-800 mb-4">Select Services & Items</div>
                 
                 <div id="items-container" class="space-y-4">
-                    <!-- Default first item -->
-                    <div class="item-row flex items-center gap-3">
-                        <select name="items[0][service_id]" required class="flex-1 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm">
-                            <option value="">Select Service</option>
-                            @foreach($services as $service)
-                                <option value="{{ $service->id }}" data-price="{{ $service->base_price }}">
-                                    {{ $service->name }} (Rs.{{ $service->base_price }})
-                                </option>
-                            @endforeach
-                        </select>
-                        <input type="number" name="items[0][quantity]" value="1" min="1" required class="w-20 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm text-center">
-                        <button type="button" class="btn-remove-item text-red-500 hover:bg-red-50 p-2 rounded-lg transition" style="display:none;">🗑️</button>
-                    </div>
+                    @if(isset($cartData) && count($cartData) > 0)
+                        @foreach($cartData as $index => $item)
+                            <div class="item-row flex items-center gap-3">
+                                <select name="items[{{ $index }}][service_id]" required class="flex-1 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                    <option value="">Select Service</option>
+                                    @foreach($services as $service)
+                                        <option value="{{ $service->id }}" data-price="{{ $service->base_price }}" {{ $service->id == $item['service']['id'] ? 'selected' : '' }}>
+                                            {{ $service->name }} (Rs.{{ $service->base_price }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <input type="number" name="items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}" min="1" required class="w-20 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm text-center">
+                                <button type="button" class="btn-remove-item text-red-500 hover:bg-red-50 p-2 rounded-lg transition" {{ count($cartData) == 1 ? 'style=display:none;' : '' }}>🗑️</button>
+                            </div>
+                        @endforeach
+                    @else
+                        <!-- Default first item -->
+                        <div class="item-row flex items-center gap-3">
+                            <select name="items[0][service_id]" required class="flex-1 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                                <option value="">Select Service</option>
+                                @foreach($services as $service)
+                                    <option value="{{ $service->id }}" data-price="{{ $service->base_price }}">
+                                        {{ $service->name }} (Rs.{{ $service->base_price }})
+                                    </option>
+                                @endforeach
+                            </select>
+                            <input type="number" name="items[0][quantity]" value="1" min="1" required class="w-20 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm text-center">
+                            <button type="button" class="btn-remove-item text-red-500 hover:bg-red-50 p-2 rounded-lg transition" style="display:none;">🗑️</button>
+                        </div>
+                    @endif
                 </div>
 
                 <button type="button" id="btn-add-item" class="mt-4 w-full py-2 border-2 border-dashed border-slate-200 text-slate-500 font-bold rounded-xl hover:bg-slate-50 transition text-sm">
@@ -48,7 +65,15 @@
             document.addEventListener('DOMContentLoaded', function() {
                 const container = document.getElementById('items-container');
                 const btnAdd = document.getElementById('btn-add-item');
-                let itemCount = 1;
+                let itemCount = {{ isset($cartData) && count($cartData) > 0 ? count($cartData) : 1 }};
+
+                // Attach event listener to existing remove buttons
+                const existingRemoveBtns = container.querySelectorAll('.btn-remove-item');
+                existingRemoveBtns.forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.target.closest('.item-row').remove();
+                    });
+                });
 
                 btnAdd.addEventListener('click', function() {
                     const firstRow = container.querySelector('.item-row');

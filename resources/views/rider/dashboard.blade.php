@@ -130,9 +130,16 @@
                                                 Pick Order
                                             </a>
                                         @else
-                                            <button onclick="updateTask({{ $task->id }}, 'complete')" style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
-                                                Deliver Order
-                                            </button>
+                                            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                                                @if($task->order && ($task->order->total - $task->order->paid_amount) > 0)
+                                                    <div style="font-size:10px;font-weight:800;color:#dc2626;background:#fef2f2;padding:2px 6px;border-radius:4px;border:1px solid #fecaca;">
+                                                        Collect: LKR {{ number_format($task->order->total - $task->order->paid_amount, 2) }}
+                                                    </div>
+                                                @endif
+                                                <button onclick="updateTask({{ $task->id }}, 'complete')" style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);">
+                                                    Deliver Order
+                                                </button>
+                                            </div>
                                         @endif
                                     @endif
 

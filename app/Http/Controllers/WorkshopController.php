@@ -97,6 +97,8 @@ class WorkshopController extends Controller
         $cardPaymentsAmount = 0;
         $totalSale = 0;
 
+        $bankTransfers = 0;
+
         if ($activeSession) {
             // Cash collected by workshop admins during this shift (from riders returning to workshop)
             $cashCollected = \App\Models\PaymentTransaction::whereHas('order', function($q) use ($branchId) {
@@ -106,6 +108,20 @@ class WorkshopController extends Controller
                 ->where('payment_method', 'cash')
                 ->sum('amount');
 
+            $cardPaymentsAmount = \App\Models\PaymentTransaction::whereHas('order', function($q) use ($branchId) {
+                    $q->where('workshop_id', $branchId);
+                })
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'card')
+                ->sum('amount');
+                
+            $bankTransfers = \App\Models\PaymentTransaction::whereHas('order', function($q) use ($branchId) {
+                    $q->where('workshop_id', $branchId);
+                })
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->where('payment_method', 'bank_transfer')
+                ->sum('amount');
+
             // Expenses logged by workshop admins
             $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
                 ->where('created_at', '>=', $activeSession->opened_at)
@@ -113,7 +129,7 @@ class WorkshopController extends Controller
 
             $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
             $currentBalance = $cashBalance;
-            $totalSale = $cashCollected; // Workshops mostly just collect cash
+            $totalSale = $cashCollected + $cardPaymentsAmount + $bankTransfers;
         }
 
         // Workshop Stats
@@ -130,6 +146,7 @@ class WorkshopController extends Controller
             'cash_balance' => $cashBalance,
             'card_payments' => $cardPayments,
             'card_payments_amount' => $cardPaymentsAmount,
+            'bank_transfers' => $bankTransfers,
             'total_sale' => $totalSale,
         ];
 
@@ -205,13 +222,16 @@ class WorkshopController extends Controller
 
         $dispatches = WorkshopDispatch::with(['order.customer', 'branch', 'dispatchedBy'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
-            ->whereNotIn('status', ['received_at_branch'])
+            ->whereNotIn('status', ['received_at_branch', 'returned_to_branch'])
             ->orderByDesc('dispatched_at')
             ->get();
 
-        $completedToday = WorkshopDispatch::where('status', 'received_at_branch')
+        $completedToday = WorkshopDispatch::whereIn('status', ['received_at_branch', 'returned_to_branch'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
-            ->whereDate('received_at_branch_at', today())
+            ->where(function($q) {
+                $q->whereDate('received_at_branch_at', today())
+                  ->orWhereDate('returned_at', today());
+            })
             ->count();
 
         $branches = Branch::where('type', 'branch')->get();
@@ -292,9 +312,40 @@ class WorkshopController extends Controller
     public function approvePayment(WorkshopDispatch $dispatch)
     {
         $order = $dispatch->order;
-        $order->update(['payment_approved' => true]);
+        
+        $amount = $order->requested_advance > 0 ? $order->requested_advance : $order->total;
+        
+        $order->update([
+            'payment_approved' => true,
+            'paid_amount' => $order->paid_amount + $amount,
+        ]);
+        
+        if ($order->paid_amount >= $order->total) {
+            $order->update(['payment_status' => 'paid']);
+        } else {
+            $order->update(['payment_status' => 'partial']);
+        }
+        
+        \App\Models\PaymentTransaction::create([
+            'order_id' => $order->id,
+            'amount' => $amount,
+            'payment_method' => 'bank_transfer',
+            'status' => 'completed',
+            'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+        ]);
 
-        return response()->json(['success' => true, 'message' => 'Payment approved. You can now start processing.']);
+        if (in_array($dispatch->status, ['dispatched_to_workshop', 'received_at_workshop'])) {
+            $dispatch->update(['status' => 'processing']);
+            $order->update(['status' => 'processing']);
+            \App\Models\OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => 'processing',
+                'changed_by' => auth()->id(),
+                'note' => 'Payment approved, processing started',
+            ]);
+        }
+
+        return response()->json(['success' => true, 'message' => 'Payment approved. Order is now processing.']);
     }
 
     public function finalizeBill(WorkshopDispatch $dispatch)
@@ -333,8 +384,8 @@ class WorkshopController extends Controller
     {
         $request->validate([
             'delivery_method' => 'required|in:rider,pickme_flash',
-            'rider_id' => 'required_if:delivery_method,rider|exists:users,id',
-            'pickme_cost' => 'required_if:delivery_method,pickme_flash|numeric|min:0',
+            'rider_id' => 'required_if:delivery_method,rider|nullable|exists:users,id',
+            'pickme_cost' => 'required_if:delivery_method,pickme_flash|nullable|numeric|min:0',
         ]);
 
         $order = $dispatch->order;
@@ -356,8 +407,8 @@ class WorkshopController extends Controller
                 'amount' => $request->pickme_cost,
                 'category' => 'delivery',
                 'description' => 'PickMe Flash Delivery for Order #' . $order->order_number,
-                'date' => now(),
-                'added_by' => auth()->id(),
+                'expense_date' => now(),
+                'created_by' => auth()->id(),
             ]);
         }
 
@@ -439,18 +490,6 @@ class WorkshopController extends Controller
         return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
     }
 
-    // ─── View order tracking steps ───
-    public function tracking($orderId)
-    {
-        $order = Order::withoutGlobalScopes()->findOrFail($orderId);
-        
-        $dispatch = WorkshopDispatch::with(['dispatchedBy', 'receivedBy', 'returnedBy'])
-            ->where('order_id', $order->id)
-            ->latest()
-            ->first();
-
-        return view('workshop.tracking', compact('order', 'dispatch'));
-    }
 
     // ─── Workshop Admin: All completed orders ───
     public function history()
@@ -459,8 +498,8 @@ class WorkshopController extends Controller
 
         $dispatches = WorkshopDispatch::with(['order.customer', 'branch'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $user->branch_id))
-            ->where('status', 'received_at_branch')
-            ->orderByDesc('received_at_branch_at')
+            ->whereIn('status', ['received_at_branch', 'returned_to_branch'])
+            ->orderByRaw('COALESCE(received_at_branch_at, returned_at) DESC')
             ->paginate(20);
 
         return view('workshop.history', compact('dispatches'));

@@ -141,6 +141,7 @@ class OrderController extends Controller
                     'discount' => $discountAmount,
                     'total' => $total,
                     'paid_amount' => $paidAmount,
+                    'requested_advance' => $request->requested_advance,
                 ]);
 
                 // Insert new order items
@@ -162,6 +163,26 @@ class OrderController extends Controller
                     'changed_by' => auth()->id(),
                     'note' => 'Order details updated',
                 ]);
+
+                // Handle next action
+                if ($request->next_action === 'start_processing') {
+                    $order->update(['status' => 'processing']);
+                    OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'status' => 'processing',
+                        'changed_by' => auth()->id(),
+                        'note' => 'Workshop started processing',
+                    ]);
+                } else if ($request->next_action === 'request_payment') {
+                    // We can send WhatsApp message here
+                    $amountToRequest = $request->requested_advance > 0 ? $request->requested_advance : $total;
+                    $phone = $order->customer->phone;
+                    if ($phone) {
+                        $msg = "Hi {$order->customer->name},\n\nYour laundry bill for Order #{$order->order_number} has been finalized.\nTotal Bill: Rs. {$total}\nAmount to Pay Now: Rs. {$amountToRequest}\n\nPlease visit your dashboard to complete the payment so we can start processing: " . route('customer.dashboard');
+                        $waService = app(\App\Services\WhatsAppService::class);
+                        $waService->sendText($phone, $msg, $order->id, $order->customer_id);
+                    }
+                }
             });
 
             return response()->json(['success' => true]);
@@ -174,7 +195,7 @@ class OrderController extends Controller
 
     public function show(Order $order)
     {
-        $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby']);
+        $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment']);
         $branchId = auth()->user()->branch_id ?? 1;
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 
@@ -300,6 +321,33 @@ class OrderController extends Controller
                     $appt = DeliveryAppointment::where('order_id', $order->id)->first();
                     if ($appt) {
                         $appt->update(['status' => 'delivered']);
+                    }
+                }
+
+                if ($request->status === 'completed') {
+                    if ($request->has('payment_method')) {
+                        $order->payment_method = $request->payment_method;
+                    }
+
+                    // If not fully paid, settle the balance
+                    $amountToPay = $order->total - $order->paid_amount;
+                    if ($amountToPay > 0) {
+                        PaymentTransaction::create([
+                            'order_id' => $order->id,
+                            'amount' => $amountToPay,
+                            'payment_method' => $order->payment_method ?? 'cash',
+                            'created_by' => auth()->id(),
+                            'collected_from_rider_at' => now(),
+                            'status' => 'completed',
+                            'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                        ]);
+                        $order->paid_amount = $order->total;
+                        $order->payment_status = 'paid';
+                    } else {
+                        // Mark previously uncollected transactions from rider as collected
+                        PaymentTransaction::where('order_id', $order->id)
+                            ->whereNull('collected_from_rider_at')
+                            ->update(['collected_from_rider_at' => now()]);
                     }
                 }
 

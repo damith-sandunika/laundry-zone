@@ -203,7 +203,7 @@
         <div class="card" style="background: #f0fdf4; border-color: #bbf7d0;">
             <div class="card-title">Done Payments (Collected)</div>
             <div class="card-value" style="color: #16a34a;">Rs.{{ number_format($totalCollected, 2) }}</div>
-            <div class="card-sub">Cash: Rs.{{ number_format($collectedCash, 2) }} | Card: Rs.{{ number_format($collectedCard, 2) }}</div>
+            <div class="card-sub">Cash: Rs.{{ number_format($collectedCash, 2) }} | Card: Rs.{{ number_format($collectedCard, 2) }} | Bank: Rs.{{ number_format($collectedBank ?? 0, 2) }}</div>
         </div>
 
         <div style="display:table-cell; width:2%;"></div> <!-- Spacer -->

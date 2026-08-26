@@ -103,21 +103,21 @@ class RiderController extends Controller
             $appointment->update(['status' => 'delivered']);
             $order = Order::find($task->order_id);
             if ($order) {
-                // Process payment if requested
-                if ($request->has('payment_amount') && $request->payment_amount > 0) {
-                    $amount = $request->payment_amount;
-                    $method = $request->payment_method ?? 'cash';
-
-                    PaymentTransaction::create([
+                $balance = $order->total - $order->paid_amount;
+                if ($balance > 0) {
+                    \App\Models\PaymentTransaction::create([
                         'order_id' => $order->id,
-                        'amount' => $amount,
-                        'payment_method' => $method,
+                        'amount' => $balance,
+                        'payment_method' => 'cash',
                         'created_by' => auth()->id(),
+                        'status' => 'completed',
+                        'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                        'collected_from_rider_at' => null // Admin needs to settle this
                     ]);
 
-                    $order->paid_amount += $amount;
-                    $order->payment_status = ($order->paid_amount >= $order->total) ? 'paid' : 'partial';
-                    $order->payment_method = $method;
+                    $order->paid_amount += $balance;
+                    $order->payment_status = 'paid';
+                    $order->payment_method = 'cash';
                 }
 
                 $order->update([
@@ -139,8 +139,9 @@ class RiderController extends Controller
         }
 
         $services = ServiceType::where('is_active', true)->get();
+        $cartData = $task->appointment->cart_json ? json_decode($task->appointment->cart_json, true) : [];
 
-        return view('rider.create-order', compact('task', 'services'));
+        return view('rider.create-order', compact('task', 'services', 'cartData'));
     }
 
     public function storeOrder(Request $request, DeliveryTask $task, WhatsAppService $waService)
@@ -169,7 +170,7 @@ class RiderController extends Controller
             'branch_id' => $branchId,
             'customer_id' => $appointment->customer_id,
             'created_by' => auth()->id(),
-            'status' => 'received',
+            'status' => 'picked_up',
             'subtotal' => $subtotal,
             'total' => $subtotal, // Delivery fee added later if applicable
             'notes' => $request->notes,
@@ -185,13 +186,13 @@ class RiderController extends Controller
                 'order_id' => $order->id,
                 'service_type_id' => $service->id,
                 'quantity' => $item['quantity'],
-                'price' => $service->base_price,
-                'subtotal' => $price,
+                'unit_price' => $service->base_price,
+                'total_price' => $price,
             ]);
         }
 
         $appointment->update([
-            'status' => 'order_created',
+            'status' => 'picked_up',
             'order_id' => $order->id,
             'picked_up_at' => now(),
         ]);

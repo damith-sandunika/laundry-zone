@@ -41,11 +41,14 @@
                             <span style="font-size:11px;color:#94a3b8;font-weight:500;">{{ $dispatch->dispatched_at?->format('h:i A') }}</span>
                         </td>
                         <td style="padding:12px 20px;font-weight:600;color:#475569;">
-                            <span style="display:block;">{{ $dispatch->received_at_branch_at?->format('M d, Y') }}</span>
-                            <span style="font-size:11px;color:#94a3b8;font-weight:500;">{{ $dispatch->received_at_branch_at?->format('h:i A') }}</span>
+                            @php
+                                $completedDate = $dispatch->received_at_branch_at ?? $dispatch->returned_at;
+                            @endphp
+                            <span style="display:block;">{{ $completedDate?->format('M d, Y') }}</span>
+                            <span style="font-size:11px;color:#94a3b8;font-weight:500;">{{ $completedDate?->format('h:i A') }}</span>
                         </td>
                         <td style="padding:12px 20px;text-align:center;">
-                            <a href="{{ route('orders.workshopTracking', $dispatch->order) }}"
+                            <a href="{{ route('orders.show', $dispatch->order) }}"
                                style="display:inline-block;padding:5px 12px;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;"
                                onmouseover="this.style.background='#e2e8f0';this.style.color='#0f172a';" onmouseout="this.style.background='#f1f5f9';this.style.color='#334155';">
                                 View Timeline

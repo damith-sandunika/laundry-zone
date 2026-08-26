@@ -46,6 +46,10 @@
                                             <span class="text-[13px] font-bold text-slate-500">Total Card Balance</span>
                                             <span class="text-base font-black text-blue-600">Rs.{{ number_format($stats['card_payments_amount'] ?? 0, 0) }}</span>
                                         </div>
+                                        <div class="flex justify-between items-center py-2 border-b border-slate-100">
+                                            <span class="text-[13px] font-bold text-slate-500">Bank Transfers</span>
+                                            <span class="text-base font-black text-purple-600">Rs.{{ number_format($stats['bank_transfers'] ?? 0, 0) }}</span>
+                                        </div>
                                         
                                         <div class="mt-6 flex flex-col gap-3">
                                             <a href="{{ route('reports.closeShift', ['action' => 'print']) }}" target="_blank" class="w-full flex items-center justify-center gap-2 py-3 bg-slate-100 text-slate-700 text-[13px] font-extrabold rounded-xl hover:bg-slate-200 transition-colors">
@@ -113,7 +117,7 @@
                     ['label' => 'Received', 'value' => $stats['active_orders'], 'sub' => 'Just Arrived', 'color' => 'text-blue-600', 'bg' => 'bg-blue-50', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01'],
                     ['label' => 'Processing', 'value' => $stats['pending_deliveries'], 'sub' => 'Washing/Ironing', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                     ['label' => 'Done', 'value' => $stats['completed_today'], 'sub' => 'Ready for branch', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'icon' => 'M5 13l4 4L19 7'],
-                    ['label' => 'Total Balance', 'value' => 'Rs.' . number_format($stats['current_balance'], 0), 'sub' => null, 'color' => 'text-violet-600', 'bg' => 'bg-violet-50', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
+                    ['label' => 'Total Sales', 'value' => 'Rs.' . number_format($stats['total_sale'], 0), 'sub' => null, 'color' => 'text-violet-600', 'bg' => 'bg-violet-50', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ];
             @endphp
             @foreach($cards as $index => $card)
@@ -121,9 +125,10 @@
                     <div>
                         <p class="text-[9px] sm:text-[10.5px] font-extrabold text-slate-500 uppercase tracking-widest mb-1 leading-tight sm:leading-normal whitespace-normal">{{ $card['label'] }}</p>
                         <p class="text-lg sm:text-3xl font-black text-slate-900 tracking-tight leading-none mb-1 sm:mb-2">{{ $card['value'] }}</p>
-                        @if($card['label'] === 'Total Balance')
+                        @if($card['label'] === 'Total Sales')
                             <p class="text-[9px] sm:text-[11px] font-bold text-emerald-600 mb-0.5 whitespace-nowrap">Cash: Rs.{{ number_format($stats['cash_balance'], 0) }}</p>
-                            <p class="text-[9px] sm:text-[11px] font-bold text-blue-600 leading-tight">Card: {{ $stats['card_payments'] }} (Rs.{{ number_format($stats['card_payments_amount'], 0) }})</p>
+                            <p class="text-[9px] sm:text-[11px] font-bold text-blue-600 mb-0.5 whitespace-nowrap">Card: {{ $stats['card_payments'] }} (Rs.{{ number_format($stats['card_payments_amount'], 0) }})</p>
+                            <p class="text-[9px] sm:text-[11px] font-bold text-purple-600 leading-tight">Bank: Rs.{{ number_format($stats['bank_transfers'], 0) }}</p>
                         @elseif($card['sub'])
                             <p class="inline-block px-1.5 sm:px-2.5 py-0.5 text-[8px] sm:text-[10px] font-bold {{ $card['color'] }} {{ $card['bg'] }} rounded-md uppercase tracking-wide leading-tight">{{ $card['sub'] }}</p>
                         @endif
@@ -171,7 +176,7 @@
                                 @endphp
                                 <tr class="hover:bg-slate-50/50 transition-colors group">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <a href="{{ route('orders.workshopTracking', $order->order_id) }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order->order_number ?? 'N/A' }}</a>
+                                        <a href="{{ route('orders.show', $order->order_id) }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order->order_number ?? 'N/A' }}</a>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-[13px] font-bold text-slate-700">
                                         {{ $order->order->customer->name ?? 'N/A' }}
@@ -189,7 +194,10 @@
                                         <span class="inline-flex px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest {{ $c[0] }} {{ $c[1] }}">{{ $order->status }}</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
-                                        <a href="{{ route('orders.workshopTracking', $order->order_id) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
+                                        @if($order->order && $order->order->receipt_path)
+                                            <a href="{{ asset('storage/' . $order->order->receipt_path) }}" target="_blank" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 rounded-lg text-[11px] font-bold transition-all mr-1">View Invoice</a>
+                                        @endif
+                                        <a href="{{ route('orders.show', $order->order_id) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
                                     </td>
                                 </tr>
                             @empty

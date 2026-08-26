@@ -23,8 +23,7 @@
         <div class="flex justify-between h-20 items-center">
             <!-- Logo + Brand Name -->
             <a href="{{ route('home') }}" class="flex items-center gap-2">
-                <img src="{{ asset('logos/1786348129_admin_logo.png') }}" alt="Logo" class="h-10 w-auto">
-                <span class="font-black text-xl tracking-tight text-brand">360 Laundry</span>
+                <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="360 Laundry" class="h-10">
             </a>
             
             <!-- Desktop Menu -->

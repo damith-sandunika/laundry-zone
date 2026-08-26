@@ -60,8 +60,6 @@ class CustomerSiteController extends Controller
                 'notes' => 'nullable|string',
 
                 // New fields
-                'payment_method' => 'required|string',
-                'payment_timing' => 'required|in:at_pickup,at_delivery',
                 'delivery_preference' => 'required|in:deliver_to_address,pickup_from_branch',
                 'same_as_pickup' => 'nullable|boolean',
                 'delivery_lat' => 'nullable|numeric',
@@ -88,9 +86,6 @@ class CustomerSiteController extends Controller
         }
 
         $receiptPath = null;
-        if ($request->hasFile('receipt_image')) {
-            $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
-        }
 
         $deliveryCost = 0;
         $workshops = Branch::workshops()->where('is_active', true)->get();
@@ -176,8 +171,8 @@ class CustomerSiteController extends Controller
                 'status' => 'pending',
 
                 // New fields
-                'payment_method' => $request->payment_method,
-                'payment_timing' => $request->payment_timing,
+                'payment_method' => 'pending',
+                'payment_timing' => 'pending',
                 'delivery_preference' => $request->delivery_preference,
                 'delivery_lat' => $deliveryLat,
                 'delivery_lng' => $deliveryLng,

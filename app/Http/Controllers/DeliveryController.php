@@ -30,7 +30,7 @@ class DeliveryController extends Controller
         }
 
         $pickupsQuery = clone $query;
-        $pickups = $pickupsQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'cancelled'])->get();
+        $pickups = $pickupsQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created', 'cancelled'])->get();
 
         $returnsQuery = clone $query;
         $returns = $returnsQuery->whereIn('status', ['ready', 'out_for_delivery', 'delivered'])
@@ -150,7 +150,7 @@ class DeliveryController extends Controller
             ]);
         }
 
-        // Create the official Order stub for the Workshop
+        // Create the official Order stub for the Workshop if not exists
         if (! $appointment->order_id) {
             $order = Order::create([
                 'order_number' => Order::generateOrderNumber(),
@@ -165,6 +165,7 @@ class DeliveryController extends Controller
                 'due_date' => \Carbon\Carbon::now()->addDays(2), // Default 2 days
                 'created_by' => auth()->id(),
                 'is_delivery_order' => true,
+                'delivery_appointment_id' => $appointment->id,
             ]);
 
             $appointment->update(['order_id' => $order->id]);
@@ -191,25 +192,22 @@ class DeliveryController extends Controller
                     }
                     $order->update([
                         'subtotal' => $subtotal,
-                        'total' => $subtotal, // We might need to handle delivery cost later if needed
+                        'total' => $subtotal,
                     ]);
                 }
             }
-
-            WorkshopDispatch::create([
-                'order_id' => $order->id,
-                'branch_id' => $appointment->branch_id,
-                'workshop_branch_id' => $appointment->branch_id,
-                'dispatched_by' => auth()->id(),
-                'dispatched_at' => now(),
-                'status' => 'received_at_workshop',
-                'received_by' => auth()->id(),
-                'received_at_workshop_at' => now(),
-            ]);
-
-            // Notify customer that order is at branch
-            // $waService->notifyOrderReceived($order);
         }
+
+        WorkshopDispatch::create([
+            'order_id' => $appointment->order_id,
+            'branch_id' => $appointment->branch_id,
+            'workshop_branch_id' => $appointment->branch_id,
+            'dispatched_by' => auth()->id(),
+            'dispatched_at' => now(),
+            'status' => 'received_at_workshop',
+            'received_by' => auth()->id(),
+            'received_at_workshop_at' => now(),
+        ]);
 
         return redirect()->route('workshop.operations')->with('success', 'Delivery arrived! Order has been moved directly to Arrival & Processing.');
     }
@@ -258,13 +256,21 @@ class DeliveryController extends Controller
             ->whereNotNull('created_by')
             ->get();
 
+        $cashCollected = $request->input('cash_collected');
+
         foreach ($transactions as $tx) {
             $user = User::find($tx->created_by);
             if ($user && $user->role === 'rider') {
-                $tx->update(['collected_from_rider_at' => now()]);
+                $tx->update([
+                    'collected_from_rider_at' => now(),
+                    'amount' => $cashCollected ?? $tx->amount
+                ]);
             }
         }
 
-        return redirect()->back()->with('success', 'Cash marked as received from rider.');
+        $appointment->update(['status' => 'completed']);
+        $order->update(['status' => 'completed']);
+
+        return redirect()->back()->with('success', 'Verified and collected cash from rider. Order marked as completed.');
     }
 }

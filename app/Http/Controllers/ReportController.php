@@ -55,11 +55,12 @@ class ReportController extends Controller
         $totalCollected = $payments->sum('amount') + $packagePayments->sum('amount');
         $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
         $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
+        $collectedBank = $payments->where('payment_method', 'bank_transfer')->sum('amount') + $packagePayments->where('payment_method', 'bank_transfer')->sum('amount');
 
         $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
             return max(0, $q->total - $q->paid_amount);
         });
-        $totalPending = $orders->where('payment_method', '!=', 'credit')->sum(function ($q) {
+        $totalPending = $orders->whereNotIn('payment_method', ['credit'])->sum(function ($q) {
             return max(0, $q->total - $q->paid_amount);
         });
 
@@ -89,14 +90,13 @@ class ReportController extends Controller
         }
         $services = $serviceBreakdown->groupBy('service_types.name')->get();
 
-        // 3. Staff Salary Report
-        $salaryQuery = Expense::where('category', 'salary')
-            ->whereBetween('expense_date', [$startDate, $endDate]);
+        // 3. Expenses Report
+        $expenseQuery = Expense::whereBetween('expense_date', [$startDate, $endDate]);
         if ($branchId) {
-            $salaryQuery->where('branch_id', $branchId);
+            $expenseQuery->where('branch_id', $branchId);
         }
-        $salaries = $salaryQuery->orderBy('expense_date', 'desc')->get();
-        $totalSalaries = $salaries->sum('amount');
+        $expensesList = $expenseQuery->orderBy('expense_date', 'desc')->get();
+        $totalExpensesAmount = $expensesList->sum('amount');
 
         // 4. Inventory Transactions Log
         $inventoryQuery = InventoryTransaction::with(['inventoryItem', 'createdBy'])
@@ -152,8 +152,8 @@ class ReportController extends Controller
             ->get();
 
         return view('reports.index', compact(
-            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'totalCredit', 'totalPending',
-            'services', 'salaries', 'totalSalaries', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders',
+            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank', 'totalCredit', 'totalPending',
+            'services', 'expensesList', 'totalExpensesAmount', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders',
             'customerPackages', 'packagePayments', 'branches', 'branchId', 'isSuperAdmin',
             'deliveryRevenue', 'walkinRevenue', 'deliveryOrders', 'walkinOrders', 'dailyRevenue', 'topCustomers'
         ));
@@ -227,11 +227,12 @@ class ReportController extends Controller
         $totalCollected = $payments->sum('amount') + $totalPackagePayments;
         $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
         $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
+        $collectedBank = $payments->where('payment_method', 'bank_transfer')->sum('amount') + $packagePayments->where('payment_method', 'bank_transfer')->sum('amount');
 
         $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
             return max(0, $q->total - $q->paid_amount);
         });
-        $totalPending = $orders->where('payment_method', '!=', 'credit')->sum(function ($q) {
+        $totalPending = $orders->whereNotIn('payment_method', ['credit'])->sum(function ($q) {
             return max(0, $q->total - $q->paid_amount);
         });
 
@@ -250,7 +251,7 @@ class ReportController extends Controller
         return view('reports.pdf', compact(
             'recentOrders', 'totalSales', 'services', 'salaries', 'totalSalaries',
             'expenses', 'totalExpenses', 'totalInventoryCost', 'startDate', 'endDate', 'branch',
-            'totalPackagePayments', 'totalCollected', 'collectedCash', 'collectedCard',
+            'totalPackagePayments', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank',
             'totalCredit', 'totalPending', 'customerPackages'
         ));
     }
@@ -284,6 +285,8 @@ class ReportController extends Controller
         $totalDiscounts = $orders->sum('discount');
 
         $cashPaymentOnly = $orders->where('payment_method', 'cash')->sum('paid_amount');
+        $cardPaymentOnly = $orders->where('payment_method', 'card')->sum('paid_amount');
+        $bankPaymentOnly = $orders->where('payment_method', 'bank_transfer')->sum('paid_amount');
 
         $expenses = Expense::where('branch_id', $branchId)
             ->whereBetween('expense_date', [$startDate, $endDate])
@@ -297,9 +300,13 @@ class ReportController extends Controller
             ->get();
         $totalPackageIncome = $packagePayments->sum('amount');
         $cashPackageIncome = $packagePayments->where('payment_method', 'cash')->sum('amount');
+        $cardPackageIncome = $packagePayments->where('payment_method', 'card')->sum('amount');
+        $bankPackageIncome = $packagePayments->where('payment_method', 'bank_transfer')->sum('amount');
 
         $totalCashIn += $totalPackageIncome;
         $cashPaymentOnly += $cashPackageIncome;
+        $cardPaymentOnly += $cardPackageIncome;
+        $bankPaymentOnly += $bankPackageIncome;
 
         $openingBalance = $session ? ($session->opening_cash ?? 0) : 0;
         $closingBalance = $openingBalance + $totalCashIn - $totalExpenses;
@@ -326,7 +333,7 @@ class ReportController extends Controller
             ->get();
 
         return view('reports.close_shift', compact(
-            'branch', 'session', 'orders', 'totalSales', 'totalCashIn', 'cashPaymentOnly',
+            'branch', 'session', 'orders', 'totalSales', 'totalCashIn', 'cashPaymentOnly', 'cardPaymentOnly', 'bankPaymentOnly',
             'expenses', 'totalExpenses', 'openingBalance', 'closingBalance',
             'startDate', 'endDate', 'inventoryItems', 'serviceBreakdown', 'inventoryConsumed', 'totalPackageIncome', 'totalDiscounts'
         ));

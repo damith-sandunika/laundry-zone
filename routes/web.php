@@ -29,6 +29,23 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
 
+// ─── Static Pages ───
+Route::view('/about-us', 'site.pages.about')->name('site.about');
+Route::view('/how-it-works', 'site.pages.how-it-works')->name('site.how-it-works');
+Route::view('/faq', 'site.pages.faq')->name('site.faq');
+Route::view('/terms-and-conditions', 'site.pages.terms')->name('site.terms');
+Route::view('/privacy-policy', 'site.pages.privacy')->name('site.privacy');
+Route::view('/quality-guarantee', 'site.pages.quality')->name('site.quality');
+
+// Fix for Windows PHP built-in server symlink 403 error
+Route::get('/storage/receipts/{filename}', function ($filename) {
+    $path = storage_path('app/public/receipts/' . $filename);
+    if (!file_exists($path)) {
+        abort(404);
+    }
+    return response()->file($path);
+});
+
 // ─── Public Booking Routes (Customer Site) ───
 Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
 
@@ -52,16 +69,16 @@ Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group
     Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
     Route::get('/orders/{order}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
+    Route::post('/orders/{order}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
     Route::get('/orders/{order}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
     
     // Appointments
     Route::get('/appointments/{appointment}', [\App\Http\Controllers\Customer\DashboardController::class, 'showAppointment'])->name('appointments.show');
-    Route::middleware(['auth:customer'])->group(function () {
-        // Payment Gateway Routes
-        Route::get('/orders/{order}/pay', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
-        Route::post('/payment/process', [\App\Http\Controllers\PaymentController::class, 'process'])->name('payment.process');
-        Route::get('/orders/{order}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
-    });
+
+    // Payment Gateway Routes
+    Route::get('/orders/{order}/pay', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::post('/payment/process', [\App\Http\Controllers\PaymentController::class, 'process'])->name('payment.process');
+    Route::get('/orders/{order}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
 });
 
 // ─── Public Order Tracking (QR Code link) ───
@@ -100,7 +117,6 @@ Route::middleware(['auth'])->group(function () {
     // Workshop dispatch from order
     Route::post('/orders/{order}/dispatch-workshop', [WorkshopController::class, 'dispatch'])->name('orders.dispatchWorkshop');
     Route::post('/orders/workshop/bulk-dispatch', [WorkshopController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
-    Route::get('/orders/{order}/workshop-tracking', [WorkshopController::class, 'tracking'])->name('orders.workshopTracking');
     Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
     Route::resource('orders', OrderController::class)->only(['index', 'show']);
 

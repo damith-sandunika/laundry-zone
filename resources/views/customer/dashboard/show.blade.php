@@ -8,10 +8,10 @@
                     <p class="text-sm font-bold text-slate-500">Placed on {{ $order->created_at->format('M d, Y h:i A') }}</p>
                 </div>
             </div>
-            @if($order->payment_status === 'unpaid')
-                <a href="{{ route('customer.orders.pay', $order) }}" class="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-900 hover:shadow-lg transition-all text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-credit-card"></i> Pay Now (LKR {{ number_format($order->total, 2) }})
-                </a>
+            @if($order->payment_status === 'unpaid' || $order->payment_status === 'partial')
+                <button type="button" x-data @click="$dispatch('open-payment-modal')" class="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-900 hover:shadow-lg transition-all text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-credit-card"></i> Pay Now
+                </button>
             @else
                 <span class="bg-green-100 text-green-700 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
                     <i class="fa-solid fa-circle-check"></i> Paid
@@ -21,6 +21,7 @@
     </x-slot>
 
     <!-- Horizontal Status Timeline -->
+    @if($order->payment_approved || $order->requested_advance == 0)
     <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8 mb-6 overflow-hidden">
         <h3 class="font-black text-slate-800 mb-8 flex items-center gap-2"><i class="fa-solid fa-bars-progress text-blue-500"></i> Order Progress</h3>
         
@@ -28,9 +29,9 @@
             if ($order->is_delivery_order) {
                 $statuses = [
                     'received'         => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'yellow'],
-                    'processing'       => ['label' => 'Accepted', 'icon' => 'fa-clipboard-check', 'color' => 'blue'],
-                    'washing'          => ['label' => 'Picked Up', 'icon' => 'fa-truck-pickup', 'color' => 'blue'],
-                    'ready'            => ['label' => 'Job Done', 'icon' => 'fa-box-open', 'color' => 'blue'],
+                    'picked_up'        => ['label' => 'Picked Up', 'icon' => 'fa-truck-pickup', 'color' => 'blue'],
+                    'processing'       => ['label' => 'Processing', 'icon' => 'fa-spinner', 'color' => 'blue'],
+                    'ready'            => ['label' => 'Ready to Deliver', 'icon' => 'fa-box-open', 'color' => 'blue'],
                     'out_for_delivery' => ['label' => 'Out for Delivery', 'icon' => 'fa-motorcycle', 'color' => 'blue'],
                     'delivered'        => ['label' => 'Delivered', 'icon' => 'fa-truck-fast', 'color' => 'purple'],
                     'completed'        => ['label' => 'Completed', 'icon' => 'fa-check-double', 'color' => 'green']
@@ -47,20 +48,20 @@
             $actualStatus = $order->status;
             
             if ($order->is_delivery_order) {
-                if (in_array($actualStatus, ['pending'])) {
-                    $actualStatus = 'received';
+                if (in_array($actualStatus, ['pending', 'received', 'dispatched_to_workshop', 'received_at_workshop'])) {
+                    $actualStatus = 'picked_up';
                 }
-                if (in_array($actualStatus, ['drying', 'ironing'])) {
-                    $actualStatus = 'washing';
+                if (in_array($actualStatus, ['washing', 'drying', 'ironing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
+                    $actualStatus = 'processing';
                 }
-                if (in_array($actualStatus, ['returned_from_workshop'])) {
+                if (in_array($actualStatus, ['returned_from_workshop', 'done'])) {
                     $actualStatus = 'ready';
                 }
             } else {
-                if (in_array($actualStatus, ['pending'])) {
+                if (in_array($actualStatus, ['pending', 'dispatched_to_workshop', 'received_at_workshop'])) {
                     $actualStatus = 'received';
                 }
-                if (in_array($actualStatus, ['washing', 'drying', 'ironing'])) {
+                if (in_array($actualStatus, ['washing', 'drying', 'ironing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
                     $actualStatus = 'processing';
                 }
             }
@@ -127,7 +128,32 @@
                 @endforeach
             </div>
         </div>
+        </div>
     </div>
+    @endif
+
+    <!-- Action Required: Payment Banner -->
+    @if(!$order->payment_approved && $order->requested_advance > 0)
+    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-lg p-8 mb-6 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mt-20 -mr-20 pointer-events-none"></div>
+        <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -mb-10 -ml-10 pointer-events-none"></div>
+        
+        <div class="relative z-10 flex-1 text-center md:text-left">
+            <h3 class="text-2xl font-black mb-2"><i class="fa-solid fa-circle-exclamation mr-2 text-yellow-300 animate-pulse"></i> Action Required: Advance Payment</h3>
+            <p class="text-blue-100 font-medium text-sm md:text-base max-w-2xl">
+                We have inspected your laundry! To start the washing process, please pay the requested advance amount of 
+                <strong class="text-white bg-blue-800/50 px-2 py-1 rounded-lg">LKR {{ number_format($order->requested_advance, 2) }}</strong>. 
+                Once paid, our workshop will immediately begin processing your order.
+            </p>
+        </div>
+        
+        <div class="relative z-10 shrink-0 w-full md:w-auto">
+            <button type="button" x-data @click="$dispatch('open-payment-modal')" class="w-full md:w-auto bg-yellow-400 text-yellow-900 hover:bg-yellow-300 px-8 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-lg flex items-center justify-center gap-3">
+                <i class="fa-solid fa-bolt"></i> PAY NOW
+            </button>
+        </div>
+    </div>
+    @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Left Column: Details & Items -->
@@ -177,8 +203,23 @@
                         @endif
                         <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
                             <span class="font-black text-slate-800">Total Amount</span>
-                            <span class="font-black text-xl text-brand">LKR {{ number_format($order->total, 2) }}</span>
+                            <span class="font-black text-lg text-slate-800">LKR {{ number_format($order->total, 2) }}</span>
                         </div>
+                        @if($order->paid_amount > 0)
+                            <div class="flex justify-between text-sm font-bold text-green-600 mt-2">
+                                <span>Paid Amount</span>
+                                <span>- LKR {{ number_format($order->paid_amount, 2) }}</span>
+                            </div>
+                            <div class="pt-3 border-t border-slate-200 flex justify-between items-center mt-2 bg-blue-50 -mx-6 px-6 py-3 border-b border-blue-100">
+                                <span class="font-black text-blue-900">Balance to Pay</span>
+                                <span class="font-black text-xl text-blue-700">LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
+                            </div>
+                        @else
+                            <div class="pt-3 border-t border-slate-200 flex justify-between items-center mt-2 bg-blue-50 -mx-6 px-6 py-3 border-b border-blue-100">
+                                <span class="font-black text-blue-900">Balance to Pay</span>
+                                <span class="font-black text-xl text-blue-700">LKR {{ number_format($order->total, 2) }}</span>
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -207,6 +248,95 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+
+    <!-- Payment Modal -->
+    <div x-data="{ 
+            showPaymentModal: false, 
+            amountToPay: {{ $order->requested_advance > 0 ? $order->requested_advance : $order->total }},
+            paymentMethod: 'bank_transfer',
+            isSubmitting: false
+         }" 
+         @open-payment-modal.window="showPaymentModal = true"
+         class="relative z-50" 
+         aria-labelledby="modal-title" 
+         role="dialog" 
+         aria-modal="true">
+         
+        <div x-show="showPaymentModal" x-transition.opacity class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+
+        <div x-show="showPaymentModal" 
+             x-transition:enter="ease-out duration-300"
+             x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave="ease-in duration-200"
+             x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+             x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+             class="fixed inset-0 z-10 w-screen overflow-y-auto" style="display: none;">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                    <form action="{{ route('customer.orders.submitPayment', $order->id) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true">
+                        @csrf
+                        <div class="bg-white px-6 pb-6 pt-8 sm:p-8">
+                            <div class="sm:flex sm:items-start mb-6">
+                                <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 sm:mx-0 sm:h-12 sm:w-12 text-blue-600 text-xl">
+                                    <i class="fa-solid fa-credit-card"></i>
+                                </div>
+                                <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                    <h3 class="text-xl font-black leading-6 text-slate-800" id="modal-title">Make Payment</h3>
+                                    <div class="mt-1">
+                                        <p class="text-sm text-slate-500 font-medium">Please enter the amount you wish to pay.</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="space-y-5">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-1">Amount (LKR)</label>
+                                    <input type="number" name="amount" x-model="amountToPay" step="0.01" max="{{ $order->total }}" required class="w-full px-4 py-3 text-lg font-black text-blue-700 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 text-center">
+                                    <div class="flex justify-between mt-1 px-1">
+                                        <span class="text-[10px] text-slate-400 font-bold">Requested: {{ number_format($order->requested_advance > 0 ? $order->requested_advance : $order->total, 2) }}</span>
+                                        <span class="text-[10px] text-slate-400 font-bold">Total: {{ number_format($order->total, 2) }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Payment Method</label>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="payment_method" value="bank_transfer" x-model="paymentMethod" class="peer sr-only">
+                                            <div class="p-3 border-2 border-slate-200 rounded-xl text-center peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
+                                                <i class="fa-solid fa-building-columns text-slate-400 peer-checked:text-blue-600 mb-1 text-lg"></i>
+                                                <div class="text-xs font-black text-slate-700 peer-checked:text-blue-700">Bank Transfer</div>
+                                            </div>
+                                        </label>
+                                        <label class="relative cursor-pointer">
+                                            <input type="radio" name="payment_method" value="gateway" x-model="paymentMethod" class="peer sr-only">
+                                            <div class="p-3 border-2 border-slate-200 rounded-xl text-center peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
+                                                <i class="fa-solid fa-credit-card text-slate-400 peer-checked:text-blue-600 mb-1 text-lg"></i>
+                                                <div class="text-xs font-black text-slate-700 peer-checked:text-blue-700">Pay Online</div>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+                                
+                                <div x-show="paymentMethod === 'bank_transfer'" x-collapse>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Upload Bank Slip</label>
+                                    <input type="file" name="receipt_image" accept="image/*" :required="paymentMethod === 'bank_transfer'" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all border border-slate-200 rounded-xl p-1 bg-slate-50">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 px-6 py-4 sm:flex sm:flex-row-reverse sm:px-8 border-t border-slate-100 gap-3">
+                            <button type="submit" :disabled="isSubmitting" class="inline-flex w-full justify-center rounded-xl bg-blue-600 px-6 py-3 text-sm font-black text-white shadow-md hover:bg-blue-500 sm:ml-3 sm:w-auto transition-colors disabled:opacity-70 disabled:cursor-not-allowed">
+                                <span x-show="!isSubmitting">Proceed to Pay</span>
+                                <span x-show="isSubmitting"><i class="fa-solid fa-spinner fa-spin mr-2"></i> Processing...</span>
+                            </button>
+                            <button type="button" @click="showPaymentModal = false" class="mt-3 inline-flex w-full justify-center rounded-xl bg-white px-6 py-3 text-sm font-black text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto transition-colors">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 </x-customer-layout>

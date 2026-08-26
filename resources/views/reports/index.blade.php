@@ -83,9 +83,10 @@
                 <h3 class="text-xs font-bold text-slate-500 uppercase tracking-widest">Collected Payments</h3>
             </div>
             <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10">Rs.{{ number_format($totalCollected, 2) }}</p>
-            <div class="mt-3 flex gap-2 text-xs font-bold text-slate-500 relative z-10">
-                <span class="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">💵 Rs.{{ number_format($collectedCash, 2) }}</span>
-                <span class="bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200">💳 Rs.{{ number_format($collectedCard, 2) }}</span>
+            <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500 relative z-10">
+                <span class="bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">💵 Rs.{{ number_format($collectedCash, 2) }}</span>
+                <span class="bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">💳 Rs.{{ number_format($collectedCard, 2) }}</span>
+                <span class="bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">🏦 Rs.{{ number_format($collectedBank, 2) }}</span>
             </div>
         </div>
 
@@ -156,8 +157,8 @@
                 <button @click="activeReport = 'customers'" :class="activeReport === 'customers' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
                     Top Customers
                 </button>
-                <button @click="activeReport = 'salaries'" :class="activeReport === 'salaries' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
-                    Salaries Log
+                <button @click="activeReport = 'expenses'" :class="activeReport === 'expenses' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
+                    Expenses Log
                 </button>
                 <button @click="activeReport = 'inventory'" :class="activeReport === 'inventory' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-5 py-2.5 text-sm font-bold rounded-xl transition-all">
                     Inventory Usage
@@ -278,27 +279,43 @@
                 </div>
             </div>
 
-            <!-- SALARIES LOG -->
-            <div x-show="activeReport === 'salaries'" style="display:none;" x-transition>
+            <!-- EXPENSES LOG -->
+            <div x-show="activeReport === 'expenses'" style="display:none;" x-transition>
+                <div class="p-4 border-b border-slate-100 flex justify-between items-center bg-white">
+                    <h3 class="font-bold text-slate-800">Expenses Log</h3>
+                    <select x-model="expenseCategoryFilter" class="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-sm font-bold bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-0">
+                        <option value="">All Categories</option>
+                        @php $expenseCategories = $expensesList->pluck('category')->unique(); @endphp
+                        @foreach($expenseCategories as $cat)
+                            <option value="{{ $cat }}">{{ ucfirst(str_replace('_', ' ', $cat)) }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Payment Details</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Category</th>
+                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Details</th>
                                 <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            @forelse($salaries as $sal)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $sal->expense_date }}</td>
-                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $sal->description }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-rose-500">Rs.{{ number_format($sal->amount, 2) }}</td>
+                            @forelse($expensesList as $exp)
+                                <tr x-show="expenseCategoryFilter === '' || expenseCategoryFilter === '{{ $exp->category }}'" class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $exp->expense_date }}</td>
+                                    <td class="px-6 py-4">
+                                        <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200 rounded-lg">
+                                            {{ str_replace('_', ' ', $exp->category) }}
+                                        </span>
+                                    </td>
+                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $exp->description }}</td>
+                                    <td class="px-6 py-4 text-right font-black text-rose-500">Rs.{{ number_format($exp->amount, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="3" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No payroll expenses logged in this range.</td>
+                                    <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No expenses logged in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -602,6 +619,7 @@
         function reportData() {
             return {
                 activeReport: 'services',
+                expenseCategoryFilter: '',
                 orders: @json($orders),
                 pendingModalOpen: false,
                 selectedServiceName: '',
