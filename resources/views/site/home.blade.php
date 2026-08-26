@@ -224,48 +224,57 @@
             </div>
         </div>
 
-        <!-- White Pill Banner (Always visible on all slides) -->
-        <div class="absolute bottom-2 lg:bottom-12 left-0 right-0 z-20 max-w-7xl mx-auto px-1 sm:px-6 lg:px-8 w-full">
-            <!-- 2x2 Grid on mobile to save space, inline on desktop -->
-            <div
-                class="bg-white/95 backdrop-blur-xl rounded-3xl lg:rounded-[2.5rem] p-3 lg:p-6 shadow-2xl border border-white grid grid-cols-2 lg:flex lg:flex-row lg:flex-wrap justify-start lg:justify-between items-center gap-3 lg:gap-4 w-full">
-
-                <div class="flex items-center gap-3 lg:gap-4 lg:pl-4">
-                    <div class="text-2xl lg:text-3xl text-brand"><i class="fa-solid fa-truck-fast"></i></div>
-                    <div>
-                        <p class="font-extrabold text-[12px] sm:text-sm lg:text-base text-brand leading-tight">Pickup &
-                            Delivery</p>
-                        <p class="text-[10px] lg:text-xs text-slate-500 font-medium">Right at your doorstep.</p>
+        <!-- 4 Separate Feature Cards (Always visible on all slides) -->
+        <div class="absolute bottom-2 lg:bottom-10 left-0 right-0 z-20 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 w-full"
+             x-data="{ activeFeature: 1 }" 
+             x-init="setInterval(() => { activeFeature = activeFeature === 4 ? 1 : activeFeature + 1 }, 2500)">
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 w-full">
+                <!-- Card 1: Blue & Bounce -->
+                <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 sm:p-3 shadow-lg border border-white flex flex-row items-center gap-2 sm:gap-3 transition-all duration-300"
+                     :class="activeFeature === 1 ? 'ring-2 ring-blue-400 -translate-y-1' : ''">
+                    <div class="text-xl sm:text-2xl text-brand transition-all duration-300"
+                         :class="activeFeature === 1 ? 'animate-bounce text-blue-600' : ''">
+                        <i class="fa-solid fa-truck-fast"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-extrabold text-[10px] sm:text-[12px] text-brand leading-tight">Pickup & Delivery</p>
+                        <p class="text-[8px] sm:text-[9px] text-slate-500 font-medium">Right at your doorstep.</p>
                     </div>
                 </div>
-                <div class="hidden lg:block w-px h-10 bg-slate-200"></div>
-
-                <div class="flex items-center gap-3 lg:gap-4">
-                    <div class="text-2xl lg:text-3xl text-brand"><i class="fa-solid fa-clock-rotate-left"></i></div>
-                    <div>
-                        <p class="font-extrabold text-[12px] sm:text-sm lg:text-base text-brand leading-tight">48-Hour
-                            Service</p>
-                        <p class="text-[10px] lg:text-xs text-slate-500 font-medium">Fast & reliable delivery.</p>
+                <!-- Card 2: Orange & Spin -->
+                <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 sm:p-3 shadow-lg border border-white flex flex-row items-center gap-2 sm:gap-3 transition-all duration-300"
+                     :class="activeFeature === 2 ? 'ring-2 ring-orange-400 -translate-y-1' : ''">
+                    <div class="text-xl sm:text-2xl text-brand transition-all duration-300 inline-block"
+                         :class="activeFeature === 2 ? 'animate-[spin_1s_linear_infinite] text-orange-500' : ''">
+                        <i class="fa-solid fa-clock-rotate-left"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-extrabold text-[10px] sm:text-[12px] text-brand leading-tight">48-Hour Service</p>
+                        <p class="text-[8px] sm:text-[9px] text-slate-500 font-medium">Fast & reliable delivery.</p>
                     </div>
                 </div>
-                <div class="hidden lg:block w-px h-10 bg-slate-200"></div>
-
-                <div class="flex items-center gap-3 lg:gap-4">
-                    <div class="text-2xl lg:text-3xl text-brand"><i class="fa-solid fa-moon"></i></div>
-                    <div>
-                        <p class="font-extrabold text-[12px] sm:text-sm lg:text-base text-brand leading-tight">Open Till
-                            10 PM</p>
-                        <p class="text-[10px] lg:text-xs text-slate-500 font-medium">Pickups available late.</p>
+                <!-- Card 3: Purple & Pulse -->
+                <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 sm:p-3 shadow-lg border border-white flex flex-row items-center gap-2 sm:gap-3 transition-all duration-300"
+                     :class="activeFeature === 3 ? 'ring-2 ring-purple-400 -translate-y-1' : ''">
+                    <div class="text-xl sm:text-2xl text-brand transition-all duration-300"
+                         :class="activeFeature === 3 ? 'animate-pulse scale-125 text-purple-600' : ''">
+                        <i class="fa-solid fa-moon"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-extrabold text-[10px] sm:text-[12px] text-brand leading-tight">Open Till 10 PM</p>
+                        <p class="text-[8px] sm:text-[9px] text-slate-500 font-medium">Pickups available late.</p>
                     </div>
                 </div>
-                <div class="hidden lg:block w-px h-10 bg-slate-200"></div>
-
-                <div class="flex items-center gap-3 lg:gap-4 lg:pr-4">
-                    <div class="text-2xl lg:text-3xl text-green-500"><i class="fa-solid fa-shield-virus"></i></div>
-                    <div>
-                        <p class="font-extrabold text-[12px] sm:text-sm lg:text-base text-brand leading-tight">Safe &
-                            Hygienic</p>
-                        <p class="text-[10px] lg:text-xs text-slate-500 font-medium">Clean you can trust.</p>
+                <!-- Card 4: Green & Scale/Rotate -->
+                <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 sm:p-3 shadow-lg border border-white flex flex-row items-center gap-2 sm:gap-3 transition-all duration-300"
+                     :class="activeFeature === 4 ? 'ring-2 ring-green-400 -translate-y-1' : ''">
+                    <div class="text-xl sm:text-2xl text-green-500 transition-all duration-300 inline-block"
+                         :class="activeFeature === 4 ? 'scale-125 -rotate-12 text-green-600' : ''">
+                        <i class="fa-solid fa-shield-virus"></i>
+                    </div>
+                    <div class="text-left">
+                        <p class="font-extrabold text-[10px] sm:text-[12px] text-brand leading-tight">Safe & Hygienic</p>
+                        <p class="text-[8px] sm:text-[9px] text-slate-500 font-medium">Clean you can trust.</p>
                     </div>
                 </div>
             </div>
@@ -292,454 +301,399 @@
     </style>
 
     <!-- Services Section -->
-    <section id="services" class="py-10 lg:py-20 bg-white" x-data="{ openCategory: null }">
+    <section id="services" class="py-10 lg:py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span
-                    class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What
-                    We Offer</span>
+            <div class="text-center mb-12">
+                <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What We Offer</span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">Our Services</h2>
                 <div class="w-16 h-1 bg-accent mx-auto rounded-full"></div>
             </div>
 
             <!-- Category Cards Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="max-w-4xl mx-auto grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
                 @foreach($categories as $category)
-                    <div class="rounded-3xl border border-slate-100 shadow-sm overflow-hidden transition-all duration-300"
-                        :class="openCategory === {{ $category->id }} ? 'ring-2 ring-blue-200 shadow-xl' : 'hover:shadow-lg'">
-
-                        <!-- Category Header Card -->
-                        <div @click="openCategory = openCategory === {{ $category->id }} ? null : {{ $category->id }}"
-                            class="p-6 cursor-pointer flex items-center justify-between transition-colors duration-200"
-                            :class="openCategory === {{ $category->id }} ? 'bg-accent text-white' : 'bg-white text-slate-800'">
-                            <div class="flex items-center gap-5">
-                                <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl transition-colors"
-                                    :class="openCategory === {{ $category->id }} ? 'bg-white/20 text-white' : 'bg-blue-50 text-accent'">
-                                    @if(str_contains(strtolower($category->name), 'wash'))
-                                        <i class="fa-solid fa-soap"></i>
-                                    @elseif(str_contains(strtolower($category->name), 'dry'))
-                                        <i class="fa-solid fa-shirt"></i>
-                                    @elseif(str_contains(strtolower($category->name), 'iron'))
-                                        <i class="fa-solid fa-fire-burner"></i>
-                                    @else
-                                        <i class="fa-solid fa-layer-group"></i>
-                                    @endif
+                    <a href="{{ route('customer.booking') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center">
+                        <!-- Category Image -->
+                        <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full overflow-hidden bg-slate-50 mb-2 sm:mb-3 group-hover:scale-105 transition-transform">
+                            @if($category->image_path)
+                                <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
+                            @else
+                                <div class="w-full h-full flex items-center justify-center">
+                                    <i class="fa-solid fa-image text-xl text-slate-400"></i>
                                 </div>
-                                <div>
-                                    <h3 class="text-xl font-extrabold">{{ $category->name }}</h3>
-                                    <p class="text-sm mt-0.5"
-                                        :class="openCategory === {{ $category->id }} ? 'text-blue-100' : 'text-slate-500'">
-                                        {{ $category->services->count() }} service(s) available</p>
-                                </div>
-                            </div>
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center transition-all"
-                                :class="openCategory === {{ $category->id }} ? 'bg-white/20 rotate-180' : 'bg-slate-100'">
-                                <i class="fa-solid fa-chevron-down text-sm"
-                                    :class="openCategory === {{ $category->id }} ? 'text-white' : 'text-slate-500'"></i>
-                            </div>
-                        </div>
-
-                        <!-- Services List (Expandable) -->
-                        <div x-show="openCategory === {{ $category->id }}"
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 -translate-y-2"
-                            x-transition:enter-end="opacity-100 translate-y-0"
-                            x-transition:leave="transition ease-in duration-150" x-transition:leave-end="opacity-0"
-                            style="display:none;" class="bg-slate-50 border-t border-slate-100">
-                            @foreach($category->services as $service)
-                                <div
-                                    class="flex items-center justify-between px-6 py-4 border-b border-slate-100 last:border-0 hover:bg-white transition-colors">
-                                    <div class="flex items-center gap-4">
-                                        <div
-                                            class="w-10 h-10 rounded-xl bg-blue-50 text-accent flex items-center justify-center">
-                                            @if(str_contains(strtolower($service->name), 'wash'))
-                                                <i class="fa-solid fa-jug-detergent"></i>
-                                            @elseif(str_contains(strtolower($service->name), 'iron'))
-                                                <i class="fa-solid fa-fire-burner"></i>
-                                            @elseif(str_contains(strtolower($service->name), 'dry'))
-                                                <i class="fa-solid fa-shirt"></i>
-                                            @else
-                                                <i class="fa-solid fa-hands-bubbles"></i>
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-slate-800">{{ $service->name }}</h4>
-                                            <p class="text-xs text-slate-500 mt-0.5">
-                                                {{ $service->description ?? 'Professional care for your clothes.' }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="text-right shrink-0 ml-4">
-                                        <p class="text-accent font-extrabold text-lg">Rs.
-                                            {{ number_format($service->base_price, 0) }}</p>
-                                        <p class="text-xs text-slate-400">
-                                            {{ $service->price_type == 'per_kg' ? 'per kg' : 'per item' }}</p>
-                                    </div>
-                                </div>
-                            @endforeach
-                            @if($category->services->isEmpty())
-                                <div class="p-6 text-center text-slate-400 text-sm">No services in this category yet.</div>
                             @endif
-                            <div class="p-4 border-t border-slate-100">
-                                <a href="{{ route('customer.booking') }}"
-                                    class="block w-full text-center bg-accent text-white py-3 rounded-xl font-bold hover:bg-blue-700 transition-all shadow-sm">
-                                    Book {{ $category->name }} <i class="fa-solid fa-arrow-right ml-1"></i>
-                                </a>
-                            </div>
                         </div>
-                    </div>
+                        
+                        <!-- Title -->
+                        <h4 class="text-slate-800 text-[11px] sm:text-xs font-bold leading-tight">{{ $category->name }}</h4>
+                    </a>
                 @endforeach
+            </div>
+            <div class="text-center mt-8">
+                <a href="{{ route('customer.booking') }}" class="inline-flex items-center gap-2 bg-accent hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-200 transition-all">
+                    View All Services & Book <i class="fa-solid fa-arrow-right"></i>
+                </a>
             </div>
         </div>
     </section>
 
     <!-- Pricing Section -->
     <section id="pricing" class="py-10 lg:py-20 bg-slate-50 relative overflow-hidden">
-        <div
-            class="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2">
-        </div>
+        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2"></div>
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <div class="text-center mb-16">
-                <span
-                    class="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Affordable
-                    & Transparent</span>
+                <span class="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Affordable & Transparent</span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">Simple & Transparent Pricing</h2>
-                <p class="text-slate-500 max-w-2xl mx-auto">Choose a package that best fits your laundry needs. Save
-                    more with our bundle deals.</p>
+                <p class="text-slate-500 max-w-2xl mx-auto">Choose a package that best fits your laundry needs. Save more with our bundle deals.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center max-w-5xl mx-auto">
-                @foreach($packages->take(3) as $index => $package)
-                    <div
-                        class="bg-white rounded-2xl p-6 border border-slate-100 {{ $index === 1 ? 'shadow-2xl ring-2 ring-blue-500/20 md:-translate-y-2 scale-105 relative' : 'shadow hover:shadow-lg' }} transition-all">
-                        @if($index === 1)
-                            <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                                <span
-                                    class="bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">Most
-                                    Popular</span>
-                            </div>
-                        @endif
-                        <h3 class="text-xl font-bold text-center text-brand mb-1">{{ $package->name }}</h3>
-                        <div class="text-center mb-4">
-                            <span class="text-xs text-slate-500 font-medium">From</span><br>
-                            <span class="text-3xl font-extrabold text-slate-800">Rs.
-                                {{ number_format($package->price, 0) }}</span>
-                        </div>
-
-                        <ul class="space-y-2.5 mb-6">
-                            @foreach($package->services as $ps)
-                                <li class="flex items-center gap-2 text-xs text-slate-600">
-                                    <i
-                                        class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i>
-                                    {{ $ps->serviceType->name ?? 'Service' }} <span
-                                        class="text-slate-400 text-[10px] ml-auto">x{{ $ps->total_quantity }}</span>
-                                </li>
-                            @endforeach
-                            <li class="flex items-center gap-2 text-xs text-slate-600">
-                                <i
-                                    class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i>
-                                Free Delivery
-                            </li>
-                        </ul>
-
-                        <a href="{{ route('customer.booking') }}"
-                            class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all {{ $index === 1 ? 'bg-accent text-white hover:bg-blue-700 shadow-md' : 'bg-blue-50 text-blue-600 hover:bg-blue-100' }}">
-                            Book Now
-                        </a>
+                <!-- Basic Wash -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow hover:shadow-lg transition-all">
+                    <h3 class="text-xl font-bold text-center text-brand mb-1">Basic Wash</h3>
+                    <p class="text-center text-xs text-slate-500 mb-4">Wash & Fold</p>
+                    <div class="text-center mb-4">
+                        <span class="text-xs text-slate-500 font-medium">From</span><br>
+                        <span class="text-3xl font-extrabold text-slate-800">Rs. 1,500</span>
                     </div>
-                @endforeach
+                    <ul class="space-y-2.5 mb-6">
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Standard Wash <span class="text-slate-400 text-[10px] ml-auto">Up to 3kg</span></li>
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Crisp Folding</li>
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> 48-Hour Delivery</li>
+                    </ul>
+                    <a href="{{ route('customer.booking') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all bg-blue-50 text-blue-600 hover:bg-blue-100">Book Now</a>
+                </div>
+                
+                <!-- Premium Care -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-2xl ring-2 ring-blue-500/20 md:-translate-y-2 scale-105 relative transition-all">
+                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <span class="bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">Most Popular</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-center text-brand mb-1">Premium Care</h3>
+                    <p class="text-center text-xs text-slate-500 mb-4">Wash & Iron</p>
+                    <div class="text-center mb-4">
+                        <span class="text-xs text-slate-500 font-medium">From</span><br>
+                        <span class="text-3xl font-extrabold text-slate-800">Rs. 2,500</span>
+                    </div>
+                    <ul class="space-y-2.5 mb-6">
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Premium Wash <span class="text-slate-400 text-[10px] ml-auto">Up to 3kg</span></li>
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Professional Ironing</li>
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Fabric Softener</li>
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Free Delivery</li>
+                    </ul>
+                    <a href="{{ route('customer.booking') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all bg-accent text-white hover:bg-blue-700 shadow-md">Book Now</a>
+                </div>
+
+                <!-- Family Bundle -->
+                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow hover:shadow-lg transition-all">
+                    <h3 class="text-xl font-bold text-center text-brand mb-1">Family Bundle</h3>
+                    <p class="text-center text-xs text-slate-500 mb-4">Bulk Wash</p>
+                    <div class="text-center mb-4">
+                        <span class="text-xs text-slate-500 font-medium">From</span><br>
+                        <span class="text-3xl font-extrabold text-slate-800">Rs. 5,000</span>
+                    </div>
+                    <ul class="space-y-2.5 mb-6">
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Family Size Wash <span class="text-slate-400 text-[10px] ml-auto">Up to 8kg</span></li>
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Separate Whites & Colors</li>
+                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Free Delivery</li>
+                    </ul>
+                    <a href="{{ route('customer.booking') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all bg-blue-50 text-blue-600 hover:bg-blue-100">Book Now</a>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- How It Works -->
-    <section id="how-it-works" class="py-20 bg-white">
+    <section id="how-it-works" class="py-12 lg:py-20 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span
-                    class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Easy
-                    Steps</span>
+            <div class="text-center mb-12">
+                <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Easy Steps</span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">How It Works</h2>
             </div>
 
-            <div class="flex flex-col md:flex-row justify-between items-center relative">
-                <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-blue-100 -translate-y-1/2 z-0">
+            <div class="flex flex-col md:flex-row justify-between items-center relative max-w-5xl mx-auto">
+                <div class="hidden md:block absolute top-1/2 left-0 w-full h-0.5 bg-blue-100 -translate-y-1/2 z-0"></div>
+
+                <div class="relative z-10 bg-white p-2 sm:p-4 text-center group">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-3 group-hover:border-blue-200 transition-colors shadow-md">
+                        <i class="fa-regular fa-calendar-check text-2xl sm:text-3xl text-accent"></i>
+                    </div>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-800">1. Book</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2 max-w-[150px] mx-auto">Schedule a pickup.</p>
                 </div>
 
-                <div class="relative z-10 bg-white p-4 text-center group mb-8 md:mb-0">
-                    <div
-                        class="w-24 h-24 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:border-blue-200 transition-colors shadow-lg">
-                        <i class="fa-regular fa-calendar-check text-4xl text-accent"></i>
+                <div class="block md:hidden text-blue-200 my-2"><i class="fa-solid fa-arrow-down text-xl"></i></div>
+                <div class="hidden md:block relative z-10 text-blue-300"><i class="fa-solid fa-arrow-right text-xl"></i></div>
+
+                <div class="relative z-10 bg-white p-2 sm:p-4 text-center group">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-3 group-hover:border-blue-200 transition-colors shadow-md">
+                        <i class="fa-solid fa-truck-pickup text-2xl sm:text-3xl text-accent"></i>
                     </div>
-                    <h3 class="font-bold text-lg text-slate-800">1. Book</h3>
-                    <p class="text-sm text-slate-500 mt-2 max-w-[150px] mx-auto">Schedule a pickup at your convenience.
-                    </p>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-800">2. Pickup</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2 max-w-[150px] mx-auto">We collect laundry.</p>
                 </div>
 
-                <div class="hidden md:block relative z-10 text-blue-300"><i
-                        class="fa-solid fa-arrow-right text-2xl"></i></div>
+                <div class="block md:hidden text-blue-200 my-2"><i class="fa-solid fa-arrow-down text-xl"></i></div>
+                <div class="hidden md:block relative z-10 text-blue-300"><i class="fa-solid fa-arrow-right text-xl"></i></div>
 
-                <div class="relative z-10 bg-white p-4 text-center group mb-8 md:mb-0">
-                    <div
-                        class="w-24 h-24 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:border-blue-200 transition-colors shadow-lg">
-                        <i class="fa-solid fa-truck-pickup text-4xl text-accent"></i>
+                <div class="relative z-10 bg-white p-2 sm:p-4 text-center group">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-3 group-hover:border-blue-200 transition-colors shadow-md">
+                        <i class="fa-solid fa-hands-bubbles text-2xl sm:text-3xl text-accent"></i>
                     </div>
-                    <h3 class="font-bold text-lg text-slate-800">2. Pickup</h3>
-                    <p class="text-sm text-slate-500 mt-2 max-w-[150px] mx-auto">We collect laundry from your doorstep.
-                    </p>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-800">3. Clean</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2 max-w-[150px] mx-auto">Premium products.</p>
                 </div>
 
-                <div class="hidden md:block relative z-10 text-blue-300"><i
-                        class="fa-solid fa-arrow-right text-2xl"></i></div>
+                <div class="block md:hidden text-blue-200 my-2"><i class="fa-solid fa-arrow-down text-xl"></i></div>
+                <div class="hidden md:block relative z-10 text-blue-300"><i class="fa-solid fa-arrow-right text-xl"></i></div>
 
-                <div class="relative z-10 bg-white p-4 text-center group mb-8 md:mb-0">
-                    <div
-                        class="w-24 h-24 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:border-blue-200 transition-colors shadow-lg">
-                        <i class="fa-solid fa-hands-bubbles text-4xl text-accent"></i>
+                <div class="relative z-10 bg-white p-2 sm:p-4 text-center group">
+                    <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-3 group-hover:border-blue-200 transition-colors shadow-md">
+                        <i class="fa-solid fa-box-open text-2xl sm:text-3xl text-accent"></i>
                     </div>
-                    <h3 class="font-bold text-lg text-slate-800">3. Clean</h3>
-                    <p class="text-sm text-slate-500 mt-2 max-w-[150px] mx-auto">Clothes are cleaned with premium
-                        products.</p>
-                </div>
-
-                <div class="hidden md:block relative z-10 text-blue-300"><i
-                        class="fa-solid fa-arrow-right text-2xl"></i></div>
-
-                <div class="relative z-10 bg-white p-4 text-center group">
-                    <div
-                        class="w-24 h-24 mx-auto bg-white border-4 border-blue-50 rounded-full flex items-center justify-center mb-4 group-hover:border-blue-200 transition-colors shadow-lg">
-                        <i class="fa-solid fa-box-open text-4xl text-accent"></i>
-                    </div>
-                    <h3 class="font-bold text-lg text-slate-800">4. Deliver</h3>
-                    <p class="text-sm text-slate-500 mt-2 max-w-[150px] mx-auto">We deliver fresh, clean clothes back to
-                        you.</p>
+                    <h3 class="font-bold text-base sm:text-lg text-slate-800">4. Deliver</h3>
+                    <p class="text-xs sm:text-sm text-slate-500 mt-1 sm:mt-2 max-w-[150px] mx-auto">Fresh clothes back.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Why Choose Us & Features -->
-    <section class="py-20 bg-slate-50 border-t border-slate-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex flex-col lg:flex-row gap-12 items-center">
-                <div class="flex-1">
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-brand mb-8">Why Choose 360 Laundry?</h2>
-                    <div class="grid grid-cols-2 gap-8">
-                        <div class="text-center lg:text-left">
-                            <div
-                                class="w-16 h-16 mx-auto lg:mx-0 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4">
-                                <i class="fa-solid fa-users-gear"></i>
-                            </div>
-                            <h4 class="font-bold text-slate-800 mb-2">Experienced Team</h4>
-                            <p class="text-sm text-slate-500">Trained professionals with years of experience.</p>
-                        </div>
-                        <div class="text-center lg:text-left">
-                            <div
-                                class="w-16 h-16 mx-auto lg:mx-0 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4">
-                                <i class="fa-solid fa-cogs"></i>
-                            </div>
-                            <h4 class="font-bold text-slate-800 mb-2">Advanced Equipment</h4>
-                            <p class="text-sm text-slate-500">Modern machines & safe cleaning methods.</p>
-                        </div>
-                        <div class="text-center lg:text-left">
-                            <div
-                                class="w-16 h-16 mx-auto lg:mx-0 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4">
-                                <i class="fa-solid fa-shield-virus"></i>
-                            </div>
-                            <h4 class="font-bold text-slate-800 mb-2">Hygienic Cleaning</h4>
-                            <p class="text-sm text-slate-500">Deep cleaning for a healthier life.</p>
-                        </div>
-                        <div class="text-center lg:text-left">
-                            <div
-                                class="w-16 h-16 mx-auto lg:mx-0 bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-2xl mb-4">
-                                <i class="fa-solid fa-thumbs-up"></i>
-                            </div>
-                            <h4 class="font-bold text-slate-800 mb-2">100% Satisfaction</h4>
-                            <p class="text-sm text-slate-500">We ensure you get the best service.</p>
-                        </div>
+    <section class="py-16 lg:py-20 bg-slate-50 border-t border-slate-100">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mb-4">Why Choose 360 Laundry?</h2>
+                <p class="text-slate-500 max-w-2xl mx-auto font-medium">We combine state-of-the-art technology with expert care to give your clothes the premium treatment they deserve.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12">
+                <div class="text-center">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl mb-4">
+                        <i class="fa-solid fa-users-gear"></i>
                     </div>
+                    <h4 class="font-bold text-slate-800 text-sm sm:text-base mb-1">Experienced Team</h4>
+                    <p class="text-xs sm:text-sm text-slate-500">Trained professionals.</p>
                 </div>
-                <div class="flex-1 flex justify-center">
-                    <!-- A nice stacked towels image -->
-                    <div class="relative">
-                        <div class="absolute inset-0 bg-blue-600 rounded-[2rem] rotate-6 opacity-10"></div>
-                        <img src="{{ asset('images/choose_laundry.png') }}" alt="Clean Towels"
-                            class="relative z-10 rounded-[2rem] shadow-2xl object-cover h-[400px] w-[500px]">
+                <div class="text-center">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl mb-4">
+                        <i class="fa-solid fa-cogs"></i>
                     </div>
+                    <h4 class="font-bold text-slate-800 text-sm sm:text-base mb-1">Advanced Equipment</h4>
+                    <p class="text-xs sm:text-sm text-slate-500">Modern machines.</p>
                 </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl mb-4">
+                        <i class="fa-solid fa-shield-virus"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm sm:text-base mb-1">Hygienic Cleaning</h4>
+                    <p class="text-xs sm:text-sm text-slate-500">Deep cleaning care.</p>
+                </div>
+                <div class="text-center">
+                    <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto bg-blue-100 text-blue-600 rounded-2xl flex items-center justify-center text-xl sm:text-2xl mb-4">
+                        <i class="fa-solid fa-thumbs-up"></i>
+                    </div>
+                    <h4 class="font-bold text-slate-800 text-sm sm:text-base mb-1">100% Satisfaction</h4>
+                    <p class="text-xs sm:text-sm text-slate-500">Best service assured.</p>
+                </div>
+            </div>
+
+            <div class="flex justify-center">
+                <img src="{{ asset('images/why_choose_us.png') }}" alt="Premium Laundry" class="w-full rounded-[2rem] shadow-2xl object-cover border border-slate-200">
             </div>
         </div>
     </section>
 
     <!-- Testimonials -->
-    <section id="testimonials" class="py-20 bg-white">
+    <section id="testimonials" class="py-16 lg:py-20 bg-white border-t border-slate-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span
-                    class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What
-                    Our Customers Say</span>
-                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">Testimonials</h2>
+            <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
+                <div class="text-center md:text-left">
+                    <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What Our Customers Say</span>
+                    <h2 class="text-3xl md:text-4xl font-extrabold text-brand mt-4">Testimonials</h2>
+                </div>
+                <a href="#" class="bg-brand hover:bg-blue-900 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition-colors flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-pen-nib"></i> Write a Review
+                </a>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 relative">
-                    <i class="fa-solid fa-quote-left absolute top-6 right-8 text-4xl text-blue-100"></i>
-                    <div class="flex items-center gap-4 mb-6 relative z-10">
-                        <img src="https://i.pravatar.cc/150?img=5" alt="User"
-                            class="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-white">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 relative shadow-sm hover:shadow-md transition-all">
+                    <i class="fa-solid fa-quote-left absolute top-6 right-6 text-3xl text-blue-100"></i>
+                    <div class="flex items-center gap-4 mb-4 relative z-10">
+                        <img src="https://i.pravatar.cc/150?img=5" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white">
                         <div>
-                            <h4 class="font-bold text-slate-800">Nirosha W.</h4>
-                            <div class="flex text-yellow-400 text-xs">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                                    class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                                    class="fa-solid fa-star"></i>
+                            <h4 class="font-bold text-slate-800 text-sm">Nirosha W.</h4>
+                            <div class="flex text-yellow-400 text-[10px]">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
                             </div>
                         </div>
                     </div>
-                    <p class="text-slate-600 relative z-10">"Amazing service! My clothes came back so fresh and
-                        perfectly folded. Saves me so much time every week."</p>
+                    <p class="text-slate-600 relative z-10 text-sm">"Amazing service! My clothes came back so fresh and perfectly folded. Saves me so much time every week."</p>
                 </div>
 
-                <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 relative">
-                    <i class="fa-solid fa-quote-left absolute top-6 right-8 text-4xl text-blue-100"></i>
-                    <div class="flex items-center gap-4 mb-6 relative z-10">
-                        <img src="https://i.pravatar.cc/150?img=11" alt="User"
-                            class="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-white">
+                <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 relative shadow-sm hover:shadow-md transition-all">
+                    <i class="fa-solid fa-quote-left absolute top-6 right-6 text-3xl text-blue-100"></i>
+                    <div class="flex items-center gap-4 mb-4 relative z-10">
+                        <img src="https://i.pravatar.cc/150?img=11" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white">
                         <div>
-                            <h4 class="font-bold text-slate-800">Gayan P.</h4>
-                            <div class="flex text-yellow-400 text-xs">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                                    class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                                    class="fa-solid fa-star-half-stroke"></i>
+                            <h4 class="font-bold text-slate-800 text-sm">Gayan P.</h4>
+                            <div class="flex text-yellow-400 text-[10px]">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
                             </div>
                         </div>
                     </div>
-                    <p class="text-slate-600 relative z-10">"Very reliable pickup and delivery. Their dry cleaning
-                        removed a tough stain from my suit. Highly recommended!"</p>
+                    <p class="text-slate-600 relative z-10 text-sm">"Very reliable pickup and delivery. Their dry cleaning removed a tough stain from my suit. Highly recommended!"</p>
                 </div>
 
-                <div class="bg-slate-50 rounded-3xl p-8 border border-slate-100 relative">
-                    <i class="fa-solid fa-quote-left absolute top-6 right-8 text-4xl text-blue-100"></i>
-                    <div class="flex items-center gap-4 mb-6 relative z-10">
-                        <img src="https://i.pravatar.cc/150?img=9" alt="User"
-                            class="w-16 h-16 rounded-full object-cover shadow-sm border-2 border-white">
+                <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 relative shadow-sm hover:shadow-md transition-all">
+                    <i class="fa-solid fa-quote-left absolute top-6 right-6 text-3xl text-blue-100"></i>
+                    <div class="flex items-center gap-4 mb-4 relative z-10">
+                        <img src="https://i.pravatar.cc/150?img=9" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white">
                         <div>
-                            <h4 class="font-bold text-slate-800">Tharindi S.</h4>
-                            <div class="flex text-yellow-400 text-xs">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                                    class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i
-                                    class="fa-solid fa-star"></i>
+                            <h4 class="font-bold text-slate-800 text-sm">Tharindi S.</h4>
+                            <div class="flex text-yellow-400 text-[10px]">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
                             </div>
                         </div>
                     </div>
-                    <p class="text-slate-600 relative z-10">"Great quality ironing. My clothes look brand new every
-                        time. The booking process is extremely easy."</p>
+                    <p class="text-slate-600 relative z-10 text-sm">"Great quality ironing. My clothes look brand new every time. The booking process is extremely easy."</p>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- App Promo -->
-    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-20">
-        <div
-            class="bg-gradient-to-r from-blue-600 to-blue-400 rounded-[3rem] p-10 lg:p-16 text-white shadow-2xl relative overflow-hidden flex flex-col md:flex-row items-center gap-10">
-            <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-2xl"></div>
-            <div class="absolute -left-10 -bottom-10 w-40 h-40 bg-black/10 rounded-full blur-xl"></div>
+    
+    <!-- App Download Section -->
+    <section class="py-16 lg:py-20 bg-brand text-white relative">
+        <!-- Background Elements -->
+        <div class="absolute inset-0 opacity-10 overflow-hidden pointer-events-none">
+            <div class="absolute top-0 left-0 w-64 h-64 bg-white rounded-full mix-blend-overlay filter blur-3xl transform -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute bottom-0 right-0 w-96 h-96 bg-blue-400 rounded-full mix-blend-overlay filter blur-3xl transform translate-x-1/3 translate-y-1/3"></div>
+        </div>
 
-            <div class="flex-1 relative z-10 text-center md:text-left">
-                <h2 class="text-3xl md:text-5xl font-extrabold mb-4">Laundry at Your Fingertips</h2>
-                <p class="text-blue-100 text-lg mb-8 max-w-lg">Book, track & manage your laundry easily from your phone.
-                    Download our app today!</p>
-                <div class="flex flex-wrap justify-center md:justify-start gap-4">
-                    <a href="#"
-                        class="bg-black hover:bg-gray-800 transition rounded-xl px-5 py-2.5 flex items-center gap-3">
-                        <i class="fa-brands fa-google-play text-2xl"></i>
-                        <div class="text-left">
-                            <p class="text-[10px] uppercase tracking-wider leading-none">GET IT ON</p>
-                            <p class="font-bold leading-none mt-1">Google Play</p>
-                        </div>
-                    </a>
-                    <a href="#"
-                        class="bg-black hover:bg-gray-800 transition rounded-xl px-5 py-2.5 flex items-center gap-3">
-                        <i class="fa-brands fa-apple text-3xl mb-1"></i>
-                        <div class="text-left">
-                            <p class="text-[10px] uppercase tracking-wider leading-none">Download on the</p>
-                            <p class="font-bold leading-none mt-1">App Store</p>
-                        </div>
-                    </a>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-20">
+            <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-20">
+                <!-- Text Content (Left) -->
+                <div class="flex-1 text-center lg:text-left z-20">
+                    <h2 class="text-3xl md:text-5xl font-extrabold mb-4 leading-tight">Laundry at Your Fingertips</h2>
+                    <p class="text-blue-100 text-base md:text-lg mb-8 max-w-xl mx-auto lg:mx-0">
+                        Book, track & manage your laundry easily from your phone. Download our app today for exclusive discounts and seamless scheduling.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
+                        <!-- App Store Button -->
+                        <a href="#" class="flex items-center gap-3 bg-white text-brand px-6 py-3 rounded-xl hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl w-full sm:w-auto justify-center group">
+                            <i class="fa-brands fa-apple text-3xl group-hover:scale-110 transition-transform"></i>
+                            <div class="text-left">
+                                <p class="text-[10px] uppercase font-bold leading-none text-slate-500 mb-1">Download on the</p>
+                                <p class="text-lg font-bold leading-none">App Store</p>
+                            </div>
+                        </a>
+                        
+                        <!-- Google Play Button -->
+                        <a href="#" class="flex items-center gap-3 bg-white text-brand px-6 py-3 rounded-xl hover:bg-blue-50 transition-colors shadow-lg hover:shadow-xl w-full sm:w-auto justify-center group">
+                            <i class="fa-brands fa-google-play text-2xl group-hover:scale-110 transition-transform"></i>
+                            <div class="text-left">
+                                <p class="text-[10px] uppercase font-bold leading-none text-slate-500 mb-1">GET IT ON</p>
+                                <p class="text-lg font-bold leading-none">Google Play</p>
+                            </div>
+                        </a>
+                    </div>
                 </div>
-            </div>
 
-            <div class="flex-1 relative z-10 flex justify-center lg:justify-end">
-                <!-- App mockup image instead of list -->
-                <img src="{{ asset('images/app_mockup.png') }}" alt="App Mockup"
-                    class="w-full max-w-[300px] h-auto drop-shadow-2xl rounded-[3rem] transform lg:-translate-y-4 hover:-translate-y-6 transition-transform duration-500">
+                <!-- App Image (Right) -->
+                <div class="flex-1 relative flex justify-center lg:justify-end z-30">
+                    <!-- Negative margins make the image "pop out" of the section boundaries -->
+                    <div class="relative w-full max-w-[280px] sm:max-w-sm -mb-28 lg:-my-32">
+                        <!-- Decorative glow behind image -->
+                        <div class="absolute inset-0 bg-blue-400 rounded-full filter blur-3xl opacity-30 transform scale-90 pointer-events-none"></div>
+                        <img src="{{ asset('images/laundry_app_mockup_new.png') }}" alt="Laundry App Mockup" class="relative z-30 w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500" style="mix-blend-mode: multiply;">
+                    </div>
+                </div>
             </div>
         </div>
     </section>
 
     <!-- Contact Section -->
-    <section id="contact" class="py-20 bg-white border-t border-slate-100">
+    <section id="contact" class="py-16 lg:py-20 bg-slate-50 border-t border-slate-100 mt-12 lg:mt-0 relative z-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-16">
-                <span
-                    class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Get
-                    In Touch</span>
+            <div class="text-center mb-12">
+                <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Get In Touch</span>
                 <h2 class="text-3xl md:text-4xl font-extrabold text-brand mt-4">We're Here for You</h2>
             </div>
 
-            <div
-                class="flex flex-col lg:flex-row gap-12 bg-white rounded-3xl shadow-xl overflow-hidden border border-slate-100">
-                <!-- Contact Info -->
-                <div class="flex-1 p-10 lg:p-12 h-[500px] overflow-y-auto custom-scrollbar">
-                    <div class="space-y-8">
-                        @foreach($branches as $b)
-                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
-                                <h3 class="font-bold text-lg text-brand mb-4 border-b border-slate-200 pb-2"><i
-                                        class="fa-solid fa-store text-accent mr-2"></i>{{ $b->name }}</h3>
-                                <div class="space-y-4">
-                                    <div class="flex gap-4">
-                                        <div
-                                            class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm">
-                                            <i class="fa-solid fa-phone"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-xs text-slate-800 uppercase">Phone</h4>
-                                            <p class="text-slate-600 text-sm">{{ $b->phone ?? '-' }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-4">
-                                        <div
-                                            class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm">
-                                            <i class="fa-brands fa-whatsapp"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-xs text-slate-800 uppercase">WhatsApp</h4>
-                                            <p class="text-slate-600 text-sm">{{ $b->whatsapp_number ?? '-' }}</p>
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-4">
-                                        <div
-                                            class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm">
-                                            <i class="fa-solid fa-location-dot"></i>
-                                        </div>
-                                        <div>
-                                            <h4 class="font-bold text-xs text-slate-800 uppercase">Address</h4>
-                                            <p class="text-slate-600 text-sm">{{ $b->address ?? '-' }}</p>
-                                        </div>
-                                    </div>
+            <div class="flex flex-col lg:flex-row gap-8 bg-white rounded-3xl shadow-lg overflow-hidden border border-slate-200">
+                <!-- Contact Info (No Scroll) -->
+                <div class="flex-1 p-6 lg:p-10 flex flex-col justify-center">
+                    <div class="grid gap-6">
+                        <!-- Main Branch - Colombo -->
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <h3 class="font-bold text-base text-brand mb-3 pb-2 border-b border-slate-200"><i class="fa-solid fa-building text-accent mr-2"></i>Main Branch - Colombo</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-phone"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Phone</p><p class="text-sm font-semibold text-slate-700">0112345678</p></div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-white text-green-500 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm"><i class="fa-brands fa-whatsapp"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">WhatsApp</p><p class="text-sm font-semibold text-slate-700">94771234567</p></div>
+                                </div>
+                                <div class="flex items-center gap-3 sm:col-span-2 mt-1">
+                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Address</p><p class="text-sm font-semibold text-slate-700">No. 45, Main Street, Colombo 03</p></div>
                                 </div>
                             </div>
-                        @endforeach
+                        </div>
+
+                        <!-- Branch 2 - Kandy -->
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <h3 class="font-bold text-base text-brand mb-3 pb-2 border-b border-slate-200"><i class="fa-solid fa-store text-accent mr-2"></i>Branch 2 - Kandy</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-phone"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Phone</p><p class="text-sm font-semibold text-slate-700">0812345678</p></div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-white text-green-500 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm"><i class="fa-brands fa-whatsapp"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">WhatsApp</p><p class="text-sm font-semibold text-slate-700">94761234567</p></div>
+                                </div>
+                                <div class="flex items-center gap-3 sm:col-span-2 mt-1">
+                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Address</p><p class="text-sm font-semibold text-slate-700">No. 12, Peradeniya Road, Kandy</p></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Main Branch 2 -->
+                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
+                            <h3 class="font-bold text-base text-brand mb-3 pb-2 border-b border-slate-200"><i class="fa-solid fa-building text-accent mr-2"></i>Main Branch</h3>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-phone"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Phone</p><p class="text-sm font-semibold text-slate-700">0112223334</p></div>
+                                </div>
+                                <div class="flex items-center gap-3 sm:col-span-2 mt-1">
+                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-location-dot"></i></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Address</p><p class="text-sm font-semibold text-slate-700">123 Branch St, Colombo</p></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Map Placeholder -->
-                <div class="flex-1 bg-slate-100 relative min-h-[400px]">
-                    <img src="https://images.unsplash.com/photo-1524661135-423995f22d0b?q=80&w=800&auto=format&fit=crop"
-                        class="w-full h-full object-cover opacity-80 mix-blend-luminosity" alt="Map">
-                    <div
-                        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-accent text-5xl drop-shadow-xl animate-bounce">
-                        <i class="fa-solid fa-location-dot"></i>
+                <!-- Authentic OpenStreetMap -->
+                <div class="flex-1 bg-slate-200 relative min-h-[300px] lg:min-h-full">
+                    <iframe 
+                        src="https://www.openstreetmap.org/export/embed.html?bbox=79.8350,6.9120,79.8750,6.9520&amp;layer=mapnik&amp;marker=6.9271,79.8612" 
+                        width="100%" 
+                        height="100%" 
+                        style="border:0; position:absolute; top:0; left:0;" 
+                        allowfullscreen="" 
+                        loading="lazy">
+                    </iframe>
+                    <!-- Small attribution for OSM -->
+                    <div class="absolute bottom-1 right-1 bg-white/80 px-2 py-1 text-[10px] text-slate-500 rounded">
+                        <a href="https://www.openstreetmap.org/?mlat=6.9271&amp;mlon=79.8612#map=14/6.9271/79.8612" target="_blank" class="hover:text-blue-600">View Larger Map</a>
                     </div>
                 </div>
             </div>
