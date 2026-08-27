@@ -339,6 +339,18 @@
                             <td colspan="3" style="padding:8px 16px;text-align:right;font-size:11px;font-weight:600;color:#64748b;">Subtotal</td>
                             <td style="padding:8px 16px;text-align:right;font-weight:700;color:#334155;">Rs.{{ number_format($order->subtotal, 2) }}</td>
                         </tr>
+                        @if($order->additional > 0)
+                        <tr>
+                            <td colspan="3" style="padding:8px 16px;text-align:right;font-size:12px;font-weight:700;color:#64748b;">Additional Charges</td>
+                            <td style="padding:8px 16px;text-align:right;font-size:13px;font-weight:800;color:#dc2626;">+ Rs.{{ number_format($order->additional, 2) }}</td>
+                        </tr>
+                        @endif
+                        @if($order->delivery_fee > 0)
+                        <tr>
+                            <td colspan="3" style="padding:8px 16px;text-align:right;font-size:12px;font-weight:700;color:#64748b;">Delivery Fee</td>
+                            <td style="padding:8px 16px;text-align:right;font-size:13px;font-weight:800;color:#0f172a;">+ Rs.{{ number_format($order->delivery_fee, 2) }}</td>
+                        </tr>
+                        @endif
                         @if($order->discount > 0)
                         <tr>
                             <td colspan="3" style="padding:8px 16px;text-align:right;font-size:11px;font-weight:600;color:#64748b;">Discount</td>

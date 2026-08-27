@@ -122,7 +122,7 @@ class OrderController extends Controller
                 // Calculate discount and total
                 $discountPercentage = max(0, min(100, (float) ($request->discount_percentage ?? 0)));
                 $discountAmount = $subtotal * ($discountPercentage / 100);
-                $total = $subtotal - $discountAmount;
+                $total = $subtotal - $discountAmount + $order->delivery_fee;
 
                 // Enforce minimum order value for deliveries
                 $isDelivery = \App\Models\DeliveryAppointment::where('order_id', $order->id)->exists();

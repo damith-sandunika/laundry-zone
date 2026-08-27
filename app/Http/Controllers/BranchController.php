@@ -37,7 +37,7 @@ class BranchController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size']);
+        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude']);
         $data['is_active'] = $request->has('is_active');
 
         if ($request->hasFile('logo')) {
@@ -67,7 +67,7 @@ class BranchController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
         ]);
 
-        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size']);
+        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude']);
 
         // Ensure is_active defaults to false if not present, true if present
         $data['is_active'] = $request->has('is_active');

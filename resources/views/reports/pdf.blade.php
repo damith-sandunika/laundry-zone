@@ -170,9 +170,13 @@
             <td>Total Package Sales Revenue</td>
             <td class="text-right">Rs.{{ number_format($totalPackagePayments, 2) }}</td>
         </tr>
+        <tr>
+            <td>Total Delivery Fees Collected</td>
+            <td class="text-right">Rs.{{ number_format($totalDeliveryFees, 2) }}</td>
+        </tr>
         <tr class="total-row">
             <td>TOTAL GROSS INCOME</td>
-            <td class="text-right" style="color:#2563eb;">Rs.{{ number_format($totalSales + $totalPackagePayments, 2) }}</td>
+            <td class="text-right" style="color:#2563eb;">Rs.{{ number_format($totalSales + $totalPackagePayments + $totalDeliveryFees, 2) }}</td>
         </tr>
         <tr class="expense-row">
             <td>Less: Total Inventory Billed (Cost of materials used)</td>
@@ -184,7 +188,7 @@
         </tr>
         <tr class="profit-row">
             <td>NET PROFIT</td>
-            <td class="text-right">Rs.{{ number_format(($totalSales + $totalPackagePayments) - ($totalExpenses + $totalInventoryCost), 2) }}</td>
+            <td class="text-right">Rs.{{ number_format(($totalSales + $totalPackagePayments + $totalDeliveryFees) - ($totalExpenses + $totalInventoryCost), 2) }}</td>
         </tr>
     </table>
 
@@ -193,8 +197,8 @@
         <!-- Card 1 -->
         <div class="card" style="background: #f8fafc; border-color: #cbd5e1;">
             <div class="card-title">Total Gross Income</div>
-            <div class="card-value" style="color: #0f172a;">Rs.{{ number_format($totalSales + $totalPackagePayments, 2) }}</div>
-            <div class="card-sub">Services + Packages</div>
+            <div class="card-value" style="color: #0f172a;">Rs.{{ number_format($totalSales + $totalPackagePayments + $totalDeliveryFees, 2) }}</div>
+            <div class="card-sub">Services + Packages + Delivery</div>
         </div>
 
         <div style="display:table-cell; width:2%;"></div> <!-- Spacer -->

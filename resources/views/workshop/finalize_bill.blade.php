@@ -64,13 +64,17 @@
             </div>
 
             <div class="p-4 border-t border-slate-100 bg-white shadow-[0_-4px_10px_rgba(0,0,0,0.02)]">
-                <div class="flex justify-between items-center mb-2">
+                <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
                     <span class="text-xs font-bold text-slate-500">Subtotal</span>
                     <span class="text-sm font-black text-slate-800" x-text="'Rs.' + subtotal.toFixed(2)"></span>
                 </div>
+                <div x-show="deliveryFee > 0" class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2">
+                    <span class="text-xs font-bold text-slate-500">Delivery Fee</span>
+                    <span class="text-sm font-black text-slate-800" x-text="'Rs.' + parseFloat(deliveryFee).toFixed(2)"></span>
+                </div>
                 <div class="flex justify-between items-center mb-4">
                     <span class="text-xs font-bold text-slate-500">Total (Min Rs.{{ $minimumDeliveryCost }})</span>
-                    <span class="text-lg font-black text-blue-700" x-text="'Rs.' + Math.max({{ $minimumDeliveryCost }}, subtotal).toFixed(2)"></span>
+                    <span class="text-lg font-black text-blue-700" x-text="'Rs.' + total.toFixed(2)"></span>
                 </div>
                 <div class="mb-4">
                     <label class="block text-xs font-bold text-slate-700 mb-1">Advance Amount Required (Optional)</label>
@@ -101,6 +105,7 @@
                 services: @json($services),
                 search: '',
                 cart: @json($cartItems),
+                deliveryFee: {{ (float)($dispatch->order->delivery_fee ?? 0) }},
                 requestedAdvance: null,
                 isSaving: false,
                 orderId: {{ $dispatch->order_id }},
@@ -112,6 +117,11 @@
                 
                 get subtotal() {
                     return this.cart.reduce((sum, item) => sum + (item.base_price * item.qty), 0);
+                },
+                
+                get total() {
+                    let calculated = this.subtotal + this.deliveryFee;
+                    return Math.max({{ $minimumDeliveryCost }}, calculated);
                 },
                 
                 addToCart(service) {

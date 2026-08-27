@@ -18,6 +18,7 @@
                         <option value="utilities" {{ $expense->category === 'utilities' ? 'selected' : '' }}>Utilities (Water, Electricity)</option>
                         <option value="supplies" {{ $expense->category === 'supplies' ? 'selected' : '' }}>Laundry Supplies (Detergent etc)</option>
                         <option value="rent" {{ $expense->category === 'rent' ? 'selected' : '' }}>Shop Rent</option>
+                        <option value="PickMe" {{ $expense->category === 'PickMe' ? 'selected' : '' }}>PickMe Delivery</option>
                         <option value="other" {{ $expense->category === 'other' ? 'selected' : '' }}>Other Miscellaneous</option>
                     </select>
                 </div>

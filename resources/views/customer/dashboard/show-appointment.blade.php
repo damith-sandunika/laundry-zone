@@ -35,6 +35,10 @@
                         <span class="text-slate-500 font-bold text-sm">Payment Method</span>
                         <span class="text-slate-800 font-black text-sm">{{ ucfirst(str_replace('_', ' ', $appointment->payment_method ?? 'Cash')) }}</span>
                     </div>
+                    <div class="flex justify-between border-b border-slate-100 pb-3">
+                        <span class="text-slate-500 font-bold text-sm">Delivery Fee (Estimate)</span>
+                        <span class="text-slate-800 font-black text-sm">Rs. {{ number_format($appointment->delivery_cost, 2) }}</span>
+                    </div>
                 </div>
 
                 <div class="mt-6 p-4 bg-blue-50 rounded-2xl border border-blue-100">

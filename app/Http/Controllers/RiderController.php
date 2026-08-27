@@ -210,7 +210,8 @@ class RiderController extends Controller
             'created_by' => auth()->id(),
             'status' => 'received',
             'subtotal' => $subtotal,
-            'total' => $subtotal, // Delivery fee added later if applicable
+            'total' => $subtotal + ($appointment->delivery_cost ?? 0), // Include delivery fee
+            'delivery_fee' => $appointment->delivery_cost ?? 0,
             'notes' => $request->notes,
             'is_delivery_order' => true,
             'delivery_appointment_id' => $appointment->id,

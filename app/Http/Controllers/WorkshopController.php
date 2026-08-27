@@ -43,6 +43,9 @@ class WorkshopController extends Controller
             'dispatched_to_workshop_at' => now(),
         ]);
 
+        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
+        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Order Dispatched from Branch: #' . $order->order_number, route('workshop.dashboard'), 'branch_dispatch'));
+
         return redirect()->back()->with('success', 'Order dispatched to workshop successfully.');
     }
 
@@ -76,6 +79,9 @@ class WorkshopController extends Controller
                 'workshop_id' => $request->workshop_branch_id,
             ]);
         }
+
+        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
+        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification(count($orders) . ' Orders Dispatched from Branch', route('workshop.dashboard'), 'branch_dispatch'));
 
         return redirect()->back()->with('success', count($orders).' orders dispatched to workshop.');
     }
@@ -407,6 +413,9 @@ class WorkshopController extends Controller
 
         $dispatch->order->update(['status' => 'returned_from_workshop']);
 
+        $branchAdmins = \App\Models\User::where('role', 'branch_admin')->where('branch_id', $dispatch->branch_id)->get();
+        \Illuminate\Support\Facades\Notification::send($branchAdmins, new \App\Notifications\SystemAlertNotification('Order Returned from Workshop: #' . $dispatch->order->order_number, route('orders.show', $dispatch->order_id), 'workshop_return'));
+
         return response()->json(['success' => true, 'status' => 'returned_to_branch']);
     }
 
@@ -443,6 +452,11 @@ class WorkshopController extends Controller
                 'returned_at' => now(),
             ]);
 
+            $riderUser = \App\Models\User::find($request->rider_id);
+            if ($riderUser) {
+                \Illuminate\Support\Facades\Notification::send($riderUser, new \App\Notifications\SystemAlertNotification('New Delivery Task (from Workshop): Order #' . $order->order_number, route('rider.tasks')));
+            }
+
             return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
 
         } else {
@@ -454,7 +468,7 @@ class WorkshopController extends Controller
             \App\Models\Expense::create([
                 'branch_id' => $dispatch->workshop_branch_id,
                 'amount' => $request->pickme_cost,
-                'category' => 'delivery',
+                'category' => 'PickMe',
                 'description' => 'PickMe Delivery for Order #' . $order->order_number,
                 'expense_date' => now(),
                 'created_by' => auth()->id(),

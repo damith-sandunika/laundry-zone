@@ -145,7 +145,6 @@
             // Chart Defaults for Modern Aesthetic
             Chart.defaults.font.family = "'Inter', sans-serif";
             Chart.defaults.color = "#94a3b8";
-            Chart.defaults.scale.grid.color = "#f1f5f9";
             
             // --- Sales By Branch Chart ---
             const branchSalesCtx = document.getElementById('branchSalesChart').getContext('2d');

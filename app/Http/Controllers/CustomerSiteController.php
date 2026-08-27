@@ -67,6 +67,7 @@ class CustomerSiteController extends Controller
                 'delivery_lng' => 'nullable|numeric',
                 'delivery_address' => 'nullable|string|max:255',
                 'receipt_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'estimated_delivery_fee' => 'nullable|numeric',
             ]);
         } catch (ValidationException $e) {
             \Log::error('Booking Validation Failed', $e->errors());
@@ -149,6 +150,11 @@ class CustomerSiteController extends Controller
                 $deliveryCost = $deliveryRange->cost;
             }
         }
+        
+        // If delivery range cost is not set, use the frontend estimate
+        if ($deliveryCost == 0 && $request->filled('estimated_delivery_fee')) {
+            $deliveryCost = (float) $request->estimated_delivery_fee;
+        }
 
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
         $deliveryCost = max($deliveryCost, $minimumDeliveryCost);
@@ -185,6 +191,10 @@ class CustomerSiteController extends Controller
 
         // WhatsApp notification
         $waService->notifyBookingReceived($appointment);
+
+        // System Alert to Workshop Admins (since delivery orders go to workshop)
+        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $closestWorkshop->id)->get();
+        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Booking Received: #' . $appointment->id, route('workshop.operations'), 'new_order'));
 
         return redirect()->route('customer.booking.success', $appointment->id);
     }

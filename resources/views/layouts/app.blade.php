@@ -275,68 +275,7 @@
                     @endif
 
                     <!-- Notifications Dropdown -->
-                    @php
-                        $notifsList = [];
-                        $lowStockAlerts = \App\Models\InventoryItem::whereRaw('current_stock <= min_stock')->get();
-                        foreach ($lowStockAlerts as $item) {
-                            $notifsList[] = [
-                                'title' => 'Low Stock: ' . $item->name . ' is low (' . $item->current_stock . ' ' . $item->unit . ' left)',
-                                'time' => 'System Alert',
-                                'type' => 'alert'
-                            ];
-                        }
-                        $pendingBookings = \App\Models\OnlineBooking::where('status', 'pending')->latest()->take(3)->get();
-                        foreach ($pendingBookings as $b) {
-                            $notifsList[] = [
-                                'title' => 'New booking request from ' . $b->customer_name,
-                                'time' => $b->created_at->diffForHumans(),
-                                'type' => 'booking'
-                            ];
-                        }
-                        $recentOrdersCount = \App\Models\Order::where('created_at', '>=', now()->subHours(2))->count();
-                        if ($recentOrdersCount > 0) {
-                            $notifsList[] = [
-                                'title' => $recentOrdersCount . ' new orders placed recently',
-                                'time' => 'Just now',
-                                'type' => 'order'
-                            ];
-                        }
-                    @endphp
-                    <div class="relative">
-                        <button @click="notifOpen = !notifOpen; profileOpen = false" @click.away="notifOpen = false" class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border-2 border-slate-100 hover:bg-slate-100 hover:border-slate-200 transition-colors text-slate-500 hover:text-slate-700">
-                            @if(count($notifsList) > 0)
-                                <div class="absolute top-[6px] right-[6px] w-2 h-2 rounded-full bg-blue-500 ring-2 ring-white animate-pulse"></div>
-                            @endif
-                            <svg class="w-[22px] h-[22px]" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-                        </button>
-                        
-                        <!-- Notifications Menu -->
-                        <div x-show="notifOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="absolute right-0 top-[52px] w-[300px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 origin-top-right" x-cloak>
-                            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                                <span class="text-xs font-black text-slate-800">Notifications</span>
-                                <span class="text-[10px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">{{ count($notifsList) }} New</span>
-                            </div>
-                            <div class="max-h-[280px] overflow-y-auto">
-                                @forelse($notifsList as $n)
-                                    <div class="flex gap-3 px-4 py-3 border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                                        <div class="mt-0.5 flex-shrink-0">
-                                            @if(($n['type'] ?? '') === 'alert')
-                                                <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                            @else
-                                                <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                            @endif
-                                        </div>
-                                        <div>
-                                            <p class="text-[11.5px] font-semibold text-slate-700 leading-snug mb-0.5">{{ $n['title'] }}</p>
-                                            <span class="text-[9.5px] font-medium text-slate-400">{{ $n['time'] }}</span>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <div class="p-6 text-center text-xs font-medium text-slate-400">No new notifications.</div>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
+                    <x-alert-system />
 
                     <!-- Profile Dropdown -->
                     <div class="relative">

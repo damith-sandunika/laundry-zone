@@ -95,6 +95,8 @@ Route::get('/qr/{content}', function (string $content) {
 })->name('qr.generate');
 
 Route::middleware(['auth'])->group(function () {
+    Route::get('/notifications/check', [\App\Http\Controllers\NotificationController::class, 'check'])->name('notifications.check');
+    Route::post('/notifications/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::post('/shifts/open', [DashboardController::class, 'openShift'])->name('shifts.open');

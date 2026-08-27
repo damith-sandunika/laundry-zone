@@ -204,6 +204,12 @@
                                 <span>+ LKR {{ number_format($order->additional, 2) }}</span>
                             </div>
                         @endif
+                        @if($order->delivery_fee > 0)
+                            <div class="flex justify-between text-sm font-bold text-slate-700">
+                                <span>Delivery Fee</span>
+                                <span>+ LKR {{ number_format($order->delivery_fee, 2) }}</span>
+                            </div>
+                        @endif
                         <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
                             <span class="font-black text-slate-800">Total Amount</span>
                             <span class="font-black text-lg text-slate-800">LKR {{ number_format($order->total, 2) }}</span>

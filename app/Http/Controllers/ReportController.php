@@ -35,6 +35,7 @@ class ReportController extends Controller
         }
         $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->get();
         $totalSales = $orders->sum('total');
+        $totalDeliveryFees = $orders->sum('delivery_fee');
 
         $paymentsQuery = PaymentTransaction::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
@@ -152,7 +153,7 @@ class ReportController extends Controller
             ->get();
 
         return view('reports.index', compact(
-            'orders', 'totalSales', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank', 'totalCredit', 'totalPending',
+            'orders', 'totalSales', 'totalDeliveryFees', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank', 'totalCredit', 'totalPending',
             'services', 'expensesList', 'totalExpensesAmount', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders',
             'customerPackages', 'packagePayments', 'branches', 'branchId', 'isSuperAdmin',
             'deliveryRevenue', 'walkinRevenue', 'deliveryOrders', 'walkinOrders', 'dailyRevenue', 'topCustomers'
@@ -174,6 +175,7 @@ class ReportController extends Controller
         }
         $orders = $salesQuery->with('customer')->orderBy('created_at', 'desc')->get();
         $totalSales = $orders->sum('total');
+        $totalDeliveryFees = $orders->sum('delivery_fee');
 
         $serviceBreakdown = OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'))
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
@@ -249,7 +251,7 @@ class ReportController extends Controller
         $recentOrders = collect(); // User requested to remove recent orders
 
         return view('reports.pdf', compact(
-            'recentOrders', 'totalSales', 'services', 'salaries', 'totalSalaries',
+            'recentOrders', 'totalSales', 'totalDeliveryFees', 'services', 'salaries', 'totalSalaries',
             'expenses', 'totalExpenses', 'totalInventoryCost', 'startDate', 'endDate', 'branch',
             'totalPackagePayments', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank',
             'totalCredit', 'totalPending', 'customerPackages'

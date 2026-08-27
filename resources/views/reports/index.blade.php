@@ -110,6 +110,9 @@
                     <div class="text-lg font-black text-violet-500 tracking-tight">Rs.{{ number_format($deliveryRevenue, 2) }}</div>
                 </div>
             </div>
+            <div class="mt-3 text-xs font-bold text-violet-500 flex items-center gap-1 relative z-10">
+                Delivery Fees Collected: Rs.{{ number_format($totalDeliveryFees, 2) }}
+            </div>
         </div>
 
         <!-- Pending -->

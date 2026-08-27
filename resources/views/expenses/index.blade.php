@@ -55,6 +55,7 @@
                         <option value="utilities" {{ $category === 'utilities' ? 'selected' : '' }}>Utilities (Water, Electricity)</option>
                         <option value="supplies" {{ $category === 'supplies' ? 'selected' : '' }}>Laundry Supplies (Detergent etc)</option>
                         <option value="rent" {{ $category === 'rent' ? 'selected' : '' }}>Shop Rent</option>
+                        <option value="PickMe" {{ $category === 'PickMe' ? 'selected' : '' }}>PickMe Delivery</option>
                         <option value="other" {{ $category === 'other' ? 'selected' : '' }}>Other Miscellaneous</option>
                     </select>
                 </div>
@@ -144,6 +145,7 @@
                                     <option value="utilities">Utilities (Water, Electricity)</option>
                                     <option value="supplies">Laundry Supplies (Detergent etc)</option>
                                     <option value="rent">Shop Rent</option>
+                                    <option value="PickMe">PickMe Delivery</option>
                                     <option value="other">Other Miscellaneous</option>
                                 </select>
                             </div>

@@ -128,6 +128,8 @@ class DeliveryController extends Controller
 
         $appointment->update(['status' => 'rider_assigned']);
 
+        \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Pickup Task Assigned: #' . $appointment->id, route('rider.tasks')));
+
         // WA notification
         $waService->notifyRiderAssigned($appointment, $rider);
 
@@ -158,7 +160,8 @@ class DeliveryController extends Controller
                 'branch_id' => $appointment->branch_id,
                 'status' => 'received',
                 'subtotal' => 0,
-                'total' => 0,
+                'total' => $appointment->delivery_cost ?? 0,
+                'delivery_fee' => $appointment->delivery_cost ?? 0,
                 'paid_amount' => 0,
                 'payment_status' => 'pending',
                 'payment_method' => $appointment->payment_method ?? 'cash',
@@ -192,13 +195,14 @@ class DeliveryController extends Controller
                     }
                     $order->update([
                         'subtotal' => $subtotal,
-                        'total' => $subtotal,
+                        'total' => $subtotal + ($appointment->delivery_cost ?? 0),
+                        'delivery_fee' => $appointment->delivery_cost ?? 0,
                     ]);
                 }
             }
         }
 
-        WorkshopDispatch::create([
+        $dispatch = WorkshopDispatch::create([
             'order_id' => $appointment->order_id,
             'branch_id' => $appointment->branch_id,
             'workshop_branch_id' => $appointment->branch_id,
@@ -208,6 +212,9 @@ class DeliveryController extends Controller
             'received_by' => auth()->id(),
             'received_at_workshop_at' => now(),
         ]);
+
+        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $appointment->branch_id)->get();
+        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Delivery Order Arrived: #' . $dispatch->order->order_number, route('workshop.operations'), 'delivery_arrived'));
 
         return redirect()->route('workshop.operations')->with('success', 'Delivery arrived! Order has been moved directly to Arrival & Processing.');
     }
@@ -311,6 +318,8 @@ class DeliveryController extends Controller
 
         $appointment->update(['status' => 'out_for_delivery', 'delivery_method' => 'in_house']);
         Order::find($request->order_id)?->update(['status' => 'out_for_delivery']);
+
+        \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Delivery Drop-off Task Assigned: Order #' . $request->order_id, route('rider.tasks')));
 
         return redirect()->back()->with('success', "Rider {$rider->name} assigned for delivery.")->with('print_url', route('orders.printChit', $request->order_id));
     }

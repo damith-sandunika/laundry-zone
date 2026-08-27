@@ -56,6 +56,7 @@
             @csrf
             <input type="hidden" name="item_description" x-model="formattedCart">
             <input type="hidden" name="cart_json" x-bind:value="JSON.stringify(cart)">
+            <input type="hidden" name="estimated_delivery_fee" x-model="estimatedDeliveryFee">
             
             @if ($errors->any())
                 <div class="p-4 bg-red-50 border border-red-200 rounded-xl text-red-600 mb-6">
@@ -383,9 +384,25 @@
                             <i class="fa-solid fa-file-invoice-dollar"></i>
                         </div>
                         <h3 class="text-lg font-black text-indigo-900 mb-2">Payment Details</h3>
-                        <p class="text-sm text-indigo-700 font-medium max-w-md mx-auto">
+                        <p class="text-sm text-indigo-700 font-medium max-w-md mx-auto mb-4">
                             Payment will be requested after your laundry has been inspected and the total bill is finalized by our workshop. You will be notified via WhatsApp with the exact amount.
                         </p>
+                        
+                        <div class="bg-white rounded-xl p-4 text-left border border-indigo-100 shadow-sm mt-4">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold text-slate-600">Items Total (Estimate)</span>
+                                <span class="text-sm font-black text-slate-800">LKR <span x-text="totalPrice"></span></span>
+                            </div>
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm font-bold text-slate-600">Pickup & Delivery Fee (Estimate)</span>
+                                <span class="text-sm font-black text-slate-800">LKR <span x-text="estimatedDeliveryFee"></span></span>
+                            </div>
+                            <div class="border-t border-slate-100 my-2 pt-2 flex justify-between items-center">
+                                <span class="text-base font-black text-indigo-900">Total Estimated Amount</span>
+                                <span class="text-base font-black text-indigo-900">LKR <span x-text="totalPrice + estimatedDeliveryFee"></span></span>
+                            </div>
+                            <p class="text-[10px] text-slate-400 font-medium text-center mt-2">* Delivery fees may vary based on exact route and are finalized by the workshop.</p>
+                        </div>
                     </div>
                 </div>
 
@@ -429,6 +446,14 @@
                     pickupMap: null,
                     deliveryMap: null,
                     deliveryMapInitialized: false,
+                    pickupLat: null,
+                    pickupLng: null,
+                    deliveryLat: null,
+                    deliveryLng: null,
+                    estimatedDeliveryFee: 0,
+                    baseLat: 6.9322889, // Main branch lat
+                    baseLng: 79.8567772, // Main branch lng
+                    ratePerKm: 100, // LKR 100 per km
 
                     initData() {
                         this.$watch('step', value => {
@@ -449,7 +474,10 @@
                             if (!value && this.step === 4) {
                                 setTimeout(() => this.initDeliveryMap(), 100);
                             }
+                            this.calculateDeliveryFee();
                         });
+                        
+                        this.$watch('deliveryPref', () => this.calculateDeliveryFee());
                     },
 
                     goToStep(n) {
@@ -534,6 +562,9 @@
                             const center = this.pickupMap.getCenter();
                             document.getElementById('pickup_lat').value = center.lat.toFixed(6);
                             document.getElementById('pickup_lng').value = center.lng.toFixed(6);
+                            this.pickupLat = center.lat;
+                            this.pickupLng = center.lng;
+                            this.calculateDeliveryFee();
                         };
 
                         this.pickupMap.on('move', updateCoords);
@@ -557,6 +588,9 @@
                             const center = this.deliveryMap.getCenter();
                             document.getElementById('delivery_lat').value = center.lat.toFixed(6);
                             document.getElementById('delivery_lng').value = center.lng.toFixed(6);
+                            this.deliveryLat = center.lat;
+                            this.deliveryLng = center.lng;
+                            this.calculateDeliveryFee();
                         };
 
                         this.deliveryMap.on('move', updateCoords);
@@ -575,6 +609,43 @@
                                 alert("Could not get your location. Please check browser permissions.");
                             });
                         }
+                    },
+                    
+                    calculateDistance(lat1, lon1, lat2, lon2) {
+                        const R = 6371; // km
+                        const dLat = (lat2 - lat1) * Math.PI / 180;
+                        const dLon = (lon2 - lon1) * Math.PI / 180;
+                        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                                Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                                Math.sin(dLon/2) * Math.sin(dLon/2);
+                        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                        return R * c;
+                    },
+                    
+                    calculateDeliveryFee() {
+                        let totalDistance = 0;
+                        
+                        // Distance to pickup
+                        if (this.pickupLat && this.pickupLng) {
+                            totalDistance += this.calculateDistance(this.baseLat, this.baseLng, this.pickupLat, this.pickupLng);
+                        }
+                        
+                        // Distance to delivery
+                        if (this.deliveryPref === 'deliver_to_address') {
+                            if (this.sameAsPickup && this.pickupLat && this.pickupLng) {
+                                totalDistance += this.calculateDistance(this.baseLat, this.baseLng, this.pickupLat, this.pickupLng);
+                            } else if (!this.sameAsPickup && this.deliveryLat && this.deliveryLng) {
+                                totalDistance += this.calculateDistance(this.baseLat, this.baseLng, this.deliveryLat, this.deliveryLng);
+                            }
+                        }
+                        
+                        // Calculate fee
+                        let rawFee = totalDistance * this.ratePerKm;
+                        
+                        // Minimum delivery fee of LKR 300 if distance > 0
+                        if (rawFee > 0 && rawFee < 300) rawFee = 300;
+                        
+                        this.estimatedDeliveryFee = Math.round(rawFee);
                     },
 
                     // Cart methods

@@ -1,5 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
         <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
                 <h2 class="ph-title">Global Branches</h2>
@@ -19,7 +20,7 @@
         </div>
     @endif
 
-    <div x-data="{ addModalOpen: false, editModalOpen: false, selectedBranch: null }" @open-add-branch.window="addModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
+    <div x-data="branchManager()" @open-add-branch.window="openAddModal()" style="display:flex;flex-direction:column;gap:20px;">
 
         <div class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden">
             <div class="overflow-x-auto">
@@ -74,7 +75,7 @@
                             </td>
                             <td class="px-6 py-4 text-center space-x-2">
                                 <button 
-                                    @click="selectedBranch = {{ json_encode($branch) }}; editModalOpen = true"
+                                    @click="openEditModal({{ json_encode($branch) }})"
                                     class="text-xs font-semibold px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded hover:bg-gray-100">
                                     Edit
                                 </button>
@@ -133,6 +134,12 @@
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Tagline</label>
                                     <input type="text" name="tagline" placeholder="e.g. Premium Laundry Services" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Location (Pick on Map) <span class="text-red-500">*</span></label>
+                                    <div id="addMap" style="height: 200px; width: 100%; border-radius: 12px; z-index: 1;"></div>
+                                    <input type="hidden" name="latitude" id="add_lat" required>
+                                    <input type="hidden" name="longitude" id="add_lng" required>
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Branch Logo</label>
@@ -200,6 +207,12 @@
                                     <input type="text" name="tagline" :value="selectedBranch?.tagline" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                                 </div>
                                 <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Location (Pick on Map) <span class="text-red-500">*</span></label>
+                                    <div id="editMap" style="height: 200px; width: 100%; border-radius: 12px; z-index: 1;"></div>
+                                    <input type="hidden" name="latitude" id="edit_lat" :value="selectedBranch?.latitude" required>
+                                    <input type="hidden" name="longitude" id="edit_lng" :value="selectedBranch?.longitude" required>
+                                </div>
+                                <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Update Logo (Optional)</label>
                                     <input type="file" name="logo" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors">
                                 </div>
@@ -222,5 +235,75 @@
             </div>
         </div>
 
+        </div>
     </div>
+
+    <x-slot name="scripts">
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('branchManager', () => ({
+                addModalOpen: false,
+                editModalOpen: false,
+                selectedBranch: null,
+                addMap: null,
+                addMarker: null,
+                editMap: null,
+                editMarker: null,
+                
+                openAddModal() {
+                    this.addModalOpen = true;
+                    setTimeout(() => {
+                        if (!this.addMap) {
+                            this.addMap = L.map('addMap').setView([6.9271, 79.8612], 13); // Default to Colombo
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.addMap);
+                            
+                            this.addMap.on('click', (e) => {
+                                if (this.addMarker) this.addMap.removeLayer(this.addMarker);
+                                this.addMarker = L.marker(e.latlng).addTo(this.addMap);
+                                document.getElementById('add_lat').value = e.latlng.lat;
+                                document.getElementById('add_lng').value = e.latlng.lng;
+                            });
+                        }
+                        this.addMap.invalidateSize();
+                    }, 100);
+                },
+                
+                openEditModal(branch) {
+                    this.selectedBranch = branch;
+                    this.editModalOpen = true;
+                    setTimeout(() => {
+                        if (!this.editMap) {
+                            this.editMap = L.map('editMap').setView([6.9271, 79.8612], 13);
+                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.editMap);
+                            
+                            this.editMap.on('click', (e) => {
+                                if (this.editMarker) this.editMap.removeLayer(this.editMarker);
+                                this.editMarker = L.marker(e.latlng).addTo(this.editMap);
+                                document.getElementById('edit_lat').value = e.latlng.lat;
+                                document.getElementById('edit_lng').value = e.latlng.lng;
+                            });
+                        }
+                        this.editMap.invalidateSize();
+                        
+                        if (this.editMarker) {
+                            this.editMap.removeLayer(this.editMarker);
+                            this.editMarker = null;
+                        }
+                        
+                        if (branch.latitude && branch.longitude) {
+                            let latlng = [branch.latitude, branch.longitude];
+                            this.editMap.setView(latlng, 15);
+                            this.editMarker = L.marker(latlng).addTo(this.editMap);
+                            document.getElementById('edit_lat').value = branch.latitude;
+                            document.getElementById('edit_lng').value = branch.longitude;
+                        } else {
+                            this.editMap.setView([6.9271, 79.8612], 13);
+                        }
+                    }, 100);
+                }
+            }))
+        });
+    </script>
+    </x-slot>
 </x-app-layout>
