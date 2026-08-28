@@ -30,7 +30,7 @@ class DeliveryController extends Controller
         }
 
         $pickupsQuery = clone $query;
-        $pickups = $pickupsQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created', 'cancelled'])->get();
+        $pickups = $pickupsQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created'])->get();
 
         $returnsQuery = clone $query;
         $returns = $returnsQuery->whereIn('status', ['ready', 'out_for_delivery', 'delivered'])
@@ -92,7 +92,11 @@ class DeliveryController extends Controller
     public function cancel(Request $request, DeliveryAppointment $appointment, WhatsAppService $waService)
     {
         $request->validate(['reason' => 'nullable|string|max:255']);
-        $appointment->update(['status' => 'cancelled']);
+        $appointment->update([
+            'status' => 'cancelled',
+            'cancel_reason' => $request->reason,
+            'cancelled_by' => auth()->id(),
+        ]);
 
         $waService->notifyBookingCancelled($appointment, $request->reason ?? 'Branch cancelled.');
 

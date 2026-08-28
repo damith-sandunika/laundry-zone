@@ -461,39 +461,114 @@
 
             <!-- Storage Location / Cubby -->
             @php
-                $receipts = collect();
-                if ($order->receipt_path) {
-                    $receipts->push($order->receipt_path);
-                }
-                if ($order->deliveryAppointment && $order->deliveryAppointment->receipt_path) {
-                    $receipts->push($order->deliveryAppointment->receipt_path);
-                }
-                $txReceipts = \App\Models\PaymentTransaction::where('order_id', $order->id)
+                $paymentTxs = \App\Models\PaymentTransaction::where('order_id', $order->id)
                     ->whereNotNull('receipt_path')
-                    ->pluck('receipt_path');
-                
-                foreach ($txReceipts as $tr) {
-                    $receipts->push($tr);
-                }
-                
-                $receipts = $receipts->unique()->values();
+                    ->orderBy('created_at', 'desc')
+                    ->get();
             @endphp
 
-            @if($receipts->count() > 0)
+            @if($paymentTxs->count() > 0)
             <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
-                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Payment Receipts</h3>
+                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Payment Slips</h3>
                 <div style="display:flex;flex-direction:column;gap:10px;">
-                    @foreach($receipts as $index => $path)
-                    <a href="{{ asset('storage/' . $path) }}" target="_blank" style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
-                        <div style="width:32px;height:32px;background:#eef2ff;color:#4f46e5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">
-                            <i class="fa-solid fa-file-invoice"></i>
+                    @foreach($paymentTxs as $index => $tx)
+                    <div x-data="{ openReviewModal: false }" style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="width:32px;height:32px;background:#eef2ff;color:#4f46e5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">
+                                    <i class="fa-solid fa-file-invoice"></i>
+                                </div>
+                                <div>
+                                    <p style="font-size:11.5px;font-weight:800;color:#0f172a;margin:0;">Rs.{{ number_format($tx->amount, 2) }}</p>
+                                    <p style="font-size:10px;color:#64748b;margin:0;font-weight:600;">{{ $tx->created_at->format('M d, h:i A') }}</p>
+                                </div>
+                            </div>
+                            
+                            @if($tx->status === 'pending')
+                                <span style="background:#fef9c3;color:#a16207;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fef08a;text-transform:uppercase;">Pending</span>
+                            @elseif($tx->status === 'completed')
+                                <span style="background:#f0fdf4;color:#16a34a;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #bbf7d0;text-transform:uppercase;">Approved</span>
+                            @elseif($tx->status === 'rejected')
+                                <span style="background:#fef2f2;color:#dc2626;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fecaca;text-transform:uppercase;">Rejected</span>
+                            @endif
                         </div>
-                        <div style="flex:1;">
-                            <p style="font-size:11px;font-weight:800;color:#0f172a;margin:0;">Receipt #{{ $index + 1 }}</p>
-                            <p style="font-size:10px;color:#64748b;margin:0;font-weight:600;">Click to view</p>
+                        
+                        <div style="display:flex;gap:6px;margin-top:4px;">
+                            <a href="{{ asset('storage/' . $tx->receipt_path) }}" target="_blank" style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">View Slip</a>
+                            
+                            @if($tx->status === 'pending')
+                                <button type="button" @click="openReviewModal = true" style="flex:1;padding:6px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">Review</button>
+                            @endif
                         </div>
-                        <i class="fa-solid fa-arrow-up-right-from-square" style="color:#94a3b8;font-size:12px;"></i>
-                    </a>
+                        
+                        @if($tx->status === 'rejected')
+                            <div style="font-size:10px;color:#b91c1c;background:#fef2f2;padding:6px;border-radius:4px;margin-top:2px;">
+                                <strong style="text-transform:uppercase;letter-spacing:0.05em;font-size:9px;">Reason:</strong><br>
+                                {{ $tx->reject_reason }}
+                            </div>
+                        @endif
+
+                        <!-- Review Modal -->
+                        <template x-teleport="body">
+                            <div x-show="openReviewModal" style="display:none;">
+                                <div style="position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:9999;">
+                                    <div @click.outside="openReviewModal = false" style="background:white;border-radius:16px;padding:20px;width:100%;max-width:350px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.1);">
+                                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                                            <h3 style="font-size:15px;font-weight:900;color:#0f172a;margin:0;">Review Slip</h3>
+                                            <button @click="openReviewModal = false" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:16px;line-height:1;">✕</button>
+                                        </div>
+                                        
+                                        <!-- Scrollable Image -->
+                                        <div style="width:100%;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;overflow-y:auto;overflow-x:hidden;max-height:220px;margin-bottom:12px;">
+                                            <img src="{{ asset('storage/' . $tx->receipt_path) }}" alt="Payment Slip" style="width:100%;height:auto;display:block;">
+                                        </div>
+                                        <div style="text-align:right;margin-bottom:12px;">
+                                            <a href="{{ asset('storage/' . $tx->receipt_path) }}" target="_blank" style="font-size:11px;color:#4f46e5;font-weight:700;text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab</a>
+                                        </div>
+
+                                        <div style="margin-bottom:12px;background:#f8fafc;padding:12px;border-radius:10px;border:1px solid #e2e8f0;font-size:12px;color:#334155;display:flex;justify-content:space-between;align-items:center;">
+                                            <div>
+                                                <span style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;display:block;">Amount Paid</span>
+                                                <span style="font-size:16px;font-weight:900;color:#0f172a;">Rs.{{ number_format($tx->amount, 2) }}</span>
+                                            </div>
+                                            <div style="text-align:right;">
+                                                <span style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;display:block;">Time</span>
+                                                <span style="font-size:11px;font-weight:700;color:#334155;">{{ $tx->created_at->format('M d, h:i A') }}</span>
+                                            </div>
+                                        </div>
+                                        
+                                        <div x-data="{ mode: 'review' }">
+                                            <!-- Action Buttons -->
+                                            <div x-show="mode === 'review'" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                                <form method="POST" action="{{ route('orders.payments.approve', [$order->id, $tx->id]) }}" style="margin:0;">
+                                                    @csrf
+                                                    <button type="submit" style="width:100%;height:100%;padding:12px;background:linear-gradient(to right, #16a34a, #15803d);color:white;border:none;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(22,163,74,0.3);display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                                                        <i class="fa-solid fa-check"></i> Approve
+                                                    </button>
+                                                </form>
+                                                <button type="button" @click="mode = 'reject'" style="width:100%;height:100%;padding:12px;background:linear-gradient(to right, #dc2626, #b91c1c);color:white;border:none;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.3);display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                                                    <i class="fa-solid fa-xmark"></i> Reject
+                                                </button>
+                                            </div>
+
+                                            <!-- Reject Form -->
+                                            <form x-cloak x-show="mode === 'reject'" method="POST" action="{{ route('orders.payments.reject', [$order->id, $tx->id]) }}" style="margin-top:8px;display:flex;flex-direction:column;gap:12px;background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
+                                                @csrf
+                                                <div>
+                                                    <label style="font-size:11px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;"><i class="fa-solid fa-circle-info"></i> Rejection Reason</label>
+                                                    <textarea name="reject_reason" required rows="2" placeholder="e.g. Unclear image..." style="width:100%;padding:10px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;color:#334155;outline:none;resize:none;" onfocus="this.style.borderColor='#dc2626'" onblur="this.style.borderColor='#cbd5e1'"></textarea>
+                                                </div>
+                                                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                                                    <button type="button" @click="mode = 'review'" style="width:100%;padding:12px;background:white;color:#64748b;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;">Cancel</button>
+                                                    <button type="submit" style="width:100%;padding:12px;background:#dc2626;color:white;border:none;border-radius:10px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.3);">Reject</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                     @endforeach
                 </div>
             </div>

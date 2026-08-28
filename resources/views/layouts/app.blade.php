@@ -173,60 +173,90 @@
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
             <!-- Topbar -->
-            <header class="h-16 px-4 lg:px-8 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 flex items-center justify-between sticky top-0 z-30 shadow-sm">
+            <header class="py-2 lg:py-0 px-3 lg:px-8 bg-white/70 backdrop-blur-xl border-b border-slate-200/60 flex flex-col lg:flex-row lg:items-center justify-between sticky top-0 z-30 shadow-sm gap-y-3 lg:gap-y-0 lg:h-16">
                 
-                <!-- Mobile Toggle -->
-                <button @click="sidebarOpen=!sidebarOpen" class="p-2 -ml-2 rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
-                </button>
+                <!-- Top Row (Mobile & Desktop) -->
+                <div class="flex items-center justify-between w-full lg:w-auto relative">
+                    <!-- Mobile Toggle -->
+                    <button @click="sidebarOpen=!sidebarOpen" class="p-1.5 sm:p-2 -ml-1 sm:-ml-2 rounded-lg text-slate-600 hover:bg-slate-100 lg:hidden transition-colors flex-shrink-0 z-10">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                    </button>
 
-                <!-- Center Title (Mobile) / Left Title (Desktop) -->
-                <div class="absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none lg:flex flex-col text-center lg:text-left pointer-events-none lg:pointer-events-auto">
-                    @php 
-                        $branchId = auth()->user()->branch_id ?? 1; 
-                        $branch = \App\Models\Branch::find($branchId); 
-                    @endphp
-                    <div class="flex items-center justify-center lg:justify-start gap-2">
-                        <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ $branch->name ?? '360 Laundry' }}</div>
-                        
-                        <!-- Global WhatsApp Status Indicator -->
-                        <div x-data="{ waStatus: 'checking' }" 
-                             x-init="fetch('{{ route('whatsapp.status') }}').then(r=>r.json()).then(d=>{ waStatus = d.connected ? 'connected' : 'disconnected' }).catch(()=>{ waStatus='disconnected' })"
-                             class="pointer-events-auto cursor-help"
-                             :title="waStatus === 'connected' ? 'WhatsApp Connected' : 'WhatsApp Disconnected'">
+                    <!-- Title (Centered on mobile, left on desktop) -->
+                    <div class="absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none flex flex-col text-center lg:text-left pointer-events-none lg:pointer-events-auto">
+                        @php 
+                            $branchId = auth()->user()->branch_id ?? 1; 
+                            $branch = \App\Models\Branch::find($branchId); 
+                        @endphp
+                        <div class="flex items-center justify-center lg:justify-start gap-2">
+                            @if(auth()->user()->role === 'rider')
+                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">Rider Dashboard</div>
+                            @else
+                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ $branch->name ?? '360 Laundry' }}</div>
+                            @endif
                             
-                            <!-- Connected Icon -->
-                            <svg x-show="waStatus === 'connected'" x-cloak class="w-[18px] h-[18px] text-green-500 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                            </svg>
-                            
-                            <!-- Disconnected Icon -->
-                            <svg x-show="waStatus === 'disconnected'" x-cloak class="w-[18px] h-[18px] text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
-                            </svg>
+                            <!-- Global WhatsApp Status Indicator -->
+                            <div x-data="{ waStatus: 'checking' }" 
+                                 x-init="fetch('{{ route('whatsapp.status') }}').then(r=>r.json()).then(d=>{ waStatus = d.connected ? 'connected' : 'disconnected' }).catch(()=>{ waStatus='disconnected' })"
+                                 class="pointer-events-auto cursor-help"
+                                 :title="waStatus === 'connected' ? 'WhatsApp Connected' : 'WhatsApp Disconnected'">
+                                
+                                <!-- Connected Icon -->
+                                <svg x-show="waStatus === 'connected'" x-cloak class="w-[16px] h-[16px] text-green-500 drop-shadow-sm" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                                </svg>
+                                
+                                <!-- Disconnected Icon -->
+                                <svg x-show="waStatus === 'disconnected'" x-cloak class="w-[16px] h-[16px] text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636" />
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">Laundry Management</div>
+                    </div>
+
+                    <!-- Profile Dropdown (Mobile only in this row, hidden on desktop) -->
+                    <div class="relative lg:hidden z-10" x-data="{ profileOpenMobile: false }">
+                        <button @click="profileOpenMobile = !profileOpenMobile" @click.away="profileOpenMobile = false" class="flex items-center p-1 rounded-full hover:bg-slate-100 transition-colors">
+                            <div class="w-[30px] h-[30px] rounded-full bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center text-[12px] font-black text-white shadow-md">
+                                {{ strtoupper(substr(auth()->user()->name ?? 'U', 0, 1)) }}
+                            </div>
+                        </button>
+                        <!-- Profile Menu -->
+                        <div x-show="profileOpenMobile" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100" class="absolute right-0 top-[42px] w-[180px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-[60] origin-top-right" x-cloak>
+                            <a href="{{ route('profile.edit') }}" class="flex items-center gap-2.5 px-4 py-3 text-[12.5px] font-bold text-slate-700 hover:bg-slate-50 border-b border-slate-100 transition-colors pointer-events-auto">
+                                <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                                Profile Settings
+                            </a>
+                            <form method="POST" action="{{ route('logout') }}" class="m-0 pointer-events-auto">
+                                @csrf
+                                <button type="submit" class="flex items-center gap-2.5 w-full px-4 py-3 text-[12.5px] font-bold text-red-600 hover:bg-red-50/50 hover:text-red-700 transition-colors text-left">
+                                    <svg class="w-[14px] h-[14px]" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                                    Sign Out
+                                </button>
+                            </form>
                         </div>
                     </div>
-                    <div class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">Laundry Management</div>
                 </div>
 
-                <!-- Right Side Actions -->
-                <div class="flex items-center gap-3 lg:gap-6 ml-auto">
-                    {{-- Order Quick Search Box (right corner, desktop) --}}
-                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'admin', 'staff', 'super_admin']))
-                    <div class="hidden lg:block relative" x-data="orderSearch()" @click.away="close()">
+                <!-- Right Side Actions (2nd Row on Mobile) -->
+                <div class="flex flex-row items-center w-full lg:w-auto justify-between lg:justify-end gap-1.5 sm:gap-3 lg:gap-6 ml-auto border-t border-slate-100/80 lg:border-none pt-2 lg:pt-0">
+                    {{-- Order Quick Search Box --}}
+                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'admin', 'staff', 'super_admin', 'workshop_admin']))
+                    <div class="block relative" x-data="orderSearch()" @click.away="close()">
                         <div class="relative">
-                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
+                            <svg class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path stroke-linecap="round" d="M21 21l-4.35-4.35"/></svg>
                             <input
                                 type="text"
                                 x-model="query"
                                 @input.debounce.300ms="fetchResults()"
                                 @focus="if(results.length > 0) open = true"
                                 @keydown.escape="close()"
-                                placeholder="Search orders..."
-                                class="w-52 pl-9 pr-4 py-2 text-[12.5px] font-semibold bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:bg-white focus:w-72 transition-all duration-300 placeholder-slate-400"
+                                placeholder="Search..."
+                                class="w-24 sm:w-52 pl-7 sm:pl-9 pr-2 sm:pr-4 py-1.5 sm:py-2 text-[11px] sm:text-[12.5px] font-semibold bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-blue-400 focus:bg-white focus:w-36 sm:focus:w-72 transition-all duration-300 placeholder-slate-400"
                             >
-                            <div x-show="loading" x-cloak class="absolute right-3 top-1/2 -translate-y-1/2">
-                                <svg class="w-3.5 h-3.5 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                            <div x-show="loading" x-cloak class="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2">
+                                <svg class="w-3 h-3 sm:w-3.5 sm:h-3.5 text-slate-400 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
                             </div>
                         </div>
 
@@ -277,8 +307,8 @@
                     <!-- Notifications Dropdown -->
                     <x-alert-system />
 
-                    <!-- Profile Dropdown -->
-                    <div class="relative">
+                    <!-- Profile Dropdown (Desktop) -->
+                    <div class="relative hidden lg:block">
                         <button @click="profileOpen = !profileOpen; notifOpen = false" @click.away="profileOpen = false" class="flex items-center p-1 rounded-full hover:bg-slate-100 transition-colors">
                             <div class="flex items-center gap-2.5">
                                 <div class="w-[34px] h-[34px] rounded-full bg-gradient-to-tr from-blue-700 to-indigo-500 flex items-center justify-center text-[13px] font-black text-white shadow-md">

@@ -13,7 +13,8 @@ class DeliveryAppointment extends Model
         'latitude', 'longitude', 'map_address', 'item_description',
         'pickup_scheduled_at', 'delivery_scheduled_at', 'status', 'notes', 'contact_phone',
         'order_id', 'picked_up_at', 'payment_method', 'payment_timing', 'delivery_preference',
-        'delivery_lat', 'delivery_lng', 'delivery_cost', 'receipt_path', 'cart_json'
+        'delivery_lat', 'delivery_lng', 'delivery_cost', 'receipt_path', 'cart_json',
+        'cancel_reason', 'cancelled_by'
     ];
 
     protected $casts = [
@@ -35,6 +36,16 @@ class DeliveryAppointment extends Model
     public function deliveryTasks(): HasMany
     {
         return $this->hasMany(DeliveryTask::class);
+    }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function cancelledBy()
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
     }
 
     public function order(): BelongsTo

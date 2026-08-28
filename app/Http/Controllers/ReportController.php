@@ -29,7 +29,8 @@ class ReportController extends Controller
         $branches = $isSuperAdmin ? Branch::where('is_active', true)->get() : collect();
 
         // 1. Sales Report
-        $salesQuery = Order::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        $salesQuery = Order::where('status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
         }
@@ -169,7 +170,8 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
 
-        $salesQuery = Order::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        $salesQuery = Order::where('status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
         }
@@ -279,6 +281,7 @@ class ReportController extends Controller
         $endDate = now()->toDateString();
 
         $orders = Order::where('branch_id', $branchId)
+            ->where('status', '!=', 'cancelled')
             ->whereBetween('created_at', [$session ? $session->opened_at : now()->startOfDay(), now()])
             ->with('customer')
             ->get();

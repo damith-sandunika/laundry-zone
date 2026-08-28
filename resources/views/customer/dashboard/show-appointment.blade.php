@@ -9,9 +9,15 @@
                 </div>
             </div>
             
-            <span class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
-                <i class="fa-solid fa-clock"></i> Pending Review
-            </span>
+            @if($appointment->status === 'cancelled')
+                <span class="bg-red-100 text-red-700 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2 border border-red-200">
+                    <i class="fa-solid fa-xmark"></i> Rejected
+                </span>
+            @else
+                <span class="bg-yellow-100 text-yellow-700 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-clock"></i> Pending Review
+                </span>
+            @endif
         </div>
     </x-slot>
 
@@ -25,8 +31,14 @@
                 <div class="space-y-4">
                     <div class="flex justify-between border-b border-slate-100 pb-3">
                         <span class="text-slate-500 font-bold text-sm">Status</span>
-                        <span class="text-slate-800 font-black text-sm uppercase">{{ ucfirst($appointment->status) }}</span>
+                        <span class="text-slate-800 font-black text-sm uppercase {{ $appointment->status === 'cancelled' ? 'text-red-600' : '' }}">{{ ucfirst($appointment->status) }}</span>
                     </div>
+                    @if($appointment->status === 'cancelled')
+                        <div class="flex justify-between border-b border-slate-100 pb-3">
+                            <span class="text-slate-500 font-bold text-sm">Rejection Reason</span>
+                            <span class="text-red-600 font-black text-sm">{{ $appointment->cancel_reason ?: 'No specific reason provided' }}</span>
+                        </div>
+                    @endif
                     <div class="flex justify-between border-b border-slate-100 pb-3">
                         <span class="text-slate-500 font-bold text-sm">Scheduled Pickup</span>
                         <span class="text-slate-800 font-black text-sm">{{ \Carbon\Carbon::parse($appointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</span>
@@ -41,19 +53,28 @@
                     </div>
                 </div>
 
-                <div class="mt-6 p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                    <h4 class="font-bold text-blue-800 text-sm mb-2"><i class="fa-solid fa-circle-info mr-1"></i> What happens next?</h4>
-                    <p class="text-xs text-blue-700 font-medium leading-relaxed">
-                        Your pickup request has been received. Our rider will arrive at the scheduled time to collect your laundry. 
-                        Once weighed and inspected at our branch, a final order will be generated and you will be able to make the payment here.
-                    </p>
-                </div>
-                
-                <div class="mt-6 text-center">
-                    <button type="button" onclick="alert('Payment will be activated once the laundry is weighed and the final bill is generated.');" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 transition-all text-sm w-full md:w-auto shadow-md">
-                        <i class="fa-solid fa-credit-card mr-2"></i> Pay Now (Total Pending)
-                    </button>
-                </div>
+                @if($appointment->status === 'cancelled')
+                    <div class="mt-6 p-4 bg-red-50 rounded-2xl border border-red-100">
+                        <h4 class="font-bold text-red-800 text-sm mb-2"><i class="fa-solid fa-circle-exclamation mr-1"></i> Order Rejected</h4>
+                        <p class="text-xs text-red-700 font-medium leading-relaxed">
+                            Unfortunately, we are unable to process your request at this time. If you have any questions, please contact our support team.
+                        </p>
+                    </div>
+                @else
+                    <div class="mt-6 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                        <h4 class="font-bold text-blue-800 text-sm mb-2"><i class="fa-solid fa-circle-info mr-1"></i> What happens next?</h4>
+                        <p class="text-xs text-blue-700 font-medium leading-relaxed">
+                            Your pickup request has been received. Our rider will arrive at the scheduled time to collect your laundry. 
+                            Once weighed and inspected at our branch, a final order will be generated and you will be able to make the payment here.
+                        </p>
+                    </div>
+                    
+                    <div class="mt-6 text-center">
+                        <button type="button" onclick="alert('Payment will be activated once the laundry is weighed and the final bill is generated.');" class="bg-slate-800 text-white px-8 py-3 rounded-xl font-bold hover:bg-slate-900 transition-all text-sm w-full md:w-auto shadow-md">
+                            <i class="fa-solid fa-credit-card mr-2"></i> Pay Now (Total Pending)
+                        </button>
+                    </div>
+                @endif
             </div>
 
             @if($appointment->item_description)

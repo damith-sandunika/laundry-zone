@@ -224,10 +224,10 @@ class DashboardController extends Controller
             ]);
         } else {
             // Bank transfer uploaded - mark payment_method as 'bank' so riders know not to collect COD
+            // But do NOT increment paid_amount until workshop admin approves the slip
             $order->update([
                 'receipt_path' => $receiptPath,
                 'payment_method' => 'bank',
-                'paid_amount' => $order->paid_amount + $request->amount,
             ]);
 
             \App\Models\PaymentTransaction::create([
@@ -235,18 +235,20 @@ class DashboardController extends Controller
                 'amount' => $request->amount,
                 'payment_method' => 'bank',
                 'receipt_path' => $request->hasFile('receipt_image') ? $receiptPath : null,
-                'status' => 'completed',
+                'status' => 'pending', // Set to pending for approval
             ]);
         }
         
         // Reload order to get fresh paid_amount
         $order->refresh();
         
-        // If paid amount >= total, mark as paid. Else partial.
+        // If paid amount >= total, mark as paid. Else partial. (or unpaid if 0)
         if ($order->paid_amount >= $order->total && $order->total > 0) {
             $order->update(['payment_status' => 'paid']);
         } elseif ($order->paid_amount > 0) {
             $order->update(['payment_status' => 'partial']);
+        } else {
+            $order->update(['payment_status' => 'unpaid']);
         }
 
         return redirect()->back()->with('success', 'Payment submitted successfully. Thank you!');

@@ -1,53 +1,72 @@
 @props(['playAudio' => true])
 
-@php
-    $alertTypes = [
-        'new_order' => ['label' => 'New Bookings', 'icon' => 'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z', 'color' => 'emerald'],
-        'branch_dispatch' => ['label' => 'Dispatched to Us', 'icon' => 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4', 'color' => 'amber'],
-        'workshop_return' => ['label' => 'Returned Items', 'icon' => 'M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6', 'color' => 'purple'],
-        'payment' => ['label' => 'Payments', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'color' => 'blue'],
-        'delivery_arrived' => ['label' => 'Deliveries', 'icon' => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', 'color' => 'indigo'],
-        'rider_task' => ['label' => 'Tasks', 'icon' => 'M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.242-4.243a8 8 0 1111.314 0z', 'color' => 'orange'],
-        'general' => ['label' => 'Alerts', 'icon' => 'M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9', 'color' => 'red']
-    ];
-@endphp
-
-<div x-data="alertSystem()" x-init="init()" class="relative mr-2 lg:mr-4 flex items-center gap-2">
+<div x-data="alertSystem()" x-init="init()" class="relative mr-1 sm:mr-2 lg:mr-4 flex items-center gap-1.5 sm:gap-2 flex-wrap">
     
-    @foreach($alertTypes as $typeKey => $t)
-    <div x-show="grouped['{{ $typeKey }}'] && grouped['{{ $typeKey }}'].length > 0" class="relative" x-cloak>
-        <button @click="openType = (openType === '{{ $typeKey }}' ? null : '{{ $typeKey }}')" @click.away="if(openType === '{{ $typeKey }}') openType = null" class="relative flex items-center justify-center w-10 h-10 rounded-xl bg-slate-50 border-2 border-slate-100 hover:bg-slate-100 hover:border-slate-200 transition-colors text-slate-500 hover:text-slate-700" title="{{ $t['label'] }}">
-            <!-- Flashing dot -->
-            <div class="absolute top-[6px] right-[6px] w-2.5 h-2.5 rounded-full bg-{{ $t['color'] }}-500 ring-2 ring-white animate-pulse"></div>
+    <template x-for="alert in alerts" :key="alert.id">
+        <span class="relative flex items-center justify-center w-7 h-7 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl border-2 shadow-sm transition-all animate-pulse cursor-pointer"
+           :class="'bg-' + alert.color + '-50/50 border-' + alert.color + '-200 text-' + alert.color + '-700 hover:bg-' + alert.color + '-100'"
+           @click="toggleCustomAlert(alert)">
             
-            <svg class="w-[20px] h-[20px] animate-pulse text-{{ $t['color'] }}-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="{{ $t['icon'] }}"/></svg>
-        </button>
+            <!-- Heavy Flashing background effect -->
+            <span class="absolute inset-0 rounded-lg sm:rounded-xl animate-ping opacity-30" :class="'bg-' + alert.color + '-500'"></span>
 
-        <!-- Dropdown -->
-        <div x-show="openType === '{{ $typeKey }}'" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100 translate-y-0" x-transition:leave-end="opacity-0 translate-y-2" class="absolute right-0 top-[52px] w-[300px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl overflow-hidden z-50 origin-top-right" x-cloak>
-            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-slate-50/50">
-                <span class="text-xs font-black text-slate-800">{{ $t['label'] }}</span>
-                <div class="flex items-center gap-2">
-                    <span class="text-[10px] font-bold text-{{ $t['color'] }}-700 bg-{{ $t['color'] }}-100 px-2 py-0.5 rounded-md" x-text="(grouped['{{ $typeKey }}'] ? grouped['{{ $typeKey }}'].length : 0) + ' New'"></span>
-                    <button @click="markAsRead('{{ $typeKey }}')" class="text-[10px] font-bold text-blue-600 hover:text-blue-800 underline">Mark as read</button>
+            <!-- Small notification dot -->
+            <div class="absolute -top-1 -right-1 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full ring-2 ring-white z-10 flex items-center justify-center text-[7px] sm:text-[8px] font-black text-white" :class="'bg-' + alert.color + '-600'" x-text="alert.count"></div>
+            
+            <!-- Icon -->
+            <svg class="w-3.5 h-3.5 sm:w-5 sm:h-5 relative z-10" :class="'text-' + alert.color + '-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+                <path stroke-linecap="round" stroke-linejoin="round" :d="alert.icon"/>
+            </svg>
+        </span>
+    </template>
+
+    <!-- Custom Centered Alert Box Container -->
+    <template x-teleport="body">
+        <div x-show="activeAlert" x-cloak class="fixed inset-0 z-[100] flex items-center justify-center pointer-events-none px-4">
+            
+            <!-- Overlay background -->
+            <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm pointer-events-auto"
+                 x-show="activeAlert"
+                 x-transition.opacity
+                 @click="activeAlert = null; clickedAlert = null">
+            </div>
+
+            <!-- The Modal Box -->
+            <div x-show="activeAlert"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-90 translate-y-4"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-90 translate-y-4"
+                 class="relative pointer-events-auto bg-white/95 backdrop-blur-2xl border shadow-2xl rounded-2xl p-5 flex flex-col items-center text-center w-[90%] max-w-[280px] z-10"
+                 @click.stop
+                 :class="'border-' + (activeAlert?.color || 'slate') + '-200'">
+                
+                <!-- Close Button -->
+                <button @click="activeAlert = null; clickedAlert = null" 
+                        class="absolute top-3 right-3 p-1.5 rounded-full text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+
+                <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 shadow-sm"
+                     :class="'bg-' + (activeAlert?.color || 'slate') + '-100 text-' + (activeAlert?.color || 'slate') + '-600'">
+                    <svg class="w-7 h-7 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" :d="activeAlert?.icon"/>
+                    </svg>
+                </div>
+                <h3 class="text-[15px] font-bold text-slate-800 mb-2 leading-tight" x-text="activeAlert?.label"></h3>
+                <div class="px-4 py-1.5 mt-1 rounded-lg" :class="'bg-' + (activeAlert?.color || 'slate') + '-50'">
+                    <p class="text-[14px] font-semibold text-slate-600">
+                        <span class="text-[18px] font-black" :class="'text-' + (activeAlert?.color || 'slate') + '-600'" x-text="activeAlert?.count"></span> 
+                        Pending
+                    </p>
                 </div>
             </div>
-            <div class="max-h-[280px] overflow-y-auto">
-                <template x-for="notif in (grouped['{{ $typeKey }}'] || [])" :key="notif.id">
-                    <a :href="notif.url" @click="markAsRead('{{ $typeKey }}')" class="flex gap-3 px-4 py-3 border-b border-slate-50 hover:bg-slate-50/50 transition-colors">
-                        <div class="mt-0.5 flex-shrink-0">
-                            <svg class="w-4 h-4 text-{{ $t['color'] }}-500" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        </div>
-                        <div>
-                            <p class="text-[11.5px] font-semibold text-slate-700 leading-snug mb-0.5" x-text="notif.message"></p>
-                            <span class="text-[9.5px] font-medium text-slate-400" x-text="notif.time"></span>
-                        </div>
-                    </a>
-                </template>
-            </div>
         </div>
-    </div>
-    @endforeach
+    </template>
 
     <!-- Audio Player (Base64 Beep) -->
     <audio id="notification-sound" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto" loop></audio>
@@ -56,15 +75,35 @@
 <script>
     function alertSystem() {
         return {
-            openType: null,
             count: 0,
-            grouped: {},
+            alerts: [],
             lastCount: 0,
+            activeAlert: null,
+            clickedAlert: null,
             init() {
                 this.check();
                 setInterval(() => {
                     this.check();
-                }, 10000); // Poll every 10 seconds
+                }, 45000);
+            },
+            showCustomAlert(alert) {
+                if (!this.clickedAlert) {
+                    this.activeAlert = alert;
+                }
+            },
+            hideCustomAlert() {
+                if (!this.clickedAlert) {
+                    this.activeAlert = null;
+                }
+            },
+            toggleCustomAlert(alert) {
+                if (this.clickedAlert && this.clickedAlert.id === alert.id) {
+                    this.clickedAlert = null;
+                    this.activeAlert = null;
+                } else {
+                    this.clickedAlert = alert;
+                    this.activeAlert = alert;
+                }
             },
             check() {
                 fetch('/notifications/check', {
@@ -75,9 +114,21 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    this.grouped = data.grouped || {};
-                    this.count = data.count;
+                    this.alerts = data.alerts || [];
+                    this.count = data.count || 0;
                     
+                    // Update active alert data if it's currently showing
+                    if (this.activeAlert) {
+                        const updated = this.alerts.find(a => a.id === this.activeAlert.id);
+                        if (updated) {
+                            this.activeAlert = updated;
+                            if (this.clickedAlert) this.clickedAlert = updated;
+                        } else {
+                            this.activeAlert = null;
+                            this.clickedAlert = null;
+                        }
+                    }
+
                     if (this.count > 0 && this.count > this.lastCount) {
                         this.playSound();
                     } else if (this.count === 0) {
@@ -85,44 +136,7 @@
                     }
                     this.lastCount = this.count;
                 })
-                .catch(error => console.error('Error fetching notifications:', error));
-            },
-            markAsRead(type) {
-                const url = type ? '/notifications/read?type=' + encodeURIComponent(type) : '/notifications/read';
-                fetch(url, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        if (type) {
-                            // Optimistically remove from grouped
-                            this.grouped[type] = [];
-                            // Recalculate count
-                            let newCount = 0;
-                            for (let t in this.grouped) {
-                                newCount += this.grouped[t].length;
-                            }
-                            this.count = newCount;
-                            this.lastCount = newCount;
-                        } else {
-                            this.count = 0;
-                            this.lastCount = 0;
-                            this.grouped = {};
-                        }
-                        
-                        this.openType = null;
-                        
-                        if (this.count === 0) {
-                            this.stopSound();
-                        }
-                    }
-                });
+                .catch(error => console.error('Error fetching alerts:', error));
             },
             playSound() {
                 const audio = document.getElementById('notification-sound');

@@ -50,14 +50,32 @@ class OrderController extends Controller
     {
         $branchId = auth()->user()->branch_id;
         $q = $request->input('q');
+        $status = $request->input('status');
+        $isOnline = $request->input('is_online');
+        $paymentReady = $request->input('payment_ready');
 
         $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop'])
             ->orderBy('created_at', 'desc');
 
-        if ($branchId) {
+        if ($branchId && auth()->user()->role !== 'super_admin') {
             $query->where(function($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
                   ->orWhere('workshop_id', $branchId);
+            });
+        }
+
+        if ($status) {
+            $query->where('status', $status);
+        }
+
+        if ($isOnline) {
+            $query->where('is_online_booking', true);
+        }
+
+        if ($paymentReady) {
+            $query->where(function($q) {
+                $q->where('payment_approved', true)
+                  ->orWhereRaw('paid_amount >= requested_advance AND requested_advance > 0');
             });
         }
 
@@ -602,5 +620,48 @@ class OrderController extends Controller
         });
 
         return redirect()->back()->with('success', 'Credit payment collected successfully!');
+    }
+
+    public function approvePayment(Request $request, Order $order, PaymentTransaction $transaction)
+    {
+        if ($transaction->order_id !== $order->id) {
+            abort(403);
+        }
+
+        \DB::transaction(function () use ($order, $transaction) {
+            $transaction->update([
+                'status' => 'completed',
+            ]);
+
+            $order->paid_amount += $transaction->amount;
+
+            if ($order->paid_amount >= $order->total && $order->total > 0) {
+                $order->payment_status = 'paid';
+            } elseif ($order->paid_amount > 0) {
+                $order->payment_status = 'partial';
+            }
+
+            $order->save();
+        });
+
+        return redirect()->back()->with('success', 'Payment slip approved successfully.');
+    }
+
+    public function rejectPayment(Request $request, Order $order, PaymentTransaction $transaction)
+    {
+        if ($transaction->order_id !== $order->id) {
+            abort(403);
+        }
+
+        $request->validate([
+            'reject_reason' => 'required|string|max:255',
+        ]);
+
+        $transaction->update([
+            'status' => 'rejected',
+            'reject_reason' => $request->reject_reason,
+        ]);
+
+        return redirect()->back()->with('success', 'Payment slip rejected successfully.');
     }
 }

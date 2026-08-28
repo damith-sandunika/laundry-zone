@@ -26,7 +26,11 @@
                                 <h4 class="font-bold text-slate-800">{{ $orderObj->order_number }}</h4>
                             </div>
                             <div class="text-right">
-                                <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 uppercase tracking-wider">
+                                <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider
+                                    {{ $orderObj->status === 'pending' ? 'bg-yellow-100 text-yellow-700' : '' }}
+                                    {{ $orderObj->status === 'cancelled' ? 'bg-red-100 text-red-700' : '' }}
+                                    {{ !in_array($orderObj->status, ['pending', 'cancelled']) ? 'bg-blue-100 text-blue-700' : '' }}
+                                ">
                                     {{ $orderObj->status === 'pending' ? 'Requested' : ucfirst($orderObj->status) }}
                                 </span>
                             </div>
@@ -37,9 +41,11 @@
                                 <p class="text-xs text-slate-500">Requested On</p>
                             </div>
                             <div class="flex items-center gap-2">
-                                <button type="button" onclick="alert('Payment will be activated once the laundry is weighed and the final bill is generated.');" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
-                                    Pay Now
-                                </button>
+                                @if($orderObj->status !== 'cancelled')
+                                    <button type="button" onclick="alert('Payment will be activated once the laundry is weighed and the final bill is generated.');" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                        Pay Now
+                                    </button>
+                                @endif
                                 <a href="{{ route('customer.appointments.show', $orderObj->id) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
                                     View
                                 </a>
@@ -86,10 +92,17 @@
                             </div>
                             
                             <div class="flex items-center gap-2">
-                                @if($orderObj->payment_status === 'unpaid' && !in_array($orderObj->status, ['delivered', 'cancelled']))
+                                @php
+                                    $hasPendingGlobally = \App\Models\PaymentTransaction::where('order_id', $orderObj->id)->where('status', 'pending')->exists();
+                                @endphp
+                                @if($orderObj->payment_status === 'unpaid' && !in_array($orderObj->status, ['delivered', 'cancelled']) && !$hasPendingGlobally)
                                     <a href="{{ route('customer.orders.show', $orderObj->id) }}" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                         Pay Now
                                     </a>
+                                @elseif($hasPendingGlobally)
+                                    <span class="text-[10px] font-bold text-yellow-700 bg-yellow-50 px-2 py-1.5 rounded-lg flex items-center gap-1 border border-yellow-200">
+                                        <i class="fa-solid fa-hourglass-half"></i> Pending
+                                    </span>
                                 @elseif($orderObj->payment_status === 'paid')
                                     <span class="text-xs font-bold text-green-600 bg-green-50 px-2 py-1.5 rounded-lg flex items-center gap-1 border border-green-100">
                                         <i class="fa-solid fa-check"></i> Paid

@@ -201,11 +201,10 @@
                             $orderProgress = '0%';
                             $orderStatusLevel = 1;
                             
-                            $isAwaitingPayment = !$order->payment_approved && ($order->requested_advance - $order->paid_amount) > 0;
+                            $hasStartedWashing = !in_array($order->status, ['pending', 'received', 'dispatched_to_workshop', 'received_at_workshop']);
+                            $isAwaitingPayment = !$order->payment_approved && ($order->requested_advance - $order->paid_amount) > 0 && !$hasStartedWashing;
+                            
                             $logicalStatus = $order->status;
-                            if ($isAwaitingPayment && $logicalStatus === 'processing') {
-                                $logicalStatus = 'dispatched_to_workshop'; // Downgrade logical status so timeline doesn't show "Working"
-                            }
                             
                             if ($isDelivery) {
                                 // 5-step timeline for delivery: Confirmed -> Rider Pick Up -> Working -> Delivering -> Completed

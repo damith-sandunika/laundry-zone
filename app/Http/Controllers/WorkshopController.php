@@ -574,6 +574,12 @@ class WorkshopController extends Controller
             ->orderByRaw('COALESCE(received_at_branch_at, returned_at) DESC')
             ->paginate(20);
 
-        return view('workshop.history', compact('dispatches'));
+        $cancelledBookings = \App\Models\DeliveryAppointment::with(['customer', 'cancelledBy'])
+            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('branch_id', $user->branch_id))
+            ->where('status', 'cancelled')
+            ->orderByDesc('updated_at')
+            ->get();
+
+        return view('workshop.history', compact('dispatches', 'cancelledBookings'));
     }
 }

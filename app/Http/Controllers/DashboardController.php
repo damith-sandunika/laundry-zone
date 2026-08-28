@@ -29,6 +29,12 @@ class DashboardController extends Controller
             return redirect()->route('rider.dashboard');
         }
 
+        // Redirect workshop admins to workshop dashboard
+        if ($user->role === 'workshop_admin') {
+            return redirect()->route('workshop.dashboard');
+        }
+
+
         $branchId = $user->branch_id;
         $isSuperAdmin = $user->role === 'super_admin';
 

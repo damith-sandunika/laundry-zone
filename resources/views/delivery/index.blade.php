@@ -21,6 +21,14 @@
         openCashModal(apptId, orderNumber, total, paid, pending) {
             this.cashData = { id: apptId, orderNumber, total, paid, pending };
             this.showCashModal = true;
+        },
+        showRejectModal: false,
+        rejectApptId: null,
+        rejectReason: '',
+        openRejectModal(apptId) {
+            this.rejectApptId = apptId;
+            this.rejectReason = '';
+            this.showRejectModal = true;
         }
     }">
         <!-- STAT CARDS / TABS -->
@@ -74,9 +82,9 @@
                     </thead>
                     <tbody>
                         @forelse($pickups as $appt)
-                            <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                            <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;{{ $appt->status === 'cancelled' ? 'opacity:0.7;background:#fff5f5;' : '' }}" onmouseover="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '0.85' }}'" onmouseout="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '1' }}'">
                                 <td style="padding:12px 20px;">
-                                    <div style="font-size:13px;font-weight:800;color:#1d4ed8;">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</div>
+                                    <div style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }}">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</div>
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
                                         <span style="font-weight:700;color:#0f172a;">{{ $appt->customer->name ?? 'Unknown' }}</span>
                                         <span style="font-size:11px;color:#64748b;font-weight:600;">{{ $appt->contact_phone }}</span>
@@ -116,6 +124,12 @@
                                             PickMe/Flash (Pickup)
                                         </div>
                                     @endif
+                                    @if($appt->status === 'cancelled' && $appt->cancel_reason)
+                                        <div style="margin-top:4px;font-size:11px;font-weight:700;color:#dc2626;background:#fef2f2;padding:4px;border-radius:4px;border:1px solid #fecaca;">
+                                            Reason: {{ $appt->cancel_reason }}<br>
+                                            <span style="font-size:9.5px;color:#991b1b;opacity:0.8;">Rejected by: {{ $appt->cancelledBy->name ?? 'System' }}</span>
+                                        </div>
+                                    @endif
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
@@ -126,6 +140,9 @@
                                                     Confirm
                                                 </button>
                                             </form>
+                                            <button type="button" @click="openRejectModal({{ $appt->id }})" style="padding:5px 10px;background:#dc2626;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(220,38,38,0.3);">
+                                                Reject
+                                            </button>
                                         @elseif($appt->status === 'confirmed')
                                             <div x-data="{ deliveryMethod: 'in_house' }" style="display:flex;gap:10px;align-items:center;">
                                                 <form method="POST" action="{{ route('delivery.assignRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
@@ -348,6 +365,37 @@
                             <button type="button" @click="showCashModal = false" style="flex:1;padding:14px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:14px;cursor:pointer;">Cancel</button>
                             <button type="submit" style="flex:1;padding:14px;background:#f59e0b;color:white;font-size:14px;font-weight:900;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 12px rgba(245,158,11,0.3);">
                                 Confirm Cash
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- ── Reject Modal ── -->
+        <div x-cloak x-show="showRejectModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
+            <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:400px;overflow:hidden;" @click.away="showRejectModal = false">
+                <div style="padding:24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#fef2f2;">
+                    <div>
+                        <h3 style="font-size:18px;font-weight:900;color:#dc2626;margin:0;">Reject Order</h3>
+                        <p style="font-size:12px;color:#b91c1c;margin:2px 0 0;font-weight:600;">Please provide a reason for rejecting this order.</p>
+                    </div>
+                    <button @click="showRejectModal = false" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:20px;">✕</button>
+                </div>
+                
+                <form :action="`/delivery/${rejectApptId}/cancel`" method="POST" style="margin:0;">
+                    @csrf
+                    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+                        
+                        <div>
+                            <label style="display:block;font-size:11.5px;font-weight:800;color:#334155;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Rejection Reason</label>
+                            <input type="text" name="reason" x-model="rejectReason" required placeholder="E.g. We are full for today" style="width:100%;padding:14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:600;color:#0f172a;outline:none;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#e2e8f0'">
+                        </div>
+
+                        <div style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="button" @click="showRejectModal = false" style="flex:1;padding:14px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:14px;cursor:pointer;">Cancel</button>
+                            <button type="submit" style="flex:1;padding:14px;background:#ef4444;color:white;font-size:14px;font-weight:900;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+                                Confirm Reject
                             </button>
                         </div>
                     </div>

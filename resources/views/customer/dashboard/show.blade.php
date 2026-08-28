@@ -1,4 +1,7 @@
 <x-customer-layout>
+    @php
+        $hasPendingSlipGlobally = \App\Models\PaymentTransaction::where('order_id', $order->id)->where('status', 'pending')->exists();
+    @endphp
     <x-slot name="header">
         <div class="flex justify-between items-center flex-wrap gap-3">
             <div class="flex items-center gap-3">
@@ -9,9 +12,11 @@
                 </div>
             </div>
             @if($order->payment_status === 'unpaid' || $order->payment_status === 'partial')
+                @if(!$hasPendingSlipGlobally)
                 <button type="button" x-data @click="$dispatch('open-payment-modal')" class="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-slate-900 hover:shadow-lg transition-all text-sm flex items-center gap-2">
                     <i class="fa-solid fa-credit-card"></i> Pay Now
                 </button>
+                @endif
             @else
                 <span class="bg-green-100 text-green-700 px-4 py-2 rounded-xl font-bold text-sm flex items-center gap-2">
                     <i class="fa-solid fa-circle-check"></i> Paid
@@ -136,26 +141,71 @@
     @endif
 
     <!-- Action Required: Payment Banner -->
-    @if(!$order->payment_approved && ($order->requested_advance - $order->paid_amount) > 0)
-    <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-lg p-8 mb-6 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mt-20 -mr-20 pointer-events-none"></div>
-        <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -mb-10 -ml-10 pointer-events-none"></div>
+    @php
+        $latestSlip = \App\Models\PaymentTransaction::where('order_id', $order->id)->whereNotNull('receipt_path')->latest()->first();
+        $isLatestSlipRejected = $latestSlip && $latestSlip->status === 'rejected';
         
-        <div class="relative z-10 flex-1 text-center md:text-left">
-            <h3 class="text-2xl font-black mb-2"><i class="fa-solid fa-circle-exclamation mr-2 text-yellow-300 animate-pulse"></i> Action Required: Advance Payment</h3>
-            <p class="text-blue-100 font-medium text-sm md:text-base max-w-2xl">
-                We have inspected your laundry! To start the washing process, please pay the requested advance amount of 
-                <strong class="text-white bg-blue-800/50 px-2 py-1 rounded-lg">LKR {{ number_format($order->requested_advance - $order->paid_amount, 2) }}</strong>. 
-                Once paid, our workshop will immediately begin processing your order.
-            </p>
+        $hasStartedWashing = !in_array($order->status, ['pending', 'received', 'dispatched_to_workshop', 'received_at_workshop']);
+    @endphp
+
+    @if(!$hasStartedWashing)
+        @if($isLatestSlipRejected)
+        <div class="bg-red-50 rounded-3xl border border-red-200 p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-red-800 text-center sm:text-left">
+                <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-3xl shrink-0">
+                    <i class="fa-solid fa-circle-xmark text-red-500"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-lg mb-1">Payment Slip Rejected</h3>
+                    <p class="font-bold text-sm text-red-700 opacity-90 max-w-xl">
+                        Unfortunately, your recent payment slip was not accepted by our team.
+                    </p>
+                    <div class="mt-3 bg-white p-3 rounded-xl border border-red-100 text-sm font-bold shadow-sm">
+                        <span class="text-red-900 uppercase text-[10px] tracking-wider block mb-1">Reason for Rejection:</span>
+                        {{ $latestSlip->reject_reason ?? 'No reason provided' }}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="relative z-10 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
+                <button type="button" x-data @click="$dispatch('open-payment-modal')" class="w-full sm:w-auto bg-red-500 text-white hover:bg-red-600 px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Upload New Slip
+                </button>
+            </div>
         </div>
-        
-        <div class="relative z-10 shrink-0 w-full md:w-auto">
-            <button type="button" x-data @click="$dispatch('open-payment-modal')" class="w-full md:w-auto bg-yellow-400 text-yellow-900 hover:bg-yellow-300 px-8 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-lg flex items-center justify-center gap-3">
-                <i class="fa-solid fa-bolt"></i> PAY NOW
-            </button>
+        @elseif(!$order->payment_approved && ($order->requested_advance - $order->paid_amount) > 0 && !$hasPendingSlipGlobally)
+        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-lg p-8 mb-6 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+            <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mt-20 -mr-20 pointer-events-none"></div>
+            <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -mb-10 -ml-10 pointer-events-none"></div>
+            
+            <div class="relative z-10 text-center md:text-left">
+                <h3 class="text-2xl font-black mb-2"><i class="fa-solid fa-circle-exclamation mr-2 text-yellow-300 animate-pulse"></i> Action Required: Advance Payment</h3>
+                <p class="text-blue-100 font-medium text-sm md:text-base max-w-2xl">
+                    We have inspected your laundry! To start the washing process, please pay the requested advance amount of 
+                    <strong class="text-white bg-blue-800/50 px-2 py-1 rounded-lg">LKR {{ number_format($order->requested_advance - $order->paid_amount, 2) }}</strong>. 
+                    Once paid, our workshop will immediately begin processing your order.
+                </p>
+            </div>
+            
+            <div class="relative z-10 shrink-0 w-full md:w-auto">
+                <button type="button" x-data @click="$dispatch('open-payment-modal')" class="w-full md:w-auto bg-yellow-400 text-yellow-900 hover:bg-yellow-300 px-8 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-lg flex items-center justify-center gap-3">
+                    <i class="fa-solid fa-bolt"></i> PAY NOW
+                </button>
+            </div>
         </div>
-    </div>
+        @elseif($hasPendingSlipGlobally)
+        <div class="bg-yellow-50 rounded-3xl border border-yellow-200 p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <div class="flex items-center gap-4 text-yellow-800">
+                <div class="w-12 h-12 rounded-full bg-yellow-200 flex items-center justify-center text-xl shrink-0">
+                    <i class="fa-solid fa-hourglass-half fa-spin"></i>
+                </div>
+                <div>
+                    <h3 class="font-black text-lg">Payment Under Review</h3>
+                    <p class="font-bold text-sm text-yellow-700 opacity-90 mt-1">Your payment slip has been submitted and is currently being reviewed by our workshop admins.</p>
+                </div>
+            </div>
+        </div>
+        @endif
     @endif
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -227,9 +277,11 @@
                                     <span class="block font-black text-blue-900">Balance to Pay</span>
                                     <span class="font-black text-2xl text-blue-700">LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
                                 </div>
+                                @if(!$hasPendingSlipGlobally)
                                 <button type="button" x-data @click="$dispatch('open-payment-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors text-sm flex items-center justify-center gap-2 w-full sm:w-auto">
                                     <i class="fa-solid fa-credit-card"></i> Pay Now
                                 </button>
+                                @endif
                             </div>
                         @else
                             <div class="pt-3 border-t border-slate-200 flex justify-between items-center mt-2 bg-green-50 -mx-6 px-6 py-3 border-b border-green-100">
@@ -239,17 +291,49 @@
                         @endif
                         
                         @php
-                            $slips = \App\Models\PaymentTransaction::where('order_id', $order->id)->whereNotNull('receipt_path')->get();
+                            $slips = \App\Models\PaymentTransaction::where('order_id', $order->id)->whereNotNull('receipt_path')->orderBy('created_at', 'desc')->get();
+                            $hasPendingSlip = $slips->where('status', 'pending')->count() > 0;
                         @endphp
                         @if($slips->count() > 0)
-                            <div class="mt-4 pt-4 border-t border-slate-200 space-y-2">
-                                <span class="text-sm font-bold text-slate-500 mb-1 block">Payment Receipts</span>
+                            <div class="mt-4 pt-4 border-t border-slate-200 space-y-3">
+                                <span class="text-sm font-black text-slate-800 mb-1 block">Payment Slips Uploaded</span>
+                                
+                                @if($hasPendingSlip)
+                                    <div class="bg-yellow-50 text-yellow-700 p-3 rounded-xl border border-yellow-200 text-xs font-bold flex items-center gap-2">
+                                        <i class="fa-solid fa-hourglass-half text-yellow-500 text-lg"></i>
+                                        <span>Your uploaded bank slip is currently being reviewed by our workshop admin. Please wait until it is approved. The paid amount will be updated shortly!</span>
+                                    </div>
+                                @endif
+
                                 @foreach($slips as $slip)
-                                    <div class="flex justify-between items-center bg-slate-50 p-2 rounded-lg border border-slate-100">
-                                        <span class="text-xs font-bold text-slate-600">LKR {{ number_format($slip->amount, 2) }} <span class="text-[10px] text-slate-400 font-normal ml-1">{{ $slip->created_at->format('M d, g:i A') }}</span></span>
-                                        <a href="{{ asset('storage/' . $slip->receipt_path) }}" target="_blank" class="px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-xs font-bold hover:bg-blue-200 transition-colors">
-                                            <i class="fa-solid fa-file-invoice mr-1"></i> View Slip
-                                        </a>
+                                    <div class="bg-white p-3 rounded-xl border {{ $slip->status === 'rejected' ? 'border-red-200' : ($slip->status === 'pending' ? 'border-yellow-200' : 'border-green-200') }} shadow-sm">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <span class="text-sm font-black text-slate-800">LKR {{ number_format($slip->amount, 2) }}</span>
+                                                <span class="text-[10px] text-slate-400 font-bold block">{{ $slip->created_at->format('M d, Y - g:i A') }}</span>
+                                            </div>
+                                            <div class="flex flex-col items-end gap-2">
+                                                @if($slip->status === 'pending')
+                                                    <span class="bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide">Pending Review</span>
+                                                @elseif($slip->status === 'completed')
+                                                    <span class="bg-green-100 text-green-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide">Approved</span>
+                                                @elseif($slip->status === 'rejected')
+                                                    <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wide">Rejected</span>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        
+                                        @if($slip->status === 'rejected' && $slip->reject_reason)
+                                            <div class="bg-red-50 text-red-800 p-2 rounded-lg text-xs font-bold mb-2 border border-red-100">
+                                                <i class="fa-solid fa-circle-exclamation mr-1"></i> Reason: {{ $slip->reject_reason }}
+                                            </div>
+                                        @endif
+                                        
+                                        <div class="mt-2 text-right">
+                                            <a href="{{ asset('storage/' . $slip->receipt_path) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors">
+                                                <i class="fa-solid fa-file-invoice mr-1.5"></i> View Slip
+                                            </a>
+                                        </div>
                                     </div>
                                 @endforeach
                             </div>
