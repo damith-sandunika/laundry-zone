@@ -39,8 +39,21 @@ class CustomerSiteController extends Controller
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
         $minimumOrderLimit = \App\Models\Setting::get('minimum_delivery_cost', 0);
+        
+        // Fetch delivery ranges for distance cost calculation
+        $deliveryRanges = \App\Models\DeliveryRange::orderBy('min_distance_km')->get();
+        
+        // Fetch all active workshops for map markers & distance calculation
+        $workshops = \App\Models\Branch::where('is_active', true)->where('type', 'workshop')->get();
+        // Fallback to first branch if no workshop exists
+        if ($workshops->isEmpty()) {
+            $fallback = \App\Models\Branch::where('is_active', true)->first();
+            if ($fallback) $workshops = collect([$fallback]);
+        }
+        // For backward compat: single workshop variable pointing to first
+        $workshop = $workshops->first();
 
-        return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods', 'minimumOrderLimit'));
+        return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods', 'minimumOrderLimit', 'deliveryRanges', 'workshop', 'workshops'));
     }
 
     public function store(Request $request, WhatsAppService $waService)

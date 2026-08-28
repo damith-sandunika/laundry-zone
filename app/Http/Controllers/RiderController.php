@@ -204,7 +204,7 @@ class RiderController extends Controller
         }
 
         $order = Order::create([
-            'order_number' => Order::generateOrderNumber(),
+            'order_number' => Order::generateOrderNumber($branchId, true),
             'branch_id' => $branchId,
             'customer_id' => $appointment->customer_id,
             'created_by' => auth()->id(),

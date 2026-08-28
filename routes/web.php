@@ -130,7 +130,7 @@ Route::middleware(['auth'])->group(function () {
 
 
 
-    Route::resource('payment_methods', \App\Http\Controllers\PaymentMethodController::class)->only(['store', 'update', 'destroy']);
+    // Note: payment_methods are managed via PaymentSettingsController (settings page)
 
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
 
@@ -162,6 +162,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/dispatches/{dispatch}/receive', [WorkshopController::class, 'receive'])->name('receive');
         Route::post('/dispatches/{dispatch}/start-processing', [WorkshopController::class, 'startProcessing'])->name('startProcessing');
         Route::post('/dispatches/{dispatch}/complete', [WorkshopController::class, 'complete'])->name('complete');
+        Route::post('/dispatches/{dispatch}/handover', [WorkshopController::class, 'handover'])->name('handover');
         Route::post('/dispatches/{dispatch}/return', [WorkshopController::class, 'returnToBranch'])->name('return');
         Route::get('/dispatches/{dispatch}/finalize-bill', [WorkshopController::class, 'finalizeBill'])->name('finalizeBill');
         Route::post('/dispatches/{dispatch}/delivery', [WorkshopController::class, 'dispatchDelivery'])->name('dispatchDelivery');
@@ -188,12 +189,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
     });
 
-    // ─── ADMIN ONLY ROUTES ───
+    // ─── ADMIN + WORKSHOP_ADMIN SETTINGS ───
     Route::middleware(['admin'])->group(function () {
-        Route::resource('branches', BranchController::class)->except(['create', 'show', 'edit']);
-
-        Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
-
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
 
@@ -204,6 +201,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/settings/whatsapp/status', [SettingsController::class, 'whatsappStatus'])->name('whatsapp.status');
         Route::post('/settings/whatsapp/logout', [SettingsController::class, 'whatsappLogout'])->name('whatsapp.logout');
         Route::post('/settings/whatsapp/reset', [SettingsController::class, 'whatsappReset'])->name('whatsapp.reset');
+
+        Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
+        Route::put('/settings/cubbies/{cubby}', [SettingsController::class, 'updateCubby'])->name('settings.updateCubby');
+        Route::delete('/settings/cubbies/{cubby}', [SettingsController::class, 'destroyCubby'])->name('settings.destroyCubby');
+
+        Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
+        Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
 
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
@@ -242,9 +246,6 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
         Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
 
-        Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
-        Route::resource('staff', StaffController::class);
-
         // HR Routes
         Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->name('hr.dashboard');
         Route::post('/hr/{staff}/attendance', [HRController::class, 'storeAttendance'])->name('hr.attendance.store');
@@ -252,6 +253,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
         Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
+
+        Route::resource('branches', BranchController::class)->except(['create', 'show', 'edit']);
+        Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
+        Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
+        Route::resource('staff', StaffController::class);
     });
 });
 

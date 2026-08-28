@@ -39,7 +39,7 @@
                  x-transition:leave="transition ease-in duration-200"
                  x-transition:leave-start="opacity-100 scale-100 translate-y-0"
                  x-transition:leave-end="opacity-0 scale-90 translate-y-4"
-                 class="relative pointer-events-auto bg-white/95 backdrop-blur-2xl border shadow-2xl rounded-2xl p-5 flex flex-col items-center text-center w-[90%] max-w-[280px] z-10"
+                 class="relative pointer-events-auto bg-white/95 backdrop-blur-2xl border shadow-2xl rounded-2xl p-5 flex flex-col items-center text-center w-[92%] max-w-[320px] z-10"
                  @click.stop
                  :class="'border-' + (activeAlert?.color || 'slate') + '-200'">
                 
@@ -51,18 +51,29 @@
                     </svg>
                 </button>
 
-                <div class="w-14 h-14 rounded-full flex items-center justify-center mb-4 shadow-sm"
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mb-3 shadow-sm"
                      :class="'bg-' + (activeAlert?.color || 'slate') + '-100 text-' + (activeAlert?.color || 'slate') + '-600'">
-                    <svg class="w-7 h-7 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <svg class="w-6 h-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" :d="activeAlert?.icon"/>
                     </svg>
                 </div>
-                <h3 class="text-[15px] font-bold text-slate-800 mb-2 leading-tight" x-text="activeAlert?.label"></h3>
-                <div class="px-4 py-1.5 mt-1 rounded-lg" :class="'bg-' + (activeAlert?.color || 'slate') + '-50'">
-                    <p class="text-[14px] font-semibold text-slate-600">
-                        <span class="text-[18px] font-black" :class="'text-' + (activeAlert?.color || 'slate') + '-600'" x-text="activeAlert?.count"></span> 
+                <h3 class="text-[13px] font-bold text-slate-800 mb-3 leading-tight px-2" x-text="activeAlert?.label"></h3>
+
+                <!-- Count Badge -->
+                <div class="px-4 py-1.5 rounded-lg mb-3 w-full" :class="'bg-' + (activeAlert?.color || 'slate') + '-50'">
+                    <p class="text-[13px] font-semibold text-slate-600">
+                        <span class="text-[20px] font-black" :class="'text-' + (activeAlert?.color || 'slate') + '-600'" x-text="activeAlert?.count"></span>
                         Pending
                     </p>
+                </div>
+
+                <!-- Order Numbers List -->
+                <div x-show="activeAlert?.order_numbers?.length > 0"
+                     class="w-full mt-2 rounded-xl border overflow-hidden"
+                     :class="'border-' + (activeAlert?.color || 'slate') + '-100'">
+                    <div style="max-height:160px;overflow-y:auto;text-align:left;"
+                         x-html="renderOrderNumbers(activeAlert)">
+                    </div>
                 </div>
             </div>
         </div>
@@ -85,6 +96,16 @@
                 setInterval(() => {
                     this.check();
                 }, 45000);
+            },
+            renderOrderNumbers(alert) {
+                if (!alert || !alert.order_numbers || alert.order_numbers.length === 0) return '';
+                return alert.order_numbers.map((n, i) => {
+                    let bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;background:${bg};">
+                                <span style="font-size:11px;color:#94a3b8;min-width:18px;text-align:right;">${i+1}.</span>
+                                <span style="font-size:12px;font-weight:800;color:#1e40af;letter-spacing:0.03em;">${n}</span>
+                            </div>`;
+                }).join('');
             },
             showCustomAlert(alert) {
                 if (!this.clickedAlert) {

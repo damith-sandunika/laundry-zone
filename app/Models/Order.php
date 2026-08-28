@@ -105,11 +105,17 @@ class Order extends Model
     }
 
     // Generate unique order number: U0001, U0002, ...
-    public static function generateOrderNumber(): string
+    public static function generateOrderNumber(int $branchId, bool $isDelivery = false): string
     {
-        $last = self::withoutGlobalScope(BranchScope::class)->max('id') ?? 0;
+        // Count existing orders for this branch (without global scope) for sequential numbering
+        $count = self::withoutGlobalScope(BranchScope::class)
+            ->where('branch_id', $branchId)
+            ->count() + 1;
 
-        return 'U'.str_pad($last + 1, 4, '0', STR_PAD_LEFT);
+        $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
+        $sequence = str_pad($count, 7, '0', STR_PAD_LEFT);
+
+        return "{$prefix}-L-{$sequence}";
     }
 
     public function isPackageOrder()

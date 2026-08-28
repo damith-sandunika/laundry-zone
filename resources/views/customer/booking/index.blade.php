@@ -29,7 +29,7 @@
         .radio-dot { transform: scale(0); transition: transform 0.2s ease-in-out; }
     </style>
 
-    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }})" x-init="initData()">
+    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }}, {{ Js::from($deliveryRanges) }}, {{ Js::from($workshops) }})" x-init="initData()">
         
         <!-- Wizard Progress Bar -->
         <div class="mb-8">
@@ -289,13 +289,24 @@
                         </div>
                         
                         <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none">
-                                <div class="text-4xl text-blue-600 drop-shadow-xl pb-8"><i class="fa-solid fa-location-dot"></i></div>
+                            <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none flex flex-col items-center justify-end pb-4">
+                                <div x-show="!isOutOfRange" class="bg-slate-900 text-white text-xs font-black px-3 py-1.5 rounded-lg mb-1 shadow-lg whitespace-nowrap border border-slate-700 animate-fade-in flex items-center gap-1.5">
+                                    <i class="fa-solid fa-motorcycle text-amber-400"></i> Fee: LKR <span x-text="estimatedDeliveryFee"></span>
+                                </div>
+                                <div x-show="isOutOfRange" x-cloak class="bg-red-600 text-white text-xs font-black px-3 py-1.5 rounded-lg mb-1 shadow-lg whitespace-nowrap border border-red-700 animate-pulse flex items-center gap-1.5">
+                                    <i class="fa-solid fa-triangle-exclamation text-yellow-300"></i> Out of range
+                                </div>
+                                <div class="text-4xl text-blue-600 drop-shadow-xl" :class="isOutOfRange ? 'text-red-500' : 'text-blue-600'"><i class="fa-solid fa-location-dot"></i></div>
                             </div>
                             <div id="pickup_map" class="map-container"></div>
                         </div>
                         <input type="hidden" name="latitude" id="pickup_lat">
                         <input type="hidden" name="longitude" id="pickup_lng">
+                        <!-- Nearest Workshop Banner -->
+                        <div x-show="nearestWorkshop" class="mt-2 flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-100 rounded-xl px-3 py-2">
+                            <i class="fa-solid fa-circle-check text-blue-500"></i>
+                            Your order will be handled by: <span class="text-blue-900" x-text="nearestWorkshop ? nearestWorkshop.name : ''"></span>
+                        </div>
                     </div>
 
                     <div>
@@ -308,7 +319,7 @@
                     <button type="button" @click="step = 2" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
                         <i class="fa-solid fa-arrow-left"></i> Back
                     </button>
-                    <button type="button" @click="goToStep(4)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
+                    <button type="button" @click="goToStep(4)" :disabled="isOutOfRange" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
                         Next Step <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
@@ -362,8 +373,14 @@
                                 <div class="mb-4">
                                     <label class="block text-sm font-bold text-slate-700 mb-2">Pin delivery location on map</label>
                                     <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
-                                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none">
-                                            <div class="text-4xl text-blue-600 drop-shadow-xl pb-8"><i class="fa-solid fa-location-dot"></i></div>
+                                        <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[400] pointer-events-none flex flex-col items-center justify-end pb-4">
+                                            <div x-show="!isOutOfRange" class="bg-slate-900 text-white text-xs font-black px-3 py-1.5 rounded-lg mb-1 shadow-lg whitespace-nowrap border border-slate-700 flex items-center gap-1.5">
+                                                <i class="fa-solid fa-motorcycle text-amber-400"></i> Fee: LKR <span x-text="estimatedDeliveryFee"></span>
+                                            </div>
+                                            <div x-show="isOutOfRange" x-cloak class="bg-red-600 text-white text-xs font-black px-3 py-1.5 rounded-lg mb-1 shadow-lg whitespace-nowrap border border-red-700 animate-pulse flex items-center gap-1.5">
+                                                <i class="fa-solid fa-triangle-exclamation text-yellow-300"></i> Out of range
+                                            </div>
+                                            <div class="text-4xl drop-shadow-xl" :class="isOutOfRange ? 'text-red-500' : 'text-emerald-500'"><i class="fa-solid fa-location-dot"></i></div>
                                         </div>
                                         <div id="delivery_map" class="map-container"></div>
                                     </div>
@@ -410,7 +427,7 @@
                     <button type="button" @click="step = 3" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
                         <i class="fa-solid fa-arrow-left"></i> Back
                     </button>
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-xl font-black transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-lg">
+                    <button type="submit" :disabled="isOutOfRange" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-black transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-lg">
                         Confirm Booking <i class="fa-solid fa-check-circle"></i>
                     </button>
                 </div>
@@ -420,7 +437,7 @@
 
     <x-slot name="scripts">
         <script>
-            function bookingWizard(categories, isAuth, customer, minLimit) {
+            function bookingWizard(categories, isAuth, customer, minLimit, deliveryRanges, workshopsArray) {
                 return {
                     step: 1,
                     categories: categories,
@@ -451,9 +468,13 @@
                     deliveryLat: null,
                     deliveryLng: null,
                     estimatedDeliveryFee: 0,
-                    baseLat: 6.9322889, // Main branch lat
-                    baseLng: 79.8567772, // Main branch lng
-                    ratePerKm: 100, // LKR 100 per km
+                    deliveryRanges: deliveryRanges || [],
+                    // Workshops array for multi-workshop support
+                    workshopsArray: workshopsArray || [],
+                    nearestWorkshop: workshopsArray && workshopsArray.length > 0 ? workshopsArray[0] : null,
+                    baseLat: workshopsArray && workshopsArray.length > 0 ? parseFloat(workshopsArray[0].latitude) : 6.9322889,
+                    baseLng: workshopsArray && workshopsArray.length > 0 ? parseFloat(workshopsArray[0].longitude) : 79.8567772,
+                    isOutOfRange: false,
 
                     initData() {
                         this.$watch('step', value => {
@@ -546,17 +567,75 @@
                         }
                     },
 
+                    workshopMarkers: {}, // { workshopId: { marker, mapType } }
+
+                    addWorkshopMarkersToMap(map, mapKey) {
+                        const self = this;
+                        this.workshopsArray.forEach(ws => {
+                            if (!ws.latitude || !ws.longitude) return;
+                            const isNearest = self.nearestWorkshop && self.nearestWorkshop.id === ws.id;
+                            const icon = self.makeWorkshopIcon(isNearest);
+                            const marker = L.marker([parseFloat(ws.latitude), parseFloat(ws.longitude)], {icon, interactive: false}).addTo(map);
+                            const key = mapKey + '_' + ws.id;
+                            self.workshopMarkers[key] = { marker, wsId: ws.id, mapKey };
+                        });
+                    },
+
+                    makeWorkshopIcon(isNearest) {
+                        const color = isNearest ? '#2563eb' : '#94a3b8';
+                        const opacity = isNearest ? '1' : '0.4';
+                        return L.divIcon({
+                            html: `<div style="transform:translate(-50%,-100%);opacity:${opacity};transition:all 0.3s;">
+                                    <div style="width:32px;height:32px;background:${color};border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22" fill="white" stroke="white"/></svg>
+                                    </div>
+                                    ${isNearest ? '<div style="width:8px;height:8px;background:'+color+';border-radius:50%;margin:2px auto 0;box-shadow:0 1px 4px rgba(0,0,0,0.2);"></div>' : '<div style="width:5px;height:5px;background:'+color+';border-radius:50%;margin:2px auto 0;opacity:0.4;"></div>'}
+                                   </div>`,
+                            className: 'bg-transparent',
+                            iconSize: [1, 1],
+                            iconAnchor: [0, 0]
+                        });
+                    },
+
+                    updateWorkshopMarkerStyles() {
+                        const self = this;
+                        Object.values(this.workshopMarkers).forEach(({ marker, wsId }) => {
+                            const isNearest = self.nearestWorkshop && self.nearestWorkshop.id === wsId;
+                            marker.setIcon(self.makeWorkshopIcon(isNearest));
+                        });
+                    },
+
+                    findNearestWorkshop(lat, lng) {
+                        if (!this.workshopsArray || this.workshopsArray.length === 0) return null;
+                        let nearest = null;
+                        let minDist = Infinity;
+                        this.workshopsArray.forEach(ws => {
+                            if (ws.latitude && ws.longitude) {
+                                const d = this.calculateDistance(parseFloat(ws.latitude), parseFloat(ws.longitude), lat, lng);
+                                if (d < minDist) {
+                                    minDist = d;
+                                    nearest = ws;
+                                }
+                            }
+                        });
+                        return nearest;
+                    },
+
                     initPickupMap() {
                         if (this.pickupMap) {
                             this.pickupMap.invalidateSize();
                             return;
                         }
-                        const defaultCenter = [6.9271, 79.8612];
-                        this.pickupMap = L.map('pickup_map', { zoomControl: false }).setView(defaultCenter, 13);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                            attribution: '&copy; OpenStreetMap'
+                        const defaultCenter = [this.baseLat, this.baseLng];
+                        this.pickupMap = L.map('pickup_map', { zoomControl: false }).setView(defaultCenter, 14);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors',
+                            maxZoom: 19
                         }).addTo(this.pickupMap);
                         L.control.zoom({ position: 'bottomright' }).addTo(this.pickupMap);
+
+                        // Add all workshop markers
+                        this.addWorkshopMarkersToMap(this.pickupMap, 'pickup');
 
                         const updateCoords = () => {
                             const center = this.pickupMap.getCenter();
@@ -564,6 +643,14 @@
                             document.getElementById('pickup_lng').value = center.lng.toFixed(6);
                             this.pickupLat = center.lat;
                             this.pickupLng = center.lng;
+                            // Update nearest workshop dynamically
+                            const nearest = this.findNearestWorkshop(center.lat, center.lng);
+                            if (nearest && (!this.nearestWorkshop || this.nearestWorkshop.id !== nearest.id)) {
+                                this.nearestWorkshop = nearest;
+                                this.baseLat = parseFloat(nearest.latitude);
+                                this.baseLng = parseFloat(nearest.longitude);
+                                this.updateWorkshopMarkerStyles();
+                            }
                             this.calculateDeliveryFee();
                         };
 
@@ -577,12 +664,16 @@
                             this.deliveryMap.invalidateSize();
                             return;
                         }
-                        const center = this.pickupMap ? this.pickupMap.getCenter() : [6.9271, 79.8612];
-                        this.deliveryMap = L.map('delivery_map', { zoomControl: false }).setView(center, 13);
-                        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                            attribution: '&copy; OpenStreetMap'
+                        const center = this.pickupMap ? this.pickupMap.getCenter() : [this.baseLat, this.baseLng];
+                        this.deliveryMap = L.map('delivery_map', { zoomControl: false }).setView(center, 14);
+                        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                            attribution: '&copy; OpenStreetMap contributors',
+                            maxZoom: 19
                         }).addTo(this.deliveryMap);
                         L.control.zoom({ position: 'bottomright' }).addTo(this.deliveryMap);
+
+                        // Add all workshop markers
+                        this.addWorkshopMarkersToMap(this.deliveryMap, 'delivery');
 
                         const updateCoords = () => {
                             const center = this.deliveryMap.getCenter();
@@ -623,29 +714,62 @@
                     },
                     
                     calculateDeliveryFee() {
-                        let totalDistance = 0;
+                        let distanceToPickup = 0;
+                        let distanceToDelivery = 0;
+                        let pickupFee = 0;
+                        let deliveryFee = 0;
+                        let isPickupOutOfRange = false;
+                        let isDeliveryOutOfRange = false;
+                        
+                        // Default to 15km if no delivery ranges are set
+                        let maxAllowedDistance = this.deliveryRanges.length > 0 ? 
+                            Math.max(...this.deliveryRanges.map(r => Number(r.max_distance_km))) : 15;
+                        
+                        const getFeeForDistance = (distance) => {
+                            if (this.deliveryRanges.length === 0) {
+                                let rawFee = distance * 100;
+                                return rawFee > 0 && rawFee < 300 ? 300 : Math.round(rawFee);
+                            }
+                            for (let range of this.deliveryRanges) {
+                                if (distance >= Number(range.min_distance_km) && distance <= Number(range.max_distance_km)) {
+                                    return Number(range.cost);
+                                }
+                            }
+                            return -1; // Out of all ranges
+                        };
+                        
+                        // Use nearest workshop as base (updated dynamically as pin moves)
+                        const wsLat = this.baseLat;
+                        const wsLng = this.baseLng;
                         
                         // Distance to pickup
                         if (this.pickupLat && this.pickupLng) {
-                            totalDistance += this.calculateDistance(this.baseLat, this.baseLng, this.pickupLat, this.pickupLng);
+                            distanceToPickup = this.calculateDistance(wsLat, wsLng, this.pickupLat, this.pickupLng);
+                            if (distanceToPickup > maxAllowedDistance) {
+                                isPickupOutOfRange = true;
+                            } else {
+                                pickupFee = getFeeForDistance(distanceToPickup);
+                            }
                         }
                         
                         // Distance to delivery
                         if (this.deliveryPref === 'deliver_to_address') {
                             if (this.sameAsPickup && this.pickupLat && this.pickupLng) {
-                                totalDistance += this.calculateDistance(this.baseLat, this.baseLng, this.pickupLat, this.pickupLng);
+                                distanceToDelivery = distanceToPickup;
+                                isDeliveryOutOfRange = isPickupOutOfRange;
+                                deliveryFee = pickupFee;
                             } else if (!this.sameAsPickup && this.deliveryLat && this.deliveryLng) {
-                                totalDistance += this.calculateDistance(this.baseLat, this.baseLng, this.deliveryLat, this.deliveryLng);
+                                distanceToDelivery = this.calculateDistance(wsLat, wsLng, this.deliveryLat, this.deliveryLng);
+                                if (distanceToDelivery > maxAllowedDistance) {
+                                    isDeliveryOutOfRange = true;
+                                } else {
+                                    deliveryFee = getFeeForDistance(distanceToDelivery);
+                                }
                             }
                         }
                         
-                        // Calculate fee
-                        let rawFee = totalDistance * this.ratePerKm;
-                        
-                        // Minimum delivery fee of LKR 300 if distance > 0
-                        if (rawFee > 0 && rawFee < 300) rawFee = 300;
-                        
-                        this.estimatedDeliveryFee = Math.round(rawFee);
+                        this.isOutOfRange = isPickupOutOfRange || isDeliveryOutOfRange;
+                        this.estimatedDeliveryFee = Math.round(Math.max(pickupFee, deliveryFee));
                     },
 
                     // Cart methods

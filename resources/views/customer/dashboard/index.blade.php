@@ -153,6 +153,15 @@
                                                 <i class="fa-solid fa-truck-pickup"></i> Pickup Request
                                             </span>
                                             <h4 class="font-bold text-slate-800 mb-1">Booking #{{ str_pad($deliveryAppointment->id, 4, '0', STR_PAD_LEFT) }}</h4>
+                                            @if($deliveryAppointment->pickup_scheduled_at)
+                                                <div class="text-[11px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md mb-2 inline-flex items-center gap-1.5">
+                                                    <i class="fa-solid fa-calendar-day text-indigo-500"></i> 
+                                                    {{ \Carbon\Carbon::parse($deliveryAppointment->pickup_scheduled_at)->format('M d, Y') }} 
+                                                    @if($deliveryAppointment->pickupTimePeriod)
+                                                        &middot; {{ \Carbon\Carbon::parse($deliveryAppointment->pickupTimePeriod->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($deliveryAppointment->pickupTimePeriod->end_time)->format('h:i A') }}
+                                                    @endif
+                                                </div>
+                                            @endif
                                             <div class="text-xs font-bold text-slate-500 mb-2">Order {{ $order->order_number }} &middot; {{ $order->items->count() }} Items &middot; 
                                                 @if($order->paid_amount > 0)
                                                     <span class="text-blue-600">Bal: LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span> <span class="text-slate-400 font-medium text-[10px]">(Total: {{ number_format($order->total, 2) }})</span>

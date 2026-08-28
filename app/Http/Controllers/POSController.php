@@ -21,21 +21,25 @@ class POSController extends Controller
 {
     public function index()
     {
+        $user = auth()->user();
         // For super admin without a branch_id, fetch all, otherwise fetch branch specific
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = $user->branch_id ?? 1;
 
-        $activeSession = RegisterSession::where('branch_id', $branchId)
-            ->whereNull('closed_at')
-            ->first();
+        // Workshop admins bypass shift requirement (they don't have a register/cash till)
+        if ($user->role !== 'workshop_admin') {
+            $activeSession = RegisterSession::where('branch_id', $branchId)
+                ->whereNull('closed_at')
+                ->first();
 
-        if (! $activeSession) {
-            return redirect()->route('dashboard')->with('error', 'You must open a shift to use the POS system.');
+            if (! $activeSession) {
+                return redirect()->route('dashboard')->with('error', 'You must open a shift to use the POS system.');
+            }
         }
 
         $services = ServiceType::where('is_active', true)->get();
         $categories = ServiceCategory::where('is_active', true)->get();
 
-        $customers = Customer::where('is_active', true)->get();
+        $customers = Customer::withoutGlobalScopes()->where('is_active', true)->get();
 
         $customerPackages = CustomerPackage::where('status', 'active')
             ->with(['package', 'services.serviceType'])
@@ -55,17 +59,21 @@ class POSController extends Controller
             'due_date' => 'required|string',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? 1;
+        $user = auth()->user();
+        $branchId = $user->branch_id ?? 1;
 
-        $activeSession = RegisterSession::where('branch_id', $branchId)
-            ->whereNull('closed_at')
-            ->first();
+        // Workshop admins skip register session check
+        if ($user->role !== 'workshop_admin') {
+            $activeSession = RegisterSession::where('branch_id', $branchId)
+                ->whereNull('closed_at')
+                ->first();
 
-        if (! $activeSession) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Cannot place order. Shift is closed.',
-            ], 403);
+            if (! $activeSession) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Cannot place order. Shift is closed.',
+                ], 403);
+            }
         }
 
         // Process cart with package deduction
@@ -141,20 +149,21 @@ class POSController extends Controller
         $paidAmount = $paymentMode === 'pay_now' ? $total : 0;
 
         try {
-            $result = DB::transaction(function () use ($request, $branchId, $subtotal, $discountAmount, $total, $paidAmount, $paymentMode, $processedCart, $packageId, $activePackage, $packageDeductions) {
+            $result = DB::transaction(function () use ($request, $user, $branchId, $subtotal, $discountAmount, $total, $paidAmount, $paymentMode, $processedCart, $packageId, $activePackage, $packageDeductions) {
                 // 1. Resolve Customer
                 $customerId = $request->customer_id;
                 if (! $customerId) {
-                    $customer = Customer::firstOrCreate(
-                        ['phone' => '0000000000', 'branch_id' => $branchId],
-                        ['name' => 'Walk-in Customer']
+                    // Walk-in customer: find or create globally (not branch-scoped)
+                    $customer = Customer::withoutGlobalScopes()->firstOrCreate(
+                        ['phone' => '0000000000'],
+                        ['name' => 'Walk-in Customer', 'branch_id' => $branchId]
                     );
                     $customerId = $customer->id;
                 }
 
                 // 2. Create Order
                 $order = Order::create([
-                    'order_number' => Order::generateOrderNumber(),
+                    'order_number' => Order::generateOrderNumber($branchId),
                     'branch_id' => $branchId,
                     'customer_id' => $customerId,
                     'created_by' => auth()->id(),
@@ -229,7 +238,7 @@ class POSController extends Controller
                 }
 
                 // 4. WhatsApp notification queue
-                $customerObj = Customer::find($customerId);
+                $customerObj = Customer::withoutGlobalScopes()->find($customerId);
                 $msgContent = WhatsappTemplate::generateMessage('order_confirmation', $order, $customerObj);
 
                 if (! empty($msgContent)) {
@@ -241,6 +250,22 @@ class POSController extends Controller
                         'message' => $msgContent,
                         'status' => 'pending',
                     ]);
+                }
+
+                // 5. If workshop admin: auto-dispatch to operations as 'processing'
+                if ($user->role === 'workshop_admin') {
+                    \App\Models\WorkshopDispatch::create([
+                        'order_id'           => $order->id,
+                        'branch_id'          => $branchId,
+                        'workshop_branch_id' => $branchId,
+                        'dispatched_by'      => auth()->id(),
+                        'dispatched_at'      => now(),
+                        'status'             => 'processing',
+                        'received_by'        => auth()->id(),
+                        'received_at_workshop_at' => now(),
+                        'dispatch_notes'     => 'Walk-in POS Order',
+                    ]);
+                    $order->update(['status' => 'processing']);
                 }
 
                 return [

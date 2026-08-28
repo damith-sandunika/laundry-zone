@@ -22,7 +22,7 @@ class DeliveryController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $query = DeliveryAppointment::with(['customer', 'branch', 'deliveryTasks.rider'])
+        $query = DeliveryAppointment::with(['customer', 'branch', 'deliveryTasks.rider', 'order.paymentTransactions', 'cancelledBy'])
             ->orderByDesc('pickup_scheduled_at');
 
         if (! $user->isSuperAdmin()) {
@@ -159,7 +159,7 @@ class DeliveryController extends Controller
         // Create the official Order stub for the Workshop if not exists
         if (! $appointment->order_id) {
             $order = Order::create([
-                'order_number' => Order::generateOrderNumber(),
+                'order_number' => Order::generateOrderNumber($appointment->branch_id, true),
                 'customer_id' => $appointment->customer_id,
                 'branch_id' => $appointment->branch_id,
                 'status' => 'received',

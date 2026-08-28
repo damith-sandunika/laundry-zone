@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
-                <h2 class="ph-title">Workshop History</h2>
-                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all completed and returned workshop orders</p>
+                <h2 class="ph-title">Completed Orders History</h2>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all completed, returned, and handed-over workshop orders</p>
             </div>
             <a href="{{ route('workshop.dashboard') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
                 Back to Dashboard

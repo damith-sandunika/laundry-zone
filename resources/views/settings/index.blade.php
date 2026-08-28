@@ -571,24 +571,7 @@
                             </div>
                         </div>
 
-                        <h4 class="text-xs font-bold text-gray-800 mt-6 mb-2 uppercase">Workshop Locations (Used for distance calculation)</h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @foreach($workshops as $ws)
-                                <div class="p-3 border rounded-lg bg-gray-50">
-                                    <h5 class="font-bold text-sm text-gray-800 mb-2">{{ $ws->name }}</h5>
-                                    <div class="grid grid-cols-2 gap-2">
-                                        <div>
-                                            <label class="block text-[10px] font-semibold text-gray-600 uppercase">Latitude</label>
-                                            <input type="text" name="workshops[{{ $ws->id }}][latitude]" value="{{ $ws->latitude }}" class="w-full text-xs border-gray-300 rounded p-1.5" placeholder="e.g. 6.9271">
-                                        </div>
-                                        <div>
-                                            <label class="block text-[10px] font-semibold text-gray-600 uppercase">Longitude</label>
-                                            <input type="text" name="workshops[{{ $ws->id }}][longitude]" value="{{ $ws->longitude }}" class="w-full text-xs border-gray-300 rounded p-1.5" placeholder="e.g. 79.8612">
-                                        </div>
-                                    </div>
-                                </div>
-                            @endforeach
-                        </div>
+
 
                         <div class="mt-4 flex justify-end">
                             <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded-md font-bold text-sm hover:bg-blue-700">Save Settings</button>

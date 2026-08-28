@@ -245,7 +245,7 @@ class WorkshopController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'branch', 'dispatchedBy'])
+        $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'branch', 'dispatchedBy'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
             ->whereNotIn('status', ['received_at_branch', 'returned_to_branch'])
             ->orderByDesc('dispatched_at')
@@ -261,8 +261,9 @@ class WorkshopController extends Controller
 
         $branches = Branch::where('type', 'branch')->get();
         $riders = \App\Models\User::where('role', 'rider')->get();
+        $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->where('is_active', true)->get();
 
-        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders'));
+        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies'));
     }
 
     // ─── Workshop Admin: Mark received at workshop ───
@@ -284,13 +285,7 @@ class WorkshopController extends Controller
     {
         $order = $dispatch->order;
 
-        // For delivery orders: only block if NO payment submitted at all (paid_amount = 0 and no transactions)
-        if ($order->is_delivery_order && !$order->payment_approved) {
-            $hasAnyPayment = $order->paid_amount > 0 || \App\Models\PaymentTransaction::where('order_id', $order->id)->exists();
-            if (!$hasAnyPayment) {
-                return response()->json(['success' => false, 'message' => 'Customer has not submitted any payment yet. Please wait for advance payment before starting processing.'], 403);
-            }
-        }
+        // Payment check removed to allow starting processing without advance payment
 
         $dispatch->update(['status' => 'processing']);
         $order->update(['status' => 'processing']);
@@ -302,20 +297,73 @@ class WorkshopController extends Controller
             'note' => 'Processing started',
         ]);
 
-        return response()->json(['success' => true, 'status' => 'processing']);
+        return response()->json(['success' => true, 'status' => 'processing', 'order_id' => $order->id]);
     }
 
     // ─── Workshop Admin: Mark completed at workshop ───
-    public function complete(WorkshopDispatch $dispatch)
+    public function complete(Request $request, WorkshopDispatch $dispatch)
     {
+        $request->validate([
+            'cubby_id'       => 'nullable|exists:cubbies,id',
+            'payment_method' => 'nullable|string',
+            'amount_paid'    => 'nullable|numeric|min:0',
+        ]);
+
         $dispatch->update([
-            'status' => 'completed_at_workshop',
+            'status'                   => 'completed_at_workshop',
             'completed_at_workshop_at' => now(),
         ]);
 
-        $dispatch->order->statusHistory()->create([
-            'status' => 'completed_at_workshop',
-            'note' => 'Completed at Workshop',
+        $order = $dispatch->order;
+
+        // Assign cubby if provided
+        if ($request->filled('cubby_id')) {
+            // Release any previous cubby
+            \App\Models\OrderCubby::where('order_id', $order->id)->whereNull('released_at')
+                ->update(['released_at' => now()]);
+
+            $cubby = \App\Models\Cubby::find($request->cubby_id);
+            if ($cubby) {
+                \App\Models\OrderCubby::create([
+                    'order_id'    => $order->id,
+                    'cubby_id'    => $cubby->id,
+                    'assigned_at' => now(),
+                ]);
+                $cubby->update(['status' => 'occupied']);
+            }
+        }
+
+        // Handle payment if provided
+        if ($request->filled('amount_paid') && $request->amount_paid > 0) {
+            \App\Models\PaymentTransaction::create([
+                'order_id'       => $order->id,
+                'amount'         => $request->amount_paid,
+                'payment_method' => $request->payment_method ?? 'cash',
+                'created_by'     => auth()->id(),
+                'status'         => 'completed',
+                'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+            ]);
+            $newPaid = $order->paid_amount + $request->amount_paid;
+            $order->update([
+                'paid_amount'    => $newPaid,
+                'payment_method' => $request->payment_method ?? $order->payment_method,
+                'payment_status' => $newPaid >= $order->total ? 'paid' : 'partial',
+            ]);
+        }
+
+        // For walk-in (non-delivery) orders: update order status
+        if (! $order->is_delivery_order) {
+            $order->update(['status' => 'done', 'ready_at' => now()]);
+
+            // Send "Order Ready" WA notification
+            try {
+                app(\App\Services\WhatsAppService::class)->notifyOrderReady($order->fresh());
+            } catch (\Exception $e) { /* silent */ }
+        }
+
+        $order->statusHistory()->create([
+            'status'     => 'completed_at_workshop',
+            'note'       => 'Completed at Workshop',
             'changed_by' => auth()->id(),
         ]);
 
@@ -560,6 +608,75 @@ class WorkshopController extends Controller
         $waService->notifyOrderReady($order);
 
         return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
+    }
+
+    // ─── Workshop Admin: Hand Over Walk-in Order to Customer ───
+    public function handover(Request $request, WorkshopDispatch $dispatch)
+    {
+        $request->validate([
+            'payment_method' => 'nullable|string',
+            'amount_paid'    => 'nullable|numeric|min:0',
+        ]);
+
+        $order = $dispatch->order;
+
+        DB::transaction(function () use ($request, $order, $dispatch) {
+            // Collect payment if provided
+            $amountPaid = (float) ($request->amount_paid ?? 0);
+            if ($amountPaid > 0) {
+                \App\Models\PaymentTransaction::create([
+                    'order_id'       => $order->id,
+                    'amount'         => $amountPaid,
+                    'payment_method' => $request->payment_method ?? 'cash',
+                    'created_by'     => auth()->id(),
+                    'status'         => 'completed',
+                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                ]);
+                $newPaid = $order->paid_amount + $amountPaid;
+                $order->update([
+                    'paid_amount'    => $newPaid,
+                    'payment_method' => $request->payment_method ?? $order->payment_method,
+                    'payment_status' => $newPaid >= $order->total ? 'paid' : 'partial',
+                ]);
+                $order = $order->fresh();
+            }
+
+            // Require full payment before handover
+            if ($order->paid_amount < $order->total) {
+                throw new \Exception('Balance due: Rs. ' . number_format($order->total - $order->paid_amount, 2) . '. Collect full payment before handover.');
+            }
+
+            $order->update([
+                'status'       => 'completed',
+                'delivered_at' => now(),
+            ]);
+
+            $order->statusHistory()->create([
+                'status'     => 'completed',
+                'note'       => 'Handed over to customer at workshop',
+                'changed_by' => auth()->id(),
+            ]);
+
+            // Release cubby
+            $cubbyIds = \App\Models\OrderCubby::where('order_id', $order->id)->pluck('cubby_id');
+            \App\Models\OrderCubby::where('order_id', $order->id)->whereNull('released_at')
+                ->update(['released_at' => now()]);
+            foreach ($cubbyIds as $cid) {
+                $cubby = \App\Models\Cubby::find($cid);
+                if ($cubby && !$cubby->currentOrder()->exists()) {
+                    $cubby->update(['status' => 'available']);
+                }
+            }
+
+            $dispatch->update([
+                'status'       => 'returned_to_branch',
+                'returned_by'  => auth()->id(),
+                'returned_at'  => now(),
+                'workshop_notes' => 'Handed over directly to customer at workshop',
+            ]);
+        });
+
+        return response()->json(['success' => true, 'order_id' => $order->id]);
     }
 
 
