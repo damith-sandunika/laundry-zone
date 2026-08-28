@@ -17,7 +17,13 @@ class CustomerSiteController extends Controller
 {
     public function home()
     {
-        $branches = Branch::regularBranches()->where('is_active', true)->get();
+        // Include both workshop branches and delivery-enabled branches on the map
+        $branches = Branch::where('is_active', true)
+            ->where(function($q) {
+                $q->where('type', 'workshop')
+                  ->orWhere('is_delivery_enabled', true);
+            })
+            ->get();
         $categories = ServiceCategory::with('services')->where('is_active', true)->get();
         $packages = Package::with('services.serviceType')->where('is_active', true)->get();
 
@@ -43,9 +49,14 @@ class CustomerSiteController extends Controller
         // Fetch delivery ranges for distance cost calculation
         $deliveryRanges = \App\Models\DeliveryRange::orderBy('min_distance_km')->get();
         
-        // Fetch all active workshops for map markers & distance calculation
-        $workshops = \App\Models\Branch::where('is_active', true)->where('type', 'workshop')->get();
-        // Fallback to first branch if no workshop exists
+        // Fetch all active workshops AND delivery-enabled branches for map markers & distance calculation
+        $workshops = \App\Models\Branch::where('is_active', true)
+            ->where(function($q) {
+                $q->where('type', 'workshop')
+                  ->orWhere('is_delivery_enabled', true);
+            })
+            ->get();
+        // Fallback to first branch if none exist
         if ($workshops->isEmpty()) {
             $fallback = \App\Models\Branch::where('is_active', true)->first();
             if ($fallback) $workshops = collect([$fallback]);
@@ -101,9 +112,15 @@ class CustomerSiteController extends Controller
         }
 
         $receiptPath = null;
-
         $deliveryCost = 0;
-        $workshops = Branch::workshops()->where('is_active', true)->get();
+
+        // Find all delivery-capable branches: workshops OR delivery-enabled branches
+        $deliveryBranches = Branch::where('is_active', true)
+            ->where(function($q) {
+                $q->where('type', 'workshop')
+                  ->orWhere('is_delivery_enabled', true);
+            })
+            ->get();
         $closestWorkshop = null;
         $shortestDistance = PHP_FLOAT_MAX;
         $totalDistance = 0;
@@ -118,9 +135,9 @@ class CustomerSiteController extends Controller
             return $earthRadius * (2 * atan2(sqrt($a), sqrt(1 - $a)));
         };
 
-        // Find the closest workshop based on pickup coordinates
+        // Find the closest delivery-capable branch based on pickup coordinates
         if ($request->latitude && $request->longitude) {
-            foreach ($workshops as $ws) {
+            foreach ($deliveryBranches as $ws) {
                 if ($ws->latitude && $ws->longitude) {
                     $dist = $calculateDistance($ws->latitude, $ws->longitude, $request->latitude, $request->longitude);
                     if ($dist < $shortestDistance) {
@@ -131,9 +148,9 @@ class CustomerSiteController extends Controller
             }
         }
 
-        // Fallback to first workshop if none matched coordinates
+        // Fallback to first delivery-capable branch if none matched coordinates
         if (!$closestWorkshop) {
-            $closestWorkshop = $workshops->first();
+            $closestWorkshop = $deliveryBranches->first();
         }
 
         if ($closestWorkshop && $closestWorkshop->latitude && $closestWorkshop->longitude) {
@@ -205,9 +222,16 @@ class CustomerSiteController extends Controller
         // WhatsApp notification
         $waService->notifyBookingReceived($appointment);
 
-        // System Alert to Workshop Admins (since delivery orders go to workshop)
-        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $closestWorkshop->id)->get();
-        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Booking Received: #' . $appointment->id, route('workshop.operations'), 'new_order'));
+        // System Alert: notify the right admin based on branch type
+        if ($closestWorkshop->type === 'workshop') {
+            // Workshop branch → notify workshop admins
+            $admins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $closestWorkshop->id)->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SystemAlertNotification('New Booking Received: #' . $appointment->id, route('workshop.operations'), 'new_order'));
+        } else {
+            // Delivery-enabled regular branch → notify branch admins
+            $admins = \App\Models\User::whereIn('role', ['branch_admin', 'admin'])->where('branch_id', $closestWorkshop->id)->get();
+            \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SystemAlertNotification('New Delivery Booking: #' . $appointment->id, route('delivery.index'), 'new_order'));
+        }
 
         return redirect()->route('customer.booking.success', $appointment->id);
     }

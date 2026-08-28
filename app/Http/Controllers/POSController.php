@@ -161,6 +161,15 @@ class POSController extends Controller
                     $customerId = $customer->id;
                 }
 
+                // Calculate Profit Split
+                $branchProfit = 0;
+                $workshopProfit = 0;
+                $branch = \App\Models\Branch::find($branchId);
+                if ($branch && $branch->branch_profit_percentage > 0) {
+                    $branchProfit = $subtotal * ($branch->branch_profit_percentage / 100);
+                    $workshopProfit = $subtotal - $branchProfit;
+                }
+                
                 // 2. Create Order
                 $order = Order::create([
                     'order_number' => Order::generateOrderNumber($branchId),
@@ -175,6 +184,8 @@ class POSController extends Controller
                     'paid_amount' => $paidAmount,
                     'payment_method' => $paymentMode === 'pay_now' ? ($request->payment_method ?? 'cash') : null,
                     'due_date' => $request->due_date ? date('Y-m-d H:i:s', strtotime($request->due_date)) : null,
+                    'branch_profit' => $branchProfit,
+                    'workshop_profit' => $workshopProfit,
                 ]);
 
                 if ($paidAmount > 0 && $paymentMode === 'pay_now') {

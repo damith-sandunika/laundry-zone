@@ -46,15 +46,89 @@
         deliverOrder: null,
         deliveryPaymentMethod: 'cash',
 
+        // Dispatch Delivery Modal (For Delivery Orders)
+        showDispatchDeliveryModal: false,
+        deliveryMethod: 'rider',
+        deliveryRiderId: '',
+        deliveryPickmeCost: '',
+        isDispatchingDelivery: false,
+        riders: JSON.parse(atob('{{ base64_encode(json_encode($riders)) }}')),
+
         // Edit Order Modal
         showEditModal: false,
         editOrderData: null,
         editCart: [],
         editDiscount: 0,
+        editAdvanceCashAmount: '',
         selectedServiceToAdd: '',
         allServices: JSON.parse(atob('{{ base64_encode(json_encode($services)) }}')),
+        minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
 
         ordersList: JSON.parse(atob('{{ base64_encode(json_encode($orders)) }}')),
+
+        showPaymentModal: false,
+        paymentOrder: null,
+        paymentAmountType: 'full',
+        customPaymentAmount: '',
+        isRequestingPayment: false,
+
+        openPaymentModal(order) {
+            this.paymentOrder = order;
+            this.paymentAmountType = 'full';
+            this.customPaymentAmount = '';
+            this.showPaymentModal = true;
+        },
+
+        showSlipModal: false,
+        selectedSlip: null,
+        selectedOrder: null,
+
+        openSlipModal(receipt, order) {
+            this.selectedSlip = receipt;
+            this.selectedOrder = order;
+            this.showSlipModal = true;
+        },
+
+        getReceipts(order) {
+            if (!order || !order.payment_transactions) return [];
+            return order.payment_transactions.filter(p => p.receipt_path).map(p => ({
+                id: p.id,
+                amount: p.amount,
+                url: '/storage/' + p.receipt_path,
+                status: p.status,
+                reject_reason: p.reject_reason,
+                created_at: p.created_at ? new Date(p.created_at).toLocaleString() : ''
+            }));
+        },
+
+        async sendPaymentRequest() {
+            if (!this.paymentOrder) return;
+            this.isRequestingPayment = true;
+            try {
+                const res = await fetch('/orders/' + this.paymentOrder.id + '/request-payment', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        amount_type: this.paymentAmountType,
+                        custom_amount: this.customPaymentAmount
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert('Payment Request Sent successfully via WhatsApp.');
+                    this.showPaymentModal = false;
+                } else {
+                    alert(data.message || 'Failed to send payment request.');
+                }
+            } catch (err) {
+                alert('Connection error');
+            }
+            this.isRequestingPayment = false;
+        },
 
         toggleSelectAll(e) {
             if (e.target.checked) {
@@ -69,8 +143,11 @@
             if (this.currentTab === 'received') {
                 return this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop');
             }
+            if (this.currentTab === 'arriving') {
+                return this.ordersList.filter(o => o.status === 'returned_from_workshop');
+            }
             if (this.currentTab === 'done') {
-                return this.ordersList.filter(o => o.status === 'done' || o.status === 'returned_from_workshop');
+                return this.ordersList.filter(o => o.status === 'done');
             }
             if (this.currentTab === 'delivered') {
                 return this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed');
@@ -82,8 +159,9 @@
             return {
                 all: this.ordersList.length,
                 received: this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop').length,
-                processing: this.ordersList.filter(o => o.status === 'processing').length,
-                done: this.ordersList.filter(o => o.status === 'done' || o.status === 'returned_from_workshop').length,
+                processing: this.ordersList.filter(o => o.status === 'processing' || o.status === 'completed_at_workshop').length,
+                arriving: this.ordersList.filter(o => o.status === 'returned_from_workshop').length,
+                done: this.ordersList.filter(o => o.status === 'done').length,
                 delivered: this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed').length
             };
         },
@@ -191,6 +269,50 @@
             this.showDeliverModal = true;
         },
 
+        openDeliveryDispatchPopup(order) {
+            this.deliverOrder = order;
+            this.deliveryMethod = 'rider';
+            this.deliveryRiderId = '';
+            this.deliveryPickmeCost = '';
+            this.isDispatchingDelivery = false;
+            this.showDispatchDeliveryModal = true;
+        },
+
+        async submitDeliveryDispatch() {
+            if (this.deliveryMethod === 'rider' && !this.deliveryRiderId) return alert('Select a rider');
+            if (this.deliveryMethod === 'pickme_flash' && !this.deliveryPickmeCost) return alert('Enter PickMe cost');
+            
+            this.isDispatchingDelivery = true;
+            try {
+                if (this.deliverOrder.status === 'returned_from_workshop' && this.deliverOrder.workshop_dispatch_id) {
+                    await fetch(`/workshop/dispatches/${this.deliverOrder.workshop_dispatch_id}/received-at-branch`, {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
+                    });
+                }
+
+                const res = await fetch(`/orders/${this.deliverOrder.id}/dispatch-delivery`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                    body: JSON.stringify({
+                        delivery_method: this.deliveryMethod,
+                        rider_id: this.deliveryRiderId,
+                        pickme_cost: this.deliveryPickmeCost
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Error dispatching delivery');
+                    this.isDispatchingDelivery = false;
+                }
+            } catch (err) {
+                alert('Connection error');
+                this.isDispatchingDelivery = false;
+            }
+        },
+
         async confirmDelivery(shouldPrint = true) {
             try {
                 // Submit delivery request
@@ -217,83 +339,26 @@
         },
 
         openEdit(order) {
-            this.editOrderData = order;
-            this.editCart = order.items.map(i => ({
+            let cart = (order.items || []).map(i => ({
                 service_type_id: i.service_type_id,
                 name: i.service_type ? i.service_type.name : i.item_description,
-                qty: i.quantity,
                 base_price: i.unit_price,
-                price_type: i.service_type ? i.service_type.price_type : 'per_item'
+                qty: i.quantity
             }));
-            
-            // Calculate discount percentage based on existing subtotal and discount
-            let st = parseFloat(order.subtotal) || 0;
-            let d = parseFloat(order.discount) || 0;
-            this.editDiscount = st > 0 ? Math.round((d / st) * 100) : 0;
-            
-            this.selectedServiceToAdd = '';
-            this.showEditModal = true;
-        },
-
-        addServiceToEditCart() {
-            if (!this.selectedServiceToAdd) return;
-            let svc = this.allServices.find(s => s.id == this.selectedServiceToAdd);
-            if (svc) {
-                this.editCart.push({
-                    service_type_id: svc.id,
-                    name: svc.name,
-                    qty: 1,
-                    base_price: svc.base_price,
-                    price_type: svc.price_type
-                });
-            }
-            this.selectedServiceToAdd = '';
-        },
-
-        get editSubtotal() {
-            return this.editCart.reduce((sum, item) => sum + (item.base_price * (parseFloat(item.qty) || 0)), 0);
-        },
-
-        get editTotal() {
-            let disc = this.editSubtotal * ((parseFloat(this.editDiscount) || 0) / 100);
-            let total = this.editSubtotal - disc;
-            // Check if it's a delivery order and enforce minimum 3000
-            let isDelivery = this.editOrderData && this.editOrderData.order_number && this.editOrderData.order_number.includes('ORD'); // we don't easily know if it's delivery from order obj unless we pass it. 
-            // Better yet, just enforce 3000 if order has delivery appointment.
-            // Let's assume the backend will enforce it. For the frontend, we can check if it's < 3000 and maybe show a warning. 
-            // Or just check if total < 3000. Wait, only for deliveries! Let's just return total for now, backend will fix it on save.
-            return total;
-        },
-
-        async saveOrderEdit() {
-            if (this.editCart.length === 0) {
-                alert('Order must have at least one item.');
-                return;
-            }
-
-            try {
-                const res = await fetch(`/orders/${this.editOrderData.id}/update`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                    },
-                    body: JSON.stringify({
-                        cart: this.editCart,
-                        discount_percentage: this.editDiscount
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    window.location.href = window.location.pathname + '?_t=' + Date.now();
-                } else {
-                    alert('Error: ' + (data.message || 'Failed to update order'));
+            window.dispatchEvent(new CustomEvent('open-finalize-modal', {
+                detail: {
+                    context: 'branch',
+                    services: this.allServices,
+                    order: order,
+                    cart: cart,
+                    advance: null,
+                    minimumDeliveryCost: this.minimumDeliveryCost
                 }
-            } catch (err) {
-                alert('Connection error');
-            }
-        }    }"> <!-- STAT CARDS -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
+            }));
+        },
+
+    }"> <!-- STAT CARDS -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 mb-6">
 
             <!-- Pending Dispatch -->
             <div @click="currentTab = 'received'"
@@ -309,6 +374,14 @@
                 class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
                 <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'processing' ? 'text-yellow-700' : 'text-gray-900'" x-text="counts.processing"></span>
                 <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">At Workshop</span>
+            </div>
+
+            <!-- Arriving -->
+            <div @click="currentTab = 'arriving'"
+                :class="currentTab === 'arriving' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
+                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'arriving' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.arriving"></span>
+                <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Arriving</span>
             </div>
 
             <!-- Ready for Pickup -->
@@ -465,64 +538,114 @@
                                 <td style="padding:12px 20px;text-align:right;font-weight:800;color:#0f172a;font-size:13px;"
                                     x-text="parseFloat(order.total) === 0 ? 'Package' : 'Rs.' + parseFloat(order.total).toFixed(2)"></td>
                                 <td style="padding:12px 20px;text-align:center;">
-                                    <div style="display:inline-flex;gap:6px;align-items:center;">
-                                        <a :href="'/orders/' + order.id"
-                                            style="padding:5px 10px;background:white;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:8px;font-size:11.5px;font-weight:800;text-decoration:none;transition:all 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.05);"
-                                            onmouseover="this.style.background='#eff6ff'"
-                                            onmouseout="this.style.background='white'">View</a>
+                                    <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
+                                        <template x-if="order.status === 'received' || getReceipts(order).length > 0">
+                                            <div style="display:flex;flex-direction:column;gap:6px;align-items:center;background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;width:100%;">
+                                                <div style="font-size:11px;font-weight:800;color:#334155;">
+                                                    Paid: <span style="color:#16a34a;">LKR <span x-text="parseFloat(order.paid_amount || 0).toFixed(2)"></span></span> / 
+                                                    <span style="color:#0f172a;">LKR <span x-text="parseFloat(order.total || 0).toFixed(2)"></span></span>
+                                                </div>
+                                                
+                                                <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%;">
+                                                    <!-- Slips -->
+                                                    <template x-for="(receipt, idx) in getReceipts(order)" :key="idx">
+                                                        <button @click="openSlipModal(receipt, order)"
+                                                            :style="
+                                                                receipt.status === 'pending' ? 'border-color:#fbbf24;background:#fffbeb;color:#b45309;' : 
+                                                                receipt.status === 'rejected' ? 'border-color:#fca5a5;background:#fef2f2;color:#b91c1c;text-decoration:line-through;' : 
+                                                                'border-color:#c7d2fe;background:white;color:#4f46e5;'
+                                                            "
+                                                            style="padding:5px 12px;border-width:1.5px;border-style:dashed;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.02);transition:all 0.15s;display:flex;align-items:center;gap:6px;"
+                                                            onmouseover="this.style.transform='scale(1.05)'; this.style.borderStyle='solid'" onmouseout="this.style.transform='scale(1)'; this.style.borderStyle='dashed'">
+                                                            <i class="fa-solid fa-file-invoice"></i> <span x-text="'Slip ' + (idx + 1)"></span>
+                                                            <template x-if="receipt.status === 'pending'"><i class="fa-solid fa-circle-exclamation" style="font-size:10px;"></i></template>
+                                                            <template x-if="receipt.status === 'rejected'"><i class="fa-solid fa-circle-xmark" style="font-size:10px;"></i></template>
+                                                            <template x-if="receipt.status === 'completed'"><i class="fa-solid fa-circle-check" style="font-size:10px;"></i></template>
+                                                        </button>
+                                                    </template>
+                                                    
+                                                    <template x-if="order.status === 'received'">
+                                                        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;">
+                                                            <button @click="openEdit(order)"
+                                                                style="padding:5px 12px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.3);transition:transform 0.1s;"
+                                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                                Finalize
+                                                            </button>
 
-                                        <template x-if="order.status !== 'delivered' && order.status !== 'cancelled'">
-                                            <button @click="openEdit(order)"
-                                                style="padding:5px 8px;background:white;color:#d97706;border:1.5px solid #fde68a;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
-                                                onmouseover="this.style.background='#fffbeb'"
-                                                onmouseout="this.style.background='white'" title="Edit Order">
-                                                ✏️
-                                            </button>
+                                                            <button @click="bulkStatus = 'dispatched_to_workshop'; selectedOrders = [order.id]; showBulkModal = true;"
+                                                                style="padding:5px 12px;background:linear-gradient(to right, #eab308, #d97706);color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;"
+                                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                                Dispatch
+                                                            </button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </div>
                                         </template>
 
-                                        <template x-if="currentTab === 'received' && order.status === 'received'">
-                                            <button @click="bulkStatus = 'dispatched_to_workshop'; selectedOrders = [order.id]; showBulkModal = true;"
-                                                style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(79,70,229,0.3);transition:transform 0.1s;"
-                                                onmouseover="this.style.transform='scale(1.05)'"
-                                                onmouseout="this.style.transform='scale(1)'">
-                                                Dispatch
+                                    <template x-if="order.status !== 'received'">
+                                        <div style="display:inline-flex;gap:6px;align-items:center;">
+                                            <a :href="'/orders/' + order.id"
+                                                style="padding:5px 10px;background:white;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:8px;font-size:11.5px;font-weight:800;text-decoration:none;transition:all 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.05);"
+                                                onmouseover="this.style.background='#eff6ff'"
+                                                onmouseout="this.style.background='white'">View</a>
+
+                                            <template x-if="order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'dispatched_to_workshop'">
+                                                <button @click="openEdit(order)"
+                                                    style="padding:5px 8px;background:white;color:#d97706;border:1.5px solid #fde68a;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
+                                                    onmouseover="this.style.background='#fffbeb'"
+                                                    onmouseout="this.style.background='white'" title="Edit Order">
+                                                    ✏️
+                                                </button>
+                                            </template>
+
+                                            <template x-if="currentTab === 'arriving' && order.status === 'returned_from_workshop'">  
+                                                <div style="display:inline-flex;gap:6px;align-items:center;">
+                                                    <template x-if="!order.is_delivery_order">
+                                                        <button @click="openCubbetPopup(order)"
+                                                            style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);transition:transform 0.1s;"
+                                                            onmouseover="this.style.transform='scale(1.05)'"
+                                                            onmouseout="this.style.transform='scale(1)'">
+                                                            ✅ Confirm Arrival
+                                                        </button>
+                                                    </template>
+                                                    
+                                                    <template x-if="order.is_delivery_order">
+                                                        <button @click="openDeliveryDispatchPopup(order)"
+                                                            style="padding:5px 10px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(14,165,233,0.3);transition:transform 0.1s;"
+                                                            onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                            Confirm & Dispatch
+                                                        </button>
+                                                    </template>
+                                                </div>
+                                            </template>
+
+                                            <template x-if="currentTab === 'done' && order.status === 'done'">
+                                                <button @click="order.delivery_appointment ? openDeliveryDispatchPopup(order) : openDeliverPopup(order)"
+                                                    style="padding:5px 10px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(14,165,233,0.3);transition:transform 0.1s;"
+                                                    onmouseover="this.style.transform='scale(1.05)'"
+                                                    onmouseout="this.style.transform='scale(1)'">
+                                                    <span x-text="order.delivery_appointment ? 'Dispatch Delivery' : 'Deliver'"></span>
+                                                </button>
+                                            </template>
+
+                                            <button
+                                                @click="window.open('/orders/' + order.id + '/chit', '_blank', 'width=300,height=400')"
+                                                style="padding:5px 10px;background:white;color:#0f172a;border:1.5px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.15s;"
+                                                onmouseover="this.style.background='#f8fafc'"
+                                                onmouseout="this.style.background='white'">
+                                                🖨️
                                             </button>
-                                        </template>
 
-                                        <template x-if="currentTab === 'done' && order.status === 'returned_from_workshop'">
-                                            <button @click="openCubbetPopup(order)"
-                                                style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);transition:transform 0.1s;"
-                                                onmouseover="this.style.transform='scale(1.05)'"
-                                                onmouseout="this.style.transform='scale(1)'">
-                                                Confirm Arrival (Done)
+                                            <button @click="openReverse(order.id)"
+                                                style="padding:5px 7px;background:white;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
+                                                onmouseover="this.style.background='#fef2f2'"
+                                                onmouseout="this.style.background='white'" title="Reverse Order">
+                                                ↩
                                             </button>
-                                        </template>
-
-                                        <template x-if="currentTab === 'done' && order.status === 'done'">
-                                            <button @click="openDeliverPopup(order)"
-                                                style="padding:5px 10px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(14,165,233,0.3);transition:transform 0.1s;"
-                                                onmouseover="this.style.transform='scale(1.05)'"
-                                                onmouseout="this.style.transform='scale(1)'">
-                                                Deliver
-                                            </button>
-                                        </template>
-
-                                        <button
-                                            @click="window.open('/orders/' + order.id + '/chit', '_blank', 'width=300,height=400')"
-                                            style="padding:5px 10px;background:white;color:#0f172a;border:1.5px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.15s;"
-                                            onmouseover="this.style.background='#f8fafc'"
-                                            onmouseout="this.style.background='white'">
-                                            🖨️
-                                        </button>
-
-                                        <button @click="openReverse(order.id)"
-                                            style="padding:5px 7px;background:white;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
-                                            onmouseover="this.style.background='#fef2f2'"
-                                            onmouseout="this.style.background='white'" title="Reverse Order">
-                                            ↩
-                                        </button>
+                                        </div>
+                                    </template>
                                     </div>
-                                </td>
                             </tr>
                         </template>
                         <tr x-show="filteredOrders.length === 0">
@@ -761,109 +884,69 @@
             </div>
 
         </div>
-            
-            <!-- ── Edit Order Modal ── -->
-            <div x-cloak x-show="showEditModal"
-                class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
-                <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:550px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;"
-                    @click.away="showEditModal = false">
-                    <div
-                        style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#fffbeb;">
-                        <div>
-                            <h3 style="font-size:18px;font-weight:900;color:#d97706;margin:0;">Edit Order</h3>
-                            <p style="font-size:12px;color:#b45309;margin:2px 0 0;font-weight:600;"
-                                x-text="'Order #' + (editOrderData ? editOrderData.order_number : '')"></p>
-                        </div>
-                        <button @click="showEditModal = false"
-                            style="background:none;border:none;cursor:pointer;color:#d97706;font-size:20px;">✕</button>
+
+        <!-- ── Dispatch Delivery Modal ── -->
+        <div x-cloak x-show="showDispatchDeliveryModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
+            <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:440px;overflow:hidden;" @click.away="showDispatchDeliveryModal = false">
+                <div style="padding:24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#eff6ff;">
+                    <div>
+                        <h3 style="font-size:18px;font-weight:900;color:#1d4ed8;margin:0;">Dispatch Delivery</h3>
+                        <p style="font-size:12px;color:#3b82f6;margin:2px 0 0;font-weight:600;" x-text="'Order #' + (deliverOrder?.order_number || '')"></p>
                     </div>
-                    
-                    <div style="padding:20px 24px;overflow-y:auto;display:flex;flex-direction:column;gap:20px;flex:1;">
-                        
-                        <!-- Add Service Dropdown -->
-                        <div>
-                            <label style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Add Service</label>
-                            <div style="display:flex;gap:10px;">
-                                <select x-model="selectedServiceToAdd"
-                                    style="flex:1;padding:10px 12px;border:1.5px solid #cbd5e1;border-radius:10px;font-size:13px;font-weight:700;outline:none;background:white;color:#0f172a;">
-                                    <option value="" style="color:#94a3b8;">-- Select a service to add --</option>
-                                    <template x-for="svc in allServices" :key="svc.id">
-                                        <option :value="svc.id" x-text="svc.name + ' - Rs.' + svc.base_price"></option>
-                                    </template>
-                                </select>
-                                <button type="button" @click="addServiceToEditCart()"
-                                    style="padding:10px 16px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Add</button>
-                            </div>
+                    <button @click="showDispatchDeliveryModal = false" style="background:none;border:none;cursor:pointer;color:#1d4ed8;font-size:20px;">✕</button>
+                </div>
+                <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+                    <div>
+                        <label style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.05em;">Delivery Method</label>
+                        <div class="grid grid-cols-2 gap-3" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;">
+                            <button @click="deliveryMethod = 'rider'" :class="deliveryMethod === 'rider' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600'" class="p-3 border rounded-xl font-bold text-sm transition-all text-center" style="padding: 12px; border-width: 1px; border-radius: 12px; font-weight: 700; font-size: 14px; text-align: center; cursor:pointer;">
+                                Rider
+                            </button>
+                            <button @click="deliverOrder?.paid_amount >= deliverOrder?.total ? deliveryMethod = 'pickme_flash' : null" 
+                                :class="[
+                                    deliveryMethod === 'pickme_flash' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300',
+                                    deliverOrder?.paid_amount < deliverOrder?.total ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200' : ''
+                                ]"
+                                class="p-3 border rounded-xl font-bold text-sm transition-all text-center relative group" style="padding: 12px; border-width: 1px; border-radius: 12px; font-weight: 700; font-size: 14px; text-align: center; cursor:pointer; position:relative;">
+                                PickMe
+                                <template x-if="deliverOrder?.paid_amount < deliverOrder?.total">
+                                    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; font-size: 10px; padding: 4px 8px; border-radius: 4px; pointer-events: none; white-space: nowrap; z-index: 10;">
+                                        Requires full payment
+                                    </div>
+                                </template>
+                            </button>
                         </div>
-
-                        <!-- Current Cart Items -->
-                        <div>
-                            <label style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Order Items</label>
-                            
-                            <div style="border:1.5px solid #e2e8f0;border-radius:12px;overflow:hidden;">
-                                <table style="width:100%;border-collapse:collapse;font-size:12.5px;color:#334155;">
-                                    <thead>
-                                        <tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">
-                                            <th style="padding:10px 14px;text-align:left;font-weight:800;">Item</th>
-                                            <th style="padding:10px 14px;text-align:center;font-weight:800;width:110px;">Qty</th>
-                                            <th style="padding:10px 14px;text-align:right;font-weight:800;width:90px;">Total</th>
-                                            <th style="padding:10px 14px;text-align:center;width:40px;"></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <template x-for="(item, index) in editCart" :key="index">
-                                            <tr style="border-bottom:1px solid #f1f5f9;">
-                                                <td style="padding:10px 14px;font-weight:700;" x-text="item.name"></td>
-                                                <td style="padding:10px 14px;text-align:center;">
-                                                    <input type="number" x-model.number="editCart[index].qty" style="width:70px;text-align:center;border:1.5px solid #e2e8f0;border-radius:6px;background:white;font-size:13px;font-weight:800;outline:none;padding:6px;" min="0.01" step="0.01">
-                                                </td>
-                                                <td style="padding:10px 14px;text-align:right;font-weight:800;" x-text="'Rs.' + (item.base_price * item.qty).toFixed(2)"></td>
-                                                <td style="padding:10px 14px;text-align:center;">
-                                                    <button @click="editCart.splice(index, 1)" style="background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;" title="Remove">🗑️</button>
-                                                </td>
-                                            </tr>
-                                        </template>
-                                        <tr x-show="editCart.length === 0">
-                                            <td colspan="4" style="padding:20px;text-align:center;color:#94a3b8;font-weight:600;font-style:italic;">No items in this order.</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        <!-- Totals & Discount -->
-                        <div style="background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;padding:16px;">
-                            <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
-                                <span style="font-size:13px;font-weight:700;color:#64748b;">Subtotal:</span>
-                                <span style="font-size:14px;font-weight:900;color:#0f172a;" x-text="'Rs.' + editSubtotal.toFixed(2)"></span>
-                            </div>
-                            
-                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                                <span style="font-size:13px;font-weight:700;color:#64748b;">Discount (%):</span>
-                                <input type="number" x-model.number="editDiscount" min="0" max="100" style="width:70px;text-align:right;padding:6px;border:1.5px solid #cbd5e1;border-radius:8px;font-size:13px;font-weight:800;outline:none;">
-                            </div>
-
-                            <div x-show="editDiscount > 0" style="display:flex;justify-content:space-between;margin-bottom:10px;">
-                                <span style="font-size:13px;font-weight:700;color:#dc2626;">Discount Amount:</span>
-                                <span style="font-size:13px;font-weight:800;color:#dc2626;" x-text="'- Rs.' + (editSubtotal * (editDiscount / 100)).toFixed(2)"></span>
-                            </div>
-
-                            <div style="display:flex;justify-content:space-between;padding-top:10px;border-top:1.5px dashed #cbd5e1;">
-                                <span style="font-size:14px;font-weight:800;color:#0f172a;">Final Total:</span>
-                                <span style="font-size:18px;font-weight:900;color:#16a34a;" x-text="'Rs.' + editTotal.toFixed(2)"></span>
-                            </div>
-                        </div>
-
                     </div>
-                    
-                    <div style="padding:20px 24px;border-top:1px solid #f1f5f9;background:#f8fafc;display:flex;gap:12px;">
-                        <button type="button" @click="showEditModal = false"
-                            style="flex:1;padding:12px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;">Cancel</button>
-                        <button type="button" @click="saveOrderEdit()"
-                            style="flex:1;padding:12px;background:#d97706;color:white;font-size:14px;font-weight:900;border:none;border-radius:12px;cursor:pointer;box-shadow:0 4px 12px rgba(217,119,6,0.3);">
-                            💾 Save Changes</button>
+
+                    <div x-show="deliveryMethod === 'rider'" style="display: none;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Select Rider</label>
+                        <select x-model="deliveryRiderId" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                            <option value="">-- Choose Rider --</option>
+                            <template x-for="rider in riders" :key="rider.id">
+                                <option :value="rider.id" x-text="rider.name"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <div x-show="deliveryMethod === 'pickme_flash'" style="display: none;">
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">PickMe Cost (Rs.)</label>
+                        <input type="number" x-model="deliveryPickmeCost" placeholder="e.g. 500" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                        <p style="font-size:11px;color:#64748b;margin-top:6px;font-weight:600;">This will automatically be added as a Branch Expense.</p>
+                    </div>
+
+                    <div style="display:flex;gap:12px;margin-top:8px;">
+                        <button type="button" @click="showDispatchDeliveryModal = false" style="flex:1;padding:14px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:14px;cursor:pointer;">Cancel</button>
+                        <button type="button" @click="submitDeliveryDispatch()" :disabled="isDispatchingDelivery" style="flex:1;padding:14px;background:#3b82f6;color:white;font-size:14px;font-weight:900;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 12px rgba(59,130,246,0.3);">
+                            <span x-text="isDispatchingDelivery ? 'Dispatching...' : 'Dispatch Now'"></span>
+                        </button>
                     </div>
                 </div>
             </div>
+        </div>
 
+        <x-modals.request-payment />
+        <x-modals.review-slip />
+        <x-modals.finalize-order />
+
+    </div>
 </x-app-layout>

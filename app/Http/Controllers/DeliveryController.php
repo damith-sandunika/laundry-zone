@@ -22,10 +22,18 @@ class DeliveryController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
+        // Super admins and workshop admins have full access
+        $hasFullAccess = $user->isSuperAdmin() || $user->role === 'workshop_admin';
+
+        // Branch admins and staff can only access if delivery is enabled for their branch
+        if (! $hasFullAccess && (! $user->branch || ! $user->branch->is_delivery_enabled)) {
+            abort(403, 'Delivery operations are not enabled for your branch.');
+        }
+
         $query = DeliveryAppointment::with(['customer', 'branch', 'deliveryTasks.rider', 'order.paymentTransactions', 'cancelledBy'])
             ->orderByDesc('pickup_scheduled_at');
 
-        if (! $user->isSuperAdmin()) {
+        if (! $hasFullAccess) {
             $query->where('branch_id', $branchId);
         }
 
@@ -59,10 +67,10 @@ class DeliveryController extends Controller
                 return true;
             });
 
-        $branches = $user->isSuperAdmin() ? Branch::where('is_active', true)->get() : collect();
+        $branches = $hasFullAccess ? Branch::where('is_active', true)->get() : collect();
 
         $ridersQuery = User::where('role', 'rider');
-        if (! $user->isSuperAdmin()) {
+        if (! $hasFullAccess) {
             $ridersQuery->where('branch_id', $branchId);
         }
         $riders = $ridersQuery->get();
@@ -204,6 +212,18 @@ class DeliveryController extends Controller
                     ]);
                 }
             }
+            
+            // Calculate Profit Share
+            $branch = Branch::find($appointment->branch_id);
+            if ($branch && $branch->branch_profit_percentage > 0) {
+                $subtotal = $order->subtotal ?? 0;
+                $branchProfit = $subtotal * ($branch->branch_profit_percentage / 100);
+                $workshopProfit = $subtotal - $branchProfit;
+                $order->update([
+                    'branch_profit' => $branchProfit,
+                    'workshop_profit' => $workshopProfit,
+                ]);
+            }
         }
 
         $dispatch = WorkshopDispatch::create([
@@ -218,9 +238,9 @@ class DeliveryController extends Controller
         ]);
 
         $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $appointment->branch_id)->get();
-        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Delivery Order Arrived: #' . $dispatch->order->order_number, route('workshop.operations'), 'delivery_arrived'));
+        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Delivery Order Arrived: #' . $dispatch->order->order_number, route('orders.index'), 'delivery_arrived'));
 
-        return redirect()->route('workshop.operations')->with('success', 'Delivery arrived! Order has been moved directly to Arrival & Processing.');
+        return redirect()->route('orders.index')->with('success', 'Delivery arrived! Order has been moved to the Orders page.');
     }
 
     public function assignDeliveryRider(Request $request, DeliveryAppointment $appointment)

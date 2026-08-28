@@ -145,9 +145,19 @@
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Branch Logo</label>
                                     <input type="file" name="logo" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors">
                                 </div>
-                                <div class="flex items-center gap-2 mt-4">
-                                    <input type="checkbox" name="is_active" value="1" checked class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
-                                    <label class="text-sm font-semibold text-gray-700">Set as Active Branch</label>
+                                <div class="grid grid-cols-2 gap-4 mt-2">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="is_active" value="1" checked class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                                        <label class="text-sm font-semibold text-gray-700">Set as Active Branch</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="is_delivery_enabled" value="1" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                                        <label class="text-sm font-semibold text-gray-700">Enable Delivery Ops</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Branch Profit Percentage (%)</label>
+                                    <input type="number" step="0.01" min="0" max="100" name="branch_profit_percentage" value="0" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50" placeholder="e.g. 20">
                                 </div>
                             </div>
                         </div>
@@ -216,9 +226,19 @@
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Update Logo (Optional)</label>
                                     <input type="file" name="logo" accept="image/*" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-colors">
                                 </div>
-                                <div class="flex items-center gap-2 mt-4">
-                                    <input type="checkbox" name="is_active" value="1" :checked="selectedBranch?.is_active" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
-                                    <label class="text-sm font-semibold text-gray-700">Active Branch</label>
+                                <div class="grid grid-cols-2 gap-4 mt-2">
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="is_active" value="1" :checked="selectedBranch?.is_active" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                                        <label class="text-sm font-semibold text-gray-700">Active Branch</label>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <input type="checkbox" name="is_delivery_enabled" value="1" :checked="selectedBranch?.is_delivery_enabled" class="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500">
+                                        <label class="text-sm font-semibold text-gray-700">Enable Delivery Ops</label>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Branch Profit Percentage (%)</label>
+                                    <input type="number" step="0.01" min="0" max="100" name="branch_profit_percentage" :value="selectedBranch?.branch_profit_percentage" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                                 </div>
                             </div>
                         </div>

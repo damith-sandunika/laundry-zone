@@ -190,6 +190,19 @@
             <td>NET PROFIT</td>
             <td class="text-right">Rs.{{ number_format(($totalSales + $totalPackagePayments + $totalDeliveryFees) - ($totalExpenses + $totalInventoryCost), 2) }}</td>
         </tr>
+        @if(isset($totalBranchProfit) && isset($totalWorkshopProfit) && ($totalBranchProfit > 0 || $totalWorkshopProfit > 0))
+        <tr>
+            <td colspan="2" style="padding-top: 15px; font-weight: bold; color: #475569;">PROFIT SPLIT (FROM SERVICE REVENUE ONLY)</td>
+        </tr>
+        <tr>
+            <td>Branch Share</td>
+            <td class="text-right" style="color: #16a34a; font-weight: bold;">Rs.{{ number_format($totalBranchProfit, 2) }}</td>
+        </tr>
+        <tr>
+            <td>Workshop Payable</td>
+            <td class="text-right" style="color: #2563eb; font-weight: bold;">Rs.{{ number_format($totalWorkshopProfit, 2) }}</td>
+        </tr>
+        @endif
     </table>
 
     <!-- 5. Status Cards (as requested) -->

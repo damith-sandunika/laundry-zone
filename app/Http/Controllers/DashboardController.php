@@ -102,26 +102,98 @@ class DashboardController extends Controller
                 ->sum('paid_amount');
             $bankTransfersAmount += $directBankOrders;
 
-            // Calculate expenses logged during shift
             $expensesLogged = Expense::where('branch_id', $branchId)
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
-            // Calculate total gross sales logged during shift (Orders + Packages)
-            $totalOrderSales = Order::where('branch_id', $branchId)
+            // Calculate pending payments for orders created today
+            $pendingPayments = Order::where('branch_id', $branchId)
                 ->where('created_at', '>=', $activeSession->opened_at)
-                ->sum('total');
+                ->selectRaw('SUM(total - paid_amount) as pending_total')
+                ->value('pending_total') ?? 0;
 
+            // Calculate commissionable sales and delivery fees from ACTUAL PAYMENTS
+            $totalDeliveryFees = 0;
+            $commissionableSales = 0;
+            $grossSales = 0;
+
+            // 1. Process payment transactions in this shift
+            $shiftPayments = PaymentTransaction::with('order')
+                ->whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->get();
+
+            foreach ($shiftPayments as $payment) {
+                if ($payment->order) {
+                    $order = $payment->order;
+                    $deliveryFee = $order->delivery_fee ?? 0;
+                    
+                    // Sum payments made BEFORE this transaction
+                    $paidBefore = PaymentTransaction::where('order_id', $order->id)
+                        ->where('id', '<', $payment->id)
+                        ->sum('amount');
+
+                    if ($paidBefore >= $deliveryFee) {
+                        $paidToDelivery = 0;
+                        $commissionable = $payment->amount;
+                    } else {
+                        $remainingDeliveryFee = $deliveryFee - $paidBefore;
+                        $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
+                        $commissionable = $payment->amount - $paidToDelivery;
+                    }
+                    
+                    $totalDeliveryFees += $paidToDelivery;
+                    $commissionableSales += $commissionable;
+                    $grossSales += $payment->amount;
+                }
+            }
+
+            // 2. Process backward compat direct cash/bank orders without transactions
+            $directOrders = Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->whereDoesntHave('paymentTransactions')
+                ->whereIn('payment_method', ['cash', 'bank'])
+                ->get();
+
+            foreach ($directOrders as $order) {
+                $deliveryFee = $order->delivery_fee ?? 0;
+                $paid = $order->paid_amount;
+                
+                $paidToDelivery = min($paid, $deliveryFee);
+                $commissionable = $paid - $paidToDelivery;
+                
+                $totalDeliveryFees += $paidToDelivery;
+                $commissionableSales += $commissionable;
+                $grossSales += $paid;
+            }
+
+            // 3. Package sales (fully commissionable, no delivery fee)
             $totalPackageSales = PackagePayment::whereHas('customerPackage', fn ($q) => $q->where('branch_id', $branchId))
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
-            $totalSale = $totalOrderSales + $totalPackageSales;
+            $grossSales += $totalPackageSales;
+            $commissionableSales += $totalPackageSales;
 
             $currentBalance = $activeSession->opening_cash + $cashCollected + $cardPaymentsAmount + $bankTransfersAmount - $expensesLogged;
             $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
+            $branchProfitPercent = $activeSession->branch->branch_profit_percentage ?? 0;
+            
+            $branchCommission = $commissionableSales * ($branchProfitPercent / 100);
+            $totalBranchRevenue = $branchCommission + $totalDeliveryFees;
+            $netIncome = $totalBranchRevenue - $expensesLogged;
+            $totalPaymentsCollected = $cashCollected + $cardPaymentsAmount + $bankTransfersAmount;
+
         } else {
-            $totalSale = 0;
+            $grossSales = 0;
+            $commissionableSales = 0;
+            $totalDeliveryFees = 0;
+            $branchCommission = 0;
+            $branchProfitPercent = 0;
+            $totalBranchRevenue = 0;
+            $netIncome = 0;
+            $totalPaymentsCollected = 0;
+            $pendingPayments = 0;
         }
 
         $stats = [
@@ -129,15 +201,23 @@ class DashboardController extends Controller
             'pending_deliveries' => $pendingDeliveries->count(),
             'completed_today' => $completedToday->count(),
             'total_customers' => $totalCustomers->count(),
-            'current_balance' => $currentBalance,
-            'cash_balance' => $cashBalance,
+            'current_balance' => $currentBalance ?? 0,
+            'cash_balance' => $cashBalance ?? 0,
             'cash_collected' => $cashCollected ?? 0,
-            'card_payments' => $cardPayments,
-            'card_payments_amount' => $cardPaymentsAmount,
-            'bank_transfers' => $bankTransfersAmount,
-            'bank_transfers_count' => $bankTransfers,
-            'total_sale' => $totalSale ?? 0,
+            'card_payments' => $cardPayments ?? 0,
+            'card_payments_amount' => $cardPaymentsAmount ?? 0,
+            'bank_transfers_count' => $bankTransfers ?? 0,
+            'bank_transfers' => $bankTransfersAmount ?? 0,
+            'total_payments_collected' => $totalPaymentsCollected ?? 0,
+            'gross_sales' => $grossSales ?? 0,
+            'commissionable_sales' => $commissionableSales ?? 0,
+            'total_delivery_fees' => $totalDeliveryFees ?? 0,
+            'branch_commission' => $branchCommission,
+            'total_branch_revenue' => $totalBranchRevenue ?? 0,
+            'net_income' => $netIncome ?? 0,
+            'branch_profit_percentage' => $branchProfitPercent,
             'expenses_logged' => $expensesLogged ?? 0,
+            'pending_payments' => $pendingPayments ?? 0,
         ];
 
         // Active orders sorted by nearest due_date first

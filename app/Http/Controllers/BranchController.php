@@ -35,10 +35,13 @@ class BranchController extends Controller
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude']);
         $data['is_active'] = $request->has('is_active');
+        $data['is_delivery_enabled'] = $request->has('is_delivery_enabled');
+        $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {
             $path = $request->file('logo')->store('branch_logos', 'public');
@@ -65,12 +68,15 @@ class BranchController extends Controller
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude']);
 
         // Ensure is_active defaults to false if not present, true if present
         $data['is_active'] = $request->has('is_active');
+        $data['is_delivery_enabled'] = $request->has('is_delivery_enabled');
+        $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {
             // Delete old logo if exists

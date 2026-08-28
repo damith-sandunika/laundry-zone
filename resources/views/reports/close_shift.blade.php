@@ -86,9 +86,14 @@
     <div class="row"><span>Package Income</span><span>Rs.{{ number_format($totalPackageIncome ?? 0, 2) }}</span></div>
     <div class="divider"></div>
     <div class="row total-row"><span>FULL GROSS SALE</span><span>Rs.{{ number_format($totalSales + ($totalPackageIncome ?? 0), 2) }}</span></div>
-
-
-
+    
+    @if(isset($totalBranchProfit) && isset($totalWorkshopProfit) && ($totalBranchProfit > 0 || $totalWorkshopProfit > 0))
+    <div class="divider"></div>
+    <div class="section-head">PROFIT SPLIT (SERVICE ONLY)</div>
+    <div class="row"><span>Branch Share</span><span>Rs.{{ number_format($totalBranchProfit, 2) }}</span></div>
+    <div class="row"><span>Workshop Payable</span><span>Rs.{{ number_format($totalWorkshopProfit, 2) }}</span></div>
+    @endif
+    
     <div class="section-head">EXPENSES OUT</div>
     @if($expenses->isEmpty())
         <div class="row"><span>No expenses</span><span>Rs.0.00</span></div>

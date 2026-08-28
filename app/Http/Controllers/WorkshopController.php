@@ -152,7 +152,150 @@ class WorkshopController extends Controller
 
             $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
             $currentBalance = $cashBalance;
-            $totalSale = $cashCollected + $cardPaymentsAmount + $bankTransfers;
+            $totalPaymentsCollected = $cashCollected + $cardPaymentsAmount + $bankTransfers;
+
+            $workshopDirectDeliveryFees = 0;
+            $workshopDirectCommissionableSales = 0;
+            
+            // 1. Process payment transactions collected directly by the workshop
+            $shiftPayments = \App\Models\PaymentTransaction::with('order')
+                ->whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->get();
+
+            foreach ($shiftPayments as $payment) {
+                if ($payment->order) {
+                    $order = $payment->order;
+                    $deliveryFee = $order->delivery_fee ?? 0;
+                    
+                    $paidBefore = \App\Models\PaymentTransaction::where('order_id', $order->id)
+                        ->where('id', '<', $payment->id)
+                        ->sum('amount');
+
+                    if ($paidBefore >= $deliveryFee) {
+                        $paidToDelivery = 0;
+                        $commissionable = $payment->amount;
+                    } else {
+                        $remainingDeliveryFee = $deliveryFee - $paidBefore;
+                        $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
+                        $commissionable = $payment->amount - $paidToDelivery;
+                    }
+                    
+                    $workshopDirectDeliveryFees += $paidToDelivery;
+                    $workshopDirectCommissionableSales += $commissionable;
+                }
+            }
+
+            // 2. Direct cash/bank orders without transactions
+            $directOrders = Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->whereDoesntHave('paymentTransactions')
+                ->whereIn('payment_method', ['cash', 'bank'])
+                ->get();
+
+            foreach ($directOrders as $order) {
+                $deliveryFee = $order->delivery_fee ?? 0;
+                $paid = $order->paid_amount;
+                
+                $paidToDelivery = min($paid, $deliveryFee);
+                $commissionable = $paid - $paidToDelivery;
+                
+                $workshopDirectDeliveryFees += $paidToDelivery;
+                $workshopDirectCommissionableSales += $commissionable;
+            }
+
+            // Calculate total orders dispatched to this workshop during the shift
+            $shiftDispatches = \App\Models\WorkshopDispatch::with(['order', 'branch'])
+                ->where('workshop_branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->get();
+            
+            $workshopGrossSales = 0;
+            $branchDeliveryFees = 0;
+            $commissionableSales = 0;
+            $branchCommissionsGiven = 0;
+            $branchBreakdown = [];
+            
+            $branchPendingPayments = 0;
+            $ourPendingPayments = Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->selectRaw('SUM(total - paid_amount) as pending_total')
+                ->value('pending_total') ?? 0;
+
+            foreach ($shiftDispatches as $dispatch) {
+                if ($dispatch->order && $dispatch->branch) {
+                    $bId = $dispatch->branch->id;
+                    
+                    // Exclude the workshop itself from the branch breakdown
+                    if ($bId == $branchId) {
+                        continue;
+                    }
+
+                    if (!isset($branchBreakdown[$bId])) {
+                        $branchBreakdown[$bId] = [
+                            'name' => $dispatch->branch->name,
+                            'profit_percentage' => $dispatch->branch->branch_profit_percentage ?? 0,
+                            'gross_sales' => 0,
+                            'branch_commission' => 0,
+                            'workshop_commission' => 0,
+                        ];
+                    }
+
+                    $order = $dispatch->order;
+                    $orderTotal = $order->total;
+                    $deliveryFee = $order->delivery_fee ?? 0;
+                    $paidAmount = $order->paid_amount;
+                    
+                    $branchPendingPayments += ($orderTotal - $paidAmount);
+                    
+                    $paidToDelivery = min($paidAmount, $deliveryFee);
+                    $commissionablePaid = $paidAmount - $paidToDelivery;
+                    
+                    if ($commissionablePaid > 0) {
+                        $workshopGrossSales += $commissionablePaid;
+                        $branchDeliveryFees += $paidToDelivery;
+                        $commissionableSales += $commissionablePaid;
+                        
+                        $branchProfitPercent = $dispatch->branch->branch_profit_percentage ?? 0;
+                        $branchComm = $commissionablePaid * ($branchProfitPercent / 100);
+                        
+                        $branchCommissionsGiven += $branchComm;
+
+                        $branchBreakdown[$bId]['gross_sales'] += $commissionablePaid;
+                        $branchBreakdown[$bId]['branch_commission'] += $branchComm;
+                        $branchBreakdown[$bId]['workshop_commission'] += ($commissionablePaid - $branchComm);
+                    }
+                }
+            }
+
+            // The workshop keeps the commissionable sales minus the branch commissions given
+            $workshopCommissionFromBranches = $commissionableSales - $branchCommissionsGiven;
+            
+            $totalSalesRevenue = $workshopDirectCommissionableSales + $workshopCommissionFromBranches;
+            $netIncome = $totalSalesRevenue + $workshopDirectDeliveryFees - $expensesLogged;
+
+        } else {
+            $totalPaymentsCollected = 0;
+            $workshopGrossSales = 0;
+            $branchDeliveryFees = 0;
+            $commissionableSales = 0;
+            $branchCommissionsGiven = 0;
+            $branchBreakdown = [];
+            $branchPendingPayments = 0;
+            $ourPendingPayments = 0;
+            $workshopCommissionFromBranches = 0;
+            $totalSalesRevenue = 0;
+            $workshopDirectDeliveryFees = 0;
+            $workshopDirectCommissionableSales = 0;
+            $netIncome = 0;
+            $cashCollected = 0;
+            $cardPayments = 0;
+            $cardPaymentsAmount = 0;
+            $bankTransfers = 0;
+            $expensesLogged = 0;
+            $cashBalance = 0;
+            $currentBalance = 0;
+            $totalSale = 0;
         }
 
         // Workshop Stats
@@ -171,8 +314,20 @@ class WorkshopController extends Controller
             'card_payments' => $cardPayments,
             'card_payments_amount' => $cardPaymentsAmount,
             'bank_transfers' => $bankTransfers,
-            'total_sale' => $totalSale,
+            'total_payments_collected' => $totalPaymentsCollected,
+            'workshop_direct_commissionable_sales' => $workshopDirectCommissionableSales,
+            'workshop_direct_delivery_fees' => $workshopDirectDeliveryFees,
+            'workshop_gross_sales' => $workshopGrossSales,
+            'branch_delivery_fees' => $branchDeliveryFees,
+            'commissionable_sales' => $commissionableSales,
+            'branch_commissions_given' => $branchCommissionsGiven,
+            'branch_breakdown' => $branchBreakdown,
+            'workshop_commission_from_branches' => $workshopCommissionFromBranches,
+            'total_sales_revenue' => $totalSalesRevenue,
+            'net_income' => $netIncome,
             'expenses_logged' => $expensesLogged ?? 0,
+            'our_pending_payments' => $ourPendingPayments,
+            'branch_pending_payments' => $branchPendingPayments,
         ];
 
         // Recent Dispatches (equivalent to active orders)
@@ -262,8 +417,10 @@ class WorkshopController extends Controller
         $branches = Branch::where('type', 'branch')->get();
         $riders = \App\Models\User::where('role', 'rider')->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->where('is_active', true)->get();
+        $services = \App\Models\ServiceType::where('is_active', true)->get();
+        $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies'));
+        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'services', 'minimumDeliveryCost'));
     }
 
     // ─── Workshop Admin: Mark received at workshop ───
@@ -351,15 +508,8 @@ class WorkshopController extends Controller
             ]);
         }
 
-        // For walk-in (non-delivery) orders: update order status
-        if (! $order->is_delivery_order) {
-            $order->update(['status' => 'done', 'ready_at' => now()]);
-
-            // Send "Order Ready" WA notification
-            try {
-                app(\App\Services\WhatsAppService::class)->notifyOrderReady($order->fresh());
-            } catch (\Exception $e) { /* silent */ }
-        }
+        // Mark order as completed_at_workshop — actual delivery/handover happens at branch
+        $order->update(['status' => 'completed_at_workshop']);
 
         $order->statusHistory()->create([
             'status'     => 'completed_at_workshop',
@@ -450,7 +600,7 @@ class WorkshopController extends Controller
         return view('workshop.finalize_bill', compact('dispatch', 'services', 'cartItems', 'minimumDeliveryCost'));
     }
 
-    // ─── Workshop Admin: Return to branch ───
+    // ─── Workshop Admin: Return to branch (all order types) ───
     public function returnToBranch(WorkshopDispatch $dispatch)
     {
         $dispatch->update([
@@ -459,10 +609,33 @@ class WorkshopController extends Controller
             'returned_at' => now(),
         ]);
 
-        $dispatch->order->update(['status' => 'returned_from_workshop']);
+        $order = $dispatch->order;
 
-        $branchAdmins = \App\Models\User::where('role', 'branch_admin')->where('branch_id', $dispatch->branch_id)->get();
-        \Illuminate\Support\Facades\Notification::send($branchAdmins, new \App\Notifications\SystemAlertNotification('Order Returned from Workshop: #' . $dispatch->order->order_number, route('orders.show', $dispatch->order_id), 'workshop_return'));
+        // Mark order as returning to branch — the branch must confirm receipt before it becomes 'done'
+        $order->update([
+            'status' => 'returned_from_workshop',
+            // 'ready_at' => now(), // Will be set when branch actually confirms receipt
+        ]);
+
+        \App\Models\OrderStatusHistory::create([
+            'order_id' => $order->id,
+            'status' => 'returned_from_workshop',
+            'changed_by' => auth()->id(),
+            'note' => 'Washing completed. Dispatched back to branch.',
+        ]);
+
+        // Notify branch admins (and admin role users) of the originating branch
+        $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin'])
+            ->where('branch_id', $dispatch->branch_id)
+            ->get();
+        \Illuminate\Support\Facades\Notification::send(
+            $branchAdmins,
+            new \App\Notifications\SystemAlertNotification(
+                'Order Ready from Workshop: #' . $order->order_number,
+                route('orders.show', $dispatch->order_id),
+                'workshop_return'
+            )
+        );
 
         return response()->json(['success' => true, 'status' => 'returned_to_branch']);
     }

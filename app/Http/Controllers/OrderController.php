@@ -54,7 +54,7 @@ class OrderController extends Controller
         $isOnline = $request->input('is_online');
         $paymentReady = $request->input('payment_ready');
 
-        $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop'])
+        $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop', 'deliveryAppointment', 'paymentTransactions'])
             ->orderBy('created_at', 'desc');
 
         if ($branchId && auth()->user()->role !== 'super_admin') {
@@ -89,12 +89,49 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->get();
+        $orders = $query->get()->map(function($order) {
+            // Attach the latest workshop dispatch ID so the branch can confirm receipt
+            $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
+                ->whereIn('status', ['returned_to_branch', 'received_at_branch'])
+                ->orderByDesc('returned_at')
+                ->first();
+            $order->workshop_dispatch_id = $dispatch ? $dispatch->id : null;
+            return $order;
+        });
         $cubbies = Cubby::where('branch_id', $branchId ?? 1)->orderBy('name')->get();
         $services = ServiceType::orderBy('name')->get();
         $workshops = Branch::workshops()->get();
+        $riders = \App\Models\User::where('role', 'rider')->where('is_active', true)->get();
+        $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('orders.index', compact('orders', 'cubbies', 'services', 'workshops'));
+        return view('orders.index', compact('orders', 'cubbies', 'services', 'workshops', 'riders', 'minimumDeliveryCost'));
+    }
+    public function requestPayment(Order $order, Request $request, \App\Services\WhatsAppService $waService)
+    {
+        $amountType = $request->input('amount_type', 'full');
+        $amount = 0;
+
+        if ($amountType === 'full') {
+            $amount = $order->total;
+        } elseif ($amountType === '50') {
+            $amount = $order->total / 2;
+        } else {
+            $amount = $request->input('custom_amount', $order->total);
+        }
+
+        $customer = $order->customer;
+        if ($customer && $customer->phone) {
+            $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
+            $message = "💳 *Payment Request*\n\n"
+                . "Order #{$order->order_number}\n"
+                . "Amount Due: Rs. " . number_format($amount, 2) . "\n\n"
+                . "Please pay via this link to start processing:\n{$paymentLink}";
+
+            $waService->sendText($customer->phone, $message, $order->id, $customer->id);
+            return response()->json(['success' => true, 'message' => 'Payment request sent via WhatsApp.']);
+        }
+
+        return response()->json(['success' => false, 'message' => 'Customer has no phone number.'], 400);
     }
 
     public function updateOrder(Request $request, Order $order)
@@ -194,6 +231,27 @@ class OrderController extends Controller
                         'changed_by' => auth()->id(),
                         'note' => 'Workshop started processing',
                     ]);
+                } else if ($request->next_action === 'dispatch_to_workshop') {
+                    $order->update(['status' => 'dispatched_to_workshop']);
+                    
+                    $workshop = \App\Models\Branch::workshops()->first();
+                    if ($workshop) {
+                        \App\Models\WorkshopDispatch::create([
+                            'order_id' => $order->id,
+                            'branch_id' => $order->branch_id,
+                            'workshop_branch_id' => $workshop->id,
+                            'status' => 'dispatched_to_workshop',
+                            'dispatched_by' => auth()->id(),
+                            'dispatch_notes' => 'Dispatched from branch after confirmation',
+                        ]);
+                    }
+
+                    OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'status' => 'dispatched_to_workshop',
+                        'changed_by' => auth()->id(),
+                        'note' => 'Branch verified and dispatched order to workshop',
+                    ]);
                 } else if ($request->next_action === 'request_payment') {
                     // We can send WhatsApp message here
                     $amountToRequest = $request->requested_advance > 0 ? $request->requested_advance : $total;
@@ -202,6 +260,25 @@ class OrderController extends Controller
                         $msg = "Hi {$order->customer->name},\n\nYour laundry bill for Order #{$order->order_number} has been finalized.\nTotal Bill: Rs. {$total}\nAmount to Pay Now: Rs. {$amountToRequest}\n\nPlease visit your dashboard to complete the payment so we can start processing: " . route('customer.dashboard');
                         $waService = app(\App\Services\WhatsAppService::class);
                         $waService->sendText($phone, $msg, $order->id, $order->customer_id);
+                    }
+                }
+
+                // Handle advance cash payment if provided
+                if ($request->filled('advance_cash_amount') && $request->advance_cash_amount > 0) {
+                    $advance = (float) $request->advance_cash_amount;
+                    \App\Models\PaymentTransaction::create([
+                        'order_id' => $order->id,
+                        'amount' => $advance,
+                        'payment_method' => 'cash',
+                        'status' => 'completed',
+                        'collected_by' => auth()->id(),
+                    ]);
+                    $order->increment('paid_amount', $advance);
+                    
+                    if ($order->paid_amount >= $order->total) {
+                        $order->update(['payment_status' => 'paid']);
+                    } else {
+                        $order->update(['payment_status' => 'partial']);
                     }
                 }
             });
@@ -663,5 +740,72 @@ class OrderController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Payment slip rejected successfully.');
+    }
+
+    public function dispatchDelivery(Request $request, Order $order)
+    {
+        $request->validate([
+            'delivery_method' => 'required|in:rider,pickme_flash',
+            'rider_id' => 'required_if:delivery_method,rider|nullable|exists:users,id',
+            'pickme_cost' => 'required_if:delivery_method,pickme_flash|nullable|numeric|min:0',
+        ]);
+
+        $appointment = $order->deliveryAppointment;
+        $branchId = auth()->user()->branch_id ?? 1;
+
+        if ($request->delivery_method === 'rider') {
+            \App\Models\DeliveryTask::create([
+                'delivery_appointment_id' => $appointment ? $appointment->id : null,
+                'order_id' => $order->id,
+                'rider_id' => $request->rider_id,
+                'branch_id' => $branchId,
+                'task_type' => 'delivery',
+                'status' => 'assigned',
+            ]);
+
+            if ($appointment) {
+                $appointment->update(['status' => 'out_for_delivery']);
+            }
+            $order->update(['status' => 'out_for_delivery']);
+
+            $riderUser = \App\Models\User::find($request->rider_id);
+            if ($riderUser) {
+                \Illuminate\Support\Facades\Notification::send($riderUser, new \App\Notifications\SystemAlertNotification('New Delivery Task: Order #' . $order->order_number, route('rider.tasks')));
+            }
+
+            return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
+
+        } else {
+            // PickMe
+            if ($order->paid_amount < $order->total) {
+                return response()->json(['success' => false, 'message' => 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.'], 403);
+            }
+
+            \App\Models\Expense::create([
+                'branch_id' => $branchId,
+                'amount' => $request->pickme_cost,
+                'category' => 'PickMe',
+                'description' => 'PickMe Delivery for Order #' . $order->order_number,
+                'expense_date' => now(),
+                'created_by' => auth()->id(),
+            ]);
+
+            if ($appointment) {
+                $appointment->update(['status' => 'delivered']);
+            }
+            $order->update([
+                'status' => 'delivered',
+                'delivered_at' => now(),
+            ]);
+            
+            \App\Models\OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => 'delivered',
+                'changed_by' => auth()->id(),
+                'note' => 'Delivered via PickMe',
+            ]);
+
+            return response()->json(['success' => true, 'status' => 'completed']);
+        }
     }
 }

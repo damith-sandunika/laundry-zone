@@ -115,6 +115,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{order}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
     Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
+    Route::post('/orders/{order}/dispatch-delivery', [OrderController::class, 'dispatchDelivery'])->name('orders.dispatchDelivery');
+    Route::post('/orders/{order}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
     Route::post('/orders/{order}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
     Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve');
     Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject');
@@ -171,22 +173,24 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/bulk-status', [WorkshopController::class, 'bulkStatus'])->name('bulkStatus');
     });
 
-    // ─── DELIVERY & INVENTORY (WORKSHOP ADMIN) ───
+    // ─── DELIVERY (BRANCH ADMIN & STAFF & WORKSHOP ADMIN) ───
+    // Authorization is handled inside DeliveryController
+    Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery.index');
+    Route::get('/delivery/{appointment}/confirm', [DeliveryController::class, 'confirm'])->name('delivery.confirm');
+    Route::post('/delivery/{appointment}/confirm-action', [DeliveryController::class, 'confirmAction'])->name('delivery.confirmAction');
+    Route::post('/delivery/{appointment}/cancel', [DeliveryController::class, 'cancel'])->name('delivery.cancel');
+    Route::post('/delivery/{appointment}/assign-rider', [DeliveryController::class, 'assignRider'])->name('delivery.assignRider');
+    Route::post('/delivery/{appointment}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
+    Route::post('/delivery/{appointment}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
+    Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
+
+    // ─── INVENTORY (WORKSHOP ADMIN) ───
     Route::middleware(['workshop'])->group(function () {
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::post('/inventory/bulk-restock', [InventoryController::class, 'bulkStockIn'])->name('inventory.bulkStockIn');
         Route::post('/inventory/bulk-stock-out', [InventoryController::class, 'bulkStockOut'])->name('inventory.bulkStockOut');
         Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stockOut');
         Route::delete('/inventory/{item}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
-
-        Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery.index');
-        Route::get('/delivery/{appointment}/confirm', [DeliveryController::class, 'confirm'])->name('delivery.confirm');
-        Route::post('/delivery/{appointment}/confirm-action', [DeliveryController::class, 'confirmAction'])->name('delivery.confirmAction');
-        Route::post('/delivery/{appointment}/cancel', [DeliveryController::class, 'cancel'])->name('delivery.cancel');
-        Route::post('/delivery/{appointment}/assign-rider', [DeliveryController::class, 'assignRider'])->name('delivery.assignRider');
-        Route::post('/delivery/{appointment}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
-        Route::post('/delivery/{appointment}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
-        Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
     });
 
     // ─── ADMIN + WORKSHOP_ADMIN SETTINGS ───
