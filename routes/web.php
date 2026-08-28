@@ -19,10 +19,10 @@ use App\Http\Controllers\ReportController;
 use App\Http\Controllers\RiderController;
 use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
-use App\Http\Controllers\WhatsappTemplateController;
+use App\Http\Controllers\SmsTemplateController;
+use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\WorkshopController;
 use App\Models\Order;
-use App\Services\WhatsAppService;
 use Illuminate\Support\Facades\Route;
 
 // ─── App Redirect ───
@@ -86,13 +86,7 @@ Route::get('/orders/{order}/track', function (Order $order) {
     return view('orders.track', compact('order'));
 })->name('orders.track');
 
-// ─── Public QR Code Generator ───
-Route::get('/qr/{content}', function (string $content) {
-    $service = new WhatsAppService;
-    $path = $service->generateQrCodeImage(base64_decode($content), 'qr');
 
-    return response()->file($path, ['Content-Type' => 'image/png']);
-})->name('qr.generate');
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/notifications/check', [\App\Http\Controllers\NotificationController::class, 'check'])->name('notifications.check');
@@ -201,10 +195,6 @@ Route::middleware(['auth'])->group(function () {
         // Payment Settings
         Route::post('/settings/payment-methods', [PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
 
-        // WhatsApp Proxy Routes (Server-ready)
-        Route::get('/settings/whatsapp/status', [SettingsController::class, 'whatsappStatus'])->name('whatsapp.status');
-        Route::post('/settings/whatsapp/logout', [SettingsController::class, 'whatsappLogout'])->name('whatsapp.logout');
-        Route::post('/settings/whatsapp/reset', [SettingsController::class, 'whatsappReset'])->name('whatsapp.reset');
 
         Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
         Route::put('/settings/cubbies/{cubby}', [SettingsController::class, 'updateCubby'])->name('settings.updateCubby');
@@ -239,8 +229,15 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
             Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
 
-            Route::get('/whatsapp-templates', [WhatsappTemplateController::class, 'index'])->name('whatsapp_templates.index');
-            Route::put('/whatsapp-templates/{whatsappTemplate}', [WhatsappTemplateController::class, 'update'])->name('whatsapp_templates.update');
+            Route::get('/sms-templates', [SmsTemplateController::class, 'index'])->name('sms-templates.index');
+            Route::put('/sms-templates/{template}', [SmsTemplateController::class, 'update'])->name('sms-templates.update');
+            Route::post('/sms-templates/toggle', [SmsTemplateController::class, 'toggleGlobal'])->name('sms-templates.toggleGlobal');
+            Route::post('/sms-templates/seed', [SmsTemplateController::class, 'seedDefault'])->name('sms-templates.seedDefault');
+
+            Route::get('/email-templates', [EmailTemplateController::class, 'index'])->name('email-templates.index');
+            Route::put('/email-templates/{template}', [EmailTemplateController::class, 'update'])->name('email-templates.update');
+            Route::post('/email-templates/toggle', [EmailTemplateController::class, 'toggleGlobal'])->name('email-templates.toggleGlobal');
+            Route::post('/email-templates/seed', [EmailTemplateController::class, 'seedDefault'])->name('email-templates.seedDefault');
         });
 
         Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');

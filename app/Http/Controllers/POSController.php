@@ -12,8 +12,7 @@ use App\Models\PaymentTransaction;
 use App\Models\RegisterSession;
 use App\Models\ServiceCategory;
 use App\Models\ServiceType;
-use App\Models\WhatsappLog;
-use App\Models\WhatsappTemplate;
+use App\Services\CommunicationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -248,20 +247,10 @@ class POSController extends Controller
 
                 }
 
-                // 4. WhatsApp notification queue
-                $customerObj = Customer::withoutGlobalScopes()->find($customerId);
-                $msgContent = WhatsappTemplate::generateMessage('order_confirmation', $order, $customerObj);
-
-                if (! empty($msgContent)) {
-                    WhatsappLog::create([
-                        'order_id' => $order->id,
-                        'customer_id' => $customerId,
-                        'phone' => $customerObj->phone,
-                        'message_type' => 'order_received',
-                        'message' => $msgContent,
-                        'status' => 'pending',
-                    ]);
-                }
+                // 4. Communication notification queue
+                $commService = new CommunicationService();
+                $orderForComm = Order::with('customer')->find($order->id);
+                $commService->sendOrderConfirmation($orderForComm);
 
                 // 5. If workshop admin: auto-dispatch to operations as 'processing'
                 if ($user->role === 'workshop_admin') {

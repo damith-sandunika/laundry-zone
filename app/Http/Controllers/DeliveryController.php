@@ -10,7 +10,7 @@ use App\Models\Order;
 use App\Models\PaymentTransaction;
 use App\Models\User;
 use App\Models\WorkshopDispatch;
-use App\Services\WhatsAppService;
+use App\Services\CommunicationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 
@@ -89,15 +89,14 @@ class DeliveryController extends Controller
         return view('delivery.confirm', compact('appointment', 'riders'));
     }
 
-    public function confirmAction(DeliveryAppointment $appointment, WhatsAppService $waService)
+    public function confirmAction(DeliveryAppointment $appointment)
     {
         $appointment->update(['status' => 'confirmed']);
-        $waService->notifyDeliveryConfirmed($appointment);
 
         return redirect()->route('delivery.index')->with('success', 'Appointment confirmed. Customer notified.');
     }
 
-    public function cancel(Request $request, DeliveryAppointment $appointment, WhatsAppService $waService)
+    public function cancel(Request $request, DeliveryAppointment $appointment)
     {
         $request->validate(['reason' => 'nullable|string|max:255']);
         $appointment->update([
@@ -106,12 +105,10 @@ class DeliveryController extends Controller
             'cancelled_by' => auth()->id(),
         ]);
 
-        $waService->notifyBookingCancelled($appointment, $request->reason ?? 'Branch cancelled.');
-
         return redirect()->route('delivery.index')->with('success', 'Appointment cancelled. Customer notified.');
     }
 
-    public function assignRider(Request $request, DeliveryAppointment $appointment, WhatsAppService $waService)
+    public function assignRider(Request $request, DeliveryAppointment $appointment)
     {
         $request->validate([
             'delivery_method' => 'nullable|string|in:in_house,pickme_flash',
@@ -142,14 +139,20 @@ class DeliveryController extends Controller
 
         \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Pickup Task Assigned: #' . $appointment->id, route('rider.tasks')));
 
-        // WA notification
-        $waService->notifyRiderAssigned($appointment, $rider);
+        // Notification
+        if ($appointment->order_id) {
+            $order = Order::find($appointment->order_id);
+            if ($order) {
+                $commService = new CommunicationService();
+                $commService->sendDeliveryConfirmation($order);
+            }
+        }
 
         return redirect()->route('delivery.index')->with('success', "Rider {$rider->name} assigned for pickup.");
     }
 
     // ─── Branch Admin: Mark order received at branch, assign delivery rider ───
-    public function markAtBranch(Request $request, DeliveryAppointment $appointment, WhatsAppService $waService)
+    public function markAtBranch(Request $request, DeliveryAppointment $appointment)
     {
         $appointment->update(['status' => 'at_branch']);
 

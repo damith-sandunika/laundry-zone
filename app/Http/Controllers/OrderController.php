@@ -12,8 +12,7 @@ use App\Models\OrderStatusHistory;
 use App\Models\PaymentTransaction;
 use App\Models\ServiceType;
 use App\Models\User;
-use App\Models\WhatsappLog;
-use App\Models\WhatsappTemplate;
+use App\Services\CommunicationService;
 use App\Models\WorkshopDispatch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -106,7 +105,7 @@ class OrderController extends Controller
 
         return view('orders.index', compact('orders', 'cubbies', 'services', 'workshops', 'riders', 'minimumDeliveryCost'));
     }
-    public function requestPayment(Order $order, Request $request, \App\Services\WhatsAppService $waService)
+    public function requestPayment(Order $order, Request $request)
     {
         $amountType = $request->input('amount_type', 'full');
         $amount = 0;
@@ -120,15 +119,15 @@ class OrderController extends Controller
         }
 
         $customer = $order->customer;
-        if ($customer && $customer->phone) {
+        if ($customer) {
             $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
-            $message = "💳 *Payment Request*\n\n"
-                . "Order #{$order->order_number}\n"
-                . "Amount Due: Rs. " . number_format($amount, 2) . "\n\n"
-                . "Please pay via this link to start processing:\n{$paymentLink}";
-
-            $waService->sendText($customer->phone, $message, $order->id, $customer->id);
-            return response()->json(['success' => true, 'message' => 'Payment request sent via WhatsApp.']);
+            
+            // Sending manual payment request using generic method or standard approach?
+            // Actually they wanted a "bill finalize" message!
+            $commService = new \App\Services\CommunicationService();
+            $commService->sendFinalizedBill($order);
+            
+            return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
 
         return response()->json(['success' => false, 'message' => 'Customer has no phone number.'], 400);
@@ -253,14 +252,9 @@ class OrderController extends Controller
                         'note' => 'Branch verified and dispatched order to workshop',
                     ]);
                 } else if ($request->next_action === 'request_payment') {
-                    // We can send WhatsApp message here
-                    $amountToRequest = $request->requested_advance > 0 ? $request->requested_advance : $total;
-                    $phone = $order->customer->phone;
-                    if ($phone) {
-                        $msg = "Hi {$order->customer->name},\n\nYour laundry bill for Order #{$order->order_number} has been finalized.\nTotal Bill: Rs. {$total}\nAmount to Pay Now: Rs. {$amountToRequest}\n\nPlease visit your dashboard to complete the payment so we can start processing: " . route('customer.dashboard');
-                        $waService = app(\App\Services\WhatsAppService::class);
-                        $waService->sendText($phone, $msg, $order->id, $order->customer_id);
-                    }
+                    // Send payment request / bill finalize
+                    $commService = new \App\Services\CommunicationService();
+                    $commService->sendFinalizedBill($order);
                 }
 
                 // Handle advance cash payment if provided
@@ -335,21 +329,9 @@ class OrderController extends Controller
                     ]);
                     Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
 
-                    // Queue WhatsApp msg
-                    $customer = $order->customer;
-                    $cubby = Cubby::find($request->cubby_id);
-                    $msgContent = WhatsappTemplate::generateMessage('order_ready', $order, $customer, $cubby ? $cubby->name : '');
-
-                    if (! empty($msgContent)) {
-                        WhatsappLog::create([
-                            'order_id' => $order->id,
-                            'customer_id' => $customer->id,
-                            'phone' => $customer->phone,
-                            'message_type' => 'order_ready',
-                            'message' => $msgContent,
-                            'status' => 'pending',
-                        ]);
-                    }
+                    // Queue notification
+                    $commService = new \App\Services\CommunicationService();
+                    $commService->sendOrderReady($order);
                 }
 
                 if ($request->status === 'done') {
@@ -401,20 +383,9 @@ class OrderController extends Controller
                         Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
                     }
 
-                    // Queue WhatsApp msg
-                    $customer = $order->customer;
-                    $msgContent = WhatsappTemplate::generateMessage('order_delivered', $order, $customer);
-
-                    if (! empty($msgContent)) {
-                        WhatsappLog::create([
-                            'order_id' => $order->id,
-                            'customer_id' => $customer->id,
-                            'phone' => $customer->phone,
-                            'message_type' => 'thank_you',
-                            'message' => $msgContent,
-                            'status' => 'pending',
-                        ]);
-                    }
+                    // Queue notification
+                    $commService = new \App\Services\CommunicationService();
+                    $commService->sendOrderDelivered($order);
 
                     $appt = DeliveryAppointment::where('order_id', $order->id)->first();
                     if ($appt) {
@@ -579,21 +550,9 @@ class OrderController extends Controller
 
                     Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
 
-                    // WhatsApp MSG
-                    $customer = $order->customer;
-                    $cubby = Cubby::find($request->cubby_id);
-                    $msgContent = WhatsappTemplate::generateMessage('order_ready', $order, $customer, $cubby ? $cubby->name : '');
-
-                    if (! empty($msgContent)) {
-                        WhatsappLog::create([
-                            'order_id' => $order->id,
-                            'customer_id' => $customer->id,
-                            'phone' => $customer->phone,
-                            'message_type' => 'order_ready',
-                            'message' => $msgContent,
-                            'status' => 'pending',
-                        ]);
-                    }
+                    // Notification
+                    $commService = new \App\Services\CommunicationService();
+                    $commService->sendOrderReady($order);
 
                     // Complete Workshop Dispatch
                     $dispatch = WorkshopDispatch::where('order_id', $order->id)

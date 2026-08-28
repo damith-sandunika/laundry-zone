@@ -7,7 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentTransaction;
 use App\Models\ServiceType;
-use App\Services\WhatsAppService;
+use App\Services\CommunicationService;
 use Illuminate\Http\Request;
 
 class RiderController extends Controller
@@ -61,14 +61,14 @@ class RiderController extends Controller
         return response()->json(['success' => true, 'status' => 'accepted']);
     }
 
-    // ─── Rider: Mark On The Way ───
-    public function onWay(DeliveryTask $task, WhatsAppService $waService)
+    public function onWay(DeliveryTask $task)
     {
         $this->authorizeRiderTask($task);
         $task->update(['status' => 'on_way']);
 
-        if ($task->task_type === 'pickup') {
-            $waService->notifyRiderArriving($task->appointment, auth()->user());
+        if ($task->task_type === 'pickup' && $task->order) {
+            $commService = new CommunicationService();
+            $commService->sendDeliveryConfirmation($task->order);
         }
 
         return response()->json(['success' => true, 'status' => 'on_way']);
@@ -182,7 +182,7 @@ class RiderController extends Controller
         return view('rider.create-order', compact('task', 'services', 'cartData'));
     }
 
-    public function storeOrder(Request $request, DeliveryTask $task, WhatsAppService $waService)
+    public function storeOrder(Request $request, DeliveryTask $task)
     {
         $this->authorizeRiderTask($task);
 
@@ -244,7 +244,8 @@ class RiderController extends Controller
         ]);
 
         // Notify customer
-        $waService->notifyOrderCreatedByRider($order);
+        $commService = new CommunicationService();
+        $commService->sendOrderConfirmation($order);
 
         return redirect()->route('rider.dashboard')->with('success', 'Order created successfully! Customer notified.');
     }

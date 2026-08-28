@@ -4,7 +4,7 @@ use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\RiderMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\WorkshopMiddleware;
-use App\Providers\WhatsAppServiceProvider;
+
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -38,9 +38,6 @@ return Application::configure(basePath: dirname(__DIR__))
             return '/dashboard';
         });
     })
-    ->withProviders([
-        WhatsAppServiceProvider::class,
-    ])
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();

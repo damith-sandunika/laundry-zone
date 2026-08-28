@@ -94,9 +94,14 @@ class Order extends Model
         return $this->hasMany(LoyaltyTransaction::class);
     }
 
-    public function whatsappLogs()
+    public function smsLogs()
     {
-        return $this->hasMany(WhatsappLog::class);
+        return $this->hasMany(SmsLog::class);
+    }
+    
+    public function emailLogs()
+    {
+        return $this->hasMany(EmailLog::class);
     }
 
     public function paymentTransactions()

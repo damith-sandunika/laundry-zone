@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Branch;
 use App\Models\Order;
 use App\Models\WorkshopDispatch;
-use App\Services\WhatsAppService;
+use App\Services\CommunicationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -520,7 +520,7 @@ class WorkshopController extends Controller
         return response()->json(['success' => true, 'status' => 'completed_at_workshop']);
     }
 
-    public function requestPayment(WorkshopDispatch $dispatch, Request $request, \App\Services\WhatsAppService $waService)
+    public function requestPayment(WorkshopDispatch $dispatch, Request $request)
     {
         $order = $dispatch->order;
         $amountType = $request->input('amount_type', 'full');
@@ -534,16 +534,13 @@ class WorkshopController extends Controller
             $amount = $request->input('custom_amount', $order->total);
         }
 
-        $customer = $order->customer;
-        if ($customer && $customer->phone) {
+        if ($customer) {
             $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
-            $message = "💳 *Payment Request*\n\n"
-                . "Order #{$order->order_number}\n"
-                . "Amount Due: Rs. " . number_format($amount, 2) . "\n\n"
-                . "Please pay via this link to start processing:\n{$paymentLink}";
-
-            $waService->sendText($customer->phone, $message, $order->id, $customer->id);
-            return response()->json(['success' => true, 'message' => 'Payment request sent via WhatsApp.']);
+            
+            $commService = new CommunicationService();
+            $commService->sendFinalizedBill($order);
+            
+            return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
 
         return response()->json(['success' => false, 'message' => 'Customer has no phone number.'], 400);
@@ -762,7 +759,7 @@ class WorkshopController extends Controller
     }
 
     // ─── Branch Admin: Confirm order received back from workshop ───
-    public function receivedAtBranch(WorkshopDispatch $dispatch, WhatsAppService $waService)
+    public function receivedAtBranch(WorkshopDispatch $dispatch)
     {
         $dispatch->update([
             'status' => 'received_at_branch',
@@ -777,8 +774,9 @@ class WorkshopController extends Controller
             'ready_at' => now(),
         ]);
 
-        // Send WA "Ready" notification
-        $waService->notifyOrderReady($order);
+        // Send "Ready" notification
+        $commService = new CommunicationService();
+        $commService->sendOrderReady($order);
 
         return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
     }

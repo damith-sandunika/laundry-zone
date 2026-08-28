@@ -8,7 +8,7 @@ use App\Models\DeliveryAppointment;
 use App\Models\Package;
 use App\Models\PaymentSetting;
 use App\Models\ServiceCategory;
-use App\Services\WhatsAppService;
+use App\Services\CommunicationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -67,7 +67,7 @@ class CustomerSiteController extends Controller
         return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods', 'minimumOrderLimit', 'deliveryRanges', 'workshop', 'workshops'));
     }
 
-    public function store(Request $request, WhatsAppService $waService)
+    public function store(Request $request)
     {
         if (!auth('customer')->check()) {
             return redirect()->route('customer.booking')->withErrors(['error' => 'Please login or register to complete your booking.']);
@@ -219,8 +219,7 @@ class CustomerSiteController extends Controller
             ]);
         });
 
-        // WhatsApp notification
-        $waService->notifyBookingReceived($appointment);
+
 
         // System Alert: notify the right admin based on branch type
         if ($closestWorkshop->type === 'workshop') {
