@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Customer Login - 360 Laundry</title>
+    <title>Customer Login - RAPID Laundromat</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,8 +18,8 @@
         <!-- Logo -->
         <div class="text-center mb-8">
             <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
-                <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
-                <span class="font-black text-2xl tracking-tight text-blue-600">360 Laundry</span>
+                <img src="{{ asset('images/rapid_laundromat_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
+                <span class="font-black text-2xl tracking-tight text-blue-600">RAPID Laundromat</span>
             </a>
             <p class="text-slate-500 mt-2 text-sm">Welcome back! Please login to your account.</p>
         </div>
@@ -93,7 +93,7 @@
                 <i class="fa-solid fa-mobile-screen-button text-9xl"></i>
             </div>
             <div class="relative z-10">
-                <h3 class="text-lg font-black mb-1">Get the 360 Laundry App!</h3>
+                <h3 class="text-lg font-black mb-1">Get the RAPID Laundromat App!</h3>
                 <p class="text-blue-100 text-sm mb-5 font-medium">Book pickups, track orders, and pay online effortlessly.</p>
                 <div class="flex justify-center gap-3">
                     <a href="#" class="bg-black/80 hover:bg-black text-white px-4 py-2.5 rounded-xl flex items-center gap-2.5 transition-all shadow-lg shadow-black/20 hover:-translate-y-1">

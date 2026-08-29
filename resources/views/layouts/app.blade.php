@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ config('app.name', '360 Laundry') }}</title>
+    <title>{{ config('app.name', 'RAPID Laundromat') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/admin_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -40,10 +40,10 @@
             <!-- Brand & Logo -->
             <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50">
                 <div class="w-20 h-20 rounded-[1.25rem] bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 mb-3 ring-4 ring-white transition-transform hover:scale-105 duration-300">
-                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
+                    <img src="{{ asset('images/rapid_laundromat_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
                 <div>
-                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '360 Laundry') }}</div>
+                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', 'RAPID Laundromat') }}</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
             </div>
@@ -211,7 +211,7 @@
                             @if(auth()->user()->role === 'rider')
                                 <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">Rider Dashboard</div>
                             @else
-                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ \App\Models\Setting::get('company_name', '360 Laundry') }}</div>
+                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ \App\Models\Setting::get('company_name', 'RAPID Laundromat') }}</div>
                             @endif
                             
 

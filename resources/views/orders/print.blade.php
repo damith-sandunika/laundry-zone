@@ -46,7 +46,7 @@
     </div>
     
     <div class="center bold" style="font-size:18px; letter-spacing:-0.03em; margin-bottom: 2px;">
-        {{ \App\Models\Setting::get('company_name', '360 LAUNDRY') }}
+        {{ \App\Models\Setting::get('company_name', 'RAPID Laundromat') }}
     </div>
     
     @if($branch)

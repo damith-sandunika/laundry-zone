@@ -117,7 +117,7 @@ class CommunicationService
             // Using generic gateway logic with configurable mask
             $apiUrl = env('SMS_API_URL');
             $apiToken = env('SMS_API_TOKEN');
-            $mask = env('SMS_MASK', '360LAUNDRY');
+            $mask = env('SMS_MASK', 'RAPIDLAUNDROMAT');
             
             if (!$apiUrl || !$apiToken) {
                 throw new \Exception('SMS API credentials not configured.');

@@ -29,13 +29,8 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
 
-// ─── Static Pages ───
-Route::view('/about-us', 'site.pages.about')->name('site.about');
-Route::view('/how-it-works', 'site.pages.how-it-works')->name('site.how-it-works');
-Route::view('/faq', 'site.pages.faq')->name('site.faq');
-Route::view('/terms-and-conditions', 'site.pages.terms')->name('site.terms');
-Route::view('/privacy-policy', 'site.pages.privacy')->name('site.privacy');
-Route::view('/quality-guarantee', 'site.pages.quality')->name('site.quality');
+// ─── Root → Customer Booking ───
+Route::redirect('/', '/customer/book')->name('home');
 
 // Fix for Windows PHP built-in server symlink 403 error
 Route::get('/storage/receipts/{filename}', function ($filename) {
@@ -46,8 +41,6 @@ Route::get('/storage/receipts/{filename}', function ($filename) {
     return response()->file($path);
 });
 
-// ─── Public Booking Routes (Customer Site) ───
-Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
 
 // ─── Customer Auth & Dashboard Routes ───
 Route::get('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'showLogin'])->name('customer.login');

@@ -68,7 +68,7 @@
         <div class="p-6">
             <!-- GENERAL SETTINGS TAB -->
             <div x-show="activeTab === 'general'" x-data="{ 
-                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '360 LAUNDRY')) }}',
+                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', 'RAPID Laundromat')) }}',
                 formName: '{{ addslashes($branch->name ?? 'SMART LAUNDRY') }}',
                 formAddress: '{{ addslashes($branch->address) }}',
                 formPhone: '{{ addslashes($branch->phone) }}',
@@ -752,7 +752,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Account Name</label>
-                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. 360 Laundry">
+                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. RAPID Laundromat">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Account Number</label>

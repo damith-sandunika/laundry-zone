@@ -4,9 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>360 Laundry - Premium Laundry Delivery</title>
+    <title>RAPID Laundromat - Premium Laundry Delivery</title>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap"
+        rel="stylesheet">
     <!-- FontAwesome for icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -122,72 +123,22 @@
 <body class="antialiased text-gray-800 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
 
     <!-- Navbar -->
-    <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300"
-        x-data="{ mobileMenuOpen: false }">
+    <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-20 items-center">
-                <!-- Logo + Brand Name: left on all sizes -->
-                <div class="flex items-center gap-2">
-                    <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="360 Laundry" class="h-10">
-                </div>
+            <div class="flex justify-between h-16 items-center">
+                <!-- Brand -->
+                <a href="{{ route('customer.booking') }}" class="flex items-center gap-2">
+                    <span class="text-blue-700 font-black text-xl tracking-tight">⚡ RAPID Laundromat</span>
+                </a>
 
-                <!-- Desktop Menu -->
-                <div class="hidden md:flex space-x-6 lg:space-x-8 items-center font-medium text-sm">
-                    <a href="{{ url('/') }}" class="text-blue-600 border-b-2 border-blue-600 pb-1">Home</a>
-                    <a href="#services" class="text-slate-600 hover:text-blue-600 transition">Services</a>
-                    <a href="#pricing" class="text-slate-600 hover:text-blue-600 transition">Pricing</a>
-                    <a href="#how-it-works" class="text-slate-600 hover:text-blue-600 transition">How It Works</a>
-                    <a href="#testimonials" class="text-slate-600 hover:text-blue-600 transition">Testimonials</a>
-                    <a href="#contact" class="text-slate-600 hover:text-blue-600 transition">Contact</a>
-                </div>
-
-                <div class="hidden md:flex items-center space-x-4">
+                <!-- Right: Sign In + Book Now -->
+                <div class="flex items-center gap-3">
                     <a href="{{ route('customer.login') }}"
-                        class="text-slate-600 font-medium hover:text-blue-600 transition text-sm">Sign In</a>
+                        class="text-slate-600 font-semibold hover:text-blue-600 transition text-sm hidden sm:block">My Account</a>
                     <a href="{{ route('customer.booking') }}"
-                        class="bg-blue-600 text-white px-6 py-2.5 rounded-full font-bold hover:bg-blue-700 hover:shadow-lg transition-all text-sm flex items-center gap-2">
+                        class="bg-blue-600 text-white px-5 py-2 rounded-full font-bold hover:bg-blue-700 hover:shadow-lg transition-all text-sm flex items-center gap-2">
                         Book Now <i class="fa-solid fa-arrow-right text-xs"></i>
                     </a>
-                </div>
-
-                <!-- Mobile right side: Book Now & Menu button (absolute right) -->
-                <div class="md:hidden absolute right-4 flex items-center gap-4">
-                    <a href="{{ route('customer.booking') }}"
-                        class="bg-accent text-white px-4 py-1.5 rounded-full font-bold text-xs shadow-md shadow-blue-200/50 flex items-center gap-1.5">
-                        <i class="fa-regular fa-calendar-check text-[10px]"></i> Book
-                    </a>
-                    <button @click="mobileMenuOpen = !mobileMenuOpen"
-                        class="text-gray-600 hover:text-blue-600 focus:outline-none">
-                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path x-show="!mobileMenuOpen" stroke-linecap="round" stroke-linejoin="round"
-                                stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                            <path x-show="mobileMenuOpen" style="display:none" stroke-linecap="round"
-                                stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Mobile Menu -->
-        <div x-show="mobileMenuOpen" style="display:none"
-            class="md:hidden bg-white border-t border-gray-100 absolute w-full shadow-lg z-50">
-            <div class="px-4 pt-2 pb-6 space-y-1">
-                <a href="{{ url('/') }}" class="block px-3 py-2 rounded-md text-base font-medium text-blue-600 bg-blue-50">Home</a>
-                <a href="#services"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">Services</a>
-                <a href="#pricing"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">Pricing</a>
-                <a href="#how-it-works"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">How It
-                    Works</a>
-                <a href="#contact"
-                    class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">Contact</a>
-                <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col gap-3">
-                    <a href="{{ route('customer.login') }}" class="text-center text-slate-600 font-medium py-2">Sign
-                        In</a>
-                    <a href="{{ route('customer.booking') }}"
-                        class="bg-blue-600 text-white px-5 py-3 text-center rounded-xl font-bold">Book Now</a>
                 </div>
             </div>
         </div>
@@ -201,8 +152,8 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-10 border-b border-slate-700 pb-12 mb-8">
                 <div class="col-span-1 md:col-span-1">
                     <div class="flex items-center mb-6">
-                        <span class="text-3xl mr-2 text-white"><i class="fa-solid fa-droplet"></i></span>
-                        <span class="font-bold text-2xl text-white">360 Laundry</span>
+                        <span class="text-3xl mr-2 text-white"><i class="fa-solid fa-bolt"></i></span>
+                        <span class="font-bold text-2xl text-white">RAPID Laundromat</span>
                     </div>
                     <p class="text-sm text-slate-400 mb-6">Professional laundry and dry cleaning services with care and
                         convenience.</p>
@@ -222,12 +173,12 @@
                 <div>
                     <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Quick Links</h4>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="{{ url('/') }}" class="hover:text-white transition">Home</a></li>
-                        <li><a href="{{ url('/#services') }}" class="hover:text-white transition">Services</a></li>
-                        <li><a href="{{ url('/#pricing') }}" class="hover:text-white transition">Pricing</a></li>
-                        <li><a href="{{ route('site.how-it-works') }}" class="hover:text-white transition">How it Works</a></li>
-                        <li><a href="{{ route('site.about') }}" class="hover:text-white transition">About Us</a></li>
-                        <li><a href="{{ route('site.faq') }}" class="hover:text-white transition">FAQ</a></li>
+                        <li><a href="{{ route('customer.booking') }}" class="hover:text-white transition">Book
+                                Pickup</a></li>
+                        <li><a href="{{ route('customer.login') }}" class="hover:text-white transition">My Account</a>
+                        </li>
+                        <li><a href="{{ route('customer.orders') }}" class="hover:text-white transition">Track Order</a>
+                        </li>
                     </ul>
                 </div>
 
@@ -235,7 +186,8 @@
                     <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Our Services</h4>
                     <ul class="space-y-3 text-sm">
                         @foreach(\App\Models\ServiceCategory::where('is_active', 1)->take(5)->get() as $cat)
-                            <li><a href="{{ url('/#services') }}" class="hover:text-white transition">{{ $cat->name }}</a></li>
+                            <li><a href="{{ url('/#services') }}" class="hover:text-white transition">{{ $cat->name }}</a>
+                            </li>
                         @endforeach
                     </ul>
                 </div>
@@ -255,15 +207,10 @@
             <div
                 class="text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <p>&copy; {{ date('Y') }} 360 Laundry. All Rights Reserved.</p>
+                    <p>&copy; {{ date('Y') }} RAPID Laundromat. All Rights Reserved.</p>
                     <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com"
                             target="_blank"
                             class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>
-                </div>
-                <div class="flex flex-wrap justify-center gap-4">
-                    <a href="{{ route('site.quality') }}" class="hover:text-white transition">Quality Guarantee</a>
-                    <a href="{{ route('site.privacy') }}" class="hover:text-white transition">Privacy Policy</a>
-                    <a href="{{ route('site.terms') }}" class="hover:text-white transition">Terms of Service</a>
                 </div>
             </div>
         </div>

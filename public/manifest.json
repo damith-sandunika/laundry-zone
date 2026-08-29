@@ -1,7 +1,7 @@
 {
-    "name": "360 Laundry",
-    "short_name": "360 Laundry",
-    "description": "Smart Laundry Management System",
+    "name": "RAPID Laundromat",
+    "short_name": "RAPID",
+    "description": "RAPID Laundromat Management System",
     "start_url": "/stafflogin",
     "display": "standalone",
     "background_color": "#ffffff",
