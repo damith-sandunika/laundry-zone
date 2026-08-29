@@ -315,11 +315,9 @@ class CommunicationService
             });
 
             $log->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);
-            file_put_contents(public_path('email_debug.txt'), date('Y-m-d H:i:s') . " - SUCCESS sending {$type} to {$email}" . PHP_EOL, FILE_APPEND);
         } catch (\Exception $e) {
             Log::error("Email Error: " . $e->getMessage());
             $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
-            file_put_contents(public_path('email_debug.txt'), date('Y-m-d H:i:s') . " - ERROR sending {$type}: " . $e->getMessage() . PHP_EOL, FILE_APPEND);
         }
     }
 }
