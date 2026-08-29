@@ -44,7 +44,7 @@
                         x-transition:enter-end="opacity-100 translate-y-0"
                         x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100"
                         x-transition:leave-end="opacity-0"
-                        class="text-[34px] sm:text-6xl lg:text-6xl font-extrabold font-['Poppins'] text-brand leading-[1.1] mb-0 lg:mb-2 tracking-tight drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] lg:drop-shadow-[0_4px_25px_rgba(255,255,255,1)] [-webkit-text-stroke:1.2px_white] lg:[-webkit-text-stroke:0.5px_white]"
+                        class="text-[40px] sm:text-6xl lg:text-6xl font-extrabold font-['Poppins'] text-brand leading-[1.1] mb-0 lg:mb-2 tracking-tight drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] lg:drop-shadow-[0_4px_25px_rgba(255,255,255,1)] [-webkit-text-stroke:1.2px_white] lg:[-webkit-text-stroke:0.5px_white]"
                         style="display: none;">
                         We Clean. <br> <span class="text-accent">You Relax.</span>
                     </h1>
@@ -106,7 +106,7 @@
                         x-transition:enter-end="opacity-100 translate-y-0"
                         x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100"
                         x-transition:leave-end="opacity-0"
-                        class="text-[34px] sm:text-6xl lg:text-6xl font-extrabold font-['Poppins'] text-brand leading-[1.1] mb-0 lg:mb-2 tracking-tight drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] lg:drop-shadow-[0_4px_25px_rgba(255,255,255,1)] [-webkit-text-stroke:1.2px_white] lg:[-webkit-text-stroke:0.5px_white]"
+                        class="text-[40px] sm:text-6xl lg:text-6xl font-extrabold font-['Poppins'] text-brand leading-[1.1] mb-0 lg:mb-2 tracking-tight drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] lg:drop-shadow-[0_4px_25px_rgba(255,255,255,1)] [-webkit-text-stroke:1.2px_white] lg:[-webkit-text-stroke:0.5px_white]"
                         style="display: none;">
                         Premium Fabric <br> <span class="text-accent">Care.</span>
                     </h1>
@@ -168,7 +168,7 @@
                         x-transition:enter-end="opacity-100 translate-y-0"
                         x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100"
                         x-transition:leave-end="opacity-0"
-                        class="text-[34px] sm:text-6xl lg:text-6xl font-extrabold font-['Poppins'] text-brand leading-[1.1] mb-0 lg:mb-2 tracking-tight drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] lg:drop-shadow-[0_4px_25px_rgba(255,255,255,1)] [-webkit-text-stroke:1.2px_white] lg:[-webkit-text-stroke:0.5px_white]"
+                        class="text-[40px] sm:text-6xl lg:text-6xl font-extrabold font-['Poppins'] text-brand leading-[1.1] mb-0 lg:mb-2 tracking-tight drop-shadow-[0_4px_4px_rgba(255,255,255,0.8)] lg:drop-shadow-[0_4px_25px_rgba(255,255,255,1)] [-webkit-text-stroke:1.2px_white] lg:[-webkit-text-stroke:0.5px_white]"
                         style="display: none;">
                         Fast & Reliable <br> <span class="text-accent">Delivery.</span>
                     </h1>
