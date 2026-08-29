@@ -187,6 +187,8 @@ class CommunicationService
         } catch (\Exception $e) {
             Log::error("Email Error: " . $e->getMessage());
             $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
+            // Show error directly on screen for debugging
+            dd("EMAIL SENDING FAILED: " . $e->getMessage());
         }
     }
 }
