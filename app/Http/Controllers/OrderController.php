@@ -393,9 +393,7 @@ class OrderController extends Controller
                         Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
                     }
 
-                    // Queue notification
-                    $commService = new \App\Services\CommunicationService();
-                    $commService->sendOrderDelivered($order);
+                    // Queue notification - handled in after-transaction block
 
                     $appt = DeliveryAppointment::where('order_id', $order->id)->first();
                     if ($appt) {
@@ -562,10 +560,6 @@ class OrderController extends Controller
                         Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
                     }
 
-                    // Notification
-                    $commService = new \App\Services\CommunicationService();
-                    $commService->sendOrderReady($order);
-
                     // Complete Workshop Dispatch
                     $dispatch = WorkshopDispatch::where('order_id', $order->id)
                         ->whereNotIn('status', ['received_at_branch'])
@@ -625,11 +619,13 @@ class OrderController extends Controller
             }
         });
 
-        // Add status-specific notifications after transaction succeeds
+        // Status-specific notifications - sent ONCE after transaction succeeds
         $commService = new \App\Services\CommunicationService();
         $orders = Order::whereIn('id', $request->order_ids)->get();
         foreach ($orders as $order) {
-            if ($request->status === 'delivered') {
+            if ($request->status === 'done') {
+                $commService->sendOrderReady($order);
+            } elseif ($request->status === 'delivered') {
                 $commService->sendOrderDelivered($order);
             } elseif ($request->status === 'dispatched_to_workshop') {
                 $commService->sendOrderDispatchedToWorkshop($order);
