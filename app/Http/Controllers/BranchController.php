@@ -128,10 +128,12 @@ class BranchController extends Controller
             abort(403);
         }
 
-        // We probably shouldn't hard delete, maybe just deactivate, but let's soft delete or deactivate.
-        // The migration doesn't have SoftDeletes, so we'll just set is_active = false
-        $branch->update(['is_active' => false]);
-
-        return redirect()->route('branches.index')->with('success', 'Branch deactivated successfully.');
+        try {
+            $branch->delete();
+            return redirect()->route('branches.index')->with('success', 'Branch deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Cannot delete because it has linked users/orders
+            return redirect()->route('branches.index')->with('error', 'Cannot delete this branch because it has existing orders, users, or data linked to it. Please disable it instead.');
+        }
     }
 }

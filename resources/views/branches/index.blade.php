@@ -19,6 +19,12 @@
             <span style="font-size:13px;font-weight:600;color:#15803d;">{{ session('success') }}</span>
         </div>
     @endif
+    @if(session('error'))
+        <div style="display:flex;align-items:center;gap:10px;background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;margin-bottom:24px;">
+            <svg width="16" height="16" fill="none" stroke="#dc2626" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            <span style="font-size:13px;font-weight:600;color:#b91c1c;">{{ session('error') }}</span>
+        </div>
+    @endif
 
     <div x-data="branchManager()" @open-add-branch.window="openAddModal()" style="display:flex;flex-direction:column;gap:20px;">
 
@@ -79,10 +85,10 @@
                                     class="text-xs font-semibold px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded hover:bg-gray-100">
                                     Edit
                                 </button>
-                                <form method="POST" action="{{ route('branches.destroy', $branch) }}" onsubmit="return confirm('Deactivate this branch?')" class="inline">
+                                <form method="POST" action="{{ route('branches.destroy', $branch) }}" onsubmit="return confirm('Permanently delete this branch?')" class="inline">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-xs font-semibold px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 rounded hover:bg-red-100">
-                                        Disable
+                                        Delete
                                     </button>
                                 </form>
                             </td>

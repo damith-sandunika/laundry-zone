@@ -53,7 +53,8 @@ class SmsTemplateController extends Controller
         ];
 
         foreach ($defaults as $default) {
-            SmsTemplate::firstOrCreate(['type' => $default['type']], $default);
+            $default['is_active'] = true;
+            SmsTemplate::updateOrCreate(['type' => $default['type']], $default);
         }
 
         return redirect()->route('sms-templates.index')->with('success', 'Default templates seeded');
