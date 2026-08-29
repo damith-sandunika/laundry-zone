@@ -37,7 +37,7 @@ class EmailTemplateController extends Controller
         $template->update([
             'subject' => $request->subject,
             'body' => $request->body,
-            'is_active' => $request->has('is_active')
+            'is_active' => $request->boolean('is_active')
         ]);
 
         return redirect()->route('email-templates.index')->with('success', 'Email Template updated successfully');
