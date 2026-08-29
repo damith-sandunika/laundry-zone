@@ -1,3 +1,4 @@
+<template x-teleport="body">
 <div x-data="finalizeOrderModal()" x-cloak x-show="showFinalizeModal" @open-finalize-modal.window="openModal($event.detail)" class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
     <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:1000px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;" @click.away="showFinalizeModal = false">
         
@@ -134,6 +135,7 @@
         </div>
     </div>
 </div>
+</template>
 
 <script>
     document.addEventListener('alpine:init', () => {
@@ -205,7 +207,7 @@
             
             get total() {
                 let calculated = (this.subtotal * (1 - (this.discountPercentage / 100))) + parseFloat(this.orderData?.delivery_fee || 0);
-                return Math.max(this.minimumDeliveryCost, calculated);
+                return calculated;
             },
             
             addToCart(service) {

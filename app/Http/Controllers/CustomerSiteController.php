@@ -169,40 +169,42 @@ class CustomerSiteController extends Controller
         }
 
         if ($closestWorkshop && $closestWorkshop->latitude && $closestWorkshop->longitude) {
-            $totalDistance += $shortestDistance == PHP_FLOAT_MAX ? 0 : $shortestDistance;
+            $distanceToPickup = $shortestDistance == PHP_FLOAT_MAX ? 0 : $shortestDistance;
+            $distanceToDelivery = 0;
 
-            // Calculate distance for delivery if different from pickup
             if ($request->delivery_preference === 'deliver_to_address') {
                 if ($request->has('same_as_pickup')) {
-                    if ($request->latitude && $request->longitude) {
-                        $totalDistance += $calculateDistance($closestWorkshop->latitude, $closestWorkshop->longitude, $request->latitude, $request->longitude);
-                    }
+                    $distanceToDelivery = $distanceToPickup;
                 } else if ($deliveryLat && $deliveryLng) {
-                    $totalDistance += $calculateDistance($closestWorkshop->latitude, $closestWorkshop->longitude, $deliveryLat, $deliveryLng);
+                    $distanceToDelivery = $calculateDistance($closestWorkshop->latitude, $closestWorkshop->longitude, $deliveryLat, $deliveryLng);
                 }
             }
 
-            // Find applicable delivery range for the closest workshop
-            $deliveryRange = \App\Models\DeliveryRange::where(function($q) use ($closestWorkshop) {
-                    $q->where('branch_id', $closestWorkshop->id)->orWhereNull('branch_id');
-                })
-                ->where('min_distance_km', '<=', $totalDistance)
-                ->where('max_distance_km', '>=', $totalDistance)
-                ->orderBy('cost', 'asc')
-                ->first();
-                
-            if ($deliveryRange) {
-                $deliveryCost = $deliveryRange->cost;
+            $getFeeForDistance = function($dist) use ($closestWorkshop) {
+                if ($dist <= 0) return 0;
+                $range = \App\Models\DeliveryRange::where(function($q) use ($closestWorkshop) {
+                        $q->where('branch_id', $closestWorkshop->id)->orWhereNull('branch_id');
+                    })
+                    ->where('min_distance_km', '<=', $dist)
+                    ->where('max_distance_km', '>=', $dist)
+                    ->orderBy('cost', 'asc')
+                    ->first();
+                return $range ? $range->cost : 0;
+            };
+
+            $pickupFee = $getFeeForDistance($distanceToPickup);
+            $deliveryFee = 0;
+            if ($request->delivery_preference === 'deliver_to_address') {
+                $deliveryFee = $getFeeForDistance($distanceToDelivery);
             }
+
+            $deliveryCost = $pickupFee + $deliveryFee;
         }
         
         // If delivery range cost is not set, use the frontend estimate
         if ($deliveryCost == 0 && $request->filled('estimated_delivery_fee')) {
             $deliveryCost = (float) $request->estimated_delivery_fee;
         }
-
-        $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
-        $deliveryCost = max($deliveryCost, $minimumDeliveryCost);
 
         $appointment = DB::transaction(function () use ($request, $deliveryLat, $deliveryLng, $deliveryAddress, $receiptPath, $deliveryCost, $pickupScheduledAt, $closestWorkshop) {
             

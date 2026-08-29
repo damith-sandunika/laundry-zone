@@ -453,7 +453,7 @@
                                     <input type="checkbox" :value="dispatch.id" x-model="selectedDispatches" style="cursor:pointer;">
                                 </td>
                                 <td style="padding:12px 20px;">
-                                    <a :href="dispatch.order ? '/orders/' + dispatch.order.id : '#'" style="font-size:13px;font-weight:800;color:#1d4ed8;display:block;text-decoration:none;" x-text="(dispatch.order.is_delivery_order ? '[D] ' : '') + '#' + dispatch.order.order_number" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"></a>
+                                    <a :href="dispatch.order ? '/orders/view/' + dispatch.order.order_number : '#'" style="font-size:13px;font-weight:800;color:#1d4ed8;display:block;text-decoration:none;" x-text="(dispatch.order.is_delivery_order ? '[D] ' : '') + '#' + dispatch.order.order_number" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"></a>
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
                                         <span style="font-weight:700;color:#0f172a;" x-text="dispatch.order.customer ? dispatch.order.customer.name : 'Unknown Customer'"></span>
                                     </div>

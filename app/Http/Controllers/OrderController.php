@@ -187,15 +187,6 @@ class OrderController extends Controller
 
                 $total = $subtotal - $discountAmount + $order->delivery_fee;
 
-                // Enforce minimum order value for deliveries
-                $isDelivery = \App\Models\DeliveryAppointment::where('order_id', $order->id)->exists();
-                if ($isDelivery && $total < 3000) {
-                    $total = 3000;
-                    // We can adjust subtotal or just keep total at 3000 and log it
-                    // Or add a special item for the difference. Let's just adjust the total and clear discount.
-                    $discountAmount = 0;
-                }
-
                 // Adjust paid_amount if it exceeds the new total (optional, but good practice)
                 $paidAmount = $order->paid_amount;
                 if ($paidAmount > $total) {

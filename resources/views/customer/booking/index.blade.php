@@ -462,7 +462,7 @@
 
                     // Delivery state
                     deliveryPref: 'deliver_to_address',
-                    sameAsPickup: true,
+                    sameAsPickup: false,
                     selectedPaymentMethod: '{{ $paymentMethods->first()?->type ?? 'cash_on_delivery' }}',
                     
                     // Maps
@@ -483,12 +483,29 @@
                     isOutOfRange: false,
 
                     initData() {
+                        // Check if we are starting on step 2 (authenticated)
+                        if (this.step === 2) {
+                            setTimeout(() => {
+                                if (this.pickupMap) {
+                                    this.pickupMap.invalidateSize();
+                                } else {
+                                    this.initPickupMap();
+                                }
+                            }, 400);
+                        }
+
                         this.$watch('step', value => {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                             
                             // Initialize map on step 2 if not already done
                             if (value === 2) {
-                                setTimeout(() => this.initPickupMap(), 100);
+                                setTimeout(() => {
+                                    if (this.pickupMap) {
+                                        this.pickupMap.invalidateSize();
+                                    } else {
+                                        this.initPickupMap();
+                                    }
+                                }, 400);
                             }
                             
                             // Initialize delivery map on step 4 if not same as pickup
@@ -795,7 +812,7 @@
                         }
                         
                         this.isOutOfRange = isPickupOutOfRange || isDeliveryOutOfRange;
-                        this.estimatedDeliveryFee = Math.round(Math.max(pickupFee, deliveryFee));
+                        this.estimatedDeliveryFee = Math.round(pickupFee + deliveryFee);
                     },
 
                     // Cart methods

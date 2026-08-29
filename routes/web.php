@@ -121,7 +121,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/workshop/bulk-dispatch', [WorkshopController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
     Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
     Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
-    Route::resource('orders', OrderController::class)->except(['create', 'edit', 'destroy', 'show']);
+    Route::resource('orders', OrderController::class)->only(['index']);
 
     Route::post('/packages/{customerPackage}/mark-paid', [PackageController::class, 'markPaid'])->name('packages.markPaid');
     Route::get('/packages/{customerPackage}/print', [PackageController::class, 'printReceipt'])->name('packages.print');
