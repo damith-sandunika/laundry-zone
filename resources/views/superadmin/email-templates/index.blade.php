@@ -101,6 +101,7 @@
                                     <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{order_id}</span>
                                     <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{total}</span>
                                     <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{amount_due}</span>
+                                    <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{payment_status}</span>
                                 </div>
                             </div>
                         </div>

@@ -73,11 +73,21 @@ class CommunicationService
         $customer = $order->customer;
         if (!$customer) return;
 
+        $paymentStatusText = 'Pending';
+        if ($order->paid_amount >= $order->total && $order->total > 0) {
+            $paymentStatusText = 'Paid in Full';
+        } elseif ($order->paid_amount > 0) {
+            $paymentStatusText = 'Partially Paid (Rs.' . number_format($order->paid_amount, 2) . ' paid)';
+        } elseif ($order->total == 0) {
+            $paymentStatusText = 'No Charge';
+        }
+
         $replacements = [
             '{customer_name}' => $customer->name,
             '{order_id}' => $order->id,
             '{total}' => 'Rs.' . number_format($order->total, 2),
             '{amount_due}' => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
+            '{payment_status}' => $paymentStatusText,
         ];
 
         // Process SMS
