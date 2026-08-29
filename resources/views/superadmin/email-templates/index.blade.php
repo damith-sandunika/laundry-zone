@@ -33,26 +33,24 @@
             </div>
         @endif
         
-        <!-- Empty State -->
-        @if($templates->isEmpty())
-            <div class="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                        <h4 class="text-blue-800 font-bold text-sm">No templates found</h4>
-                        <p class="text-blue-600 text-xs mt-0.5">Generate the default system templates to get started.</p>
-                    </div>
+        <!-- Seed Templates Button (Always Visible) -->
+        <div class="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 </div>
-                <form action="{{ route('email-templates.seedDefault') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm whitespace-nowrap">
-                        Generate Default Templates
-                    </button>
-                </form>
+                <div>
+                    <h4 class="text-blue-800 font-bold text-sm">Missing Templates?</h4>
+                    <p class="text-blue-600 text-xs mt-0.5">Click here to generate any missing system default templates.</p>
+                </div>
             </div>
-        @endif
+            <form action="{{ route('email-templates.seedDefault') }}" method="POST">
+                @csrf
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm whitespace-nowrap">
+                    Generate Default Templates
+                </button>
+            </form>
+        </div>
 
         <!-- Templates Grid -->
         <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">

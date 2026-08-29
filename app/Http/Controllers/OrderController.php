@@ -328,14 +328,16 @@ class OrderController extends Controller
             \Illuminate\Support\Facades\DB::transaction(function () use ($request, $order) {
                 $order->status = $request->status;
 
-                if ($request->status === 'done' && $request->cubby_id) {
-                    // Assign cubby
-                    OrderCubby::create([
-                        'order_id' => $order->id,
-                        'cubby_id' => $request->cubby_id,
-                        'assigned_at' => now(),
-                    ]);
-                    Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
+                if ($request->status === 'done') {
+                    if ($request->cubby_id) {
+                        // Assign cubby
+                        OrderCubby::create([
+                            'order_id' => $order->id,
+                            'cubby_id' => $request->cubby_id,
+                            'assigned_at' => now(),
+                        ]);
+                        Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
+                    }
 
                     // Queue notification
                     $commService = new \App\Services\CommunicationService();
@@ -540,23 +542,25 @@ class OrderController extends Controller
 
                 $order->status = $request->status;
 
-                if ($request->status === 'done' && $request->cubby_id) {
-                    // Release old active cubby if any
-                    $oldCubby = $order->cubbies()->whereNull('released_at')->first();
-                    if ($oldCubby && $oldCubby->cubby_id != $request->cubby_id) {
-                        $oldCubby->update(['released_at' => now()]);
-                        Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
-                    }
+                if ($request->status === 'done') {
+                    if ($request->cubby_id) {
+                        // Release old active cubby if any
+                        $oldCubby = $order->cubbies()->whereNull('released_at')->first();
+                        if ($oldCubby && $oldCubby->cubby_id != $request->cubby_id) {
+                            $oldCubby->update(['released_at' => now()]);
+                            Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
+                        }
 
-                    if (! $oldCubby || $oldCubby->cubby_id != $request->cubby_id) {
-                        OrderCubby::create([
-                            'order_id' => $order->id,
-                            'cubby_id' => $request->cubby_id,
-                            'assigned_at' => now(),
-                        ]);
-                    }
+                        if (! $oldCubby || $oldCubby->cubby_id != $request->cubby_id) {
+                            OrderCubby::create([
+                                'order_id' => $order->id,
+                                'cubby_id' => $request->cubby_id,
+                                'assigned_at' => now(),
+                            ]);
+                        }
 
-                    Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
+                        Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
+                    }
 
                     // Notification
                     $commService = new \App\Services\CommunicationService();
