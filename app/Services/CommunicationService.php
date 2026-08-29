@@ -193,10 +193,26 @@ class CommunicationService
             }
         }
 
-        // Process Email - uses hardcoded template content, just check global enable flag
+        // Process Email
         if ($isEmailEnabled && !empty($customer->email)) {
-            $content = $this->getEmailContent($type, $data);
-            $this->sendEmail($order, $customer->email, $type, $content['subject'], $content['body']);
+            // Use DB template body/subject if it exists, otherwise use hardcoded fallback
+            $dbTemplate = \App\Models\EmailTemplate::where('type', $type)->first();
+            if ($dbTemplate && !empty($dbTemplate->body)) {
+                $replacements = [
+                    '{customer_name}'  => $data['customer_name'],
+                    '{order_id}'       => $data['order_id'],
+                    '{total}'          => $data['total'],
+                    '{amount_due}'     => $data['amount_due'],
+                    '{payment_status}' => $data['payment_status'],
+                ];
+                $subject = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->subject);
+                $body    = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->body);
+            } else {
+                $content = $this->getEmailContent($type, $data);
+                $subject = $content['subject'];
+                $body    = $content['body'];
+            }
+            $this->sendEmail($order, $customer->email, $type, $subject, $body);
         }
     }
 
