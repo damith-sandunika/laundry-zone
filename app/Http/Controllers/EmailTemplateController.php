@@ -109,6 +109,7 @@ class EmailTemplateController extends Controller
         ];
 
         foreach ($defaults as $default) {
+            $default['is_active'] = true;
             EmailTemplate::updateOrCreate(['type' => $default['type']], $default);
         }
 
