@@ -34,8 +34,27 @@ class HRController extends Controller
             'clock_out' => 'required|date_format:H:i',
         ]);
 
+        $otMinutes = 0;
+        
+        // Calculate OT minutes if the attendance has a clock_in and user has standard_working_hours
+        if ($attendance->clock_in && $attendance->user && $attendance->user->standard_working_hours > 0) {
+            $clockIn = \Carbon\Carbon::parse($attendance->clock_in);
+            $clockOut = \Carbon\Carbon::parse($request->clock_out);
+            
+            // Calculate total minutes worked
+            $workedMinutes = $clockIn->diffInMinutes($clockOut);
+            
+            // Standard minutes
+            $standardMinutes = $attendance->user->standard_working_hours * 60;
+            
+            if ($workedMinutes > $standardMinutes) {
+                $otMinutes = $workedMinutes - $standardMinutes;
+            }
+        }
+
         $attendance->update([
             'clock_out' => $request->clock_out,
+            'ot_minutes' => $otMinutes,
         ]);
 
         return back()->with('success', 'Out time marked successfully.');

@@ -73,7 +73,7 @@
                     </td>
                     <td class="px-5 py-3 text-gray-400 text-xs">{{ $order->created_at->format('M d, Y') }}</td>
                     <td class="px-5 py-3">
-                        <a href="{{ route('orders.show', $order) }}" class="text-xs text-blue-600 hover:underline">View</a>
+                        <a href="{{ route('orders.show', $order->order_number) }}" class="text-xs text-blue-600 hover:underline">View</a>
                     </td>
                 </tr>
                 @endforeach

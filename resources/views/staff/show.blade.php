@@ -80,12 +80,8 @@
                         <p class="text-lg font-black text-gray-800">Rs. {{ number_format($staff->basic_salary ?? 0, 2) }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-green-500 mb-1">Remaining This Month</p>
-                        @php
-                            $advancesThisMonth = $staff->salaryAdvances()->whereMonth('date', now()->month)->whereYear('date', now()->year)->sum('amount');
-                            $remainingSalary = max(0, ($staff->basic_salary ?? 0) - $advancesThisMonth);
-                        @endphp
-                        <p class="text-lg font-black text-green-600">Rs. {{ number_format($remainingSalary, 2) }}</p>
+                        <p class="text-[10px] uppercase font-bold text-green-500 mb-1">Net Salary ({{ date('M') }})</p>
+                        <p class="text-lg font-black text-green-600">Rs. {{ number_format($payroll->net_salary, 2) }}</p>
                     </div>
                 </div>
             </div>
@@ -201,6 +197,45 @@
                                 <p class="text-xs font-semibold text-gray-400">No active salary advances.</p>
                             </div>
                         @endforelse
+                    </div>
+                </div>
+                
+                <!-- Current Month Payroll -->
+                <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 shadow-sm overflow-hidden p-5 mb-6">
+                    <h3 class="font-bold text-gray-800 mb-4">Payroll ({{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }})</h3>
+                    <div class="space-y-2 mb-4">
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Basic Salary:</span>
+                            <span class="font-bold text-gray-800">Rs. {{ number_format($staff->basic_salary ?? 0, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">OT ({{ floor($payroll->ot_minutes / 60) }}h {{ $payroll->ot_minutes % 60 }}m):</span>
+                            <span class="font-bold text-indigo-600">+ Rs. {{ number_format($payroll->ot_amount, 2) }}</span>
+                        </div>
+                        <div class="flex justify-between text-sm">
+                            <span class="text-gray-600">Advances:</span>
+                            <span class="font-bold text-red-500">- Rs. {{ number_format($payroll->advances, 2) }}</span>
+                        </div>
+                        <div class="pt-2 border-t border-green-200/50 flex justify-between">
+                            <span class="font-black text-gray-800">Net Pay:</span>
+                            <span class="font-black text-green-700 text-lg">Rs. {{ number_format($payroll->net_salary, 2) }}</span>
+                        </div>
+                    </div>
+                    <div class="flex gap-2">
+                        <a href="{{ route('hr.payslip.download', ['staff' => $staff->id, 'month' => $payroll->month, 'year' => $payroll->year]) }}" 
+                           target="_blank"
+                           class="flex-1 text-center py-2 px-3 bg-white text-gray-700 text-xs font-bold rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm">
+                           📄 PDF Payslip
+                        </a>
+                        <form method="POST" action="{{ route('staff.paySalary') }}" class="flex-1">
+                            @csrf
+                            <input type="hidden" name="user_id" value="{{ $staff->id }}">
+                            <input type="hidden" name="month" value="{{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }}">
+                            <input type="hidden" name="amount" value="{{ $payroll->net_salary }}">
+                            <button type="submit" class="w-full text-center py-2 px-3 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition shadow-sm shadow-green-600/30">
+                                💸 Pay Now
+                            </button>
+                        </form>
                     </div>
                 </div>
                 

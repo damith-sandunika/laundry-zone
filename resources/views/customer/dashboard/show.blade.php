@@ -422,24 +422,29 @@
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-2">Payment Method</label>
                                     <div class="grid grid-cols-2 gap-3">
+                                        @forelse($paymentMethods as $method)
                                         <label class="relative cursor-pointer">
-                                            <input type="radio" name="payment_method" value="bank" x-model="paymentMethod" class="peer sr-only">
-                                            <div class="p-3 border-2 border-slate-200 rounded-xl text-center peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
-                                                <i class="fa-solid fa-building-columns text-slate-400 peer-checked:text-blue-600 mb-1 text-lg"></i>
-                                                <div class="text-xs font-black text-slate-700 peer-checked:text-blue-700">Bank Transfer</div>
+                                            <input type="radio" name="payment_method" value="{{ $method->type === 'bank_transfer' ? 'bank' : 'gateway' }}" x-model="paymentMethod" class="peer sr-only">
+                                            <div class="p-3 border-2 border-slate-200 rounded-xl text-center peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all h-full flex flex-col justify-center">
+                                                <i class="fa-solid {{ $method->type === 'bank_transfer' ? 'fa-building-columns' : 'fa-credit-card' }} text-slate-400 peer-checked:text-blue-600 mb-1 text-lg"></i>
+                                                <div class="text-xs font-black text-slate-700 peer-checked:text-blue-700">{{ $method->name }}</div>
                                             </div>
                                         </label>
-                                        <label class="relative cursor-pointer">
-                                            <input type="radio" name="payment_method" value="gateway" x-model="paymentMethod" class="peer sr-only">
-                                            <div class="p-3 border-2 border-slate-200 rounded-xl text-center peer-checked:border-blue-600 peer-checked:bg-blue-50 hover:bg-slate-50 transition-all">
-                                                <i class="fa-solid fa-credit-card text-slate-400 peer-checked:text-blue-600 mb-1 text-lg"></i>
-                                                <div class="text-xs font-black text-slate-700 peer-checked:text-blue-700">Pay Online</div>
-                                            </div>
-                                        </label>
+                                        @empty
+                                        <div class="col-span-2 text-sm text-red-500 font-bold p-3 bg-red-50 rounded-xl border border-red-100">
+                                            No online payment methods are currently available.
+                                        </div>
+                                        @endforelse
                                     </div>
                                 </div>
                                 
                                 <div x-show="paymentMethod === 'bank'" x-collapse>
+                                    @if(!empty($bankDetails))
+                                    <div class="mb-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+                                        <h4 class="text-sm font-black text-blue-800 mb-2">Our Bank Details</h4>
+                                        <div class="text-xs text-blue-700 whitespace-pre-wrap font-medium">{!! nl2br(e($bankDetails)) !!}</div>
+                                    </div>
+                                    @endif
                                     <label class="block text-sm font-bold text-slate-700 mb-2">Upload Bank Slip</label>
                                     <input type="file" name="receipt_image" accept="image/*" :required="paymentMethod === 'bank'" class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-bold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 transition-all border border-slate-200 rounded-xl p-1 bg-slate-50">
                                 </div>

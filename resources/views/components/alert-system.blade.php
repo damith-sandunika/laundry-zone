@@ -100,10 +100,16 @@
             renderOrderNumbers(alert) {
                 if (!alert || !alert.order_numbers || alert.order_numbers.length === 0) return '';
                 return alert.order_numbers.map((n, i) => {
+                    let text = typeof n === 'object' ? n.number : n;
+                    let url = typeof n === 'object' && n.url ? n.url : '#';
                     let bg = i % 2 === 0 ? '#ffffff' : '#f8fafc';
-                    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;background:${bg};">
-                                <span style="font-size:11px;color:#94a3b8;min-width:18px;text-align:right;">${i+1}.</span>
-                                <span style="font-size:12px;font-weight:800;color:#1e40af;letter-spacing:0.03em;">${n}</span>
+                    let clickable = url !== '#' ? 'cursor:pointer; text-decoration:underline;' : '';
+                    let onClick = url !== '#' ? `onclick="window.location.href='${url}'"` : '';
+                    let hoverClass = url !== '#' ? `onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='${bg}'"` : '';
+                    
+                    return `<div ${onClick} ${hoverClass} style="display:flex;align-items:center;gap:8px;padding:8px 12px;border-bottom:1px solid #f1f5f9;background:${bg}; ${clickable} transition:background 0.15s;">
+                                <span style="font-size:11px;color:#94a3b8;min-width:18px;text-align:right;text-decoration:none;">${i+1}.</span>
+                                <span style="font-size:12px;font-weight:800;color:#1e40af;letter-spacing:0.03em;">${text}</span>
                             </div>`;
                 }).join('');
             },

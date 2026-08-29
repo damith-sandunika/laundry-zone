@@ -400,7 +400,7 @@ class WorkshopController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'branch', 'dispatchedBy'])
+        $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'order.items.serviceType', 'branch', 'dispatchedBy'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
             ->whereNotIn('status', ['received_at_branch', 'returned_to_branch'])
             ->orderByDesc('dispatched_at')
@@ -417,10 +417,12 @@ class WorkshopController extends Controller
         $branches = Branch::where('type', 'branch')->get();
         $riders = \App\Models\User::where('role', 'rider')->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->where('is_active', true)->get();
-        $services = \App\Models\ServiceType::where('is_active', true)->get();
+        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($branchId) {
+            $q->where('branch_id', $branchId);
+        }])->where('is_active', true)->where('branch_id', $branchId)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'services', 'minimumDeliveryCost'));
+        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'categories', 'minimumDeliveryCost'));
     }
 
     // ─── Workshop Admin: Mark received at workshop ───
@@ -629,7 +631,7 @@ class WorkshopController extends Controller
             $branchAdmins,
             new \App\Notifications\SystemAlertNotification(
                 'Order Ready from Workshop: #' . $order->order_number,
-                route('orders.show', $dispatch->order_id),
+                route('orders.show', $order->order_number),
                 'workshop_return'
             )
         );

@@ -48,6 +48,8 @@ class StaffController extends Controller
             'emergency_contact' => 'nullable|string|max:255',
             'basic_salary' => 'nullable|numeric|min:0',
             'casual_leaves' => 'nullable|integer|min:0',
+            'standard_working_hours' => 'nullable|numeric|min:0',
+            'ot_rate_per_hour' => 'nullable|numeric|min:0',
         ];
         if (auth()->user()->role === 'super_admin') {
             $rules['branch_id'] = 'required|exists:branches,id';
@@ -77,6 +79,8 @@ class StaffController extends Controller
             'emergency_contact' => $request->emergency_contact,
             'basic_salary' => $request->basic_salary,
             'casual_leaves' => $request->casual_leaves ?? 0,
+            'standard_working_hours' => $request->standard_working_hours ?? 8.0,
+            'ot_rate_per_hour' => $request->ot_rate_per_hour ?? 0,
         ]);
 
         return redirect()->back()->with('success', 'Staff member added successfully.');
@@ -88,7 +92,38 @@ class StaffController extends Controller
             ->where('description', 'like', "%{$staff->name}%")
             ->latest()->get();
 
-        return view('staff.show', compact('staff', 'salaries'));
+        $month = request('month', now()->month);
+        $year = request('year', now()->year);
+        
+        // Calculate OT for the requested month
+        $attendancesThisMonth = \App\Models\Attendance::where('user_id', $staff->id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->get();
+            
+        $totalOtMinutes = $attendancesThisMonth->sum('ot_minutes');
+        $otAmount = $totalOtMinutes * ($staff->ot_rate_per_hour / 60);
+        
+        // Calculate Advances for the requested month
+        $advancesThisMonth = $staff->salaryAdvances()
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->sum('amount');
+            
+        // Calculate Net Salary
+        $basicSalary = $staff->basic_salary ?? 0;
+        $netSalary = $basicSalary + $otAmount - $advancesThisMonth;
+        
+        $payroll = (object)[
+            'month' => $month,
+            'year' => $year,
+            'ot_minutes' => $totalOtMinutes,
+            'ot_amount' => $otAmount,
+            'advances' => $advancesThisMonth,
+            'net_salary' => $netSalary,
+        ];
+
+        return view('staff.show', compact('staff', 'salaries', 'payroll'));
     }
 
     public function edit(User $staff)
@@ -110,6 +145,8 @@ class StaffController extends Controller
             'emergency_contact' => 'nullable|string|max:255',
             'basic_salary' => 'nullable|numeric|min:0',
             'casual_leaves' => 'nullable|integer|min:0',
+            'standard_working_hours' => 'nullable|numeric|min:0',
+            'ot_rate_per_hour' => 'nullable|numeric|min:0',
         ];
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
@@ -119,7 +156,7 @@ class StaffController extends Controller
         }
         $request->validate($rules);
 
-        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id', 'nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves']);
+        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id', 'nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour']);
 
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && auth()->user()->role !== 'super_admin') {
@@ -163,5 +200,38 @@ class StaffController extends Controller
         ]);
 
         return redirect()->back()->with('success', 'Salary payment recorded successfully.');
+    }
+
+    public function downloadPayslip(User $staff, Request $request)
+    {
+        $month = $request->query('month', now()->month);
+        $year = $request->query('year', now()->year);
+        
+        $attendancesThisMonth = \App\Models\Attendance::where('user_id', $staff->id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->get();
+            
+        $totalOtMinutes = $attendancesThisMonth->sum('ot_minutes');
+        $otAmount = $totalOtMinutes * ($staff->ot_rate_per_hour / 60);
+        
+        $advancesThisMonth = $staff->salaryAdvances()
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->sum('amount');
+            
+        $basicSalary = $staff->basic_salary ?? 0;
+        $netSalary = $basicSalary + $otAmount - $advancesThisMonth;
+        
+        $payroll = (object)[
+            'month' => $month,
+            'year' => $year,
+            'ot_minutes' => $totalOtMinutes,
+            'ot_amount' => $otAmount,
+            'advances' => $advancesThisMonth,
+            'net_salary' => $netSalary,
+        ];
+
+        return view('staff.payslip', compact('staff', 'payroll'));
     }
 }

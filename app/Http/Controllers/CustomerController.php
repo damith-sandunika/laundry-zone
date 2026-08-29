@@ -17,8 +17,10 @@ class CustomerController extends Controller
     public function store(Request $request)
     {
         $request->validate([
+            'title' => 'nullable|string|max:20',
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
+            'email' => 'nullable|email|max:255',
         ]);
 
         $exists = Customer::where('phone', $request->phone)->first();
@@ -32,8 +34,10 @@ class CustomerController extends Controller
 
         $customer = Customer::create([
             'branch_id' => auth()->user()->branch_id ?? 1,
+            'title' => $request->title,
             'name' => $request->name,
             'phone' => $request->phone,
+            'email' => $request->email,
             'address' => $request->address ?? null,
             'is_active' => true,
         ]);
@@ -77,13 +81,15 @@ class CustomerController extends Controller
     public function update(Request $request, Customer $customer)
     {
         $request->validate([
+            'title' => 'nullable|string|max:20',
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
+            'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:6|confirmed',
         ]);
 
-        $data = $request->only(['name', 'phone', 'address']);
+        $data = $request->only(['title', 'name', 'phone', 'email', 'address']);
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);

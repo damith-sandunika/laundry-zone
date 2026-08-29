@@ -85,7 +85,7 @@
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;{{ $appt->status === 'cancelled' ? 'opacity:0.7;background:#fff5f5;' : '' }}" onmouseover="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '0.85' }}'" onmouseout="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '1' }}'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id)
-                                        <a href="{{ route('orders.show', $appt->order_id) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</a>
+                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</a>
                                     @else
                                         <div style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }}">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</div>
                                     @endif
@@ -216,7 +216,7 @@
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id)
-                                        <a href="{{ route('orders.show', $appt->order_id) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</a>
+                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</a>
                                     @else
                                         <div style="font-size:13px;font-weight:800;color:#1d4ed8;">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</div>
                                     @endif

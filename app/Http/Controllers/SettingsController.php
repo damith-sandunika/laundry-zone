@@ -27,11 +27,11 @@ class SettingsController extends Controller
     {
         $branchId = auth()->user()->branch_id ?? 1;
         $branch = Branch::find($branchId);
-        $serviceCategories = ServiceCategory::with('services')->get();
-        $services = ServiceType::with(['inventoryItems', 'category'])->get();
+        $serviceCategories = ServiceCategory::with('services')->where('branch_id', $branchId)->get();
+        $services = ServiceType::with(['inventoryItems', 'category'])->where('branch_id', $branchId)->get();
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
-        $packages = Package::with('services.serviceType')->get();
+        $packages = Package::with('services.serviceType')->where('branch_id', $branchId)->get();
         $deliveryRanges = \App\Models\DeliveryRange::where('branch_id', $branchId)->orWhereNull('branch_id')->get();
         $paymentMethods = collect();
         if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
@@ -112,9 +112,13 @@ class SettingsController extends Controller
 
         $branch->update($data);
 
-        // If super admin, sync auto_close_time to all branches
-        if (auth()->user()->role === 'super_admin' && $request->has('auto_close_time')) {
-            Branch::query()->update(['auto_close_time' => $request->auto_close_time]);
+        if (auth()->user()->role === 'super_admin') {
+            if ($request->has('company_name')) {
+                \App\Models\Setting::set('company_name', $request->company_name);
+            }
+            if ($request->has('auto_close_time')) {
+                Branch::query()->update(['auto_close_time' => $request->auto_close_time]);
+            }
         }
 
         return redirect()->back()->with('success', 'General settings saved.');
@@ -131,6 +135,7 @@ class SettingsController extends Controller
         ]);
 
         $service = ServiceType::create([
+            'branch_id' => auth()->user()->branch_id ?? 1,
             'name' => $request->name,
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
@@ -181,7 +186,7 @@ class SettingsController extends Controller
         }
 
         ServiceCategory::create([
-            'branch_id' => null,
+            'branch_id' => auth()->user()->branch_id ?? 1,
             'name' => $request->name,
             'is_active' => true,
             'image_path' => $imagePath,
@@ -335,7 +340,7 @@ class SettingsController extends Controller
         ]);
 
         $package = Package::create([
-            'branch_id' => null,
+            'branch_id' => $branchId,
             'name' => $request->name,
             'price' => $request->price,
             'payment_type' => $request->payment_type,

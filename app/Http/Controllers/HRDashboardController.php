@@ -94,19 +94,33 @@ class HRDashboardController extends Controller
             ->get()
             ->groupBy('user_id');
 
-        $staffSummary = $staff->map(function ($user) use ($monthlyAttendances, $monthlyLeaves) {
+        $staffSummary = $staff->map(function ($user) use ($monthlyAttendances, $monthlyLeaves, $month, $year) {
             $userAttendances = $monthlyAttendances->get($user->id, collect());
 
             $userLeaves = $monthlyLeaves->get($user->id, collect());
             $leaveDays = 0;
             foreach ($userLeaves as $l) {
-                // Approximate leave days within this month (simple diff)
-                // If a leave spans months, ideally we'd calculate overlapping days.
-                // For simplicity, we just take the total days of leaves that touch this month.
                 $start = Carbon::parse($l->start_date);
                 $end = Carbon::parse($l->end_date);
                 $leaveDays += $end->diffInDays($start) + 1;
             }
+            
+            // Calculate total OT minutes
+            $totalOtMinutes = $userAttendances->sum('ot_minutes');
+            
+            // OT Amount
+            $otRatePerMinute = $user->ot_rate_per_hour / 60;
+            $otAmount = $totalOtMinutes * $otRatePerMinute;
+            
+            // Salary Advances this month for this user
+            $advances = \App\Models\SalaryAdvance::where('user_id', $user->id)
+                ->whereMonth('date', $month)
+                ->whereYear('date', $year)
+                ->sum('amount');
+                
+            // Total Salary (Basic + OT - Advances)
+            $basicSalary = $user->basic_salary ?? 0;
+            $totalSalary = $basicSalary + $otAmount - $advances;
 
             return [
                 'id' => $user->id,
@@ -116,6 +130,11 @@ class HRDashboardController extends Controller
                 'late' => $userAttendances->where('status', 'late')->count(),
                 'half_day' => $userAttendances->where('status', 'half_day')->count(),
                 'leave_days' => $leaveDays,
+                'ot_minutes' => $totalOtMinutes,
+                'ot_amount' => $otAmount,
+                'basic_salary' => $basicSalary,
+                'advances' => $advances,
+                'total_salary' => $totalSalary,
             ];
         });
 

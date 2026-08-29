@@ -17,10 +17,14 @@
                             <div class="item-row flex items-center gap-3">
                                 <select name="items[{{ $index }}][service_id]" required class="flex-1 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm">
                                     <option value="">Select Service</option>
-                                    @foreach($services as $service)
-                                        <option value="{{ $service->id }}" data-price="{{ $service->base_price }}" {{ $service->id == $item['service']['id'] ? 'selected' : '' }}>
-                                            {{ $service->name }} (Rs.{{ $service->base_price }})
-                                        </option>
+                                    @foreach($categories as $category)
+                                        <optgroup label="{{ $category->name }}">
+                                            @foreach($category->services as $service)
+                                                <option value="{{ $service->id }}" data-price="{{ $service->base_price }}" {{ $service->id == $item['service']['id'] ? 'selected' : '' }}>
+                                                    {{ $service->name }} (Rs.{{ $service->base_price }})
+                                                </option>
+                                            @endforeach
+                                        </optgroup>
                                     @endforeach
                                 </select>
                                 <input type="number" name="items[{{ $index }}][quantity]" value="{{ $item['quantity'] }}" min="1" required class="w-20 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm text-center">
@@ -32,10 +36,14 @@
                         <div class="item-row flex items-center gap-3">
                             <select name="items[0][service_id]" required class="flex-1 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm">
                                 <option value="">Select Service</option>
-                                @foreach($services as $service)
-                                    <option value="{{ $service->id }}" data-price="{{ $service->base_price }}">
-                                        {{ $service->name }} (Rs.{{ $service->base_price }})
-                                    </option>
+                                @foreach($categories as $category)
+                                    <optgroup label="{{ $category->name }}">
+                                        @foreach($category->services as $service)
+                                            <option value="{{ $service->id }}" data-price="{{ $service->base_price }}">
+                                                {{ $service->name }} (Rs.{{ $service->base_price }})
+                                            </option>
+                                        @endforeach
+                                    </optgroup>
                                 @endforeach
                             </select>
                             <input type="number" name="items[0][quantity]" value="1" min="1" required class="w-20 rounded-xl border-slate-200 focus:ring-blue-500 focus:border-blue-500 text-sm text-center">

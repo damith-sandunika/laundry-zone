@@ -176,10 +176,12 @@ class RiderController extends Controller
             abort(403, 'Can only create orders for pickups.');
         }
 
-        $services = ServiceType::where('is_active', true)->get();
+        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($task) {
+            $q->where('branch_id', $task->branch_id);
+        }])->where('is_active', true)->where('branch_id', $task->branch_id)->get();
         $cartData = $task->appointment->cart_json ? json_decode($task->appointment->cart_json, true) : [];
 
-        return view('rider.create-order', compact('task', 'services', 'cartData'));
+        return view('rider.create-order', compact('task', 'categories', 'cartData'));
     }
 
     public function storeOrder(Request $request, DeliveryTask $task)

@@ -41,7 +41,7 @@ class OrderController extends Controller
             'status_label' => str_replace('_', ' ', ucfirst($o->status)),
             'total'        => number_format($o->total, 2),
             'customer'     => $o->customer?->name ?? 'Walk-in',
-            'url'          => route('orders.show', $o->id),
+            'url'          => route('orders.show', $o->order_number),
         ]));
     }
 
@@ -98,12 +98,14 @@ class OrderController extends Controller
             return $order;
         });
         $cubbies = Cubby::where('branch_id', $branchId ?? 1)->orderBy('name')->get();
-        $services = ServiceType::orderBy('name')->get();
+        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($branchId) {
+            $q->where('branch_id', $branchId ?? 1);
+        }])->where('is_active', true)->where('branch_id', $branchId ?? 1)->get();
         $workshops = Branch::workshops()->get();
         $riders = \App\Models\User::where('role', 'rider')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('orders.index', compact('orders', 'cubbies', 'services', 'workshops', 'riders', 'minimumDeliveryCost'));
+        return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'riders', 'minimumDeliveryCost'));
     }
     public function requestPayment(Order $order, Request $request)
     {
@@ -176,6 +178,13 @@ class OrderController extends Controller
                 // Calculate discount and total
                 $discountPercentage = max(0, min(100, (float) ($request->discount_percentage ?? 0)));
                 $discountAmount = $subtotal * ($discountPercentage / 100);
+                
+                // Update customer default_discount if discount > 0
+                if ($discountPercentage > 0 && $order->customer_id) {
+                    \App\Models\Customer::where('id', $order->customer_id)
+                        ->update(['default_discount' => $discountPercentage]);
+                }
+
                 $total = $subtotal - $discountAmount + $order->delivery_fee;
 
                 // Enforce minimum order value for deliveries
@@ -285,8 +294,9 @@ class OrderController extends Controller
         }
     }
 
-    public function show(Order $order)
+    public function showByNumber($orderNumber)
     {
+        $order = Order::where('order_number', $orderNumber)->firstOrFail();
         $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment']);
         $branchId = auth()->user()->branch_id ?? 1;
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
@@ -307,6 +317,13 @@ class OrderController extends Controller
         $order->load(['customer', 'items']);
 
         return view('orders.chit', compact('order'));
+    }
+
+    public function invoice(Order $order)
+    {
+        $order->load(['customer', 'items.serviceType', 'branch']);
+
+        return view('orders.invoice', compact('order'));
     }
 
     public function updateStatus(Request $request, Order $order)

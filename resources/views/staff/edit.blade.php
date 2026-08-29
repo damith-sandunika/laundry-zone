@@ -90,6 +90,16 @@
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Standard Working Hours</label>
+                            <input type="number" step="0.5" name="standard_working_hours" value="{{ old('standard_working_hours', $staff->standard_working_hours) }}"
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">OT Rate (Rs. Per Hour)</label>
+                            <input type="number" step="0.01" name="ot_rate_per_hour" value="{{ old('ot_rate_per_hour', $staff->ot_rate_per_hour) }}"
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        </div>
+                        <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">NIC (Optional)</label>
                             <input type="text" name="nic" value="{{ old('nic', $staff->nic) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">

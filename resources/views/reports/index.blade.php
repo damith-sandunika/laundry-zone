@@ -200,7 +200,7 @@
                             @forelse($orders as $order)
                                 <tr class="hover:bg-slate-50 transition-colors">
                                     <td class="px-6 py-4 font-bold">
-                                        <a href="{{ route('orders.show', $order->id) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
+                                        <a href="{{ route('orders.show', $order->order_number) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
                                     </td>
                                     <td class="px-6 py-4 font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</td>
                                     <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
@@ -392,7 +392,7 @@
                             @forelse($creditOrders as $order)
                                 <tr class="hover:bg-slate-50 transition-colors">
                                     <td class="px-6 py-4 font-bold">
-                                        <a href="{{ route('orders.show', $order->id) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
+                                        <a href="{{ route('orders.show', $order->order_number) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
                                     </td>
                                     <td class="px-6 py-4 font-bold text-slate-900">{{ $order->customer->name }} <br><span class="text-xs text-slate-500">{{ $order->customer->phone }}</span></td>
                                     <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>

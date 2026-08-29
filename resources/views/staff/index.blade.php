@@ -201,6 +201,16 @@
                                     </div>
                                     <div class="grid grid-cols-2 gap-4 mb-3">
                                         <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">Standard Working Hours (Per Day)</label>
+                                            <input type="number" step="0.5" name="standard_working_hours" value="8.0" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-medium text-gray-700 mb-1">OT Rate (Rs. Per Hour)</label>
+                                            <input type="number" step="0.01" name="ot_rate_per_hour" value="0" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4 mb-3">
+                                        <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
                                             <input type="date" name="dob" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                         </div>

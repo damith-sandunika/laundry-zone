@@ -25,7 +25,7 @@
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     General Settings
                 </button>
-                @if(auth()->user()->role === 'super_admin')
+                @if(in_array(auth()->user()->role, ['branch_admin', 'workshop_admin', 'admin']))
                     <button @click="activeTab = 'services'; localStorage.setItem('settingsActiveTab', 'services')" 
                         :class="activeTab === 'services' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
@@ -36,6 +36,8 @@
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                         Packages
                     </button>
+                @endif
+                @if(auth()->user()->role === 'super_admin')
                     <button @click="activeTab = 'delivery'; localStorage.setItem('settingsActiveTab', 'delivery')" 
                         :class="activeTab === 'delivery' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
@@ -52,11 +54,13 @@
                         Payment Methods
                     </button>
                 @endif
+                @if(auth()->user()->role !== 'super_admin')
                 <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')" 
                     :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     Stock Locations
                 </button>
+                @endif
 
             </div>
         </div>
@@ -64,6 +68,7 @@
         <div class="p-6">
             <!-- GENERAL SETTINGS TAB -->
             <div x-show="activeTab === 'general'" x-data="{ 
+                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '360 LAUNDRY')) }}',
                 formName: '{{ addslashes($branch->name ?? 'SMART LAUNDRY') }}',
                 formAddress: '{{ addslashes($branch->address) }}',
                 formPhone: '{{ addslashes($branch->phone) }}',
@@ -74,9 +79,15 @@
                 <form action="{{ route('settings.updateGeneral') }}" method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-6">
                     <div class="flex-1 space-y-4 max-w-xl">
                         @csrf
+                    @if(auth()->user()->role === 'super_admin')
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Company Name (Global for all Bills)</label>
+                        <input type="text" name="company_name" x-model="formCompanyName" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                    </div>
+                    @endif
                     <div>
                         <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">
-                            {{ auth()->user()->role === 'super_admin' ? 'Main Shop Name (Global)' : 'Branch Name' }}
+                            Branch Name
                         </label>
                         <input type="text" name="name" x-model="formName" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                     </div>
@@ -505,7 +516,7 @@
 
                 <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
                     @forelse($cubbies as $cubby)
-                        <div x-data="{ editing: false, newName: '{{ addslashes($cubby->name) }}' }" class="p-4 border rounded-md text-center relative {{ $cubby->status === 'occupied' ? 'bg-orange-50 border-orange-200' : 'bg-green-50 border-green-200' }}">
+                        <div x-data="{ editing: false, newName: '{{ addslashes($cubby->name) }}' }" class="p-4 border rounded-md text-center relative bg-green-50 border-green-200">
                             <div class="absolute top-1 right-1 flex gap-1">
                                 <button type="button" @click="editing = true"
                                     class="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition-colors" title="Edit">
@@ -526,8 +537,8 @@
                             
                             <div x-show="!editing">
                                 <h4 class="font-bold text-gray-800 mt-2">{{ $cubby->name }}</h4>
-                                <span class="text-xs font-semibold px-2 py-0.5 rounded mt-2 inline-block {{ $cubby->status === 'occupied' ? 'bg-orange-100 text-orange-700' : 'bg-green-100 text-green-700' }}">
-                                    {{ ucfirst($cubby->status) }}
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded mt-2 inline-block bg-green-100 text-green-700">
+                                    Active
                                 </span>
                             </div>
                             
@@ -867,13 +878,24 @@
                                                         </div>
                                                         <div class="border-t border-gray-100 pt-5 text-left">
                                                             <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">Included Services & Limits</h4>
-                                                            <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
-                                                                @foreach($services as $service)
-                                                                    @php $qty = $package->services->where('service_type_id', $service->id)->first()->quantity_limit ?? 0; @endphp
-                                                                    <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100">
-                                                                        <span class="text-sm font-semibold text-gray-700">{{ $service->name }} <span class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
-                                                                        <input type="number" step="any" name="services[{{ $service->id }}]" value="{{ $qty }}" class="w-24 text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center font-bold">
+                                                            <div class="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+                                                                @foreach($serviceCategories as $category)
+                                                                    @if($category->services->count() > 0)
+                                                                    <div class="bg-gray-50/50 rounded-xl border border-gray-100 overflow-hidden">
+                                                                        <div class="bg-gray-100/50 px-3 py-2 border-b border-gray-100">
+                                                                            <h5 class="text-[10px] font-black text-gray-700 uppercase tracking-wider">{{ $category->name }}</h5>
+                                                                        </div>
+                                                                        <div class="p-1 space-y-1">
+                                                                            @foreach($category->services as $service)
+                                                                                @php $qty = $package->services->where('service_type_id', $service->id)->first()->quantity_limit ?? 0; @endphp
+                                                                                <div class="flex items-center justify-between p-2 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200">
+                                                                                    <span class="text-sm font-semibold text-gray-700">{{ $service->name }} <span class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
+                                                                                    <input type="number" step="any" name="services[{{ $service->id }}]" value="{{ $qty }}" class="w-24 text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center font-bold">
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
                                                                     </div>
+                                                                    @endif
                                                                 @endforeach
                                                             </div>
                                                         </div>
@@ -939,12 +961,23 @@
                                             <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-3">Included Services & Limits</h4>
                                             <p class="text-[11px] text-gray-500 mb-3">Set the quantity limit for services included in this package. Leave as 0 if the service is not included.</p>
                                             
-                                            <div class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
-                                                @foreach($services as $service)
-                                                    <div class="flex items-center justify-between p-2 hover:bg-gray-50 rounded-lg transition-colors border border-transparent hover:border-gray-100">
-                                                        <span class="text-sm font-semibold text-gray-700">{{ $service->name }} <span class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
-                                                        <input type="number" step="any" name="services[{{ $service->id }}]" placeholder="0" class="w-24 text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center font-bold">
+                                            <div class="space-y-3 max-h-64 overflow-y-auto custom-scrollbar pr-2">
+                                                @foreach($serviceCategories as $category)
+                                                    @if($category->services->count() > 0)
+                                                    <div class="bg-gray-50/50 rounded-xl border border-gray-100 overflow-hidden">
+                                                        <div class="bg-gray-100/50 px-3 py-2 border-b border-gray-100">
+                                                            <h5 class="text-[10px] font-black text-gray-700 uppercase tracking-wider">{{ $category->name }}</h5>
+                                                        </div>
+                                                        <div class="p-1 space-y-1">
+                                                            @foreach($category->services as $service)
+                                                            <div class="flex items-center justify-between p-2 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-gray-200">
+                                                                <span class="text-sm font-semibold text-gray-700">{{ $service->name }} <span class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
+                                                                <input type="number" step="any" name="services[{{ $service->id }}]" placeholder="0" class="w-24 text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center font-bold">
+                                                            </div>
+                                                            @endforeach
+                                                        </div>
                                                     </div>
+                                                    @endif
                                                 @endforeach
                                             </div>
                                         </div>

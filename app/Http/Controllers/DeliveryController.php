@@ -241,9 +241,11 @@ class DeliveryController extends Controller
         ]);
 
         $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $appointment->branch_id)->get();
-        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Delivery Order Arrived: #' . $dispatch->order->order_number, route('orders.index'), 'delivery_arrived'));
+        $targetRouteName = auth()->user()->role === 'workshop_admin' ? 'workshop.operations' : 'orders.index';
+        
+        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Delivery Order Arrived: #' . $dispatch->order->order_number, route($targetRouteName), 'delivery_arrived'));
 
-        return redirect()->route('orders.index')->with('success', 'Delivery arrived! Order has been moved to the Orders page.');
+        return redirect()->route($targetRouteName)->with('success', 'Delivery arrived! Order has been moved to the Operations page.');
     }
 
     public function assignDeliveryRider(Request $request, DeliveryAppointment $appointment)

@@ -16,7 +16,7 @@
         showBulkModal: false,
         bulkStatus: '',
         dispatchesList: JSON.parse(atob('{{ base64_encode(json_encode($dispatches)) }}')),
-        allServices: JSON.parse(atob('{{ base64_encode(json_encode($services)) }}')),
+        allCategories: JSON.parse(atob('{{ base64_encode(json_encode($categories)) }}')),
         minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
         
         openFinalizeModal(dispatch) {
@@ -30,7 +30,7 @@
             window.dispatchEvent(new CustomEvent('open-finalize-modal', {
                 detail: {
                     context: 'workshop',
-                    services: this.allServices,
+                    categories: this.allCategories,
                     order: order,
                     cart: cart,
                     advance: null,
@@ -556,12 +556,31 @@
 
                                         <template x-if="dispatch.status === 'completed_at_workshop'">
                                             <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-                                                <button @click="workshopAction(dispatch.id, 'return')"
-                                                    style="padding:5px 14px;background:linear-gradient(to right,#8b5cf6,#6d28d9);color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(139,92,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
-                                                    Send to Branch
-                                                </button>
+                                                <template x-if="dispatch.order.branch_id == {{ auth()->user()->branch_id ?? 'null' }}">
+                                                    <div style="display:flex;gap:6px;">
+                                                        <template x-if="dispatch.order.is_delivery_order">
+                                                            <button @click="openDeliveryModal(dispatch)"
+                                                                style="padding:5px 14px;background:linear-gradient(to right,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                                <i class="fa-solid fa-truck"></i> Assign to Delivery
+                                                            </button>
+                                                        </template>
+                                                        <template x-if="!dispatch.order.is_delivery_order">
+                                                            <button @click="openHandoverModal(dispatch)"
+                                                                style="padding:5px 14px;background:linear-gradient(to right,#10b981,#059669);color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                                <i class="fa-solid fa-box-open"></i> Handover to Cust
+                                                            </button>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                                <template x-if="dispatch.order.branch_id != {{ auth()->user()->branch_id ?? 'null' }}">
+                                                    <button @click="workshopAction(dispatch.id, 'return')"
+                                                        style="padding:5px 14px;background:linear-gradient(to right,#8b5cf6,#6d28d9);color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(139,92,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                                                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                        <i class="fa-solid fa-arrow-right-from-bracket"></i> Send to Branch
+                                                    </button>
+                                                </template>
                                             </div>
                                         </template>
                                         
@@ -607,8 +626,7 @@
             </div>
         </div>
 
-        <x-modals.request-payment />
-        <x-modals.finalize-order />
+        <!-- Modals for workshop (if any) -->
         
         <!-- ── Dispatch Delivery Modal ── -->
         <div x-cloak x-show="showDeliveryModal" class="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
@@ -692,8 +710,8 @@
                     <select x-model="doneCubbyId" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:13px;font-weight:600;outline:none;background:white;" onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#e2e8f0'">
                         <option value="">-- No cubby (skip) --</option>
                         @foreach($cubbies as $cubby)
-                            <option value="{{ $cubby->id }}" {{ $cubby->status === 'occupied' ? 'disabled' : '' }}>
-                                {{ $cubby->name }}{{ $cubby->status === 'occupied' ? ' (Occupied)' : '' }}
+                            <option value="{{ $cubby->id }}">
+                                {{ $cubby->name }}
                             </option>
                         @endforeach
                     </select>
@@ -787,6 +805,9 @@
             </div>
         </div>
     </div>
+
+    <x-modals.review-slip />
+    <x-modals.finalize-order />
 
 </div>{{-- /main x-data --}}
 

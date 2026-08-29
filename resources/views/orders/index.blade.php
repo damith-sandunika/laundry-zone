@@ -61,7 +61,7 @@
         editDiscount: 0,
         editAdvanceCashAmount: '',
         selectedServiceToAdd: '',
-        allServices: JSON.parse(atob('{{ base64_encode(json_encode($services)) }}')),
+        allCategories: JSON.parse(atob('{{ base64_encode(json_encode($categories)) }}')),
         minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
 
         ordersList: JSON.parse(atob('{{ base64_encode(json_encode($orders)) }}')),
@@ -348,7 +348,7 @@
             window.dispatchEvent(new CustomEvent('open-finalize-modal', {
                 detail: {
                     context: 'branch',
-                    services: this.allServices,
+                    categories: this.allCategories,
                     order: order,
                     cart: cart,
                     advance: null,

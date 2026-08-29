@@ -43,7 +43,7 @@
                     <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
                 <div>
-                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">360 Laundry</div>
+                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '360 Laundry') }}</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
             </div>
@@ -211,12 +211,18 @@
                             @if(auth()->user()->role === 'rider')
                                 <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">Rider Dashboard</div>
                             @else
-                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ $branch->name ?? '360 Laundry' }}</div>
+                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ \App\Models\Setting::get('company_name', '360 Laundry') }}</div>
                             @endif
                             
 
                         </div>
-                        <div class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">Laundry Management</div>
+                        <div class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">
+                            @if(auth()->user()->role !== 'rider' && $branch)
+                                {{ $branch->name }}
+                            @else
+                                Laundry Management
+                            @endif
+                        </div>
                     </div>
 
                     <!-- Profile Dropdown (Mobile only in this row, hidden on desktop) -->
@@ -432,5 +438,6 @@
             };
         }
     </script>
+    @stack('scripts')
 </body>
 </html>

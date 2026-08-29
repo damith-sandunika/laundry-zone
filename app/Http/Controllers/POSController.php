@@ -35,8 +35,8 @@ class POSController extends Controller
             }
         }
 
-        $services = ServiceType::where('is_active', true)->get();
-        $categories = ServiceCategory::where('is_active', true)->get();
+        $services = ServiceType::where('is_active', true)->where('branch_id', $branchId)->get();
+        $categories = ServiceCategory::where('is_active', true)->where('branch_id', $branchId)->get();
 
         $customers = Customer::withoutGlobalScopes()->where('is_active', true)->get();
 
@@ -148,7 +148,7 @@ class POSController extends Controller
         $paidAmount = $paymentMode === 'pay_now' ? $total : 0;
 
         try {
-            $result = DB::transaction(function () use ($request, $user, $branchId, $subtotal, $discountAmount, $total, $paidAmount, $paymentMode, $processedCart, $packageId, $activePackage, $packageDeductions) {
+            $result = DB::transaction(function () use ($request, $user, $branchId, $subtotal, $discountAmount, $discountPercentage, $total, $paidAmount, $paymentMode, $processedCart, $packageId, $activePackage, $packageDeductions) {
                 // 1. Resolve Customer
                 $customerId = $request->customer_id;
                 if (! $customerId) {
@@ -158,6 +158,12 @@ class POSController extends Controller
                         ['name' => 'Walk-in Customer', 'branch_id' => $branchId]
                     );
                     $customerId = $customer->id;
+                }
+
+                // Update customer default_discount if discount > 0
+                if ($discountPercentage > 0 && $customerId) {
+                    \App\Models\Customer::where('id', $customerId)
+                        ->update(['default_discount' => $discountPercentage]);
                 }
 
                 // Calculate Profit Split
@@ -271,7 +277,7 @@ class POSController extends Controller
                 return [
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
-                    'customer_name' => $customerObj->name,
+                    'customer_name' => $orderForComm->customer->name ?? 'Walk-in Customer',
                     'due_date' => $order->due_date ? $order->due_date->format('d M Y') : '-',
                     'cart' => collect($processedCart)->map(fn ($i) => [
                         'name' => $i['name'],

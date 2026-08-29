@@ -39,14 +39,14 @@
                 
                 <template x-for="i in 4" :key="i">
                     <div class="relative z-10 flex flex-col items-center bg-transparent">
-                        <div class="w-12 h-12 rounded-full flex items-center justify-center font-black text-base border-4 transition-all duration-300"
+                        <div @click="goToStep(i)" class="w-12 h-12 rounded-full flex items-center justify-center font-black text-base border-4 transition-all duration-300 cursor-pointer"
                              :class="step === i ? 'step-active scale-110 shadow-md' : (step > i ? 'step-completed' : 'step-inactive bg-white')">
                             <i x-show="step > i" class="fa-solid fa-check"></i>
                             <span x-show="step <= i" x-text="i"></span>
                         </div>
                         <span class="text-[11px] font-extrabold mt-2 uppercase tracking-wider absolute top-14 w-32 text-center" 
                               :class="step === i ? 'text-blue-700' : 'text-slate-400'"
-                              x-text="['Services', 'Account', 'Pickup', 'Delivery & Pay'][i-1]"></span>
+                              x-text="['Account', 'Pickup', 'Services', 'Delivery & Pay'][i-1]"></span>
                     </div>
                 </template>
             </div>
@@ -68,8 +68,8 @@
                 </div>
             @endif
 
-            <!-- STEP 1: Services Selection -->
-            <div x-show="step === 1" x-transition.opacity.duration.300ms>
+            <!-- STEP 3: Services Selection -->
+            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
                         <span class="bg-blue-50 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-shirt"></i></span>
@@ -164,14 +164,19 @@
                         Total: <span class="text-blue-600">LKR <span x-text="totalPrice"></span></span>
                         <div x-show="totalPrice < minLimit" class="text-[10px] text-red-500 font-bold mt-1">Min. order: LKR <span x-text="minLimit"></span></div>
                     </div>
-                    <button type="button" @click="goToStep(2)" :disabled="totalPrice < minLimit || cart.length === 0" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
-                        Next Step <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
+                        <button type="button" @click="goToStep(2)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
+                            <i class="fa-solid fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" @click="goToStep(4)" :disabled="totalPrice < minLimit || cart.length === 0" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
+                            Next Step <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- STEP 2: Authentication -->
-            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
+            <!-- STEP 1: Authentication -->
+            <div x-show="step === 1" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     
                     <!-- If already logged in, show account info instead of form -->
@@ -245,18 +250,15 @@
                 </div>
                 
                 <div class="flex justify-between items-center mt-6">
-                    <button type="button" @click="step = 1" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
-                        <i class="fa-solid fa-arrow-left"></i> Back
-                    </button>
                     <!-- Only show next if authenticated -->
-                    <button type="button" x-show="isAuthenticated" @click="goToStep(3)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
+                    <button type="button" x-show="isAuthenticated" @click="goToStep(2)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2 mt-4 ml-auto">
                         Next Step <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 3: Pickup Details -->
-            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
+            <!-- STEP 2: Pickup Details -->
+            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
                         <span class="bg-amber-50 text-amber-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
@@ -316,12 +318,14 @@
                 </div>
 
                 <div class="flex justify-between items-center mt-6">
-                    <button type="button" @click="step = 2" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
-                        <i class="fa-solid fa-arrow-left"></i> Back
-                    </button>
-                    <button type="button" @click="goToStep(4)" :disabled="isOutOfRange" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
-                        Next Step <i class="fa-solid fa-arrow-right"></i>
-                    </button>
+                    <div class="flex items-center justify-between">
+                        <button type="button" @click="goToStep(1)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
+                            <i class="fa-solid fa-arrow-left"></i> Back
+                        </button>
+                        <button type="button" @click="goToStep(3)" :disabled="isOutOfRange" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
+                            Next Step <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -438,8 +442,10 @@
     <x-slot name="scripts">
         <script>
             function bookingWizard(categories, isAuth, customer, minLimit, deliveryRanges, workshopsArray) {
+                const initialStep = isAuth ? 2 : 1;
                 return {
-                    step: 1,
+                    step: initialStep,
+                    highestStepReached: initialStep,
                     categories: categories,
                     minLimit: Number(minLimit || 0),
                     expandedCategory: null,
@@ -480,8 +486,8 @@
                         this.$watch('step', value => {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                             
-                            // Initialize map on step 3 if not already done
-                            if (value === 3) {
+                            // Initialize map on step 2 if not already done
+                            if (value === 2) {
                                 setTimeout(() => this.initPickupMap(), 100);
                             }
                             
@@ -501,9 +507,34 @@
                         this.$watch('deliveryPref', () => this.calculateDeliveryFee());
                     },
 
-                    goToStep(n) {
+                    async goToStep(n) {
+                        if (n > this.highestStepReached + 1) return; // Must go in order initially
+
                         // Validation logic before moving to next step
-                        if (n === 2) {
+                        if (n === 3) { // Going to Services
+                            const date = document.getElementById('pickup_date_input').value;
+                            const time = document.getElementById('pickup_time_input').value;
+                            const addr = document.getElementById('pickup_address').value;
+                            
+                            if (!date || !time || !addr) {
+                                alert("Please fill in all pickup details (Date, Time, Address).");
+                                return;
+                            }
+
+                            // Calculate closest branch and fetch services
+                            if (this.nearestWorkshop && this.nearestWorkshop.id) {
+                                try {
+                                    const res = await axios.get('/customer/branch-services/' + this.nearestWorkshop.id);
+                                    if (res.data && res.data.categories) {
+                                        this.categories = res.data.categories;
+                                    }
+                                } catch (e) {
+                                    console.error("Error fetching branch services", e);
+                                }
+                            }
+                        }
+                        
+                        if (n === 4) {
                             if (this.cart.length === 0) {
                                 alert("Please select at least one service before proceeding.");
                                 return;
@@ -513,23 +544,16 @@
                                 return;
                             }
                         }
-                        
-                        if (n === 4) {
-                            const date = document.getElementById('pickup_date_input').value;
-                            const time = document.getElementById('pickup_time_input').value;
-                            const addr = document.getElementById('pickup_address').value;
-                            
-                            if (!date || !time || !addr) {
-                                alert("Please fill in all pickup details (Date, Time, Address).");
-                                return;
-                            }
-                        }
 
                         this.step = n;
+                        if (n > this.highestStepReached) {
+                            this.highestStepReached = n;
+                        }
                         
-                        // If going to step 2 but already authenticated, skip to step 3
-                        if (n === 2 && this.isAuthenticated) {
-                            this.step = 3;
+                        // If going to step 1 but already authenticated, skip to step 2
+                        if (n === 1 && this.isAuthenticated) {
+                            this.step = 2;
+                            this.highestStepReached = Math.max(this.highestStepReached, 2);
                         }
                     },
 
@@ -541,7 +565,7 @@
                             if (response.data.success) {
                                 this.isAuthenticated = true;
                                 this.authCustomer = response.data.customer;
-                                this.goToStep(3);
+                                this.goToStep(2);
                             }
                         } catch (error) {
                             this.authError = error.response?.data?.message || 'Login failed. Please check your credentials.';
@@ -558,7 +582,7 @@
                             if (response.data.success) {
                                 this.isAuthenticated = true;
                                 this.authCustomer = response.data.customer;
-                                this.goToStep(3);
+                                this.goToStep(2);
                             }
                         } catch (error) {
                             this.authError = error.response?.data?.message || 'Registration failed. Please check the form.';
@@ -600,7 +624,7 @@
                     updateWorkshopMarkerStyles() {
                         const self = this;
                         Object.values(this.workshopMarkers).forEach(({ marker, wsId }) => {
-                            const isNearest = self.nearestWorkshop && self.nearestWorkshop.id === wsId;
+                            const isNearest = self.nearestWorkshop && self.nearestWorkshop.id == wsId;
                             marker.setIcon(self.makeWorkshopIcon(isNearest));
                         });
                     },
@@ -645,10 +669,12 @@
                             this.pickupLng = center.lng;
                             // Update nearest workshop dynamically
                             const nearest = this.findNearestWorkshop(center.lat, center.lng);
-                            if (nearest && (!this.nearestWorkshop || this.nearestWorkshop.id !== nearest.id)) {
+                            if (nearest && (!this.nearestWorkshop || this.nearestWorkshop.id != nearest.id)) {
                                 this.nearestWorkshop = nearest;
                                 this.baseLat = parseFloat(nearest.latitude);
                                 this.baseLng = parseFloat(nearest.longitude);
+                                this.cart = []; // clear cart if branch changes
+                                this.updateCart();
                                 this.updateWorkshopMarkerStyles();
                             }
                             this.calculateDeliveryFee();

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ServiceType extends Model
 {
     protected $fillable = [
-        'category_id', 'name', 'description', 'price_type', 'base_price', 'loyalty_points_earn', 'is_active', 'icon', 'color',
+        'branch_id', 'category_id', 'name', 'description', 'price_type', 'base_price', 'loyalty_points_earn', 'is_active', 'icon', 'color',
     ];
 
     public function category()

@@ -46,10 +46,10 @@
     </div>
     
     <div class="center bold" style="font-size:18px; letter-spacing:-0.03em; margin-bottom: 2px;">
-        {{ \App\Models\Branch::first()->name ?? 'SMART LAUNDRY' }}
+        {{ \App\Models\Setting::get('company_name', '360 LAUNDRY') }}
     </div>
     
-    @if($branch && $branch->id !== (\App\Models\Branch::first()->id ?? 1))
+    @if($branch)
         <div class="center bold" style="font-size:14px; margin-bottom: 2px;">{{ $branch->name }}</div>
     @endif
 
@@ -70,7 +70,7 @@
     @if($order->due_date)
     <div class="row" style="font-size: 12px;"><span>Pickup Date:</span><span class="bold">{{ \Carbon\Carbon::parse($order->due_date)->format('d M Y h:i A') }}</span></div>
     @endif
-    <div class="row" style="font-size: 12px;"><span>Customer:</span><span class="bold">{{ $order->customer->name }}</span></div>
+    <div class="row" style="font-size: 12px;"><span>Customer:</span><span class="bold">{{ $order->customer->title ? $order->customer->title . ' ' : '' }}{{ $order->customer->name }}</span></div>
     <div class="row" style="font-size: 12px;"><span>Phone:</span><span class="bold">{{ $order->customer->phone }}</span></div>
 
     <div class="divider"></div>

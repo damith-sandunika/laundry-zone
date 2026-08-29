@@ -12,6 +12,28 @@
                 <div class="p-4 border-b border-slate-100 bg-slate-50">
                     <input type="text" x-model="search" placeholder="Search services..." class="w-full px-4 py-2 bg-white border border-slate-200 rounded-lg text-sm font-bold outline-none focus:border-blue-500">
                 </div>
+                <!-- Category Filters -->
+                <div class="px-4 py-2 border-b border-slate-100 bg-white z-10 overflow-x-auto scrollbar-none">
+                    <div class="flex gap-2 w-max">
+                        <button @click="activeCategory = null" 
+                            :class="activeCategory === null ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
+                            All
+                        </button>
+                        <template x-for="cat in categories" :key="cat.id">
+                            <button @click="activeCategory = cat.id" 
+                                :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap"
+                                x-text="cat.name">
+                            </button>
+                        </template>
+                        <button @click="activeCategory = 'uncategorized'" 
+                            :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
+                            Uncategorized
+                        </button>
+                    </div>
+                </div>
                 <div class="flex-1 overflow-y-auto p-4 grid grid-cols-2 md:grid-cols-3 gap-3 content-start custom-scrollbar">
                     <template x-for="service in filteredServices" :key="service.id">
                         <button @click="addToCart(service)" class="p-3 border border-slate-200 rounded-xl hover:border-blue-500 hover:shadow-md transition-all text-left group bg-white">
@@ -59,10 +81,23 @@
                         <span class="text-xs font-bold text-slate-500">Subtotal</span>
                         <span class="text-sm font-black text-slate-800" x-text="'Rs.' + subtotal.toFixed(2)"></span>
                     </div>
+
+                    <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2" x-show="orderData?.delivery_fee > 0">
+                        <span class="text-xs font-bold text-slate-500">Delivery Fee</span>
+                        <span class="text-sm font-black text-slate-800" x-text="'Rs.' + parseFloat(orderData?.delivery_fee || 0).toFixed(2)"></span>
+                    </div>
                     
                     <div class="flex justify-between items-center mb-4">
                         <span class="text-xs font-bold text-slate-500" x-text="'Total' + (minimumDeliveryCost > 0 ? ' (Min Rs.' + minimumDeliveryCost + ')' : '')"></span>
                         <span class="text-lg font-black text-blue-700" x-text="'Rs.' + total.toFixed(2)"></span>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Discount (%)</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">%</span>
+                            <input type="number" x-model.number="discountPercentage" class="w-full pl-9 pr-4 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0" min="0" max="100">
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -105,27 +140,63 @@
         Alpine.data('finalizeOrderModal', () => ({
             showFinalizeModal: false,
             context: 'branch',
+            categories: [],
             services: [],
+            activeCategory: null,
             search: '',
             cart: [],
             requestedAdvance: null,
+            discountPercentage: 0,
             isSaving: false,
             orderData: null,
             minimumDeliveryCost: 0,
             
             openModal(detail) {
                 this.context = detail.context || 'branch';
-                this.services = detail.services || [];
+                this.categories = detail.categories || [];
+                // Flatten services from categories for searching/listing
+                this.services = [];
+                this.categories.forEach(cat => {
+                    if (cat.services) {
+                        cat.services.forEach(s => {
+                            s.category_id = cat.id;
+                            this.services.push(s);
+                        });
+                    }
+                });
+                // Find any uncategorized services if they were passed separately
+                if (detail.services) {
+                    detail.services.forEach(s => {
+                        if (!this.services.find(existing => existing.id === s.id)) {
+                            s.category_id = 'uncategorized';
+                            this.services.push(s);
+                        }
+                    });
+                }
+                
                 this.orderData = detail.order;
                 this.cart = detail.cart || [];
                 this.requestedAdvance = detail.advance || null;
                 this.minimumDeliveryCost = parseFloat(detail.minimumDeliveryCost || 0);
+                
+                if (this.orderData && this.orderData.customer && this.orderData.customer.default_discount) {
+                    this.discountPercentage = parseFloat(this.orderData.customer.default_discount) || 0;
+                } else {
+                    this.discountPercentage = 0;
+                }
+
                 this.showFinalizeModal = true;
             },
             
             get filteredServices() {
-                if (!this.search) return this.services;
-                return this.services.filter(s => s.name.toLowerCase().includes(this.search.toLowerCase()));
+                let filtered = this.services;
+                if (this.activeCategory !== null) {
+                    filtered = filtered.filter(s => s.category_id === this.activeCategory);
+                }
+                if (this.search) {
+                    filtered = filtered.filter(s => s.name.toLowerCase().includes(this.search.toLowerCase()));
+                }
+                return filtered;
             },
             
             get subtotal() {
@@ -133,7 +204,7 @@
             },
             
             get total() {
-                let calculated = this.subtotal + parseFloat(this.orderData?.delivery_fee || 0);
+                let calculated = (this.subtotal * (1 - (this.discountPercentage / 100))) + parseFloat(this.orderData?.delivery_fee || 0);
                 return Math.max(this.minimumDeliveryCost, calculated);
             },
             
@@ -164,7 +235,7 @@
                         },
                         body: JSON.stringify({
                             cart: this.cart,
-                            discount_percentage: 0,
+                            discount_percentage: this.discountPercentage,
                             requested_advance: this.requestedAdvance,
                             next_action: action === 'save' ? null : action
                         })

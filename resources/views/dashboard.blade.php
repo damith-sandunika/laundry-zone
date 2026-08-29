@@ -186,7 +186,7 @@
                                 @endphp
                                 <tr class="hover:bg-slate-50/50 transition-colors group">
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <a href="{{ route('orders.show', $order) }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order_number }}</a>
+                                        <a href="{{ route('orders.show', $order->order_number) }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order_number }}</a>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-[13px] font-bold text-slate-700">
                                         {{ $order->customer->name }}
@@ -203,7 +203,7 @@
                                         <span class="inline-flex px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest {{ $c[0] }} {{ $c[1] }}">{{ $order->status }}</span>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
-                                        <a href="{{ route('orders.show', $order) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
+                                        <a href="{{ route('orders.show', $order->order_number) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
                                     </td>
                                 </tr>
                             @empty

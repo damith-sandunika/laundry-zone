@@ -23,7 +23,9 @@ class NotificationController extends Controller
             $newOrders = Order::where('is_online_booking', true)
                 ->where('status', 'received')
                 ->where('payment_approved', false)
-                ->pluck('order_number')->toArray();
+                ->get()->map(function($o) {
+                    return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
+                })->toArray();
             if (count($newOrders) > 0) {
                 $alerts[] = [
                     'id'            => 'new_customer_orders',
@@ -44,7 +46,9 @@ class NotificationController extends Controller
                     $query->where('payment_approved', true)
                           ->orWhereRaw('paid_amount >= requested_advance AND requested_advance > 0');
                 })
-                ->pluck('order_number')->toArray();
+                ->get()->map(function($o) {
+                    return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
+                })->toArray();
             if (count($readyToStart) > 0) {
                 $alerts[] = [
                     'id'            => 'ready_to_start',
@@ -63,7 +67,9 @@ class NotificationController extends Controller
             if ($user->role !== 'super_admin') {
                 $incomingDispatchQuery->where('workshop_id', $user->branch_id);
             }
-            $incomingDispatch = $incomingDispatchQuery->pluck('order_number')->toArray();
+            $incomingDispatch = $incomingDispatchQuery->get()->map(function($o) {
+                return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
+            })->toArray();
             if (count($incomingDispatch) > 0) {
                 $alerts[] = [
                     'id'            => 'incoming_dispatch',
@@ -85,7 +91,9 @@ class NotificationController extends Controller
                 $pendingPickupsQuery->where('branch_id', $user->branch_id);
             }
             $pendingPickups = $pendingPickupsQuery->get()->map(function ($p) {
-                return 'Pickup: ' . ($p->customer->name ?? $p->contact_phone ?? 'Unknown');
+                $numberStr = $p->order_id && $p->order ? $p->order->order_number : ('Pickup: ' . ($p->customer->name ?? $p->contact_phone ?? 'Unknown'));
+                $url = $p->order_id && $p->order ? route('orders.show', $p->order->order_number) : route('delivery.index');
+                return ['number' => $numberStr, 'url' => $url];
             })->toArray();
             if (count($pendingPickups) > 0) {
                 $alerts[] = [
@@ -103,11 +111,13 @@ class NotificationController extends Controller
             // 5. Pending Payment Approvals
             $pendingPaymentsQuery = Order::whereHas('paymentTransactions', function ($q) {
                 $q->where('status', 'pending')->whereNotNull('receipt_path');
-            })->whereIn('status', ['pending', 'received', 'dispatched_to_workshop', 'received_at_workshop']);
+            })->whereNotIn('status', ['delivered', 'cancelled']);
             if ($user->role !== 'super_admin' && $user->role !== 'workshop_admin') {
                 $pendingPaymentsQuery->where('branch_id', $user->branch_id);
             }
-            $pendingPayments = $pendingPaymentsQuery->pluck('order_number')->toArray();
+            $pendingPayments = $pendingPaymentsQuery->get()->map(function($o) {
+                return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
+            })->toArray();
             if (count($pendingPayments) > 0) {
                 $alerts[] = [
                     'id'            => 'pending_payments',
@@ -128,7 +138,9 @@ class NotificationController extends Controller
             if ($user->role !== 'super_admin') {
                 $incomingReturnQuery->where('branch_id', $user->branch_id);
             }
-            $incomingReturn = $incomingReturnQuery->pluck('order_number')->toArray();
+            $incomingReturn = $incomingReturnQuery->get()->map(function($o) {
+                return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
+            })->toArray();
             if (count($incomingReturn) > 0) {
                 $alerts[] = [
                     'id'            => 'incoming_return',
@@ -147,7 +159,12 @@ class NotificationController extends Controller
             // 7. New Rider Tasks
             $newTasks = \App\Models\DeliveryTask::where('rider_id', $user->id)
                 ->where('status', 'assigned')->get()->map(function ($t) {
-                    return ucfirst($t->task_type) . ' - ' . substr($t->pickup_location ?? 'Unknown', 0, 15) . '...';
+                    $numberStr = ucfirst($t->task_type) . ' - ' . substr($t->pickup_location ?? 'Unknown', 0, 15) . '...';
+                    $url = $t->order_id && $t->order ? route('orders.show', $t->order->order_number) : '#';
+                    if ($t->order_id && $t->order) {
+                        $numberStr = $t->order->order_number . ' (' . ucfirst($t->task_type) . ')';
+                    }
+                    return ['number' => $numberStr, 'url' => $url];
                 })->toArray();
             if (count($newTasks) > 0) {
                 $alerts[] = [
@@ -159,7 +176,7 @@ class NotificationController extends Controller
                     'color'         => 'indigo',
                     'url'           => '#',
                 ];
-                $totalCount += $newTasksCount;
+                $totalCount += count($newTasks);
             }
         }
 

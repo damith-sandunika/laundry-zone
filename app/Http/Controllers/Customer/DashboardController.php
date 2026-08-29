@@ -110,7 +110,25 @@ class DashboardController extends Controller
 
         $order->load(['branch', 'items.serviceType']);
         
-        return view('customer.dashboard.show', compact('customer', 'order'));
+        $paymentMethods = collect();
+        if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
+            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
+        }
+        
+        $bankName = \App\Models\Setting::get('bank_name', '');
+        $bankBranch = \App\Models\Setting::get('bank_branch', '');
+        $bankAccountName = \App\Models\Setting::get('bank_account_name', '');
+        $bankAccountNumber = \App\Models\Setting::get('bank_account_number', '');
+        
+        $bankDetails = '';
+        if ($bankName || $bankAccountNumber) {
+            $bankDetails = "Bank: {$bankName}\nBranch: {$bankBranch}\nAccount Name: {$bankAccountName}\nAccount No: {$bankAccountNumber}";
+        }
+
+        return view('customer.dashboard.show', compact('customer', 'order', 'paymentMethods', 'bankDetails'));
     }
 
     public function showAppointment(\App\Models\DeliveryAppointment $appointment)

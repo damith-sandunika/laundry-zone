@@ -231,12 +231,26 @@
                             <th @click="sortBy('leave_days')" class="p-4 text-center cursor-pointer hover:bg-gray-100 transition text-red-600">
                                 <div class="flex items-center justify-center gap-2">Leaves <span x-show="sortCol === 'leave_days'" x-text="sortAsc ? '↑' : '↓'"></span></div>
                             </th>
+                            <th @click="sortBy('ot_minutes')" class="p-4 text-center cursor-pointer hover:bg-gray-100 transition text-indigo-600">
+                                <div class="flex items-center justify-center gap-2">OT Time <span x-show="sortCol === 'ot_minutes'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('ot_amount')" class="p-4 text-right cursor-pointer hover:bg-gray-100 transition text-indigo-600">
+                                <div class="flex items-center justify-end gap-2">OT Amount <span x-show="sortCol === 'ot_amount'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('advances')" class="p-4 text-right cursor-pointer hover:bg-gray-100 transition text-pink-600">
+                                <div class="flex items-center justify-end gap-2">Advances <span x-show="sortCol === 'advances'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
+                            <th @click="sortBy('total_salary')" class="p-4 text-right cursor-pointer hover:bg-gray-100 transition text-green-700">
+                                <div class="flex items-center justify-end gap-2">Total Salary <span x-show="sortCol === 'total_salary'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                            </th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-50">
                         <template x-for="user in sortedStaff" :key="user.id">
                             <tr class="hover:bg-gray-50 transition">
-                                <td class="p-4 font-bold text-gray-800 text-sm" x-text="user.name"></td>
+                                <td class="p-4">
+                                    <a :href="'/staff/' + user.id" class="font-bold text-blue-600 hover:text-blue-800 hover:underline text-sm" x-text="user.name"></a>
+                                </td>
                                 <td class="p-4">
                                     <span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" x-text="user.branch"></span>
                                 </td>
@@ -251,6 +265,18 @@
                                 </td>
                                 <td class="p-4 text-center">
                                     <span class="text-sm font-black" :class="user.leave_days > 0 ? 'text-red-600' : 'text-gray-400'" x-text="user.leave_days"></span>
+                                </td>
+                                <td class="p-4 text-center">
+                                    <span class="text-sm font-black text-indigo-600" x-text="Math.floor(user.ot_minutes / 60) + 'h ' + (user.ot_minutes % 60) + 'm'"></span>
+                                </td>
+                                <td class="p-4 text-right">
+                                    <span class="text-sm font-black text-indigo-600" x-text="'Rs. ' + Number(user.ot_amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
+                                </td>
+                                <td class="p-4 text-right">
+                                    <span class="text-sm font-black text-pink-600" x-text="user.advances > 0 ? ('Rs. ' + Number(user.advances).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})) : '-'"></span>
+                                </td>
+                                <td class="p-4 text-right bg-green-50/30">
+                                    <span class="text-base font-black text-green-700" x-text="'Rs. ' + Number(user.total_salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
                                 </td>
                             </tr>
                         </template>
