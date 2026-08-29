@@ -46,6 +46,9 @@ class WorkshopController extends Controller
         $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Order Dispatched from Branch: #' . $order->order_number, route('workshop.dashboard'), 'branch_dispatch'));
 
+        $commService = new CommunicationService();
+        $commService->sendOrderDispatchedToWorkshop($order);
+
         return redirect()->back()->with('success', 'Order dispatched to workshop successfully.');
     }
 
@@ -82,6 +85,11 @@ class WorkshopController extends Controller
 
         $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification(count($orders) . ' Orders Dispatched from Branch', route('workshop.dashboard'), 'branch_dispatch'));
+
+        $commService = new CommunicationService();
+        foreach ($orders as $order) {
+            $commService->sendOrderDispatchedToWorkshop($order);
+        }
 
         return redirect()->back()->with('success', count($orders).' orders dispatched to workshop.');
     }
@@ -436,6 +444,9 @@ class WorkshopController extends Controller
 
         $dispatch->order->update(['status' => 'processing']);
 
+        $commService = new CommunicationService();
+        $commService->sendOrderProcessing($dispatch->order);
+
         return response()->json(['success' => true, 'status' => 'received_at_workshop']);
     }
 
@@ -455,6 +466,9 @@ class WorkshopController extends Controller
             'changed_by' => auth()->id(),
             'note' => 'Processing started',
         ]);
+
+        $commService = new CommunicationService();
+        $commService->sendOrderProcessing($order);
 
         return response()->json(['success' => true, 'status' => 'processing', 'order_id' => $order->id]);
     }
@@ -636,6 +650,9 @@ class WorkshopController extends Controller
             )
         );
 
+        $commService = new CommunicationService();
+        $commService->sendOrderReturnedFromWorkshop($order);
+
         return response()->json(['success' => true, 'status' => 'returned_to_branch']);
     }
 
@@ -756,6 +773,18 @@ class WorkshopController extends Controller
                 }
             }
         });
+
+        $commService = new CommunicationService();
+        foreach ($dispatchIds as $id) {
+            $dispatch = WorkshopDispatch::find($id);
+            if ($dispatch && $dispatch->order) {
+                if ($status === 'processing') {
+                    $commService->sendOrderProcessing($dispatch->order);
+                } elseif ($status === 'returned_to_branch') {
+                    $commService->sendOrderReturnedFromWorkshop($dispatch->order);
+                }
+            }
+        }
 
         return response()->json(['success' => true]);
     }

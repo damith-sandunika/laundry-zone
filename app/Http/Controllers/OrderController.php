@@ -625,6 +625,23 @@ class OrderController extends Controller
             }
         });
 
+        // Add status-specific notifications after transaction succeeds
+        $commService = new \App\Services\CommunicationService();
+        $orders = Order::whereIn('id', $request->order_ids)->get();
+        foreach ($orders as $order) {
+            if ($request->status === 'delivered') {
+                $commService->sendOrderDelivered($order);
+            } elseif ($request->status === 'dispatched_to_workshop') {
+                $commService->sendOrderDispatchedToWorkshop($order);
+            } elseif ($request->status === 'processing') {
+                $commService->sendOrderProcessing($order);
+            } elseif ($request->status === 'returned_from_workshop') {
+                $commService->sendOrderReturnedFromWorkshop($order);
+            } elseif ($request->status === 'cancelled') {
+                $commService->sendOrderCancelled($order);
+            }
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Bulk status updated successfully.',
