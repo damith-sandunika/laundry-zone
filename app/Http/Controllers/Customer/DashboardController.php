@@ -184,7 +184,25 @@ class DashboardController extends Controller
         ]);
 
         if ($request->payment_method === 'Bank Transfer' && $request->hasFile('receipt_image')) {
-            $path = $request->file('receipt_image')->store('receipts', 'public');
+            $file = $request->file('receipt_image');
+            $path = '';
+            
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/receipts',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $path = $result['secure_url'];
+                } catch (\Exception $e) {
+                    $path = $file->store('receipts', 'public');
+                }
+            } else {
+                $path = $file->store('receipts', 'public');
+            }
+
             $order->update([
                 'receipt_path' => $path,
                 'payment_method' => 'bank_transfer',
@@ -209,7 +227,7 @@ class DashboardController extends Controller
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
             'payment_method' => 'required|in:bank,bank_transfer,gateway',
-            'receipt_image' => 'required_if:payment_method,bank,bank_transfer|image|max:5120',
+            'receipt_image' => 'required_if:payment_method,bank,bank_transfer|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         // Prevent double submission
@@ -223,7 +241,22 @@ class DashboardController extends Controller
 
         $receiptPath = $order->receipt_path;
         if ($request->hasFile('receipt_image')) {
-            $receiptPath = $request->file('receipt_image')->store('receipts', 'public');
+            $file = $request->file('receipt_image');
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/receipts',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $receiptPath = $result['secure_url'];
+                } catch (\Exception $e) {
+                    $receiptPath = $file->store('receipts', 'public');
+                }
+            } else {
+                $receiptPath = $file->store('receipts', 'public');
+            }
         }
 
         if ($request->payment_method === 'gateway') {

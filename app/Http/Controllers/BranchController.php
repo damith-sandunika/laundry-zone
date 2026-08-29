@@ -34,7 +34,7 @@ class BranchController extends Controller
             'whatsapp_number' => 'nullable|string|max:50',
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -44,8 +44,22 @@ class BranchController extends Controller
         $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('branch_logos', 'public');
-            $data['logo_path'] = $path;
+            $file = $request->file('logo');
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/branch_logos',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $data['logo_path'] = $result['secure_url'];
+                } catch (\Exception $e) {
+                    $data['logo_path'] = $file->store('branch_logos', 'public');
+                }
+            } else {
+                $data['logo_path'] = $file->store('branch_logos', 'public');
+            }
         }
 
         Branch::create($data);
@@ -67,7 +81,7 @@ class BranchController extends Controller
             'whatsapp_number' => 'nullable|string|max:50',
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -79,12 +93,27 @@ class BranchController extends Controller
         $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($branch->logo_path) {
+            // Delete old logo if exists and not from cloudinary
+            if ($branch->logo_path && !str_contains($branch->logo_path, 'cloudinary')) {
                 Storage::disk('public')->delete($branch->logo_path);
             }
-            $path = $request->file('logo')->store('branch_logos', 'public');
-            $data['logo_path'] = $path;
+            
+            $file = $request->file('logo');
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/branch_logos',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $data['logo_path'] = $result['secure_url'];
+                } catch (\Exception $e) {
+                    $data['logo_path'] = $file->store('branch_logos', 'public');
+                }
+            } else {
+                $data['logo_path'] = $file->store('branch_logos', 'public');
+            }
         }
 
         $branch->update($data);

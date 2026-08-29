@@ -501,7 +501,7 @@
                         </div>
                         
                         <div style="display:flex;gap:6px;margin-top:4px;">
-                            <a href="{{ asset('storage/' . $tx->receipt_path) }}" target="_blank" style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">View Slip</a>
+                            <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}" target="_blank" style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">View Slip</a>
                             
                             @if($tx->status === 'pending')
                                 <button type="button" @click="openReviewModal = true" style="flex:1;padding:6px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">Review</button>
@@ -527,10 +527,10 @@
                                         
                                         <!-- Scrollable Image -->
                                         <div style="width:100%;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;overflow-y:auto;overflow-x:hidden;max-height:220px;margin-bottom:12px;">
-                                            <img src="{{ asset('storage/' . $tx->receipt_path) }}" alt="Payment Slip" style="width:100%;height:auto;display:block;">
+                                            <img src="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}" alt="Payment Slip" style="width:100%;height:auto;display:block;">
                                         </div>
                                         <div style="text-align:right;margin-bottom:12px;">
-                                            <a href="{{ asset('storage/' . $tx->receipt_path) }}" target="_blank" style="font-size:11px;color:#4f46e5;font-weight:700;text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab</a>
+                                            <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}" target="_blank" style="font-size:11px;color:#4f46e5;font-weight:700;text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab</a>
                                         </div>
 
                                         <div style="margin-bottom:12px;background:#f8fafc;padding:12px;border-radius:10px;border:1px solid #e2e8f0;font-size:12px;color:#334155;display:flex;justify-content:space-between;align-items:center;">
