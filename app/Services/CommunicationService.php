@@ -62,6 +62,26 @@ class CommunicationService
         $this->dispatch('delivery_thank_you', $order);
     }
 
+    public function sendOrderDispatchedToWorkshop(Order $order)
+    {
+        $this->dispatch('order_dispatched_to_workshop', $order);
+    }
+
+    public function sendOrderProcessing(Order $order)
+    {
+        $this->dispatch('order_processing', $order);
+    }
+
+    public function sendOrderReturnedFromWorkshop(Order $order)
+    {
+        $this->dispatch('order_returned_from_workshop', $order);
+    }
+
+    public function sendOrderCancelled(Order $order)
+    {
+        $this->dispatch('order_cancelled', $order);
+    }
+
     /**
      * Master Dispatch method to handle both SMS and Email based on global settings
      */
