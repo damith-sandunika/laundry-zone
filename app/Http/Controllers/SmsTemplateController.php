@@ -34,8 +34,8 @@ class SmsTemplateController extends Controller
         ]);
 
         $template->update([
-            'message' => $request->message,
-            'is_active' => $request->has('is_active')
+            'message'   => $request->message,
+            'is_active' => $request->input('is_active') == '1',
         ]);
 
         return redirect()->route('sms-templates.index')->with('success', 'SMS Template updated successfully');
