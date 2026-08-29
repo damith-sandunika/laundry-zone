@@ -300,6 +300,7 @@
 
             let flatUrls = receipts.map(r => r.url);
 
+            if (order.receipt_path) {
                 let rUrl = order.receipt_path.startsWith('http') ? order.receipt_path : '/storage/' + order.receipt_path;
                 if (!flatUrls.includes(rUrl)) {
                     receipts.push({ id: null, url: rUrl, amount: order.total, status: 'legacy', created_at: '', is_legacy: true });
@@ -310,7 +311,6 @@
                 if (!flatUrls.includes(daUrl)) {
                     receipts.push({ id: null, url: daUrl, amount: order.total, status: 'legacy', created_at: '', is_legacy: true });
                 }
-            }
             }
             return receipts;
         },
