@@ -115,6 +115,7 @@ class SettingsController extends Controller
                     ]);
                     $data['logo_path'] = $result['secure_url'];
                 } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Branch: ' . $e->getMessage());
                     $filename = time().'_'.$file->getClientOriginalName();
                     $file->move(public_path('logos'), $filename);
                     $data['logo_path'] = 'logos/'.$filename;
@@ -206,6 +207,7 @@ class SettingsController extends Controller
                     ]);
                     $imagePath = $result['secure_url'];
                 } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Category: ' . $e->getMessage());
                     $filename = time().'_cat_'.$file->getClientOriginalName();
                     $file->move(public_path('categories'), $filename);
                     $imagePath = 'categories/'.$filename;
@@ -249,6 +251,7 @@ class SettingsController extends Controller
                     ]);
                     $data['image_path'] = $result['secure_url'];
                 } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Category Update: ' . $e->getMessage());
                     $filename = time().'_cat_'.$file->getClientOriginalName();
                     $file->move(public_path('categories'), $filename);
                     $data['image_path'] = 'categories/'.$filename;

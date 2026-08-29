@@ -55,6 +55,7 @@ class BranchController extends Controller
                     ]);
                     $data['logo_path'] = $result['secure_url'];
                 } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Branch: ' . $e->getMessage());
                     $data['logo_path'] = $file->store('branch_logos', 'public');
                 }
             } else {
