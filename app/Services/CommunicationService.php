@@ -150,20 +150,80 @@ class CommunicationService
     {
         $log = EmailLog::create([
             'order_id' => $order->id,
-            'email' => $email,
-            'type' => $type,
-            'subject' => $subject,
-            'body' => $body,
-            'status' => 'pending'
+            'email'    => $email,
+            'type'     => $type,
+            'subject'  => $subject,
+            'body'     => $body,
+            'status'   => 'pending'
         ]);
 
         try {
-            // Using Laravel Mail to send raw HTML
-            Mail::html($body, function ($msg) use ($email, $subject) {
+            // Fetch company logo and name from settings
+            $companyName = Setting::where('key', 'company_name')->value('value') ?? config('app.name');
+            $logoPath    = Setting::where('key', 'global_logo_path')->value('value');
+            $logoUrl     = null;
+            if ($logoPath) {
+                $logoUrl = \Illuminate\Support\Str::startsWith($logoPath, 'http')
+                    ? $logoPath
+                    : asset('storage/' . $logoPath);
+            }
+
+            // Wrap the plain body in a branded HTML email template
+            $htmlBody = '<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>' . e($subject) . '</title>
+</head>
+<body style="margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#f1f5f9;padding:30px 0;">
+  <tr><td align="center">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);">
+      
+      <!-- Header / Logo -->
+      <tr>
+        <td style="background:linear-gradient(135deg,#1e40af,#3b82f6);padding:28px 36px;text-align:center;">
+          ' . ($logoUrl
+              ? '<img src="' . $logoUrl . '" alt="' . e($companyName) . '" style="max-height:70px;max-width:200px;object-fit:contain;">'
+              : '<span style="font-size:24px;font-weight:900;color:#ffffff;letter-spacing:1px;">' . e($companyName) . '</span>') . '
+        </td>
+      </tr>
+
+      <!-- Body -->
+      <tr>
+        <td style="padding:36px 36px 24px;">
+          ' . $body . '
+        </td>
+      </tr>
+
+      <!-- Footer -->
+      <tr>
+        <td style="background:#f8fafc;padding:20px 36px;text-align:center;border-top:1px solid #e2e8f0;">
+          <p style="margin:0 0 6px;font-size:12px;color:#64748b;">© ' . date('Y') . ' ' . e($companyName) . '. All rights reserved.</p>
+          <p style="margin:0;font-size:11px;color:#94a3b8;">This is an automated message. Please do not reply to this email.</p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body>
+</html>';
+
+            $fromName    = config('mail.from.name', $companyName);
+            $fromAddress = config('mail.from.address');
+
+            Mail::html($htmlBody, function ($msg) use ($email, $subject, $fromName, $fromAddress) {
                 $msg->to($email)
-                    ->subject($subject);
+                    ->subject($subject)
+                    ->replyTo($fromAddress, $fromName)
+                    ->getHeaders()
+                        ->addTextHeader('List-Unsubscribe', '<mailto:' . $fromAddress . '?subject=unsubscribe>')
+                        ->addTextHeader('Precedence', 'bulk')
+                        ->addTextHeader('X-Mailer', 'RapidLaundromat-Mailer');
             });
-            
+
             $log->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);
         } catch (\Exception $e) {
             Log::error("Email Error: " . $e->getMessage());
