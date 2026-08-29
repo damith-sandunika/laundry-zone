@@ -73,7 +73,7 @@
                             <div class="flex items-center" title="Enable or Disable this specific template">
                                 <input type="hidden" name="is_active" value="0">
                                 <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="is_active" value="1" class="sr-only peer" {{ $template->is_active ? 'checked' : '' }}>
+                                    <input type="checkbox" name="is_active" value="1" class="sr-only peer" {{ $template->is_active ? 'checked' : '' }} onchange="this.form.submit()">
                                     <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
                                 </label>
                             </div>
