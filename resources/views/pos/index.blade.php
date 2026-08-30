@@ -1015,9 +1015,7 @@
                         const data = await res.json();
                         if (data.success) {
                             this.show = false;
-                            if (confirm(data.message + '\n\nGo to Delivery Management page now?')) {
-                                window.location.href = data.redirect_url;
-                            }
+                            window.location.href = data.redirect_url;
                         } else {
                             alert('Error: ' + (data.message || 'Something went wrong.'));
                         }
