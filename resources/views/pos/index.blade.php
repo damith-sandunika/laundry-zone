@@ -581,7 +581,7 @@
     </div>
 
     <!-- ===================== Delivery Request Modal ===================== -->
-    <div x-data="deliveryModal()"
+    <div x-data="deliveryModal()" @open-delivery-modal.window="open = true; pickupDateOnly = ''; pickupTimeSlot = ''; pickupAddress = ''; deliveryAddress = ''; notes = '';"
         x-show="show" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 80;">
         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" x-transition.opacity @click="show = false"></div>
 
@@ -642,11 +642,19 @@
                         class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-800 outline-none transition-all resize-none placeholder:text-slate-400"></textarea>
                 </div>
 
-                <!-- Pickup Date -->
+                <!-- Pickup Date & Time -->
                 <div>
                     <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Pickup Date &amp; Time <span class="text-red-500">*</span></label>
-                    <input type="datetime-local" x-model="pickupDate"
-                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-black text-slate-800 outline-none transition-all cursor-pointer">
+                    <div class="grid grid-cols-2 gap-3">
+                        <input type="date" x-model="pickupDateOnly"
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-black text-slate-800 outline-none transition-all cursor-pointer">
+                        <select x-model="pickupTimeSlot" class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-black text-slate-800 outline-none transition-all cursor-pointer">
+                            <option value="">Select Time</option>
+                            <template x-for="slot in window.posSystemData.timeSlots" :key="slot.id">
+                                <option :value="slot.start_time + '-' + slot.end_time" x-text="formatTime(slot.start_time) + ' - ' + formatTime(slot.end_time)"></option>
+                            </template>
+                        </select>
+                    </div>
                 </div>
 
                 <!-- Notes -->
@@ -672,6 +680,10 @@
     </div>
 
     <script>
+        window.posSystemData = {
+            timeSlots: @json($timeSlots)
+        };
+        
         window.posSystem = function() {
             return {
                 allServices: @json($services),
@@ -934,16 +946,25 @@
                 cartItems: [],
                 pickupAddress: '',
                 deliveryAddress: '',
-                pickupDate: '',
+                pickupDateOnly: '',
+                pickupTimeSlot: '',
                 notes: '',
+
+                formatTime(timeStr) {
+                    if(!timeStr) return '';
+                    let [h, m] = timeStr.split(':');
+                    h = parseInt(h);
+                    let ampm = h >= 12 ? 'PM' : 'AM';
+                    h = h % 12 || 12;
+                    return h + ':' + m + ' ' + ampm;
+                },
 
                 init() {
                     this.$watch('show', v => {
                         if (v) {
-                            // Set default pickup date to now + 1hr
+                            // Set default pickup date to today
                             let d = new Date();
-                            d.setHours(d.getHours() + 1, 0, 0, 0);
-                            this.pickupDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                            this.pickupDateOnly = d.toISOString().split('T')[0];
                         }
                     });
                     window.addEventListener('open-delivery-modal', (e) => {
@@ -964,7 +985,11 @@
                 async submitDelivery() {
                     if (!this.selectedCust) { alert('Please select a customer in POS first.'); return; }
                     if (!this.pickupAddress.trim()) { alert('Please enter the Pickup Address.'); return; }
-                    if (!this.pickupDate) { alert('Please select Pickup Date & Time.'); return; }
+                    if (!this.pickupDateOnly) { alert('Please select Pickup Date.'); return; }
+                    if (!this.pickupTimeSlot) { alert('Please select Pickup Time.'); return; }
+
+                    let selectedTimeStart = this.pickupTimeSlot.split('-')[0]; // e.g. "08:00:00"
+                    let combinedDateTime = this.pickupDateOnly + ' ' + selectedTimeStart;
 
                     this.isSaving = true;
                     try {
@@ -972,7 +997,7 @@
                             customer_id:      this.selectedCust.id,
                             pickup_address:   this.pickupAddress,
                             delivery_address: this.deliveryAddress || this.pickupAddress,
-                            pickup_date:      this.pickupDate,
+                            pickup_date:      combinedDateTime, // Used for due_date and pickup_scheduled_at
                             notes:            this.notes,
                             cart:             this.cartItems.length > 0 ? this.cartItems : [],
                             payment_mode:     'pay_on_pickup',

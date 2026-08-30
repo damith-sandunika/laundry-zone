@@ -44,7 +44,9 @@ class POSController extends Controller
             ->with(['package', 'services.serviceType'])
             ->get();
 
-        return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages'));
+        $timeSlots = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
+
+        return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages', 'timeSlots'));
     }
 
     public function store(Request $request)
