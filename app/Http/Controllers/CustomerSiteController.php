@@ -24,10 +24,8 @@ class CustomerSiteController extends Controller
                   ->orWhere('is_delivery_enabled', true);
             })
             ->get();
-        $categories = ServiceCategory::with(['services' => function($q) {
-            $q->where('branch_id', 1);
-        }])->where('is_active', true)->where('branch_id', 1)->get();
-        $packages = Package::with('services.serviceType')->where('is_active', true)->where('branch_id', 1)->get();
+        $categories = ServiceCategory::with('services')->where('is_active', true)->get();
+        $packages = Package::with('services.serviceType')->where('is_active', true)->get();
 
         return view('site.home', compact('branches', 'categories', 'packages'));
     }
@@ -44,9 +42,7 @@ class CustomerSiteController extends Controller
         if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
             $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
         }
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) {
-            $q->where('branch_id', 1);
-        }])->where('is_active', true)->where('branch_id', 1)->get();
+        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
         $minimumOrderLimit = \App\Models\Setting::get('minimum_delivery_cost', 0);
         
@@ -73,9 +69,7 @@ class CustomerSiteController extends Controller
 
     public function getBranchServices(Branch $branch)
     {
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($branch) {
-            $q->where('branch_id', $branch->id);
-        }])->where('is_active', true)->where('branch_id', $branch->id)->get();
+        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
 
         return response()->json([
             'categories' => $categories

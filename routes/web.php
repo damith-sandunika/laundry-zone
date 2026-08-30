@@ -207,20 +207,22 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
         Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
 
-        Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
-        Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
-        Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');
 
-        Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
-        Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
-        Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
-
-        Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
-        Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
-        Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
 
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
+            Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
+            Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
+            Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');
+
+            Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
+            Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
+            Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
+
+            Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
+            Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
+            Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
+            
             Route::post('/settings/delivery-global', [SettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
             Route::post('/settings/delivery-ranges', [SettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
             Route::delete('/settings/delivery-ranges/{deliveryRange}', [SettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');

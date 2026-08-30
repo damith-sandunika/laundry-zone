@@ -27,11 +27,11 @@ class SettingsController extends Controller
     {
         $branchId = auth()->user()->branch_id ?? 1;
         $branch = Branch::find($branchId);
-        $serviceCategories = ServiceCategory::with('services')->where('branch_id', $branchId)->get();
-        $services = ServiceType::with(['inventoryItems', 'category'])->where('branch_id', $branchId)->get();
+        $serviceCategories = ServiceCategory::with('services')->get();
+        $services = ServiceType::with(['inventoryItems', 'category'])->get();
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
-        $packages = Package::with('services.serviceType')->where('branch_id', $branchId)->get();
+        $packages = Package::with('services.serviceType')->get();
         $deliveryRanges = \App\Models\DeliveryRange::where('branch_id', $branchId)->orWhereNull('branch_id')->get();
         $paymentMethods = collect();
         if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
@@ -152,7 +152,6 @@ class SettingsController extends Controller
         ]);
 
         $service = ServiceType::create([
-            'branch_id' => auth()->user()->branch_id ?? 1,
             'name' => $request->name,
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
@@ -220,7 +219,6 @@ class SettingsController extends Controller
         }
 
         ServiceCategory::create([
-            'branch_id' => auth()->user()->branch_id ?? 1,
             'name' => $request->name,
             'is_active' => true,
             'image_path' => $imagePath,
@@ -391,7 +389,6 @@ class SettingsController extends Controller
         ]);
 
         $package = Package::create([
-            'branch_id' => $branchId,
             'name' => $request->name,
             'price' => $request->price,
             'payment_type' => $request->payment_type,

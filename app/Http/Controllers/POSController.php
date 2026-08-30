@@ -35,8 +35,8 @@ class POSController extends Controller
             }
         }
 
-        $services = ServiceType::where('is_active', true)->where('branch_id', $branchId)->get();
-        $categories = ServiceCategory::where('is_active', true)->where('branch_id', $branchId)->get();
+        $services = ServiceType::where('is_active', true)->get();
+        $categories = ServiceCategory::where('is_active', true)->get();
 
         $customers = Customer::withoutGlobalScopes()->where('is_active', true)->get();
 

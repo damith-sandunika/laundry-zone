@@ -102,9 +102,7 @@ class OrderController extends Controller
             return $order;
         });
         $cubbies = Cubby::where('branch_id', $branchId ?? 1)->orderBy('name')->get();
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($branchId) {
-            $q->where('branch_id', $branchId ?? 1);
-        }])->where('is_active', true)->where('branch_id', $branchId ?? 1)->get();
+        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $workshops = Branch::workshops()->get();
         $riders = \App\Models\User::where('role', 'rider')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
