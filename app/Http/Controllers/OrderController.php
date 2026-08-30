@@ -319,8 +319,10 @@ class OrderController extends Controller
 
     public function updateStatus(Request $request, Order $order)
     {
+        \Log::info('updateStatus started for order ' . $order->id . ' to status ' . $request->status);
+        
         $request->validate([
-            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,cancelled',
+            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,completed,cancelled',
             'cubby_id' => 'nullable|exists:cubbies,id',
         ]);
 
@@ -445,8 +447,11 @@ class OrderController extends Controller
                 ]);
             });
 
+            \Log::info('Transaction successful for order ' . $order->id . ' status ' . $request->status);
+
             // Trigger status-specific notifications AFTER the transaction commits successfully
             $commService = new \App\Services\CommunicationService();
+            \Log::info('Triggering notification for status: ' . $request->status);
             if ($request->status === 'done') {
                 $commService->sendOrderReady($order);
             } elseif ($request->status === 'delivered') {
@@ -522,12 +527,12 @@ class OrderController extends Controller
         ]);
     }
 
-    public function bulkStatus(Request $request)
+public function bulkStatus(Request $request)
     {
         $request->validate([
             'order_ids' => 'required|array',
             'order_ids.*' => 'exists:orders,id',
-            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,cancelled',
+            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,completed,cancelled',
             'cubby_id' => 'nullable|exists:cubbies,id',
         ]);
 
