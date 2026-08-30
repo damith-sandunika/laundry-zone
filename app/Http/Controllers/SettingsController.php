@@ -97,7 +97,7 @@ class SettingsController extends Controller
             'whatsapp_number' => 'nullable|string|max:50',
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:300',
-            'logo' => 'nullable|image|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'auto_close_time' => 'nullable|date_format:H:i',
         ]);
 
@@ -105,9 +105,26 @@ class SettingsController extends Controller
 
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
-            $filename = time().'_'.$file->getClientOriginalName();
-            $file->move(public_path('logos'), $filename);
-            $data['logo_path'] = 'logos/'.$filename;
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/logos',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $data['logo_path'] = $result['secure_url'];
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Branch: ' . $e->getMessage());
+                    $filename = time().'_'.$file->getClientOriginalName();
+                    $file->move(public_path('logos'), $filename);
+                    $data['logo_path'] = 'logos/'.$filename;
+                }
+            } else {
+                $filename = time().'_'.$file->getClientOriginalName();
+                $file->move(public_path('logos'), $filename);
+                $data['logo_path'] = 'logos/'.$filename;
+            }
         }
 
         $branch->update($data);
@@ -174,15 +191,32 @@ class SettingsController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $imagePath = null;
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time().'_cat_'.$file->getClientOriginalName();
-            $file->move(public_path('categories'), $filename);
-            $imagePath = 'categories/'.$filename;
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/categories',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $imagePath = $result['secure_url'];
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Category: ' . $e->getMessage());
+                    $filename = time().'_cat_'.$file->getClientOriginalName();
+                    $file->move(public_path('categories'), $filename);
+                    $imagePath = 'categories/'.$filename;
+                }
+            } else {
+                $filename = time().'_cat_'.$file->getClientOriginalName();
+                $file->move(public_path('categories'), $filename);
+                $imagePath = 'categories/'.$filename;
+            }
         }
 
         ServiceCategory::create([
@@ -200,16 +234,33 @@ class SettingsController extends Controller
         $request->validate([
             'name' => 'required|string|max:255',
             'is_active' => 'boolean',
-            'image' => 'nullable|image|max:2048',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
         $data = $request->only(['name', 'is_active']);
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
-            $filename = time().'_cat_'.$file->getClientOriginalName();
-            $file->move(public_path('categories'), $filename);
-            $data['image_path'] = 'categories/'.$filename;
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/categories',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $data['image_path'] = $result['secure_url'];
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Category Update: ' . $e->getMessage());
+                    $filename = time().'_cat_'.$file->getClientOriginalName();
+                    $file->move(public_path('categories'), $filename);
+                    $data['image_path'] = 'categories/'.$filename;
+                }
+            } else {
+                $filename = time().'_cat_'.$file->getClientOriginalName();
+                $file->move(public_path('categories'), $filename);
+                $data['image_path'] = 'categories/'.$filename;
+            }
         }
 
         $category->update($data);

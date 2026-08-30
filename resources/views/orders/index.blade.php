@@ -25,339 +25,236 @@
         </div>
     @endif
 
-    <div x-data="{
-        currentTab: 'received',
-        selectedOrders: [],
-        showBulkModal: false,
-        bulkStatus: 'done',
-        bulkCubbyId: '',
-        showReverseModal: false,
-        reverseOrderId: null,
-        reversePassword: '',
-        reverseError: '',
-        
-        // Cubbet Modal (Done action)
-        showCubbetModal: false,
-        cubbetOrder: null,
-        selectedCubby: '',
-        
-        // Delivery Modal
-        showDeliverModal: false,
-        deliverOrder: null,
-        deliveryPaymentMethod: 'cash',
+    @if(session('error'))
+        <div style="margin-bottom:16px;padding:12px 18px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;font-size:13px;font-weight:700;color:#dc2626;">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
 
-        // Dispatch Delivery Modal (For Delivery Orders)
-        showDispatchDeliveryModal: false,
-        deliveryMethod: 'rider',
-        deliveryRiderId: '',
-        deliveryPickmeCost: '',
-        isDispatchingDelivery: false,
-        riders: JSON.parse(atob('{{ base64_encode(json_encode($riders)) }}')),
+    <script>
+        window.__ordersPageData = {
+            riders: @js($riders),
+            categories: @js($categories),
+            orders: @js($orders),
+            minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
+            routes: {
+                bulkDispatch: '{{ route('orders.bulkDispatchWorkshop') }}',
+                bulkStatus: '{{ route('orders.bulkStatus') }}',
+            }
+        };
+    </script>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('ordersPage', () => ({
+                currentTab: 'received',
+                selectedOrders: [],
+                showBulkModal: false,
+                bulkStatus: 'done',
+                bulkCubbyId: '',
+                bulkWorkshopId: '',
+                showReverseModal: false,
+                reverseOrderId: null,
+                reversePassword: '',
+                reverseError: '',
+                showCubbetModal: false,
+                cubbetOrder: null,
+                selectedCubby: '',
+                showDeliverModal: false,
+                deliverOrder: null,
+                deliveryPaymentMethod: 'cash',
+                showDispatchDeliveryModal: false,
+                deliveryMethod: 'rider',
+                deliveryRiderId: '',
+                deliveryPickmeCost: '',
+                isDispatchingDelivery: false,
+                riders: window.__ordersPageData.riders,
+                showEditModal: false,
+                editOrderData: null,
+                editCart: [],
+                editDiscount: 0,
+                editAdvanceCashAmount: '',
+                selectedServiceToAdd: '',
+                allCategories: window.__ordersPageData.categories,
+                minimumDeliveryCost: window.__ordersPageData.minimumDeliveryCost,
+                ordersList: window.__ordersPageData.orders,
+                showPaymentModal: false,
+                paymentOrder: null,
+                paymentAmountType: 'full',
+                customPaymentAmount: '',
+                isRequestingPayment: false,
+                showSlipModal: false,
+                selectedSlip: null,
+                selectedOrder: null,
 
-        // Edit Order Modal
-        showEditModal: false,
-        editOrderData: null,
-        editCart: [],
-        editDiscount: 0,
-        editAdvanceCashAmount: '',
-        selectedServiceToAdd: '',
-        allCategories: JSON.parse(atob('{{ base64_encode(json_encode($categories)) }}')),
-        minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
+                get filteredOrders() {
+                    if (this.currentTab === 'all') return this.ordersList;
+                    if (this.currentTab === 'received') return this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop');
+                    if (this.currentTab === 'arriving') return this.ordersList.filter(o => o.status === 'returned_from_workshop');
+                    if (this.currentTab === 'done') return this.ordersList.filter(o => o.status === 'done');
+                    if (this.currentTab === 'delivered') return this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed');
+                    return this.ordersList.filter(o => o.status === this.currentTab);
+                },
 
-        ordersList: JSON.parse(atob('{{ base64_encode(json_encode($orders)) }}')),
+                get counts() {
+                    return {
+                        all: this.ordersList.length,
+                        received: this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop').length,
+                        processing: this.ordersList.filter(o => o.status === 'processing' || o.status === 'completed_at_workshop').length,
+                        arriving: this.ordersList.filter(o => o.status === 'returned_from_workshop').length,
+                        done: this.ordersList.filter(o => o.status === 'done').length,
+                        delivered: this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed').length
+                    };
+                },
 
-        showPaymentModal: false,
-        paymentOrder: null,
-        paymentAmountType: 'full',
-        customPaymentAmount: '',
-        isRequestingPayment: false,
+                openPaymentModal(order) { this.paymentOrder = order; this.paymentAmountType = 'full'; this.customPaymentAmount = ''; this.showPaymentModal = true; },
+                openSlipModal(receipt, order) { this.selectedSlip = receipt; this.selectedOrder = order; this.showSlipModal = true; },
+                openReverse(orderId) { this.reverseOrderId = orderId; this.reversePassword = ''; this.reverseError = ''; this.showReverseModal = true; },
+                openCubbetPopup(order) { this.cubbetOrder = order; this.selectedCubby = ''; this.showCubbetModal = true; },
+                openDeliverPopup(order) { this.deliverOrder = order; this.deliveryPaymentMethod = 'cash'; this.showDeliverModal = true; },
+                openDeliveryDispatchPopup(order) { this.deliverOrder = order; this.deliveryMethod = 'rider'; this.deliveryRiderId = ''; this.deliveryPickmeCost = ''; this.isDispatchingDelivery = false; this.showDispatchDeliveryModal = true; },
 
-        openPaymentModal(order) {
-            this.paymentOrder = order;
-            this.paymentAmountType = 'full';
-            this.customPaymentAmount = '';
-            this.showPaymentModal = true;
-        },
+                getReceipts(order) {
+                    if (!order || !order.payment_transactions) return [];
+                    return order.payment_transactions.filter(p => p.receipt_path).map(p => ({
+                        id: p.id, amount: p.amount, url: '/storage/' + p.receipt_path,
+                        status: p.status, reject_reason: p.reject_reason,
+                        created_at: p.created_at ? new Date(p.created_at).toLocaleString() : ''
+                    }));
+                },
 
-        showSlipModal: false,
-        selectedSlip: null,
-        selectedOrder: null,
+                toggleSelectAll(e) {
+                    this.selectedOrders = e.target.checked ? this.filteredOrders.map(o => o.id) : [];
+                },
 
-        openSlipModal(receipt, order) {
-            this.selectedSlip = receipt;
-            this.selectedOrder = order;
-            this.showSlipModal = true;
-        },
+                async sendPaymentRequest() {
+                    if (!this.paymentOrder) return;
+                    this.isRequestingPayment = true;
+                    try {
+                        const res = await fetch('/orders/' + this.paymentOrder.id + '/request-payment', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json', 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ amount_type: this.paymentAmountType, custom_amount: this.customPaymentAmount })
+                        });
+                        const data = await res.json();
+                        if (data.success) { alert('Payment Request Sent successfully via WhatsApp.'); this.showPaymentModal = false; }
+                        else { alert(data.message || 'Failed to send payment request.'); }
+                    } catch (err) { alert('Connection error'); }
+                    this.isRequestingPayment = false;
+                },
 
-        getReceipts(order) {
-            if (!order || !order.payment_transactions) return [];
-            return order.payment_transactions.filter(p => p.receipt_path).map(p => ({
-                id: p.id,
-                amount: p.amount,
-                url: '/storage/' + p.receipt_path,
-                status: p.status,
-                reject_reason: p.reject_reason,
-                created_at: p.created_at ? new Date(p.created_at).toLocaleString() : ''
+                async submitReverse() {
+                    this.reverseError = '';
+                    try {
+                        const res = await fetch('/orders/' + this.reverseOrderId + '/reverse', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                            body: JSON.stringify({ password: this.reversePassword })
+                        });
+                        const data = await res.json();
+                        if (data.success) { window.location.reload(); }
+                        else { this.reverseError = data.message || 'Authorization failed'; }
+                    } catch (err) { this.reverseError = 'Connection error. Please try again.'; }
+                },
+
+                async submitBulkUpdate() {
+                    try {
+                        if (this.bulkStatus === 'dispatched_to_workshop') {
+                            if (!this.bulkWorkshopId) { alert('Please select a workshop'); return; }
+                            await fetch(window.__ordersPageData.routes.bulkDispatch, {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                                body: JSON.stringify({ order_ids: this.selectedOrders, workshop_branch_id: this.bulkWorkshopId, dispatch_notes: 'Bulk dispatched from branch' })
+                            });
+                            window.location.reload();
+                            return;
+                        }
+                        const res = await fetch(window.__ordersPageData.routes.bulkStatus, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                            body: JSON.stringify({ order_ids: this.selectedOrders, status: this.bulkStatus, cubby_id: this.bulkStatus === 'done' ? this.bulkCubbyId : null })
+                        });
+                        const data = await res.json();
+                        if (data.success) { window.location.reload(); }
+                        else { alert('Bulk update failed'); }
+                    } catch (err) { window.location.reload(); }
+                },
+
+                async markAsDone() {
+                    if (!this.selectedCubby) { alert('Please select a cubbet'); return; }
+                    try {
+                        const res = await fetch('/orders/' + this.cubbetOrder.id + '/status', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Accept': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify({ status: 'done', cubby_id: this.selectedCubby })
+                        });
+                        const data = await res.json();
+                        if (data.success) { window.location.reload(); }
+                        else { alert('Error: ' + (data.message || 'Failed to update status')); }
+                    } catch (err) { alert('Error updating status: ' + err); }
+                },
+
+
+                async submitDeliveryDispatch() {
+                    if (this.deliveryMethod === 'rider' && !this.deliveryRiderId) return alert('Select a rider');
+                    if (this.deliveryMethod === 'pickme_flash' && !this.deliveryPickmeCost) return alert('Enter PickMe cost');
+                    this.isDispatchingDelivery = true;
+                    try {
+                        if (this.deliverOrder.status === 'returned_from_workshop' && this.deliverOrder.workshop_dispatch_id) {
+                            await fetch('/workshop/dispatches/' + this.deliverOrder.workshop_dispatch_id + '/received-at-branch', {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
+                            });
+                        }
+                        const res = await fetch('/orders/' + this.deliverOrder.id + '/dispatch-delivery', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                            body: JSON.stringify({ delivery_method: this.deliveryMethod, rider_id: this.deliveryRiderId, pickme_cost: this.deliveryPickmeCost })
+                        });
+                        const data = await res.json();
+                        if (data.success) { window.location.reload(); }
+                        else { alert(data.message || 'Error dispatching delivery'); this.isDispatchingDelivery = false; }
+                    } catch (err) { alert('Connection error'); this.isDispatchingDelivery = false; }
+                },
+
+                async confirmDelivery(shouldPrint = true) {
+                    try {
+                        const res = await fetch('/orders/' + this.deliverOrder.id + '/status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
+                            body: JSON.stringify({ status: 'delivered', payment_method: this.deliveryPaymentMethod })
+                        });
+                        const data = await res.json();
+                        if (!data.success) { alert('Error: ' + (data.message || 'Failed to update status')); return; }
+                        if (shouldPrint && data.print_bill_id) { window.open('/orders/' + data.print_bill_id + '/print', '_blank'); }
+                        else if (shouldPrint) { window.open('/orders/' + this.deliverOrder.id + '/print', '_blank'); }
+                        window.location.reload();
+                    } catch (err) { alert('Error updating status'); }
+                },
+
+                openEdit(order) {
+                    let cart = (order.items || []).map(i => ({
+                        service_type_id: i.service_type_id,
+                        name: i.service_type ? i.service_type.name : i.item_description,
+                        base_price: i.unit_price,
+                        qty: i.quantity
+                    }));
+                    window.dispatchEvent(new CustomEvent('open-finalize-modal', {
+                        detail: { context: 'branch', categories: this.allCategories, order: order, cart: cart, advance: null, minimumDeliveryCost: this.minimumDeliveryCost }
+                    }));
+                },
             }));
-        },
+        });
+    </script>
 
-        async sendPaymentRequest() {
-            if (!this.paymentOrder) return;
-            this.isRequestingPayment = true;
-            try {
-                const res = await fetch('/orders/' + this.paymentOrder.id + '/request-payment', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
-                        'Accept': 'application/json',
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        amount_type: this.paymentAmountType,
-                        custom_amount: this.customPaymentAmount
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    alert('Payment Request Sent successfully via WhatsApp.');
-                    this.showPaymentModal = false;
-                } else {
-                    alert(data.message || 'Failed to send payment request.');
-                }
-            } catch (err) {
-                alert('Connection error');
-            }
-            this.isRequestingPayment = false;
-        },
-
-        toggleSelectAll(e) {
-            if (e.target.checked) {
-                this.selectedOrders = this.filteredOrders.map(o => o.id);
-            } else {
-                this.selectedOrders = [];
-            }
-        },
-
-        get filteredOrders() {
-            if (this.currentTab === 'all') return this.ordersList;
-            if (this.currentTab === 'received') {
-                return this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop');
-            }
-            if (this.currentTab === 'arriving') {
-                return this.ordersList.filter(o => o.status === 'returned_from_workshop');
-            }
-            if (this.currentTab === 'done') {
-                return this.ordersList.filter(o => o.status === 'done');
-            }
-            if (this.currentTab === 'delivered') {
-                return this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed');
-            }
-            return this.ordersList.filter(o => o.status === this.currentTab);
-        },
-
-        get counts() {
-            return {
-                all: this.ordersList.length,
-                received: this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop').length,
-                processing: this.ordersList.filter(o => o.status === 'processing' || o.status === 'completed_at_workshop').length,
-                arriving: this.ordersList.filter(o => o.status === 'returned_from_workshop').length,
-                done: this.ordersList.filter(o => o.status === 'done').length,
-                delivered: this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed').length
-            };
-        },
-
-        openReverse(orderId) {
-            this.reverseOrderId = orderId;
-            this.reversePassword = '';
-            this.reverseError = '';
-            this.showReverseModal = true;
-        },
-
-        async submitReverse() {
-            this.reverseError = '';
-            try {
-                const res = await fetch(`/orders/${this.reverseOrderId}/reverse`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                    },
-                    body: JSON.stringify({ password: this.reversePassword })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    this.reverseError = data.message || 'Authorization failed';
-                }
-            } catch (err) {
-                this.reverseError = 'Connection error. Please try again.';
-            }
-        },
-
-        bulkWorkshopId: '',
-
-        async submitBulkUpdate() {
-            try {
-                if (this.bulkStatus === 'dispatched_to_workshop') {
-                    if (!this.bulkWorkshopId) { alert('Please select a workshop'); return; }
-                    const res = await fetch('{{ route('orders.bulkDispatchWorkshop') }}', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                        },
-                        body: JSON.stringify({
-                            order_ids: this.selectedOrders,
-                            workshop_branch_id: this.bulkWorkshopId,
-                            dispatch_notes: 'Bulk dispatched from branch'
-                        })
-                    });
-                    const data = await res.json(); // WorkshopController needs to return json actually. Wait, bulkDispatch returns redirect. Let's fix this in a sec or just reload.
-                    window.location.reload();
-                    return;
-                }
-
-                const res = await fetch('{{ route('orders.bulkStatus') }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                    },
-                    body: JSON.stringify({
-                        order_ids: this.selectedOrders,
-                        status: this.bulkStatus,
-                        cubby_id: this.bulkStatus === 'done' ? this.bulkCubbyId : null
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert('Bulk update failed');
-                }
-            } catch (err) {
-                // If it was a redirect, fetch might throw an opaque error but it succeeded
-                window.location.reload();
-            }
-        },
-
-        openCubbetPopup(order) {
-            this.cubbetOrder = order;
-            this.selectedCubby = '';
-            this.showCubbetModal = true;
-        },
-        
-        async markAsDone() {
-            if (!this.selectedCubby) { alert('Please select a cubbet'); return; }
-            try {
-                const res = await fetch(`/orders/${this.cubbetOrder.id}/status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                    },
-                    body: JSON.stringify({ status: 'done', cubby_id: this.selectedCubby })
-                });
-                window.location.reload();
-            } catch (err) { alert('Error updating status'); }
-        },
-
-        openDeliverPopup(order) {
-            this.deliverOrder = order;
-            this.deliveryPaymentMethod = 'cash';
-            this.showDeliverModal = true;
-        },
-
-        openDeliveryDispatchPopup(order) {
-            this.deliverOrder = order;
-            this.deliveryMethod = 'rider';
-            this.deliveryRiderId = '';
-            this.deliveryPickmeCost = '';
-            this.isDispatchingDelivery = false;
-            this.showDispatchDeliveryModal = true;
-        },
-
-        async submitDeliveryDispatch() {
-            if (this.deliveryMethod === 'rider' && !this.deliveryRiderId) return alert('Select a rider');
-            if (this.deliveryMethod === 'pickme_flash' && !this.deliveryPickmeCost) return alert('Enter PickMe cost');
-            
-            this.isDispatchingDelivery = true;
-            try {
-                if (this.deliverOrder.status === 'returned_from_workshop' && this.deliverOrder.workshop_dispatch_id) {
-                    await fetch(`/workshop/dispatches/${this.deliverOrder.workshop_dispatch_id}/received-at-branch`, {
-                        method: 'POST',
-                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
-                    });
-                }
-
-                const res = await fetch(`/orders/${this.deliverOrder.id}/dispatch-delivery`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                    body: JSON.stringify({
-                        delivery_method: this.deliveryMethod,
-                        rider_id: this.deliveryRiderId,
-                        pickme_cost: this.deliveryPickmeCost
-                    })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    alert(data.message || 'Error dispatching delivery');
-                    this.isDispatchingDelivery = false;
-                }
-            } catch (err) {
-                alert('Connection error');
-                this.isDispatchingDelivery = false;
-            }
-        },
-
-        async confirmDelivery(shouldPrint = true) {
-            try {
-                // Submit delivery request
-                const res = await fetch(`/orders/${this.deliverOrder.id}/status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
-                    },
-                    body: JSON.stringify({ 
-                        status: 'delivered', 
-                        payment_method: this.deliveryPaymentMethod 
-                    })
-                });
-                
-                // Open print window automatically if requested
-                if (shouldPrint) {
-                    window.open(`/orders/${this.deliverOrder.id}/print`, '_blank');
-                }
-                
-                // Reload page to reflect changes
-                window.location.reload();
-            } catch (err) { alert('Error updating status'); }
-        },
-
-        openEdit(order) {
-            let cart = (order.items || []).map(i => ({
-                service_type_id: i.service_type_id,
-                name: i.service_type ? i.service_type.name : i.item_description,
-                base_price: i.unit_price,
-                qty: i.quantity
-            }));
-            window.dispatchEvent(new CustomEvent('open-finalize-modal', {
-                detail: {
-                    context: 'branch',
-                    categories: this.allCategories,
-                    order: order,
-                    cart: cart,
-                    advance: null,
-                    minimumDeliveryCost: this.minimumDeliveryCost
-                }
-            }));
-        },
-
-    }"> <!-- STAT CARDS -->
+    <div x-data="ordersPage()">
+        <!-- STAT CARDS -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 mb-6">
 
             <!-- Pending Dispatch -->
@@ -410,8 +307,21 @@
                     <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;">Order List</h3>
                 </div>
                 <!-- Search and Bulk Action button -->
-                <div style="display:flex;align-items:center;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    @if(auth()->user()->role === 'super_admin' && isset($allBranches) && $allBranches->count() > 0)
+                        <form action="{{ route('orders.index') }}" method="GET" style="margin:0;">
+                            @if(request('q')) <input type="hidden" name="q" value="{{ request('q') }}"> @endif
+                            <select name="branch_id" onchange="this.form.submit()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;background:white;cursor:pointer;">
+                                <option value="">All Branches</option>
+                                @foreach($allBranches as $branch)
+                                    <option value="{{ $branch->id }}" {{ (isset($filterBranchId) && $filterBranchId == $branch->id) ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                    @endif
+
                     <form action="{{ route('orders.index') }}" method="GET" style="display:flex;gap:8px;margin:0;">
+                        @if(request('branch_id')) <input type="hidden" name="branch_id" value="{{ request('branch_id') }}"> @endif
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="Search ID or phone…"
                             style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;"
                             onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
@@ -476,7 +386,7 @@
                                         style="cursor:pointer;">
                                 </td>
                                 <td style="padding:12px 20px;">
-                                    <a :href="'/orders/' + order.id"
+                                    <a :href="'/orders/view/' + order.order_number"
                                         style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:none;display:block;"
                                         x-text="order.order_number"></a>
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
@@ -585,7 +495,7 @@
 
                                     <template x-if="order.status !== 'received'">
                                         <div style="display:inline-flex;gap:6px;align-items:center;">
-                                            <a :href="'/orders/' + order.id"
+                                            <a :href="'/orders/view/' + order.order_number"
                                                 style="padding:5px 10px;background:white;color:#1d4ed8;border:1.5px solid #bfdbfe;border-radius:8px;font-size:11.5px;font-weight:800;text-decoration:none;transition:all 0.15s;box-shadow:0 1px 2px rgba(0,0,0,0.05);"
                                                 onmouseover="this.style.background='#eff6ff'"
                                                 onmouseout="this.style.background='white'">View</a>

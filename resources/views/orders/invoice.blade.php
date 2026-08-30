@@ -93,7 +93,7 @@
         
         <div class="header">
             <div class="logo-section">
-                <h1>{{ \App\Models\Setting::get('company_name', '360 LAUNDRY') }}</h1>
+                <h1>{{ \App\Models\Setting::get('company_name', '360 Laundry') }}</h1>
                 <p>{{ $order->branch->name ?? 'Main Branch' }}</p>
                 <p>{{ $order->branch->phone ?? '011 234 5678' }}</p>
                 <p>{{ $order->branch->address ?? 'Colombo, Sri Lanka' }}</p>
@@ -206,3 +206,4 @@
     </script>
 </body>
 </html>
+

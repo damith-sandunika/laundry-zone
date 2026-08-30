@@ -122,3 +122,4 @@ class EmailTemplateController extends Controller
         return redirect()->route('email-templates.index')->with('success', 'Default templates seeded');
     }
 }
+

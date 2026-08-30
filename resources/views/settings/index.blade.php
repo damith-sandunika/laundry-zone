@@ -68,7 +68,7 @@
         <div class="p-6">
             <!-- GENERAL SETTINGS TAB -->
             <div x-show="activeTab === 'general'" x-data="{ 
-                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '360 LAUNDRY')) }}',
+                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '360 Laundry')) }}',
                 formName: '{{ addslashes($branch->name ?? 'SMART LAUNDRY') }}',
                 formAddress: '{{ addslashes($branch->address) }}',
                 formPhone: '{{ addslashes($branch->phone) }}',
@@ -128,7 +128,6 @@
                     </div>
                     @endif
 
-                    @if(auth()->user()->role === 'super_admin')
                     <div x-data="{ 
                         dragOver: false, 
                         fileName: '', 
@@ -149,7 +148,7 @@
                             }
                         }
                     }">
-                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-2">Global Thermal Bill Logo</label>
+                        <label class="block text-xs font-semibold text-gray-700 uppercase mb-2">Branch Thermal Bill Logo</label>
                         
                         <div @dragover.prevent="dragOver = true" 
                              @dragleave.prevent="dragOver = false" 
@@ -169,7 +168,7 @@
                             </div>
 
                             <div x-show="previewUrl" style="display: none;" class="flex flex-col items-center justify-center p-2 h-full w-full">
-                                <img :src="previewUrl" class="h-20 object-contain mb-2" style="filter: grayscale(100%) contrast(1.2);">
+                                <img :src="previewUrl" class="h-20 object-contain mb-2">
                                 <p class="text-xs font-bold text-blue-600 truncate max-w-[80%]" x-text="fileName ? fileName : 'Current Active Logo'"></p>
                                 <p class="text-[10px] text-gray-400 mt-0.5 group-hover:text-gray-500">Click or drag to replace</p>
                             </div>
@@ -184,7 +183,6 @@
                             <p class="text-[10px] text-gray-400 mt-1">Adjust to scale the logo appropriately on the thermal bill.</p>
                         </div>
                     </div>
-                    @endif
                         <button type="submit" class="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                             Save Settings
                         </button>
@@ -202,32 +200,13 @@
                             
                             <!-- Header -->
                             <div class="text-center" style="margin-bottom: 12px;">
-                                @if(auth()->user()->role === 'super_admin')
-                                    <template x-if="previewUrl">
-                                        <img :src="previewUrl" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; filter: grayscale(100%) contrast(1.2); display: inline-block;`">
-                                    </template>
-                                    <template x-if="!previewUrl">
-                                        <img src="{{ asset('images/print_logo.png') }}" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; display: inline-block;`">
-                                    </template>
-                                @else
-                                    @php
-                                        $mainBranch = \App\Models\Branch::first();
-                                    @endphp
-                                    @if($mainBranch && $mainBranch->logo_path)
-                                        <img src="{{ asset($mainBranch->logo_path) }}" alt="Logo" style="max-width: {{ $mainBranch->logo_size ?? 140 }}px; height: auto; filter: grayscale(100%) contrast(1.2); display: inline-block;">
-                                    @else
-                                        <img src="{{ asset('images/print_logo.png') }}" alt="Logo" style="max-width: 140px; height: auto; display: inline-block;">
-                                    @endif
-                                @endif
+                                <template x-if="previewUrl">
+                                    <img :src="previewUrl" alt="Logo" :style="`max-width: ${formLogoSize}px; height: auto; display: inline-block;`">
+                                </template>
                             </div>
                             
                             <div class="text-center" style="font-size:18px; letter-spacing:-0.03em; font-weight: 800; margin-bottom: 2px;">
-                                @if(auth()->user()->role === 'super_admin')
-                                    <span x-text="formName || 'SMART LAUNDRY'"></span>
-                                @else
-                                    <span>{{ \App\Models\Branch::first()->name ?? 'SMART LAUNDRY' }}</span>
-                                    <div style="font-size:14px; margin-top: 2px;" x-text="formName"></div>
-                                @endif
+                                <span x-text="formName || 'SMART LAUNDRY'"></span>
                             </div>
                             
                             <template x-if="formTagline">
@@ -293,8 +272,11 @@
 
                             <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
                             
-                            <div style="text-align: center; font-weight: 800; font-size: 13px; margin-top: 8px;">
-                                Thank you! Come again
+                            <div style="text-align: center; font-weight: 800; font-size: 12px; margin-top: 8px;">
+                                Thank you for choosing 360 Laundry.
+                            </div>
+                            <div style="text-align: center; font-size: 10px; margin-top: 3px; color: #333;">
+                                If you are happy with our service, please leave us a Google Review!
                             </div>
                             <div style="text-align: center; font-size: 12px; margin-top: 8px;">
                                 Software by DSRZone
@@ -1462,3 +1444,4 @@
         });
     </script>
 </x-app-layout>
+

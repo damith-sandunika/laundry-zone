@@ -3,7 +3,7 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-                    <a href="{{ route('orders.index') }}" style="font-size:12px;color:#94a3b8;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#1d4ed8'" onmouseout="this.style.color='#94a3b8'">ΓåÉ Orders</a>
+                    <a href="{{ route('orders.index') }}" style="font-size:12px;color:#94a3b8;text-decoration:none;font-weight:700;" onmouseover="this.style.color='#1d4ed8'" onmouseout="this.style.color='#94a3b8'">← Orders</a>
                     <span style="color:#cbd5e1;font-size:11px;">/</span>
                     <span style="font-size:12px;color:#64748b;font-weight:700;">{{ $order->order_number }}</span>
                 </div>
@@ -21,7 +21,7 @@
                 <a href="{{ route('orders.print', $order->id) }}" target="_blank"
                     style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#334155;border:1.5px solid #e2e8f0;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
                     onmouseover="this.style.background='#f8fafc';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0'">
-                    ≡ƒû¿ Print Bill
+                    🖨️ Print Bill
                 </a>
             </div>
         </div>
@@ -29,7 +29,30 @@
 
     @if(session('success'))
         <div style="margin-bottom:12px;padding:10px 14px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;font-size:12px;font-weight:700;color:#16a34a;">
-            Γ£ô {{ session('success') }}
+            ✓ {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div style="margin-bottom:12px;padding:10px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
+
+    @if($errors->any())
+        <div style="margin-bottom:12px;padding:10px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>Please fix the following errors:</span>
+            </div>
+            <ul style="margin:0;padding-left:20px;">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
     @endif
 
@@ -76,7 +99,7 @@
                                     // 1. Customer Place Order (Appointment)
                                     $steps->push([
                                         'label' => 'Customer Order Placed',
-                                        'icon' => '≡ƒôà',
+                                        'icon' => '📅',
                                         'time' => $order->deliveryAppointment?->created_at,
                                         'user' => $order->customer->name,
                                         'active' => true
@@ -85,7 +108,7 @@
                                     // 2. Order Confirm (Received)
                                     $steps->push([
                                         'label' => 'Order Confirmed',
-                                        'icon' => 'Γ£à',
+                                        'icon' => '✅',
                                         'time' => $order->created_at,
                                         'user' => $order->createdBy?->name ?? 'System',
                                         'active' => true
@@ -95,7 +118,7 @@
                                     $pickupTask = \App\Models\DeliveryTask::where('delivery_appointment_id', $order->delivery_appointment_id)->where('task_type', 'pickup')->first();
                                     $steps->push([
                                         'label' => 'Rider Assigned',
-                                        'icon' => '≡ƒ¢╡',
+                                        'icon' => '🏍️',
                                         'time' => $pickupTask?->created_at,
                                         'user' => $pickupTask?->rider?->name,
                                         'active' => $pickupTask != null || $order->deliveryAppointment?->delivery_method === 'pickme_flash'
@@ -104,7 +127,7 @@
                                     // 4. Workshop Received
                                     $steps->push([
                                         'label' => 'Workshop Received',
-                                        'icon' => '≡ƒôÑ',
+                                        'icon' => '📥',
                                         'time' => $dispatch?->received_at_workshop_at,
                                         'user' => $dispatch?->receivedBy?->name,
                                         'active' => $dispatch?->received_at_workshop_at != null
@@ -121,7 +144,7 @@
                                     
                                     $steps->push([
                                         'label' => $payLabel,
-                                        'icon' => 'ΓÜÖ∩╕Å',
+                                        'icon' => '⚙️',
                                         'time' => $processingLog?->created_at ?? $firstPayment?->created_at,
                                         'user' => $processingLog?->changedBy?->name ?? 'Workshop Admin',
                                         'active' => $processingLog != null || $order->status === 'processing' || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
@@ -131,7 +154,7 @@
                                     $doneWorkshopLog = getLog($history, 'completed_at_workshop');
                                     $steps->push([
                                         'label' => 'Done',
-                                        'icon' => 'Γ£¿',
+                                        'icon' => '✨',
                                         'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
                                         'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
                                         'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
@@ -144,7 +167,7 @@
 
                                     $steps->push([
                                         'label' => 'Full Payment & Completed',
-                                        'icon' => '≡ƒñ¥',
+                                        'icon' => '🤝',
                                         'time' => $finalLog?->created_at ?? $order->delivered_at,
                                         'user' => $finalLog?->changedBy?->name ?? 'System',
                                         'active' => in_array($order->status, ['delivered', 'completed'])
@@ -156,7 +179,7 @@
                                     // 1. Order Received
                                     $steps->push([
                                         'label' => 'Order Received',
-                                        'icon' => '≡ƒôÑ',
+                                        'icon' => '📥',
                                         'time' => $order->created_at,
                                         'user' => $order->createdBy?->name ?? 'System',
                                         'active' => true
@@ -166,7 +189,7 @@
                                     $dispatchLog = getLog($history, 'dispatched_to_workshop');
                                     $steps->push([
                                         'label' => 'Transfer to Workshop',
-                                        'icon' => '≡ƒôñ',
+                                        'icon' => '📤',
                                         'time' => $dispatchLog?->created_at ?? $dispatch?->dispatched_at,
                                         'user' => $dispatchLog?->changedBy?->name ?? $dispatch?->dispatchedBy?->name,
                                         'active' => $dispatch != null
@@ -177,7 +200,7 @@
                                     $processingLog = getLog($history, 'processing');
                                     $steps->push([
                                         'label' => 'Arrive Workshop & Washing',
-                                        'icon' => 'ΓÜÖ∩╕Å',
+                                        'icon' => '⚙️',
                                         'time' => $arriveLog?->created_at ?? $processingLog?->created_at ?? $dispatch?->received_at_workshop_at,
                                         'user' => $arriveLog?->changedBy?->name ?? $processingLog?->changedBy?->name ?? $dispatch?->receivedBy?->name,
                                         'active' => $arriveLog != null || $processingLog != null || $dispatch?->received_at_workshop_at != null || in_array($order->status, ['processing', 'returned_from_workshop', 'done', 'delivered'])
@@ -187,7 +210,7 @@
                                     $doneWorkshopLog = getLog($history, 'completed_at_workshop');
                                     $steps->push([
                                         'label' => 'Done',
-                                        'icon' => 'Γ£¿',
+                                        'icon' => '✨',
                                         'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
                                         'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
                                         'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
@@ -197,7 +220,7 @@
                                     $returnLog = getLog($history, 'returned_from_workshop');
                                     $steps->push([
                                         'label' => 'Delivery to Branch',
-                                        'icon' => '≡ƒÜÜ',
+                                        'icon' => '🚚',
                                         'time' => $returnLog?->created_at ?? $dispatch?->returned_at,
                                         'user' => $returnLog?->changedBy?->name ?? $dispatch?->returnedBy?->name,
                                         'active' => $returnLog != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
@@ -207,7 +230,7 @@
                                     $doneLog = getLog($history, 'done');
                                     $steps->push([
                                         'label' => 'Received to Branch',
-                                        'icon' => '≡ƒÅó',
+                                        'icon' => '🏢',
                                         'time' => $doneLog?->created_at ?? $dispatch?->received_at_branch_at,
                                         'user' => $doneLog?->changedBy?->name ?? 'Branch Admin',
                                         'active' => $doneLog != null || in_array($order->status, ['done', 'delivered'])
@@ -220,7 +243,7 @@
                                     
                                     $steps->push([
                                         'label' => 'Delivered to Customer',
-                                        'icon' => '≡ƒñ¥',
+                                        'icon' => '🤝',
                                         'time' => $finalLog?->created_at ?? $order->delivered_at,
                                         'user' => $finalLog?->changedBy?->name ?? 'System',
                                         'active' => in_array($order->status, ['delivered', 'completed'])
@@ -259,13 +282,13 @@
                                 <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">New Status</label>
                                 <select id="statusSelect" name="status" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
                                     @if($order->status === 'received')
-                                        <option value="done">Γ£à Done</option>
-                                        <option value="cancelled">Γ¥î Cancel</option>
+                                        <option value="done">✅ Done</option>
+                                        <option value="cancelled">❌ Cancel</option>
                                     @elseif($order->status === 'done')
-                                        <option value="delivered">≡ƒÜÜ Delivered (Walk-in)</option>
-                                        <option value="cancelled">Γ¥î Cancel</option>
+                                        <option value="delivered">🚚 Delivered (Walk-in)</option>
+                                        <option value="cancelled">❌ Cancel</option>
                                     @elseif($order->status === 'delivered')
-                                        <option value="completed">≡ƒÆ░ Settle & Complete</option>
+                                        <option value="completed">💰 Settle & Complete</option>
                                     @endif
                                 </select>
                             </div>
@@ -274,7 +297,7 @@
                             <div id="cubby-wrapper" style="display:none;flex-direction:column;gap:4px;">
                                 <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Cubbet</label>
                                 <select name="cubby_id" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
-                                    <option value="">ΓÇö Select ΓÇö</option>
+                                    <option value="">— Select —</option>
                                     @foreach($cubbies as $cubby)
                                         <option value="{{ $cubby->id }}">{{ $cubby->name }}</option>
                                     @endforeach
@@ -285,10 +308,10 @@
                             <div id="payment-method-wrapper" style="display:none;flex-direction:column;gap:4px;">
                                 <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Payment</label>
                                 <select name="payment_method" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
-                                    <option value="cash">≡ƒÆ╡ Cash</option>
-                                    <option value="card">≡ƒÆ│ Card</option>
-                                    <option value="bank">≡ƒÅª Bank Transfer</option>
-                                    <option value="credit">ΓÅ│ Credit</option>
+                                    <option value="cash">💵 Cash</option>
+                                    <option value="card">💳 Card</option>
+                                    <option value="bank">🏦 Bank Transfer</option>
+                                    <option value="credit">⏳ Credit</option>
                                 </select>
                             </div>
 
@@ -501,7 +524,7 @@
                         </div>
                         
                         <div style="display:flex;gap:6px;margin-top:4px;">
-                            <a href="{{ asset('storage/' . $tx->receipt_path) }}" target="_blank" style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">View Slip</a>
+                            <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}" target="_blank" style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">View Slip</a>
                             
                             @if($tx->status === 'pending')
                                 <button type="button" @click="openReviewModal = true" style="flex:1;padding:6px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">Review</button>
@@ -522,15 +545,15 @@
                                     <div @click.outside="openReviewModal = false" style="background:white;border-radius:16px;padding:20px;width:100%;max-width:350px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.1);">
                                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                                             <h3 style="font-size:15px;font-weight:900;color:#0f172a;margin:0;">Review Slip</h3>
-                                            <button @click="openReviewModal = false" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:16px;line-height:1;">Γ£ò</button>
+                                            <button @click="openReviewModal = false" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:16px;line-height:1;">✕</button>
                                         </div>
                                         
                                         <!-- Scrollable Image -->
                                         <div style="width:100%;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;overflow-y:auto;overflow-x:hidden;max-height:220px;margin-bottom:12px;">
-                                            <img src="{{ asset('storage/' . $tx->receipt_path) }}" alt="Payment Slip" style="width:100%;height:auto;display:block;">
+                                            <img src="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}" alt="Payment Slip" style="width:100%;height:auto;display:block;">
                                         </div>
                                         <div style="text-align:right;margin-bottom:12px;">
-                                            <a href="{{ asset('storage/' . $tx->receipt_path) }}" target="_blank" style="font-size:11px;color:#4f46e5;font-weight:700;text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab</a>
+                                            <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}" target="_blank" style="font-size:11px;color:#4f46e5;font-weight:700;text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open in New Tab</a>
                                         </div>
 
                                         <div style="margin-bottom:12px;background:#f8fafc;padding:12px;border-radius:10px;border:1px solid #e2e8f0;font-size:12px;color:#334155;display:flex;justify-content:space-between;align-items:center;">

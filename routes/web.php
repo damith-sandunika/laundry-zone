@@ -99,6 +99,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
+    Route::post('/pos/delivery', [POSController::class, 'storeDelivery'])->name('pos.delivery.store');
 
     Route::post('/customers/pos', [CustomerController::class, 'store'])->name('customers.store.pos');
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');

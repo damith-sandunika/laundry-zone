@@ -330,7 +330,7 @@
                                         @endif
                                         
                                         <div class="mt-2 text-right">
-                                            <a href="{{ asset('storage/' . $slip->receipt_path) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors">
+                                            <a href="{{ \Illuminate\Support\Str::startsWith($slip->receipt_path, 'http') ? $slip->receipt_path : asset('storage/' . $slip->receipt_path) }}" target="_blank" class="inline-flex items-center px-3 py-1.5 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold hover:bg-slate-200 transition-colors">
                                                 <i class="fa-solid fa-file-invoice mr-1.5"></i> View Slip
                                             </a>
                                         </div>

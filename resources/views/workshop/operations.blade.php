@@ -127,6 +127,7 @@
                     alert(data.message || 'Failed to dispatch delivery.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isDispatchingDelivery = false;
@@ -156,6 +157,7 @@
                     alert(data.message || 'Failed to send payment request.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isRequestingPayment = false;
@@ -175,6 +177,7 @@
                 if (data.success) window.location.reload();
                 else alert(data.message || 'Failed');
             } catch(e) {
+                console.error('AJAX Error:', e);
                 alert('Connection error');
             }
         },
@@ -199,6 +202,7 @@
                     alert(data.message || 'Failed to update status.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
         },
@@ -245,6 +249,7 @@
                     alert(data.message || 'Failed to hand over.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isHandoverSubmitting = false;
@@ -273,6 +278,7 @@
                     alert('Error updating statuses');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
         },
@@ -287,7 +293,7 @@
                     if (tx.receipt_path) {
                         receipts.push({
                             id: tx.id,
-                            url: '/storage/' + tx.receipt_path,
+                            url: tx.receipt_path.startsWith('http') ? tx.receipt_path : '/storage/' + tx.receipt_path,
                             amount: tx.amount,
                             status: tx.status,
                             created_at: new Date(tx.created_at).toLocaleString(),
@@ -300,11 +306,17 @@
 
             let flatUrls = receipts.map(r => r.url);
 
-            if (order.receipt_path && !flatUrls.includes('/storage/' + order.receipt_path)) {
-                receipts.push({ id: null, url: '/storage/' + order.receipt_path, amount: order.total, status: 'legacy', created_at: '', is_legacy: true });
+            if (order.receipt_path) {
+                let rUrl = order.receipt_path.startsWith('http') ? order.receipt_path : '/storage/' + order.receipt_path;
+                if (!flatUrls.includes(rUrl)) {
+                    receipts.push({ id: null, url: rUrl, amount: order.total, status: 'legacy', created_at: '', is_legacy: true });
+                }
             }
-            if (order.delivery_appointment && order.delivery_appointment.receipt_path && !flatUrls.includes('/storage/' + order.delivery_appointment.receipt_path)) {
-                receipts.push({ id: null, url: '/storage/' + order.delivery_appointment.receipt_path, amount: order.total, status: 'legacy', created_at: '', is_legacy: true });
+            if (order.delivery_appointment && order.delivery_appointment.receipt_path) {
+                let daUrl = order.delivery_appointment.receipt_path.startsWith('http') ? order.delivery_appointment.receipt_path : '/storage/' + order.delivery_appointment.receipt_path;
+                if (!flatUrls.includes(daUrl)) {
+                    receipts.push({ id: null, url: daUrl, amount: order.total, status: 'legacy', created_at: '', is_legacy: true });
+                }
             }
             return receipts;
         },
@@ -357,6 +369,7 @@
                     alert(data.message || 'Failed to mark done.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isDoneSubmitting = false;

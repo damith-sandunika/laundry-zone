@@ -9,6 +9,7 @@ use App\Models\PaymentTransaction;
 use App\Models\ServiceType;
 use App\Services\CommunicationService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class RiderController extends Controller
 {
@@ -66,7 +67,10 @@ class RiderController extends Controller
         $this->authorizeRiderTask($task);
         $task->update(['status' => 'on_way']);
 
-        if ($task->task_type === 'pickup' && $task->order) {
+        if ($task->task_type === 'pickup' && $task->appointment) {
+            $commService = new CommunicationService();
+            $commService->sendPickupConfirmation($task->appointment);
+        } elseif ($task->task_type === 'delivery' && $task->order) {
             $commService = new CommunicationService();
             $commService->sendDeliveryConfirmation($task->order);
         }
@@ -155,6 +159,9 @@ class RiderController extends Controller
                     'changed_by' => auth()->id(),
                     'note' => 'Delivered by rider',
                 ]);
+
+                $commService = new \App\Services\CommunicationService();
+                $commService->sendOrderCompleted($order);
             }
         }
 
@@ -174,6 +181,12 @@ class RiderController extends Controller
         $this->authorizeRiderTask($task);
         if ($task->task_type !== 'pickup') {
             abort(403, 'Can only create orders for pickups.');
+        }
+
+        // If POS already created an order for this appointment, skip item entry
+        if ($task->appointment->order_id) {
+            return redirect()->route('rider.tasks')
+                ->with('info', 'This delivery already has an order created by the branch. Proceed to complete the pickup task.');
         }
 
         $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($task) {
@@ -205,45 +218,48 @@ class RiderController extends Controller
             $subtotal += $service->base_price * $item['quantity'];
         }
 
-        $order = Order::create([
-            'order_number' => Order::generateOrderNumber($branchId, true),
-            'branch_id' => $branchId,
-            'customer_id' => $appointment->customer_id,
-            'created_by' => auth()->id(),
-            'status' => 'received',
-            'subtotal' => $subtotal,
-            'total' => $subtotal + ($appointment->delivery_cost ?? 0), // Include delivery fee
-            'delivery_fee' => $appointment->delivery_cost ?? 0,
-            'notes' => $request->notes,
-            'is_delivery_order' => true,
-            'delivery_appointment_id' => $appointment->id,
-            'delivery_address' => $appointment->delivery_address,
-        ]);
-
-        foreach ($request->items as $item) {
-            $service = ServiceType::find($item['service_id']);
-            $price = $service->base_price * $item['quantity'];
-            OrderItem::create([
-                'order_id' => $order->id,
-                'service_type_id' => $service->id,
-                'quantity' => $item['quantity'],
-                'unit_price' => $service->base_price,
-                'total_price' => $price,
+        $order = null;
+        DB::transaction(function () use ($request, $task, $appointment, $branchId, $subtotal, &$order) {
+            $order = Order::create([
+                'order_number' => Order::generateOrderNumber($branchId, true),
+                'branch_id' => $branchId,
+                'customer_id' => $appointment->customer_id,
+                'created_by' => auth()->id(),
+                'status' => 'received',
+                'subtotal' => $subtotal,
+                'total' => $subtotal + ($appointment->delivery_cost ?? 0), // Include delivery fee
+                'delivery_fee' => $appointment->delivery_cost ?? 0,
+                'notes' => $request->notes,
+                'is_delivery_order' => true,
+                'delivery_appointment_id' => $appointment->id,
+                'delivery_address' => $appointment->delivery_address,
             ]);
-        }
 
-        $appointment->update([
-            'status' => 'picked_up',
-            'order_id' => $order->id,
-            'picked_up_at' => now(),
-        ]);
+            foreach ($request->items as $item) {
+                $service = ServiceType::find($item['service_id']);
+                $price = $service->base_price * $item['quantity'];
+                OrderItem::create([
+                    'order_id' => $order->id,
+                    'service_type_id' => $service->id,
+                    'quantity' => $item['quantity'],
+                    'unit_price' => $service->base_price,
+                    'total_price' => $price,
+                ]);
+            }
 
-        // Complete the task as picked up
-        $task->update([
-            'status' => 'completed',
-            'completed_at' => now(),
-            'order_id' => $order->id,
-        ]);
+            $appointment->update([
+                'status' => 'picked_up',
+                'order_id' => $order->id,
+                'picked_up_at' => now(),
+            ]);
+
+            // Complete the task as picked up
+            $task->update([
+                'status' => 'completed',
+                'completed_at' => now(),
+                'order_id' => $order->id,
+            ]);
+        });
 
         // Notify customer
         $commService = new CommunicationService();

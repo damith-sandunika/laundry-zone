@@ -34,7 +34,7 @@ class BranchController extends Controller
             'whatsapp_number' => 'nullable|string|max:50',
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -44,8 +44,23 @@ class BranchController extends Controller
         $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {
-            $path = $request->file('logo')->store('branch_logos', 'public');
-            $data['logo_path'] = $path;
+            $file = $request->file('logo');
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/branch_logos',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $data['logo_path'] = $result['secure_url'];
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Branch: ' . $e->getMessage());
+                    $data['logo_path'] = $file->store('branch_logos', 'public');
+                }
+            } else {
+                $data['logo_path'] = $file->store('branch_logos', 'public');
+            }
         }
 
         Branch::create($data);
@@ -67,7 +82,7 @@ class BranchController extends Controller
             'whatsapp_number' => 'nullable|string|max:50',
             'tagline' => 'nullable|string|max:255',
             'logo_size' => 'nullable|integer|min:20|max:500',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -79,12 +94,27 @@ class BranchController extends Controller
         $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {
-            // Delete old logo if exists
-            if ($branch->logo_path) {
+            // Delete old logo if exists and not from cloudinary
+            if ($branch->logo_path && !str_contains($branch->logo_path, 'cloudinary')) {
                 Storage::disk('public')->delete($branch->logo_path);
             }
-            $path = $request->file('logo')->store('branch_logos', 'public');
-            $data['logo_path'] = $path;
+            
+            $file = $request->file('logo');
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => 'rapid_laundromat/branch_logos',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $data['logo_path'] = $result['secure_url'];
+                } catch (\Exception $e) {
+                    $data['logo_path'] = $file->store('branch_logos', 'public');
+                }
+            } else {
+                $data['logo_path'] = $file->store('branch_logos', 'public');
+            }
         }
 
         $branch->update($data);
@@ -98,10 +128,12 @@ class BranchController extends Controller
             abort(403);
         }
 
-        // We probably shouldn't hard delete, maybe just deactivate, but let's soft delete or deactivate.
-        // The migration doesn't have SoftDeletes, so we'll just set is_active = false
-        $branch->update(['is_active' => false]);
-
-        return redirect()->route('branches.index')->with('success', 'Branch deactivated successfully.');
+        try {
+            $branch->delete();
+            return redirect()->route('branches.index')->with('success', 'Branch deleted successfully.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Cannot delete because it has linked users/orders
+            return redirect()->route('branches.index')->with('error', 'Cannot delete this branch because it has existing orders, users, or data linked to it. Please disable it instead.');
+        }
     }
 }

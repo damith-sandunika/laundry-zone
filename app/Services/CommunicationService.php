@@ -151,7 +151,7 @@ class CommunicationService
         $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
         $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
 
-        $type = 'order_confirmation';
+        $type = 'order_confirmation'; // Reuse order confirmation template
         $data = [
             'customer_name'  => $customer->name,
             'order_id'       => $appointment->id,
@@ -166,11 +166,11 @@ class CommunicationService
                 $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
                 $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                 $message = str_replace("Your order", "Your delivery booking", $message);
-
+                
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
                 try {
                     if (env('SMS_API_URL')) {
-                        \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', '360LAUNDRY'), 'to' => $customer->phone, 'text' => $message]);
+                        \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
                     }
                 } catch (\Exception $e) {}
             }
@@ -180,7 +180,7 @@ class CommunicationService
             $content = $this->getEmailContent($type, $data);
             $subject = "Your Delivery Booking #{$appointment->id} is Confirmed 📅";
             $body    = str_replace("Your order", "Your delivery booking", $content['body']);
-
+            
             \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
             try {
                 \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
@@ -198,7 +198,7 @@ class CommunicationService
         $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
         $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
 
-        $type = 'delivery_confirmation';
+        $type = 'delivery_confirmation'; // Reuse Rider On the Way template type
         $data = [
             'customer_name'  => $customer->name,
             'order_id'       => $appointment->id,
@@ -213,10 +213,10 @@ class CommunicationService
                 $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
                 $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                 $message = str_replace("delivery rider", "pickup rider", $message);
-
+                
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
                 try {
-                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', '360LAUNDRY'), 'to' => $customer->phone, 'text' => $message]);
+                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
                 } catch (\Exception $e) {}
             }
         }
@@ -225,7 +225,7 @@ class CommunicationService
             $content = $this->getEmailContent($type, $data);
             $subject = "Your Pickup is on the Way 🚴";
             $body    = str_replace("Our delivery rider is on the way with your order", "Our rider is on the way to pick up your laundry", $content['body']);
-
+            
             \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
             try {
                 \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
@@ -322,7 +322,7 @@ class CommunicationService
         try {
             $apiUrl   = env('SMS_API_URL');
             $apiToken = env('SMS_API_TOKEN');
-            $mask     = env('SMS_MASK', '360LAUNDRY');
+            $mask     = env('SMS_MASK', 'RAPIDLAUNDROMAT');
 
             if (!$apiUrl || !$apiToken) {
                 throw new \Exception('SMS API credentials not configured.');
@@ -402,7 +402,7 @@ class CommunicationService
                     ->getHeaders()
                         ->addTextHeader('List-Unsubscribe', '<mailto:' . $fromAddress . '?subject=unsubscribe>')
                         ->addTextHeader('Precedence', 'bulk')
-                        ->addTextHeader('X-Mailer', '360Laundry-Mailer');
+                        ->addTextHeader('X-Mailer', 'RapidLaundromat-Mailer');
             });
 
             $log->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);
@@ -412,3 +412,4 @@ class CommunicationService
         }
     }
 }
+

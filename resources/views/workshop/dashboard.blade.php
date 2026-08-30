@@ -205,7 +205,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-right">
                                         @if($order->order && $order->order->receipt_path)
-                                            <a href="{{ asset('storage/' . $order->order->receipt_path) }}" target="_blank" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 rounded-lg text-[11px] font-bold transition-all mr-1">View Invoice</a>
+                                            <a href="{{ \Illuminate\Support\Str::startsWith($order->order->receipt_path, 'http') ? $order->order->receipt_path : asset('storage/' . $order->order->receipt_path) }}" target="_blank" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 rounded-lg text-[11px] font-bold transition-all mr-1">View Invoice</a>
                                         @endif
                                         <a href="{{ route('orders.show', $order->order->order_number) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
                                     </td>
