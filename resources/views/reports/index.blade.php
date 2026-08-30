@@ -502,7 +502,7 @@
                                 <tr class="bg-white hover:bg-slate-50 transition-colors">
                                     <td class="px-4 py-4">
                                         <div class="flex items-center gap-2">
-                                            <a :href="'/orders/' + order.id" target="_blank" class="font-bold text-blue-600 hover:underline" x-text="order.order_number"></a>
+                                            <a :href="'/orders/view/' + order.order_number" target="_blank" class="font-bold text-blue-600 hover:underline" x-text="order.order_number"></a>
                                             <span x-show="order.payment_method === 'credit'" class="px-2 py-0.5 bg-orange-100 text-orange-700 text-[10px] font-bold rounded-md">CREDIT</span>
                                             <span x-show="order.payment_method === 'pay_on_pickup'" class="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-bold rounded-md">PAY ON PICKUP</span>
                                         </div>
@@ -514,7 +514,7 @@
                                     </td>
                                     <td class="px-4 py-4 text-right font-black text-rose-500" x-text="'Rs.' + parseFloat(order.service_due || 0).toFixed(2)"></td>
                                     <td class="px-4 py-4 text-center">
-                                        <a :href="'/orders/' + order.id" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors inline-block">View</a>
+                                        <a :href="'/orders/view/' + order.order_number" target="_blank" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg shadow-sm transition-colors inline-block">View</a>
                                     </td>
                                 </tr>
                             </template>

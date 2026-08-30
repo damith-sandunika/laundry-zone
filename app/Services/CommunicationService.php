@@ -169,7 +169,9 @@ class CommunicationService
                 
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
                 try {
-                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
+                    if (env('SMS_API_URL')) {
+                        \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
+                    }
                 } catch (\Exception $e) {}
             }
         }
