@@ -437,15 +437,19 @@ class WorkshopController extends Controller
     public function receive(WorkshopDispatch $dispatch)
     {
         $dispatch->update([
-            'status' => 'received_at_workshop',
-            'received_by' => auth()->id(),
-            'received_at_workshop_at' => now(),
+            'status'                    => 'received_at_workshop',
+            'received_by'               => auth()->id(),
+            'received_at_workshop_at'   => now(),
         ]);
 
         $dispatch->order->update(['status' => 'processing']);
 
-        $commService = new CommunicationService();
-        $commService->sendOrderProcessing($dispatch->order);
+        try {
+            $commService = new CommunicationService();
+            $commService->sendOrderProcessing($dispatch->order);
+        } catch (\Exception $e) {
+            \Log::error('Email notification failed (receive): ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'status' => 'received_at_workshop']);
     }
@@ -460,15 +464,23 @@ class WorkshopController extends Controller
         $dispatch->update(['status' => 'processing']);
         $order->update(['status' => 'processing']);
 
-        \App\Models\OrderStatusHistory::create([
-            'order_id' => $order->id,
-            'status' => 'processing',
-            'changed_by' => auth()->id(),
-            'note' => 'Processing started',
-        ]);
+        try {
+            \App\Models\OrderStatusHistory::create([
+                'order_id'   => $order->id,
+                'status'     => 'processing',
+                'changed_by' => auth()->id(),
+                'note'       => 'Processing started',
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('OrderStatusHistory insert failed (startProcessing): ' . $e->getMessage());
+        }
 
-        $commService = new CommunicationService();
-        $commService->sendOrderProcessing($order);
+        try {
+            $commService = new CommunicationService();
+            $commService->sendOrderProcessing($order);
+        } catch (\Exception $e) {
+            \Log::error('Email notification failed (startProcessing): ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'status' => 'processing', 'order_id' => $order->id]);
     }
@@ -527,11 +539,15 @@ class WorkshopController extends Controller
         // Mark order as completed_at_workshop — actual delivery/handover happens at branch
         $order->update(['status' => 'completed_at_workshop']);
 
-        $order->statusHistory()->create([
-            'status'     => 'completed_at_workshop',
-            'note'       => 'Completed at Workshop',
-            'changed_by' => auth()->id(),
-        ]);
+        try {
+            $order->statusHistory()->create([
+                'status'     => 'completed_at_workshop',
+                'note'       => 'Completed at Workshop',
+                'changed_by' => auth()->id(),
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('OrderStatusHistory insert failed (complete): ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'status' => 'completed_at_workshop']);
     }
@@ -630,28 +646,40 @@ class WorkshopController extends Controller
             // 'ready_at' => now(), // Will be set when branch actually confirms receipt
         ]);
 
-        \App\Models\OrderStatusHistory::create([
-            'order_id' => $order->id,
-            'status' => 'returned_from_workshop',
-            'changed_by' => auth()->id(),
-            'note' => 'Washing completed. Dispatched back to branch.',
-        ]);
+        try {
+            \App\Models\OrderStatusHistory::create([
+                'order_id'   => $order->id,
+                'status'     => 'returned_from_workshop',
+                'changed_by' => auth()->id(),
+                'note'       => 'Washing completed. Dispatched back to branch.',
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('OrderStatusHistory insert failed (returnToBranch): ' . $e->getMessage());
+        }
 
-        // Notify branch admins (and admin role users) of the originating branch
-        $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin'])
-            ->where('branch_id', $dispatch->branch_id)
-            ->get();
-        \Illuminate\Support\Facades\Notification::send(
-            $branchAdmins,
-            new \App\Notifications\SystemAlertNotification(
-                'Order Ready from Workshop: #' . $order->order_number,
-                route('orders.show', $order->order_number),
-                'workshop_return'
-            )
-        );
+        try {
+            // Notify branch admins (and admin role users) of the originating branch
+            $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin'])
+                ->where('branch_id', $dispatch->branch_id)
+                ->get();
+            \Illuminate\Support\Facades\Notification::send(
+                $branchAdmins,
+                new \App\Notifications\SystemAlertNotification(
+                    'Order Ready from Workshop: #' . $order->order_number,
+                    route('orders.show', $order->order_number),
+                    'workshop_return'
+                )
+            );
+        } catch (\Exception $e) {
+            \Log::error('Notification failed (returnToBranch): ' . $e->getMessage());
+        }
 
-        $commService = new CommunicationService();
-        $commService->sendOrderReturnedFromWorkshop($order);
+        try {
+            $commService = new CommunicationService();
+            $commService->sendOrderReturnedFromWorkshop($order);
+        } catch (\Exception $e) {
+            \Log::error('Email notification failed (returnToBranch): ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'status' => 'returned_to_branch']);
     }
