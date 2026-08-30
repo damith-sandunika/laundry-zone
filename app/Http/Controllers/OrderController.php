@@ -322,7 +322,7 @@ class OrderController extends Controller
         \Log::info('updateStatus started for order ' . $order->id . ' to status ' . $request->status);
         
         $request->validate([
-            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,completed,cancelled',
+            'status'   => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,completed,cancelled',
             'cubby_id' => 'nullable|exists:cubbies,id',
         ]);
 
@@ -332,25 +332,22 @@ class OrderController extends Controller
 
                 if ($request->status === 'done') {
                     if ($request->cubby_id) {
-                        // Assign cubby
                         OrderCubby::create([
-                            'order_id' => $order->id,
-                            'cubby_id' => $request->cubby_id,
+                            'order_id'    => $order->id,
+                            'cubby_id'    => $request->cubby_id,
                             'assigned_at' => now(),
                         ]);
                         Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
                     }
-
                 }
 
                 if ($request->status === 'done') {
-                    // Complete Workshop Dispatch
                     $dispatch = WorkshopDispatch::where('order_id', $order->id)
                         ->whereNotIn('status', ['received_at_branch'])
                         ->first();
                     if ($dispatch) {
                         $dispatch->update([
-                            'status' => 'received_at_branch',
+                            'status'                => 'received_at_branch',
                             'received_at_branch_at' => now(),
                         ]);
                     }
@@ -371,28 +368,24 @@ class OrderController extends Controller
                     if ($order->payment_method === 'credit') {
                         $order->payment_status = 'pending';
                     } else {
-                        // Check if it's already paid, otherwise create payment transaction
                         $amountToPay = $order->total - $order->paid_amount;
                         if ($amountToPay > 0) {
                             PaymentTransaction::create([
-                                'order_id' => $order->id,
-                                'amount' => $amountToPay,
+                                'order_id'       => $order->id,
+                                'amount'         => $amountToPay,
                                 'payment_method' => $order->payment_method ?? 'cash',
-                                'created_by' => auth()->id(),
+                                'created_by'     => auth()->id(),
                             ]);
                         }
                         $order->payment_status = 'paid';
-                        $order->paid_amount = $order->total;
+                        $order->paid_amount     = $order->total;
                     }
 
-                    // Release cubby
                     $orderCubby = $order->cubbies()->whereNull('released_at')->first();
                     if ($orderCubby) {
                         $orderCubby->update(['released_at' => now()]);
                         Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
                     }
-
-                    // Queue notification - handled in after-transaction block
 
                     $appt = DeliveryAppointment::where('order_id', $order->id)->first();
                     if ($appt) {
@@ -404,23 +397,20 @@ class OrderController extends Controller
                     if ($request->has('payment_method')) {
                         $order->payment_method = $request->payment_method;
                     }
-
-                    // If not fully paid, settle the balance
                     $amountToPay = $order->total - $order->paid_amount;
                     if ($amountToPay > 0) {
                         PaymentTransaction::create([
-                            'order_id' => $order->id,
-                            'amount' => $amountToPay,
-                            'payment_method' => $order->payment_method ?? 'cash',
-                            'created_by' => auth()->id(),
+                            'order_id'                => $order->id,
+                            'amount'                  => $amountToPay,
+                            'payment_method'          => $order->payment_method ?? 'cash',
+                            'created_by'              => auth()->id(),
                             'collected_from_rider_at' => now(),
-                            'status' => 'completed',
-                            'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                            'status'                  => 'completed',
+                            'transaction_id'          => 'TXN-' . strtoupper(uniqid()),
                         ]);
-                        $order->paid_amount = $order->total;
+                        $order->paid_amount    = $order->total;
                         $order->payment_status = 'paid';
                     } else {
-                        // Mark previously uncollected transactions from rider as collected
                         PaymentTransaction::where('order_id', $order->id)
                             ->where('payment_method', 'cash')
                             ->whereNull('collected_from_rider_at')
@@ -428,44 +418,53 @@ class OrderController extends Controller
                     }
                 }
 
-                // Log the status change so timeline shows correct user
-                if (in_array($request->status, ['delivered', 'completed', 'done'])) {
-                    \App\Models\OrderStatusHistory::create([
-                        'order_id' => $order->id,
-                        'status' => $request->status,
-                        'changed_by' => auth()->id(),
-                        'note' => 'Status updated to ' . $request->status,
-                    ]);
-                }
-
                 $order->save();
 
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => $request->status,
-                    'changed_by' => auth()->id(),
-                ]);
+                // Single history record per status change
+                try {
+                    OrderStatusHistory::create([
+                        'order_id'   => $order->id,
+                        'status'     => $request->status,
+                        'changed_by' => auth()->id(),
+                        'note'       => 'Status updated to ' . $request->status,
+                    ]);
+                } catch (\Exception $e) {
+                    \Log::warning('OrderStatusHistory insert failed: ' . $e->getMessage());
+                }
             });
 
             \Log::info('Transaction successful for order ' . $order->id . ' status ' . $request->status);
 
-            // Trigger status-specific notifications AFTER the transaction commits successfully
-            $commService = new \App\Services\CommunicationService();
-            \Log::info('Triggering notification for status: ' . $request->status);
-            if ($request->status === 'done') {
-                $commService->sendOrderReady($order);
-            } elseif ($request->status === 'delivered') {
-                $commService->sendOrderDelivered($order);
-            } elseif ($request->status === 'dispatched_to_workshop') {
-                $commService->sendOrderDispatchedToWorkshop($order);
-            } elseif ($request->status === 'processing') {
-                $commService->sendOrderProcessing($order);
-            } elseif ($request->status === 'returned_from_workshop') {
-                $commService->sendOrderReturnedFromWorkshop($order);
-            } elseif ($request->status === 'completed') {
-                $commService->sendOrderCompleted($order);
-            } elseif ($request->status === 'cancelled') {
-                $commService->sendOrderCancelled($order);
+            // Trigger notifications AFTER transaction commits
+            try {
+                $commService = new \App\Services\CommunicationService();
+                \Log::info('Triggering notification for status: ' . $request->status);
+                if ($request->status === 'done') {
+                    $commService->sendOrderReady($order);
+                } elseif ($request->status === 'delivered') {
+                    $commService->sendOrderDelivered($order);
+                } elseif ($request->status === 'dispatched_to_workshop') {
+                    $commService->sendOrderDispatchedToWorkshop($order);
+                } elseif ($request->status === 'processing') {
+                    $commService->sendOrderProcessing($order);
+                } elseif ($request->status === 'returned_from_workshop') {
+                    $commService->sendOrderReturnedFromWorkshop($order);
+                } elseif ($request->status === 'completed') {
+                    $commService->sendOrderCompleted($order);
+                } elseif ($request->status === 'cancelled') {
+                    $commService->sendOrderCancelled($order);
+                }
+            } catch (\Exception $e) {
+                \Log::error('Email notification failed (updateStatus): ' . $e->getMessage());
+            }
+
+            // Return JSON for AJAX calls, redirect for form submissions
+            if ($request->expectsJson() || $request->ajax()) {
+                $payload = ['success' => true, 'message' => 'Status updated successfully!'];
+                if ($request->status === 'delivered') {
+                    $payload['print_bill_id'] = $order->id;
+                }
+                return response()->json($payload);
             }
 
             if ($request->status === 'delivered') {
@@ -477,7 +476,13 @@ class OrderController extends Controller
             return redirect()->back()->with('success', 'Status updated successfully!');
 
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', 'Update failed: '.$e->getMessage());
+            \Log::error('updateStatus failed: ' . $e->getMessage());
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()], 500);
+            }
+
+            return redirect()->back()->with('error', 'Update failed: ' . $e->getMessage());
         }
     }
 

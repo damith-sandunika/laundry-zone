@@ -273,13 +273,15 @@
                     },
                     body: JSON.stringify({ status: 'done', cubby_id: this.selectedCubby })
                 });
-                if (!res.ok) {
-                    const errText = await res.text();
-                    console.error("markAsDone Error Response:", errText);
+                const data = await res.json();
+                if (data.success) {
+                    window.location.reload();
+                } else {
+                    console.error('markAsDone failed:', data);
+                    alert('Error: ' + (data.message || 'Failed to update status'));
                 }
-                window.location.reload();
             } catch (err) { 
-                console.error("markAsDone Network Error:", err);
+                console.error('markAsDone Network Error:', err);
                 alert('Error updating status'); 
             }
         },
@@ -349,20 +351,23 @@
                     })
                 });
                 
-                if (!res.ok) {
-                    const errText = await res.text();
-                    console.error("confirmDelivery Error Response:", errText);
+                const data = await res.json();
+                if (!data.success) {
+                    console.error('confirmDelivery failed:', data);
+                    alert('Error: ' + (data.message || 'Failed to update status'));
+                    return;
                 }
 
                 // Open print window automatically if requested
-                if (shouldPrint) {
+                if (shouldPrint && data.print_bill_id) {
+                    window.open(`/orders/${data.print_bill_id}/print`, '_blank');
+                } else if (shouldPrint) {
                     window.open(`/orders/${this.deliverOrder.id}/print`, '_blank');
                 }
                 
-                // Reload page to reflect changes
                 window.location.reload();
             } catch (err) { 
-                console.error("confirmDelivery Network Error:", err);
+                console.error('confirmDelivery Network Error:', err);
                 alert('Error updating status'); 
             }
         },
