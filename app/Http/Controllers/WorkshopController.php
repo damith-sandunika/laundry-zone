@@ -540,7 +540,8 @@ class WorkshopController extends Controller
         $order->update(['status' => 'completed_at_workshop']);
 
         try {
-            $order->statusHistory()->create([
+            \App\Models\OrderStatusHistory::create([
+                'order_id'   => $order->id,
                 'status'     => 'completed_at_workshop',
                 'note'       => 'Completed at Workshop',
                 'changed_by' => auth()->id(),
@@ -881,11 +882,17 @@ class WorkshopController extends Controller
                 'delivered_at' => now(),
             ]);
 
-            $order->statusHistory()->create([
-                'status'     => 'completed',
-                'note'       => 'Handed over to customer at workshop',
-                'changed_by' => auth()->id(),
-            ]);
+            // Use direct model create to avoid relationship overwriting status field
+            try {
+                \App\Models\OrderStatusHistory::create([
+                    'order_id'   => $order->id,
+                    'status'     => 'completed',
+                    'note'       => 'Handed over to customer at workshop',
+                    'changed_by' => auth()->id(),
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('OrderStatusHistory insert failed (handover): ' . $e->getMessage());
+            }
 
             // Release cubby
             $cubbyIds = \App\Models\OrderCubby::where('order_id', $order->id)->pluck('cubby_id');
@@ -899,12 +906,21 @@ class WorkshopController extends Controller
             }
 
             $dispatch->update([
-                'status'       => 'returned_to_branch',
-                'returned_by'  => auth()->id(),
-                'returned_at'  => now(),
+                'status'         => 'returned_to_branch',
+                'returned_by'    => auth()->id(),
+                'returned_at'    => now(),
                 'workshop_notes' => 'Handed over directly to customer at workshop',
             ]);
         });
+
+        // Send completion email AFTER transaction
+        try {
+            $order = $order->fresh();
+            $commService = new CommunicationService();
+            $commService->sendOrderCompleted($order);
+        } catch (\Exception $e) {
+            \Log::error('Email notification failed (handover): ' . $e->getMessage());
+        }
 
         return response()->json(['success' => true, 'order_id' => $order->id]);
     }
