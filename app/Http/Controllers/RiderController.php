@@ -66,7 +66,10 @@ class RiderController extends Controller
         $this->authorizeRiderTask($task);
         $task->update(['status' => 'on_way']);
 
-        if ($task->task_type === 'pickup' && $task->order) {
+        if ($task->task_type === 'pickup' && $task->appointment) {
+            $commService = new CommunicationService();
+            $commService->sendPickupConfirmation($task->appointment);
+        } elseif ($task->task_type === 'delivery' && $task->order) {
             $commService = new CommunicationService();
             $commService->sendDeliveryConfirmation($task->order);
         }

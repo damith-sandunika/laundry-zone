@@ -140,13 +140,8 @@ class DeliveryController extends Controller
         \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Pickup Task Assigned: #' . $appointment->id, route('rider.tasks')));
 
         // Notification
-        if ($appointment->order_id) {
-            $order = Order::find($appointment->order_id);
-            if ($order) {
-                $commService = new CommunicationService();
-                $commService->sendDeliveryConfirmation($order);
-            }
-        }
+        $commService = new CommunicationService();
+        $commService->sendPickupConfirmation($appointment);
 
         return redirect()->route('delivery.index')->with('success', "Rider {$rider->name} assigned for pickup.");
     }
