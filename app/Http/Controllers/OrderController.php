@@ -445,8 +445,6 @@ class OrderController extends Controller
                     $commService->sendOrderDelivered($order);
                 } elseif ($request->status === 'dispatched_to_workshop') {
                     $commService->sendOrderDispatchedToWorkshop($order);
-                } elseif ($request->status === 'processing') {
-                    $commService->sendOrderProcessing($order);
                 } elseif ($request->status === 'returned_from_workshop') {
                     $commService->sendOrderReturnedFromWorkshop($order);
                 } elseif ($request->status === 'completed') {
