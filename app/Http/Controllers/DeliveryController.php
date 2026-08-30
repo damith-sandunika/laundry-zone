@@ -93,6 +93,9 @@ class DeliveryController extends Controller
     {
         $appointment->update(['status' => 'confirmed']);
 
+        $commService = new \App\Services\CommunicationService();
+        $commService->sendBookingConfirmation($appointment);
+
         return redirect()->route('delivery.index')->with('success', 'Appointment confirmed. Customer notified.');
     }
 

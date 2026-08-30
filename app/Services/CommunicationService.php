@@ -143,7 +143,50 @@ class CommunicationService
         return $templates[$type] ?? ['subject' => "Order #{$orderId} Update", 'body' => "<p>Hi {$name}, there is an update on order #{$orderId}.</p>"];
     }
 
-    // ─── Public Methods ──────────────────────────────────────────────────────
+    public function sendBookingConfirmation(\App\Models\DeliveryAppointment $appointment)
+    {
+        $customer = $appointment->customer;
+        if (!$customer) return;
+
+        $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
+        $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
+
+        $type = 'order_confirmation'; // Reuse order confirmation template
+        $data = [
+            'customer_name'  => $customer->name,
+            'order_id'       => $appointment->id,
+            'total'          => 'Rs.' . number_format($appointment->delivery_cost ?? 0, 2) . ' (Estimated Delivery Cost)',
+            'amount_due'     => 'N/A',
+            'payment_status' => 'Pending',
+        ];
+
+        if ($isSmsEnabled && !empty($customer->phone)) {
+            $smsTemplate = SmsTemplate::where('type', $type)->where('is_active', true)->first();
+            if ($smsTemplate) {
+                $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
+                $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
+                $message = str_replace("Your order", "Your delivery booking", $message);
+                
+                \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
+                try {
+                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
+                } catch (\Exception $e) {}
+            }
+        }
+
+        if ($isEmailEnabled && !empty($customer->email)) {
+            $content = $this->getEmailContent($type, $data);
+            $subject = "Your Delivery Booking #{$appointment->id} is Confirmed 📅";
+            $body    = str_replace("Your order", "Your delivery booking", $content['body']);
+            
+            \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
+            try {
+                \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
+                    $msg->to($customer->email)->subject($subject);
+                });
+            } catch (\Exception $e) {}
+        }
+    }
 
     public function sendPickupConfirmation(\App\Models\DeliveryAppointment $appointment)
     {

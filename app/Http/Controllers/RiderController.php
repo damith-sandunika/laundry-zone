@@ -158,6 +158,9 @@ class RiderController extends Controller
                     'changed_by' => auth()->id(),
                     'note' => 'Delivered by rider',
                 ]);
+
+                $commService = new \App\Services\CommunicationService();
+                $commService->sendOrderDelivered($order);
             }
         }
 
