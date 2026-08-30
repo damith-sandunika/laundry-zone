@@ -231,12 +231,17 @@
                     })
                 });
                 const data = await res.json();
+                if (!res.ok) {
+                    console.error("Bulk Status Error Response:", data);
+                }
+                
                 if (data.success) {
                     window.location.reload();
                 } else {
                     alert('Bulk update failed');
                 }
             } catch (err) {
+                console.error("Bulk Status Error:", err);
                 // If it was a redirect, fetch might throw an opaque error but it succeeded
                 window.location.reload();
             }
@@ -259,8 +264,15 @@
                     },
                     body: JSON.stringify({ status: 'done', cubby_id: this.selectedCubby })
                 });
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error("markAsDone Error Response:", errText);
+                }
                 window.location.reload();
-            } catch (err) { alert('Error updating status'); }
+            } catch (err) { 
+                console.error("markAsDone Network Error:", err);
+                alert('Error updating status'); 
+            }
         },
 
         openDeliverPopup(order) {
@@ -328,6 +340,11 @@
                     })
                 });
                 
+                if (!res.ok) {
+                    const errText = await res.text();
+                    console.error("confirmDelivery Error Response:", errText);
+                }
+
                 // Open print window automatically if requested
                 if (shouldPrint) {
                     window.open(`/orders/${this.deliverOrder.id}/print`, '_blank');
@@ -335,7 +352,10 @@
                 
                 // Reload page to reflect changes
                 window.location.reload();
-            } catch (err) { alert('Error updating status'); }
+            } catch (err) { 
+                console.error("confirmDelivery Network Error:", err);
+                alert('Error updating status'); 
+            }
         },
 
         openEdit(order) {
