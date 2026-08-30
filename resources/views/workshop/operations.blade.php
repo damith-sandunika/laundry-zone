@@ -127,6 +127,7 @@
                     alert(data.message || 'Failed to dispatch delivery.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isDispatchingDelivery = false;
@@ -156,6 +157,7 @@
                     alert(data.message || 'Failed to send payment request.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isRequestingPayment = false;
@@ -175,6 +177,7 @@
                 if (data.success) window.location.reload();
                 else alert(data.message || 'Failed');
             } catch(e) {
+                console.error('AJAX Error:', e);
                 alert('Connection error');
             }
         },
@@ -199,6 +202,7 @@
                     alert(data.message || 'Failed to update status.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
         },
@@ -245,6 +249,7 @@
                     alert(data.message || 'Failed to hand over.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isHandoverSubmitting = false;
@@ -273,6 +278,7 @@
                     alert('Error updating statuses');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
         },
@@ -363,6 +369,7 @@
                     alert(data.message || 'Failed to mark done.');
                 }
             } catch (err) {
+                console.error('AJAX Error:', err);
                 alert('Connection error');
             }
             this.isDoneSubmitting = false;
