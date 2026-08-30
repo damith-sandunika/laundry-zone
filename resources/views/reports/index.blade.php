@@ -190,25 +190,25 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($orders as $order)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-bold">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold">
                                         <a href="{{ route('orders.show', $order->order_number) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
                                     </td>
-                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</td>
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-black text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No sales record in this range.</td>
+                                    <td colspan="4" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-sm font-semibold">No sales record in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -222,26 +222,26 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Rank</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Orders</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total Spent</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Rank</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Orders</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total Spent</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($topCustomers as $index => $tc)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-black text-lg text-slate-300">#{{ $index + 1 }}</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-black text-lg text-slate-300">#{{ $index + 1 }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4">
                                         <div class="font-bold text-slate-900 text-base">{{ $tc->customer->name ?? 'Deleted Customer' }}</div>
                                         <div class="text-sm font-semibold text-slate-500">{{ $tc->customer->phone ?? '' }}</div>
                                     </td>
-                                    <td class="px-6 py-4 text-center font-black text-blue-500 text-base">{{ $tc->total_orders }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-emerald-500 text-lg">Rs.{{ number_format($tc->total_spent, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-center font-black text-blue-500 text-base">{{ $tc->total_orders }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-black text-emerald-500 text-lg">Rs.{{ number_format($tc->total_spent, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No customer data available.</td>
+                                    <td colspan="4" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-sm font-semibold">No customer data available.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -255,21 +255,21 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Service Name</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Count</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Full Total</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Collected</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Pending Due</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Service Name</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Count</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Full Total</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Collected</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Pending Due</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($services as $serv)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-bold text-slate-900 text-sm">{{ $serv->name }}</td>
-                                    <td class="px-6 py-4 text-center font-bold text-slate-500">{{ number_format($serv->total_qty, 1) }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-blue-600">Rs.{{ number_format($serv->total_revenue, 2) }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-emerald-500">Rs.{{ number_format($serv->done_payment, 2) }}</td>
-                                    <td class="px-6 py-4 text-right">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold text-slate-900 text-sm">{{ $serv->name }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-center font-bold text-slate-500">{{ number_format($serv->total_qty, 1) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-black text-blue-600">Rs.{{ number_format($serv->total_revenue, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($serv->done_payment, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right">
                                         <div class="flex justify-end items-center gap-3">
                                             <span class="font-black text-rose-500">Rs.{{ number_format($serv->pending_payment + $serv->credit_payment, 2) }}</span>
                                             @if($serv->pending_payment > 0 || $serv->credit_payment > 0)
@@ -282,7 +282,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No service usage tracked in this range.</td>
+                                    <td colspan="5" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-sm font-semibold">No service usage tracked in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -306,27 +306,27 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Category</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Details</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Amount</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Category</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Details</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($expensesList as $exp)
                                 <tr x-show="expenseCategoryFilter === '' || expenseCategoryFilter === '{{ $exp->category }}'" class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $exp->expense_date }}</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm font-semibold text-slate-500">{{ $exp->expense_date }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4">
                                         <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200 rounded-lg">
                                             {{ str_replace('_', ' ', $exp->category) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $exp->description }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-rose-500">Rs.{{ number_format($exp->amount, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold text-slate-900">{{ $exp->description }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-black text-rose-500">Rs.{{ number_format($exp->amount, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No expenses logged in this range.</td>
+                                    <td colspan="4" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-sm font-semibold">No expenses logged in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -340,33 +340,33 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Supply Item</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Qty Changes</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Reason / By</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Supply Item</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Type</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Qty Changes</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Reason / By</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($inventoryLogs as $log)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 text-xs font-semibold text-slate-500">{{ $log->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $log->inventoryItem->name ?? 'Deleted Item' }}</td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-xs font-semibold text-slate-500">{{ $log->created_at->format('Y-m-d h:i A') }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold text-slate-900">{{ $log->inventoryItem->name ?? 'Deleted Item' }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4">
                                         <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest rounded-lg border {{ $log->type === 'stock_in' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200' }}">
                                             {{ strtoupper(str_replace('_', ' ', $log->type)) }}
                                         </span>
                                     </td>
-                                    <td class="px-6 py-4 text-center font-black text-base {{ $log->type === 'stock_in' ? 'text-emerald-500' : 'text-rose-500' }}">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-center font-black text-base {{ $log->type === 'stock_in' ? 'text-emerald-500' : 'text-rose-500' }}">
                                         {{ $log->type === 'stock_in' ? '+' : '-' }}{{ $log->quantity }}
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-medium text-slate-500">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm font-medium text-slate-500">
                                         {{ $log->notes ?? '-' }} <br><span class="font-bold text-slate-900">{{ $log->createdBy->name ?? 'System' }}</span>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No inventory transactions tracked in this range.</td>
+                                    <td colspan="5" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-sm font-semibold">No inventory transactions tracked in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -380,25 +380,25 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date Issued</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Balance Due</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Date Issued</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Balance Due</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($creditOrders as $order)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-bold">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold">
                                         <a href="{{ route('orders.show', $order->order_number) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
                                     </td>
-                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $order->customer->name }} <br><span class="text-xs text-slate-500">{{ $order->customer->phone }}</span></td>
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-6 py-4 text-right font-bold text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-orange-600 text-base">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
-                                    <td class="px-6 py-4 text-center">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->customer->name }} <br><span class="text-xs text-slate-500">{{ $order->customer->phone }}</span></td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-bold text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-black text-orange-600 text-base">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-center">
                                         <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center">
                                             @csrf
                                             <input type="number" name="amount" value="{{ $order->total - $order->paid_amount }}" step="0.01" max="{{ $order->total - $order->paid_amount }}" class="w-20 px-3 py-1.5 border-2 border-slate-200 rounded-lg text-sm font-bold focus:ring-0 focus:border-blue-500" required>
@@ -412,7 +412,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No active credit customers.</td>
+                                    <td colspan="6" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-sm font-semibold">No active credit customers.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -426,32 +426,32 @@
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Package Details</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Issue Date</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Price</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
-                                <th class="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Package Details</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest">Issue Date</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Price</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
+                                <th class="px-3 py-3 md:px-6 md:py-4 text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($customerPackages as $cp)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-6 py-4 font-bold text-slate-900">{{ $cp->customer->name ?? 'Deleted' }} <br><span class="text-xs text-slate-500">{{ $cp->customer->phone ?? '' }}</span></td>
-                                    <td class="px-6 py-4">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 font-bold text-slate-900">{{ $cp->customer->name ?? 'Deleted' }} <br><span class="text-xs text-slate-500">{{ $cp->customer->phone ?? '' }}</span></td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4">
                                         <div class="font-black text-blue-600">{{ $cp->package->name ?? 'Unknown' }}</div>
                                         <div class="text-xs font-semibold text-slate-500">Exp: {{ $cp->end_date->format('Y-m-d') }}</div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm font-semibold text-slate-500">{{ $cp->start_date->format('Y-m-d') }}</td>
-                                    <td class="px-6 py-4 text-right font-black text-slate-900">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
-                                    <td class="px-6 py-4 text-center">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-sm font-semibold text-slate-500">{{ $cp->start_date->format('Y-m-d') }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-right font-black text-slate-900">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-center">
                                         @if($cp->payment_status === 'paid')
                                             <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">PAID</span>
                                         @else
                                             <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-rose-50 text-rose-700 border border-rose-200 rounded-lg">PENDING</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 text-center">
+                                    <td class="px-3 py-3 md:px-6 md:py-4 text-center">
                                         @if($cp->payment_status === 'pending')
                                             <form action="{{ route('reports.approvePackagePayment', $cp->id) }}" method="POST" class="flex gap-2 items-center justify-center">
                                                 @csrf
@@ -468,7 +468,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-6 py-10 text-center text-slate-400 text-sm font-semibold">No packages issued in this range.</td>
+                                    <td colspan="6" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-sm font-semibold">No packages issued in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -519,7 +519,7 @@
                                 </tr>
                             </template>
                             <tr x-show="selectedServiceOrders.length === 0">
-                                <td colspan="4" class="px-6 py-10 text-center text-slate-400 font-semibold text-sm">No pending orders found.</td>
+                                <td colspan="4" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 font-semibold text-sm">No pending orders found.</td>
                             </tr>
                         </tbody>
                     </table>
