@@ -339,9 +339,6 @@ class OrderController extends Controller
                         Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
                     }
 
-                    // Queue notification
-                    $commService = new \App\Services\CommunicationService();
-                    $commService->sendOrderReady($order);
                 }
 
                 if ($request->status === 'done') {
@@ -447,6 +444,22 @@ class OrderController extends Controller
                     'changed_by' => auth()->id(),
                 ]);
             });
+
+            // Trigger status-specific notifications AFTER the transaction commits successfully
+            $commService = new \App\Services\CommunicationService();
+            if ($request->status === 'done') {
+                $commService->sendOrderReady($order);
+            } elseif ($request->status === 'delivered') {
+                $commService->sendOrderDelivered($order);
+            } elseif ($request->status === 'dispatched_to_workshop') {
+                $commService->sendOrderDispatchedToWorkshop($order);
+            } elseif ($request->status === 'processing') {
+                $commService->sendOrderProcessing($order);
+            } elseif ($request->status === 'returned_from_workshop') {
+                $commService->sendOrderReturnedFromWorkshop($order);
+            } elseif ($request->status === 'cancelled') {
+                $commService->sendOrderCancelled($order);
+            }
 
             if ($request->status === 'delivered') {
                 return redirect()->back()

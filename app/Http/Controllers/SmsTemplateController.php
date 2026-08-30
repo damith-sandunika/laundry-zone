@@ -50,6 +50,10 @@ class SmsTemplateController extends Controller
             ['type' => 'bill_finalize', 'name' => 'Bill Finalized', 'message' => 'Your bill for order #{order_id} is finalized. Please pay {amount_due}.'],
             ['type' => 'delivery_confirmation', 'name' => 'Delivery Confirmation', 'message' => 'Our rider is on the way with your order #{order_id}.'],
             ['type' => 'delivery_thank_you', 'name' => 'Delivery Thank You', 'message' => 'Thank you for choosing our delivery service for order #{order_id}.'],
+            ['type' => 'order_dispatched_to_workshop', 'name' => 'Sent to Workshop', 'message' => 'Your order #{order_id} has been dispatched to our workshop.'],
+            ['type' => 'order_processing', 'name' => 'Processing at Workshop', 'message' => 'We are now processing your order #{order_id} at our workshop.'],
+            ['type' => 'order_returned_from_workshop', 'name' => 'Back from Workshop', 'message' => 'Your order #{order_id} has returned from the workshop and will be ready soon.'],
+            ['type' => 'order_cancelled', 'name' => 'Order Cancelled', 'message' => 'Your order #{order_id} has been cancelled. Contact us for details.'],
         ];
 
         foreach ($defaults as $default) {
