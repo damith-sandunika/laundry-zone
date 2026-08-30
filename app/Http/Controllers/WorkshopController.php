@@ -554,6 +554,16 @@ class WorkshopController extends Controller
                 \Log::warning('OrderStatusHistory insert failed (complete): ' . $e->getMessage());
             }
 
+            // If this is a workshop walk-in, the order is now ready for customer pickup
+            if ($dispatch->branch_id === $dispatch->workshop_branch_id) {
+                try {
+                    $commService = new CommunicationService();
+                    $commService->sendOrderReady($order);
+                } catch (\Exception $e) {
+                    \Log::error('Email notification failed (complete ready): ' . $e->getMessage());
+                }
+            }
+
             return response()->json(['success' => true, 'status' => 'completed_at_workshop']);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::complete error: ' . $e->getMessage());
