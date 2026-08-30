@@ -1,116 +1,132 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="ph-title">📱 SMS Templates</h2>
-        <p class="ph-sub">Manage and customize automated SMS notifications</p>
+        <div class="flex flex-wrap justify-between items-center gap-3">
+            <div>
+                <h2 class="ph-title">📱 SMS Templates</h2>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage automated SMS notifications sent to customers</p>
+            </div>
+        </div>
     </x-slot>
 
-    <div class="space-y-6">
-        
-        <!-- Top Bar: Global Toggle & Actions -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+    @if(session('success'))
+        <div style="display:flex;align-items:center;gap:10px;background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;margin-bottom:20px;">
+            <svg width="16" height="16" fill="none" stroke="#16a34a" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+            <span style="font-size:13px;font-weight:600;color:#15803d;">{{ session('success') }}</span>
+        </div>
+    @endif
+
+    @php $isSmsEnabled = \App\Models\Setting::where('key','is_sms_enabled')->value('value') === 'true'; @endphp
+
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+        {{-- Global Toggle --}}
+        <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;background:#fff;border:1px solid #e5e7eb;border-radius:16px;padding:20px 24px;box-shadow:0 1px 4px rgba(0,0,0,0.05);">
             <div>
-                <h3 class="text-lg font-extrabold text-gray-800">Global SMS Gateway</h3>
-                <p class="text-sm text-gray-500 mt-1">Enable or disable all outgoing SMS messages across the system.</p>
+                <p style="font-weight:800;font-size:16px;color:#1e293b;margin:0 0 4px;">Global SMS Switch</p>
+                <p style="font-size:13px;color:#64748b;margin:0;">Enable or disable ALL outgoing SMS system-wide.</p>
             </div>
-            
-            <div class="flex items-center gap-3 bg-gray-50 py-2 px-4 rounded-xl border border-gray-200">
-                <span class="text-sm font-bold text-gray-700">Master Switch</span>
-                <form action="{{ route('sms-templates.toggleGlobal') }}" method="POST" id="globalToggleForm" class="flex items-center h-full m-0">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <form action="{{ route('sms-templates.toggleGlobal') }}" method="POST" id="globalSmsForm">
                     @csrf
-                    <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" name="is_sms_enabled" value="true" class="sr-only peer" {{ \App\Models\Setting::get('is_sms_enabled', 'false') === 'true' ? 'checked' : '' }} onchange="document.getElementById('globalToggleForm').submit()">
-                        <div class="w-11 h-6 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
+                    <label style="display:inline-flex;align-items:center;cursor:pointer;gap:8px;">
+                        <span style="font-size:13px;font-weight:700;color:{{ $isSmsEnabled ? '#16a34a' : '#dc2626' }};">{{ $isSmsEnabled ? 'ON' : 'OFF' }}</span>
+                        <input type="checkbox" name="is_sms_enabled" value="true" class="sr-only" {{ $isSmsEnabled ? 'checked' : '' }} onchange="document.getElementById('globalSmsForm').submit()">
+                        <div style="width:52px;height:28px;border-radius:99px;background:{{ $isSmsEnabled ? '#22c55e' : '#d1d5db' }};position:relative;cursor:pointer;">
+                            <div style="position:absolute;top:3px;left:{{ $isSmsEnabled ? '27px' : '3px' }};width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 2px 4px rgba(0,0,0,0.15);"></div>
+                        </div>
                     </label>
+                </form>
+                <form action="{{ route('sms-templates.seedDefault') }}" method="POST">
+                    @csrf
+                    <button type="submit" style="padding:8px 16px;background:#f0fdf4;border:1px solid #86efac;border-radius:8px;font-size:12px;font-weight:700;color:#15803d;cursor:pointer;">↺ Reset Defaults</button>
                 </form>
             </div>
         </div>
 
-        <!-- Success Message -->
-        @if(session('success'))
-            <div class="bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl shadow-sm flex items-center gap-3">
-                <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
-                <span class="text-sm font-bold">{{ session('success') }}</span>
-            </div>
-        @endif
-        
-        <!-- Empty State -->
         @if($templates->isEmpty())
-            <div class="bg-blue-50 border border-blue-200 p-6 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 shrink-0">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <div>
-                        <h4 class="text-blue-800 font-bold text-sm">No templates found</h4>
-                        <p class="text-blue-600 text-xs mt-0.5">Generate the default system templates to get started.</p>
-                    </div>
-                </div>
-                <form action="{{ route('sms-templates.seedDefault') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-colors text-sm whitespace-nowrap">
-                        Generate Default Templates
-                    </button>
-                </form>
-            </div>
+        <div style="background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:16px;padding:32px;text-align:center;">
+            <p style="font-weight:700;color:#1d4ed8;margin:0 0 8px;">No SMS templates found</p>
+            <p style="font-size:13px;color:#3b82f6;margin:0;">Click Reset Defaults above to generate them.</p>
+        </div>
         @endif
 
-        <!-- Templates Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;">
             @foreach($templates as $template)
-                <div class="bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col">
-                    <form action="{{ route('sms-templates.update', $template->id) }}" method="POST" class="h-full flex flex-col m-0">
-                        @csrf
-                        @method('PUT')
-                        
-                        <!-- Card Header -->
-                        <div class="p-5 border-b border-gray-50 flex justify-between items-center bg-slate-50/50">
-                            <h5 class="font-extrabold text-slate-700 flex items-center gap-2 text-[15px] capitalize">
-                                <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center shadow-inner">
-                                    <i class="fa-solid fa-comment-sms text-sm"></i>
-                                </span>
-                                {{ str_replace('_', ' ', $template->type) }}
-                            </h5>
-                            
-                            <!-- Individual Toggle -->
-                            <div class="flex items-center" title="Enable or Disable this specific template">
-                                <input type="hidden" name="is_active" value="0">
-                                <label class="relative inline-flex items-center cursor-pointer">
-                                    <input type="checkbox" name="is_active" value="1" class="sr-only peer" {{ $template->is_active ? 'checked' : '' }}>
-                                    <div class="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-500 shadow-inner"></div>
-                                </label>
-                            </div>
-                        </div>
+            @php
+                $labels = [
+                    'order_confirmation'           => ['label'=>'Order Confirmation',      'emoji'=>'🧾'],
+                    'order_ready'                  => ['label'=>'Order Ready',             'emoji'=>'✅'],
+                    'order_delivered'              => ['label'=>'Order Delivered',          'emoji'=>'🎉'],
+                    'bill_finalize'                => ['label'=>'Bill Finalized',           'emoji'=>'💰'],
+                    'delivery_confirmation'        => ['label'=>'Rider On the Way',        'emoji'=>'🚴'],
+                    'delivery_thank_you'           => ['label'=>'Delivery Thank You',      'emoji'=>'💌'],
+                    'order_dispatched_to_workshop' => ['label'=>'Sent to Workshop',        'emoji'=>'🏭'],
+                    'order_processing'             => ['label'=>'Processing at Workshop',  'emoji'=>'⚙️'],
+                    'order_returned_from_workshop' => ['label'=>'Back from Workshop',      'emoji'=>'📦'],
+                    'order_cancelled'              => ['label'=>'Order Cancelled',         'emoji'=>'❌'],
+                ];
+                $info = $labels[$template->type] ?? ['label'=>ucwords(str_replace('_',' ',$template->type)),'emoji'=>'📱'];
+            @endphp
 
-                        <!-- Card Body -->
-                        <div class="p-5 flex-grow flex flex-col gap-4">
-                            <div>
-                                <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Message Content</label>
-                                <textarea name="message" class="w-full bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 p-3 text-sm text-gray-700 font-medium resize-none shadow-inner" rows="5" required>{{ $template->message }}</textarea>
-                            </div>
-                            
-                            <!-- Variables -->
-                            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-100 mt-auto">
-                                <p class="text-[11px] font-bold text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-1.5">
-                                    <i class="fa-solid fa-wand-magic-sparkles text-blue-500"></i> Available Variables
-                                </p>
-                                <div class="flex flex-wrap gap-1.5">
-                                    <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{customer_name}</span>
-                                    <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{order_id}</span>
-                                    <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{total}</span>
-                                    <span class="bg-white border border-slate-200 text-slate-600 px-2 py-1 rounded text-[11px] font-mono font-bold shadow-sm select-all">{amount_due}</span>
-                                </div>
-                            </div>
-                        </div>
+            <div style="background:#fff;border:1.5px solid {{ $template->is_active ? '#86efac' : '#e5e7eb' }};border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.04);">
 
-                        <!-- Card Footer -->
-                        <div class="p-4 border-t border-gray-50 bg-gray-50/30">
-                            <button type="submit" class="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-4 rounded-xl shadow-sm transition-colors text-sm flex justify-center items-center gap-2">
-                                <i class="fa-solid fa-floppy-disk"></i> Save Template
-                            </button>
-                        </div>
+                {{-- Header with inline toggle --}}
+                <div style="padding:14px 18px;background:{{ $template->is_active ? '#f0fdf4' : '#f8fafc' }};border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:18px;">{{ $info['emoji'] }}</span>
+                        <p style="font-weight:800;font-size:13px;color:#1e293b;margin:0;">{{ $info['label'] }}</p>
+                    </div>
+
+                    {{-- Toggle form --}}
+                    <form action="{{ route('sms-templates.update', $template->id) }}" method="POST" id="tog_{{ $template->id }}">
+                        @csrf @method('PUT')
+                        <input type="hidden" name="message" value="{{ $template->message }}">
+                        <input type="hidden" name="is_active" value="{{ $template->is_active ? '0' : '1' }}">
+                        <label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer;">
+                            <span style="font-size:11px;font-weight:700;color:{{ $template->is_active ? '#16a34a' : '#94a3b8' }};">{{ $template->is_active ? 'ON' : 'OFF' }}</span>
+                            <div onclick="document.getElementById('tog_{{ $template->id }}').submit()"
+                                 style="width:40px;height:22px;border-radius:99px;background:{{ $template->is_active ? '#22c55e' : '#d1d5db' }};position:relative;cursor:pointer;">
+                                <div style="position:absolute;top:2px;left:{{ $template->is_active ? '20px' : '2px' }};width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);"></div>
+                            </div>
+                        </label>
                     </form>
                 </div>
+
+                {{-- Message edit form --}}
+                <form action="{{ route('sms-templates.update', $template->id) }}" method="POST">
+                    @csrf @method('PUT')
+                    <input type="hidden" name="is_active" value="{{ $template->is_active ? '1' : '0' }}">
+                    <div style="padding:14px 18px;">
+                        <textarea name="message" rows="4" required
+                            style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;color:#374151;resize:vertical;outline:none;background:#f8fafc;box-sizing:border-box;font-family:sans-serif;">{{ $template->message }}</textarea>
+                        <div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px;">
+                            @foreach(['{customer_name}','{order_id}','{total}','{amount_due}','{payment_status}'] as $var)
+                            <span style="font-family:monospace;font-size:10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:2px 7px;cursor:pointer;"
+                                onclick="insertSmsVar(this,'{{ $var }}')">{{ $var }}</span>
+                            @endforeach
+                        </div>
+                    </div>
+                    <div style="padding:0 18px 14px;">
+                        <button type="submit" style="width:100%;padding:9px;background:linear-gradient(135deg,#1e40af,#3b82f6);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;">
+                            💾 Save Message
+                        </button>
+                    </div>
+                </form>
+            </div>
             @endforeach
         </div>
     </div>
+
+    <x-slot name="scripts">
+    <script>
+    function insertSmsVar(el, varText) {
+        const textarea = el.closest('form').querySelector('textarea');
+        if (!textarea) return;
+        const s = textarea.selectionStart, e = textarea.selectionEnd;
+        textarea.value = textarea.value.substring(0,s) + varText + textarea.value.substring(e);
+        textarea.selectionStart = textarea.selectionEnd = s + varText.length;
+        textarea.focus();
+    }
+    </script>
+    </x-slot>
 </x-app-layout>

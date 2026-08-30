@@ -37,7 +37,7 @@ class EmailTemplateController extends Controller
         $template->update([
             'subject' => $request->subject,
             'body' => $request->body,
-            'is_active' => $request->has('is_active')
+            'is_active' => $request->boolean('is_active')
         ]);
 
         return redirect()->route('email-templates.index')->with('success', 'Email Template updated successfully');
@@ -56,19 +56,19 @@ class EmailTemplateController extends Controller
                 'type' => 'order_ready', 
                 'name' => 'Order Ready', 
                 'subject' => 'Your Order is Ready - #{order_id}', 
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Your Order is Ready!</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Great news! Your laundry order <strong>#{order_id}</strong> is now fresh, clean, and ready for you.</p><div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 24px 0;"><p style="margin: 0; font-size: 18px; color: #111827; font-weight: bold;">Amount Due: <span style="color: #10b981;">{amount_due}</span></p></div><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">If you requested delivery, our rider will contact you soon. Otherwise, you can pick it up at our branch during working hours.</p></div></div>'
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Your Order is Ready!</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Great news! Your laundry order <strong>#{order_id}</strong> is now fresh, clean, and ready for you.</p><div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 24px 0;"><p style="margin: 0; font-size: 16px; color: #111827;">Payment Status: <strong>{payment_status}</strong></p><p style="margin: 8px 0 0 0; font-size: 18px; color: #111827; font-weight: bold;">Amount Due: <span style="color: #10b981;">{amount_due}</span></p></div><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">If you requested delivery, our rider will contact you soon. Otherwise, you can pick it up at our branch during working hours.</p></div></div>'
             ],
             [
                 'type' => 'order_delivered', 
                 'name' => 'Order Delivered', 
                 'subject' => 'Order Delivered - #{order_id}', 
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #8b5cf6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Delivered Successfully</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your laundry order <strong>#{order_id}</strong> has been successfully delivered to your location.</p><p style="font-size: 16px; color: #374151; margin-top: 24px;">We hope you love your fresh laundry!</p></div><div style="background-color: #f8fafc; padding: 16px; text-align: center; border-top: 1px solid #e5e7eb;"><p style="margin: 0; font-size: 12px; color: #94a3b8;">Thank you for choosing 360 Laundry.</p></div></div>'
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #8b5cf6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Delivered Successfully</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your laundry order <strong>#{order_id}</strong> has been successfully delivered to your location.</p><div style="background-color: #f3f4f6; padding: 16px; border-radius: 8px; margin: 24px 0;"><p style="margin: 0; font-size: 16px; color: #111827;">Payment Status: <strong>{payment_status}</strong></p></div><p style="font-size: 16px; color: #374151; margin-top: 24px;">We hope you love your fresh laundry!</p></div><div style="background-color: #f8fafc; padding: 16px; text-align: center; border-top: 1px solid #e5e7eb;"><p style="margin: 0; font-size: 12px; color: #94a3b8;">Thank you for choosing 360 Laundry.</p></div></div>'
             ],
             [
                 'type' => 'bill_finalize', 
                 'name' => 'Bill Finalized', 
                 'subject' => 'Bill for Order #{order_id}', 
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #f59e0b; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Bill Finalized</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Our workshop has inspected and processed your laundry. The final bill for order <strong>#{order_id}</strong> is now ready.</p><div style="background-color: #fffbeb; padding: 16px; border-radius: 8px; margin: 24px 0; border: 1px solid #fde68a;"><p style="margin: 0; font-size: 16px; color: #92400e;">Total Amount: <strong>{total}</strong></p><p style="margin: 8px 0 0 0; font-size: 18px; color: #b45309; font-weight: bold;">Amount Due: {amount_due}</p></div><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">Please complete the payment so we can proceed with handing over or delivering your order.</p></div></div>'
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #f59e0b; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Bill Finalized</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Our workshop has inspected and processed your laundry. The final bill for order <strong>#{order_id}</strong> is now ready.</p><div style="background-color: #fffbeb; padding: 16px; border-radius: 8px; margin: 24px 0; border: 1px solid #fde68a;"><p style="margin: 0; font-size: 16px; color: #92400e;">Total Amount: <strong>{total}</strong></p><p style="margin: 8px 0 0 0; font-size: 16px; color: #92400e;">Payment Status: <strong>{payment_status}</strong></p><p style="margin: 8px 0 0 0; font-size: 18px; color: #b45309; font-weight: bold;">Amount Due: {amount_due}</p></div><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">Please complete the payment so we can proceed with handing over or delivering your order.</p></div></div>'
             ],
             [
                 'type' => 'delivery_confirmation', 
@@ -79,12 +79,43 @@ class EmailTemplateController extends Controller
             [
                 'type' => 'delivery_thank_you', 
                 'name' => 'Delivery Thank You', 
-                'subject' => 'Thank You for Choosing Us', 
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #ec4899; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Thank You!</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Thank you for using our delivery service for order <strong>#{order_id}</strong>.</p><p style="font-size: 16px; color: #374151; margin-top: 24px;">We truly appreciate your business and hope to serve you again soon!</p></div></div>'
+                'subject' => 'Thank you for choosing us!', 
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #ec4899; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Thank You!</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">We successfully completed your delivery for order <strong>#{order_id}</strong>.</p><p style="font-size: 16px; color: #374151; margin-top: 24px;">Thank you for using our services. We hope to serve you again soon!</p></div></div>'
             ],
+            [
+                'type' => 'order_dispatched_to_workshop', 
+                'name' => 'Order Sent to Workshop', 
+                'subject' => 'Order Update - #{order_id}', 
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #f59e0b; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Sent to Workshop</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your laundry order <strong>#{order_id}</strong> has been dispatched to our processing workshop.</p></div></div>'
+            ],
+            [
+                'type' => 'order_processing', 
+                'name' => 'Order at Workshop', 
+                'subject' => 'Order Update - #{order_id}', 
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #3b82f6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Processing</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Our workshop has started processing your laundry for order <strong>#{order_id}</strong>.</p></div></div>'
+            ],
+            [
+                'type' => 'order_returned_from_workshop', 
+                'name' => 'Order Returning to Branch', 
+                'subject' => 'Order Update - #{order_id}', 
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #f59e0b; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Returning</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Good news! Your laundry order <strong>#{order_id}</strong> is fully processed and is now returning to our branch.</p></div></div>'
+            ],
+            [
+                'type' => 'order_cancelled', 
+                'name' => 'Order Cancelled', 
+                'subject' => 'Order Cancelled - #{order_id}', 
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #ef4444; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Cancelled</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your laundry order <strong>#{order_id}</strong> has been cancelled.</p><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">If this was a mistake or you need more information, please contact our support team.</p></div></div>'
+            ],
+            [
+                'type' => 'order_completed', 
+                'name' => 'Order Completed', 
+                'subject' => 'Order Completed - #{order_id}', 
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your laundry order <strong>#{order_id}</strong> is now fully completed.</p><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">Thank you for using our services. We look forward to serving you again!</p></div></div>'
+            ]
         ];
 
         foreach ($defaults as $default) {
+            $default['is_active'] = true;
             EmailTemplate::updateOrCreate(['type' => $default['type']], $default);
         }
 
