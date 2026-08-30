@@ -85,12 +85,12 @@
             <div class="flex items-end gap-4 relative z-10">
                 <div class="flex-1">
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">🚶 Walk-in</div>
-                    <div class="text-sm md:text-lg font-black text-slate-900 tracking-tight">Rs.{{ number_format($walkinRevenue, 2) }}</div>
+                    <div class="text-[11px] md:text-base font-black text-slate-900 tracking-tight">Rs.{{ number_format($walkinRevenue, 2) }}</div>
                 </div>
                 <div class="w-px h-10 bg-slate-200"></div>
                 <div class="flex-1">
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">🚚 Delivery</div>
-                    <div class="text-sm md:text-lg font-black text-violet-500 tracking-tight">Rs.{{ number_format($deliveryRevenue, 2) }}</div>
+                    <div class="text-[11px] md:text-base font-black text-violet-500 tracking-tight">Rs.{{ number_format($deliveryRevenue, 2) }}</div>
                 </div>
             </div>
             <div class="mt-3 text-[11px] font-bold text-slate-500 relative z-10">
@@ -143,11 +143,11 @@
     <!-- Charts Section -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
         <div class="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200 shadow-sm">
-            <h3 class="text-xs md:text-base font-black text-slate-900 mb-4">Daily Revenue Trend</h3>
+            <h3 class="text-[10px] md:text-sm font-black text-slate-900 mb-4">Daily Revenue Trend</h3>
             <div id="revenueChart" class="h-[300px] w-full"></div>
         </div>
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
-            <h3 class="text-xs md:text-base font-black text-slate-900 mb-4">Order Channels</h3>
+            <h3 class="text-[10px] md:text-sm font-black text-slate-900 mb-4">Order Channels</h3>
             <div class="flex-1 flex items-center justify-center">
                 <div id="channelChart" class="w-full"></div>
             </div>
@@ -188,7 +188,7 @@
             <!-- SALES LOG -->
             <div x-show="activeReport === 'sales'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
@@ -220,7 +220,7 @@
             <!-- TOP CUSTOMERS -->
             <div x-show="activeReport === 'customers'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Rank</th>
@@ -232,13 +232,13 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($topCustomers as $index => $tc)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-black text-sm md:text-lg text-slate-300">#{{ $index + 1 }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 font-black text-[11px] md:text-base text-slate-300">#{{ $index + 1 }}</td>
                                     <td class="px-2 py-2 md:px-6 md:py-4">
-                                        <div class="font-bold text-slate-900 text-xs md:text-base">{{ $tc->customer->name ?? 'Deleted Customer' }}</div>
+                                        <div class="font-bold text-slate-900 text-[10px] md:text-sm">{{ $tc->customer->name ?? 'Deleted Customer' }}</div>
                                         <div class="text-[10px] md:text-sm font-semibold text-slate-500">{{ $tc->customer->phone ?? '' }}</div>
                                     </td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-500 text-xs md:text-base">{{ $tc->total_orders }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500 text-sm md:text-lg">Rs.{{ number_format($tc->total_spent, 2) }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-500 text-[10px] md:text-sm">{{ $tc->total_orders }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500 text-[11px] md:text-base">Rs.{{ number_format($tc->total_spent, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
@@ -253,7 +253,7 @@
             <!-- SERVICE BREAKDOWN -->
             <div x-show="activeReport === 'services'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Service Name</th>
@@ -304,7 +304,7 @@
                     </select>
                 </div>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
@@ -338,7 +338,7 @@
             <!-- INVENTORY USAGE LOG -->
             <div x-show="activeReport === 'inventory'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
@@ -358,7 +358,7 @@
                                             {{ strtoupper(str_replace('_', ' ', $log->type)) }}
                                         </span>
                                     </td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-xs md:text-base {{ $log->type === 'stock_in' ? 'text-emerald-500' : 'text-rose-500' }}">
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-[10px] md:text-sm {{ $log->type === 'stock_in' ? 'text-emerald-500' : 'text-rose-500' }}">
                                         {{ $log->type === 'stock_in' ? '+' : '-' }}{{ $log->quantity }}
                                     </td>
                                     <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-medium text-slate-500">
@@ -378,7 +378,7 @@
             <!-- CREDIT CUSTOMERS LOG -->
             <div x-show="activeReport === 'credit'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
@@ -398,7 +398,7 @@
                                     <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->customer->name }} <br><span class="text-[9px] md:text-xs text-slate-500">{{ $order->customer->phone }}</span></td>
                                     <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
                                     <td class="px-2 py-2 md:px-6 md:py-4 text-right font-bold text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-orange-600 text-xs md:text-base">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-orange-600 text-[10px] md:text-sm">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
                                     <td class="px-2 py-2 md:px-6 md:py-4 text-center">
                                         <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center">
                                             @csrf
@@ -424,7 +424,7 @@
             <!-- PACKAGE PAYMENTS LOG -->
             <div x-show="activeReport === 'packages'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
                                 <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
@@ -483,13 +483,13 @@
             <div class="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col max-h-[85vh]" @click.away="pendingModalOpen = false">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center bg-amber-50">
                     <div>
-                        <h3 class="text-sm md:text-lg font-black text-amber-600">Pending Orders</h3>
+                        <h3 class="text-[11px] md:text-base font-black text-amber-600">Pending Orders</h3>
                         <p class="text-[10px] md:text-sm font-bold text-amber-700 mt-1" x-text="'Service: ' + selectedServiceName"></p>
                     </div>
-                    <button @click="pendingModalOpen = false" class="w-10 h-10 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors font-bold text-sm md:text-lg">✕</button>
+                    <button @click="pendingModalOpen = false" class="w-10 h-10 flex items-center justify-center rounded-full bg-amber-100 text-amber-600 hover:bg-amber-200 transition-colors font-bold text-[11px] md:text-base">✕</button>
                 </div>
                 <div class="overflow-y-auto bg-slate-50 flex-1">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-100 sticky top-0">
                             <tr>
                                 <th class="px-4 py-3 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Order</th>
