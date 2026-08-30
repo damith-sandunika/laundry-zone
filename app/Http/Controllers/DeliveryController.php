@@ -13,6 +13,7 @@ use App\Models\WorkshopDispatch;
 use App\Services\CommunicationService;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DeliveryController extends Controller
 {
@@ -165,78 +166,81 @@ class DeliveryController extends Controller
             ]);
         }
 
-        // Create the official Order stub for the Workshop if not exists
-        if (! $appointment->order_id) {
-            $order = Order::create([
-                'order_number' => Order::generateOrderNumber($appointment->branch_id, true),
-                'customer_id' => $appointment->customer_id,
-                'branch_id' => $appointment->branch_id,
-                'status' => 'received',
-                'subtotal' => 0,
-                'total' => $appointment->delivery_cost ?? 0,
-                'delivery_fee' => $appointment->delivery_cost ?? 0,
-                'paid_amount' => 0,
-                'payment_status' => 'pending',
-                'payment_method' => $appointment->payment_method ?? 'cash',
-                'due_date' => \Carbon\Carbon::now()->addDays(2), // Default 2 days
-                'created_by' => auth()->id(),
-                'is_delivery_order' => true,
-                'delivery_appointment_id' => $appointment->id,
-            ]);
+        $dispatch = null;
+        DB::transaction(function () use ($request, $appointment, &$dispatch) {
+            // Create the official Order stub for the Workshop if not exists
+            if (! $appointment->order_id) {
+                $order = Order::create([
+                    'order_number' => Order::generateOrderNumber($appointment->branch_id, true),
+                    'customer_id' => $appointment->customer_id,
+                    'branch_id' => $appointment->branch_id,
+                    'status' => 'received',
+                    'subtotal' => 0,
+                    'total' => $appointment->delivery_cost ?? 0,
+                    'delivery_fee' => $appointment->delivery_cost ?? 0,
+                    'paid_amount' => 0,
+                    'payment_status' => 'pending',
+                    'payment_method' => $appointment->payment_method ?? 'cash',
+                    'due_date' => \Carbon\Carbon::now()->addDays(2), // Default 2 days
+                    'created_by' => auth()->id(),
+                    'is_delivery_order' => true,
+                    'delivery_appointment_id' => $appointment->id,
+                ]);
 
-            $appointment->update(['order_id' => $order->id]);
+                $appointment->update(['order_id' => $order->id]);
 
-            if ($appointment->cart_json) {
-                $cart = json_decode($appointment->cart_json, true);
-                if (is_array($cart)) {
-                    $subtotal = 0;
-                    foreach ($cart as $item) {
-                        if (isset($item['service']['id']) && isset($item['quantity'])) {
-                            $qty = $item['quantity'];
-                            $price = $item['service']['base_price'] ?? 0;
-                            
-                            \App\Models\OrderItem::create([
-                                'order_id' => $order->id,
-                                'service_type_id' => $item['service']['id'],
-                                'item_description' => $item['service']['name'] ?? '',
-                                'quantity' => $qty,
-                                'unit_price' => $price,
-                                'total_price' => $qty * $price,
-                            ]);
-                            $subtotal += $qty * $price;
+                if ($appointment->cart_json) {
+                    $cart = json_decode($appointment->cart_json, true);
+                    if (is_array($cart)) {
+                        $subtotal = 0;
+                        foreach ($cart as $item) {
+                            if (isset($item['service']['id']) && isset($item['quantity'])) {
+                                $qty = $item['quantity'];
+                                $price = $item['service']['base_price'] ?? 0;
+                                
+                                \App\Models\OrderItem::create([
+                                    'order_id' => $order->id,
+                                    'service_type_id' => $item['service']['id'],
+                                    'item_description' => $item['service']['name'] ?? '',
+                                    'quantity' => $qty,
+                                    'unit_price' => $price,
+                                    'total_price' => $qty * $price,
+                                ]);
+                                $subtotal += $qty * $price;
+                            }
                         }
+                        $order->update([
+                            'subtotal' => $subtotal,
+                            'total' => $subtotal + ($appointment->delivery_cost ?? 0),
+                            'delivery_fee' => $appointment->delivery_cost ?? 0,
+                        ]);
                     }
+                }
+                
+                // Calculate Profit Share
+                $branch = Branch::find($appointment->branch_id);
+                if ($branch && $branch->branch_profit_percentage > 0) {
+                    $subtotal = $order->subtotal ?? 0;
+                    $branchProfit = $subtotal * ($branch->branch_profit_percentage / 100);
+                    $workshopProfit = $subtotal - $branchProfit;
                     $order->update([
-                        'subtotal' => $subtotal,
-                        'total' => $subtotal + ($appointment->delivery_cost ?? 0),
-                        'delivery_fee' => $appointment->delivery_cost ?? 0,
+                        'branch_profit' => $branchProfit,
+                        'workshop_profit' => $workshopProfit,
                     ]);
                 }
             }
-            
-            // Calculate Profit Share
-            $branch = Branch::find($appointment->branch_id);
-            if ($branch && $branch->branch_profit_percentage > 0) {
-                $subtotal = $order->subtotal ?? 0;
-                $branchProfit = $subtotal * ($branch->branch_profit_percentage / 100);
-                $workshopProfit = $subtotal - $branchProfit;
-                $order->update([
-                    'branch_profit' => $branchProfit,
-                    'workshop_profit' => $workshopProfit,
-                ]);
-            }
-        }
 
-        $dispatch = WorkshopDispatch::create([
-            'order_id' => $appointment->order_id,
-            'branch_id' => $appointment->branch_id,
-            'workshop_branch_id' => $appointment->branch_id,
-            'dispatched_by' => auth()->id(),
-            'dispatched_at' => now(),
-            'status' => 'received_at_workshop',
-            'received_by' => auth()->id(),
-            'received_at_workshop_at' => now(),
-        ]);
+            $dispatch = WorkshopDispatch::create([
+                'order_id' => $appointment->order_id,
+                'branch_id' => $appointment->branch_id,
+                'workshop_branch_id' => $appointment->branch_id,
+                'dispatched_by' => auth()->id(),
+                'dispatched_at' => now(),
+                'status' => 'received_at_workshop',
+                'received_by' => auth()->id(),
+                'received_at_workshop_at' => now(),
+            ]);
+        });
 
         $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $appointment->branch_id)->get();
         $targetRouteName = auth()->user()->role === 'workshop_admin' ? 'workshop.operations' : 'orders.index';
