@@ -305,4 +305,133 @@ class POSController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Create a Delivery Appointment (and optionally an Order) from the POS.
+     * Called when a staff member takes a phone-in delivery request.
+     */
+    public function storeDelivery(Request $request)
+    {
+        $request->validate([
+            'customer_id'      => 'required|exists:customers,id',
+            'pickup_address'   => 'required|string|max:500',
+            'delivery_address' => 'nullable|string|max:500',
+            'pickup_date'      => 'required|string',
+            'notes'            => 'nullable|string|max:500',
+            'cart'             => 'nullable|array',
+            'payment_mode'     => 'nullable|in:pay_now,pay_on_pickup',
+        ]);
+
+        $user     = auth()->user();
+        $branchId = $user->branch_id ?? 1;
+
+        try {
+            $result = DB::transaction(function () use ($request, $user, $branchId) {
+                $pickupDate = date('Y-m-d H:i:s', strtotime($request->pickup_date));
+                $cart       = $request->cart ?? [];
+
+                // 1. Create the DeliveryAppointment (auto-confirmed since staff created it)
+                $appointment = \App\Models\DeliveryAppointment::create([
+                    'customer_id'          => $request->customer_id,
+                    'branch_id'            => $branchId,
+                    'pickup_address'       => $request->pickup_address,
+                    'delivery_address'     => $request->delivery_address ?? $request->pickup_address,
+                    'pickup_scheduled_at'  => $pickupDate,
+                    'delivery_preference'  => 'deliver_to_address',
+                    'payment_method'       => $request->payment_mode === 'pay_now' ? 'cash' : 'cash',
+                    'status'               => 'confirmed', // auto-confirmed since staff initiated
+                    'notes'                => $request->notes,
+                    'contact_phone'        => \App\Models\Customer::find($request->customer_id)?->phone,
+                ]);
+
+                $orderId     = null;
+                $orderNumber = null;
+
+                // 2. If cart items were provided, create the Order now
+                if (! empty($cart)) {
+                    $subtotal = 0;
+                    foreach ($cart as $item) {
+                        $subtotal += (float) $item['base_price'] * (float) $item['qty'];
+                    }
+
+                    $paymentMode = $request->payment_mode ?? 'pay_on_pickup';
+                    $paidAmount  = $paymentMode === 'pay_now' ? $subtotal : 0;
+
+                    $order = Order::create([
+                        'order_number'            => Order::generateOrderNumber($branchId, true),
+                        'branch_id'               => $branchId,
+                        'customer_id'             => $request->customer_id,
+                        'created_by'              => auth()->id(),
+                        'status'                  => 'received',
+                        'subtotal'                => $subtotal,
+                        'discount'                => 0,
+                        'additional'              => 0,
+                        'total'                   => $subtotal,
+                        'paid_amount'             => $paidAmount,
+                        'payment_method'          => $paymentMode === 'pay_now' ? 'cash' : null,
+                        'due_date'                => $pickupDate,
+                        'is_delivery_order'       => true,
+                        'delivery_appointment_id' => $appointment->id,
+                        'delivery_address'        => $request->delivery_address ?? $request->pickup_address,
+                        'notes'                   => $request->notes,
+                    ]);
+
+                    // Save cart items
+                    foreach ($cart as $item) {
+                        \App\Models\OrderItem::create([
+                            'order_id'        => $order->id,
+                            'service_type_id' => $item['service_type_id'] ?? $item['id'],
+                            'item_description' => $item['name'],
+                            'quantity'        => $item['qty'],
+                            'unit_price'      => $item['base_price'],
+                            'total_price'     => (float) $item['base_price'] * (float) $item['qty'],
+                        ]);
+                    }
+
+                    // Save cart_json to appointment so rider can see it
+                    $cartJson = array_map(fn($i) => [
+                        'service' => [
+                            'id'         => $i['service_type_id'] ?? $i['id'],
+                            'name'       => $i['name'],
+                            'base_price' => $i['base_price'],
+                        ],
+                        'quantity' => $i['qty'],
+                    ], $cart);
+
+                    $appointment->update([
+                        'order_id'  => $order->id,
+                        'cart_json' => json_encode($cartJson),
+                    ]);
+
+                    $orderId     = $order->id;
+                    $orderNumber = $order->order_number;
+                }
+
+                return [
+                    'appointment_id' => $appointment->id,
+                    'order_id'       => $orderId,
+                    'order_number'   => $orderNumber,
+                    'has_order'      => $orderId !== null,
+                ];
+            });
+
+            return response()->json([
+                'success'        => true,
+                'message'        => $result['has_order']
+                    ? 'Delivery request created with order #'.$result['order_number'].'! Go to Delivery page to assign a rider.'
+                    : 'Delivery request created! Go to Delivery page to assign a rider.',
+                'appointment_id' => $result['appointment_id'],
+                'order_id'       => $result['order_id'],
+                'order_number'   => $result['order_number'],
+                'has_order'      => $result['has_order'],
+                'redirect_url'   => route('delivery.index'),
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create delivery request: '.$e->getMessage(),
+            ], 500);
+        }
+    }
 }

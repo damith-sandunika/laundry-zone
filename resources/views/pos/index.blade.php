@@ -227,7 +227,7 @@
                         <span class="text-[12px] font-extrabold text-slate-500 uppercase tracking-widest">Total Amount</span>
                         <span class="text-3xl font-black text-slate-900 tracking-tight" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                     </div>
-                    <button @click="if(!selectedCustomer) { alert('Please add the customer'); return; } if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }" 
+                    <button @click="if(!selectedCustomer) { alert('Please select a customer first.'); return; } if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }" 
                         :disabled="cart.length === 0"
                         :class="cart.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5'"
                         class="w-full py-4 rounded-2xl text-[15px] font-black flex justify-center items-center gap-3 transition-all duration-300">
@@ -235,6 +235,16 @@
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
                         </svg>
+                    </button>
+
+                    <!-- Delivery Request Button -->
+                    <button @click="openDeliveryModal()"
+                        class="w-full mt-2 py-3 rounded-2xl text-[13px] font-black flex justify-center items-center gap-2 transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-0.5">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        </svg>
+                        New Delivery Request
                     </button>
                 </div>
             </div>
@@ -570,6 +580,97 @@
 
     </div>
 
+    <!-- ===================== Delivery Request Modal ===================== -->
+    <div x-data="deliveryModal()"
+        x-show="show" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 80;">
+        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" x-transition.opacity @click="show = false"></div>
+
+        <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-lg z-10 flex flex-col overflow-hidden animate-slide-up" @click.stop>
+            <!-- Header -->
+            <div class="px-6 py-5 border-b border-slate-100 bg-gradient-to-r from-orange-50 to-amber-50 flex justify-between items-center">
+                <h3 class="font-black text-lg text-slate-900 flex items-center gap-2">
+                    <svg class="w-5 h-5 text-orange-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    New Delivery Request
+                </h3>
+                <button @click="show = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-4 overflow-y-auto max-h-[75vh] custom-scrollbar">
+
+                <!-- Customer -->
+                <div class="p-3 bg-blue-50 border border-blue-100 rounded-xl flex items-center gap-3" x-show="selectedCust">
+                    <div class="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-black text-sm shrink-0">
+                        <span x-text="selectedCust?.name?.charAt(0).toUpperCase()"></span>
+                    </div>
+                    <div>
+                        <div class="text-[13px] font-black text-blue-900" x-text="selectedCust?.name"></div>
+                        <div class="text-[11px] font-bold text-blue-600" x-text="selectedCust?.phone"></div>
+                    </div>
+                </div>
+                <p x-show="!selectedCust" class="text-[12px] font-bold text-red-500 bg-red-50 border border-red-100 rounded-xl p-3">⚠️ Please select a customer in the POS first before creating a delivery request.</p>
+
+                <!-- Cart Summary (if any) -->
+                <div x-show="cartItems.length > 0" class="p-3 bg-emerald-50 border border-emerald-100 rounded-xl">
+                    <p class="text-[11px] font-extrabold text-emerald-700 uppercase tracking-wider mb-2">Cart Items (will be saved with delivery)</p>
+                    <template x-for="item in cartItems" :key="item.id">
+                        <div class="flex justify-between text-[12px] font-bold text-slate-700 py-0.5">
+                            <span x-text="item.name + ' × ' + item.qty"></span>
+                            <span class="text-emerald-600" x-text="'Rs. ' + (item.base_price * item.qty).toFixed(2)"></span>
+                        </div>
+                    </template>
+                </div>
+                <div x-show="cartItems.length === 0" class="p-3 bg-amber-50 border border-amber-100 rounded-xl">
+                    <p class="text-[11px] font-bold text-amber-700">📦 No items in cart — Rider will count items on-site and create the order from the Rider App.</p>
+                </div>
+
+                <!-- Pickup Address -->
+                <div>
+                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Pickup Address <span class="text-red-500">*</span></label>
+                    <textarea x-model="pickupAddress" rows="2" placeholder="Customer's pickup address…"
+                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-800 outline-none transition-all resize-none placeholder:text-slate-400"></textarea>
+                </div>
+
+                <!-- Delivery Address -->
+                <div>
+                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Delivery Address <span class="text-slate-400 font-semibold">(if different from pickup)</span></label>
+                    <textarea x-model="deliveryAddress" rows="2" placeholder="Leave blank if same as pickup…"
+                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-800 outline-none transition-all resize-none placeholder:text-slate-400"></textarea>
+                </div>
+
+                <!-- Pickup Date -->
+                <div>
+                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Pickup Date &amp; Time <span class="text-red-500">*</span></label>
+                    <input type="datetime-local" x-model="pickupDate"
+                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-black text-slate-800 outline-none transition-all cursor-pointer">
+                </div>
+
+                <!-- Notes -->
+                <div>
+                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Notes (Optional)</label>
+                    <input type="text" x-model="notes" placeholder="Any special instructions…"
+                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-800 outline-none transition-all placeholder:text-slate-400">
+                </div>
+
+            </div>
+
+            <div class="p-6 pt-2 bg-white border-t border-slate-100 flex gap-3">
+                <button @click="show = false" class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[14px] font-black rounded-xl transition-colors">Cancel</button>
+                <button @click="submitDelivery()" :disabled="isSaving || !selectedCust"
+                    :class="isSaving || !selectedCust ? 'opacity-50 cursor-not-allowed' : 'hover:-translate-y-0.5'"
+                    class="flex-2 flex-1 py-3.5 bg-gradient-to-r from-orange-500 to-amber-500 text-white text-[14px] font-black rounded-xl shadow-lg shadow-orange-500/20 transition-all flex items-center justify-center gap-2">
+                    <svg x-show="!isSaving" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <svg x-show="isSaving" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path></svg>
+                    <span x-text="isSaving ? 'Creating...' : 'Create Delivery Request'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <script>
         window.posSystem = function() {
             return {
@@ -810,6 +911,96 @@
                         alert('Network error. Please try again.'); 
                     }
                     finally { this.isPlacingOrder = false; }
+                },
+
+                openDeliveryModal() {
+                    // Dispatch with current POS state (customer + cart)
+                    window.dispatchEvent(new CustomEvent('open-delivery-modal', {
+                        detail: {
+                            customer: this.selectedCustomer,
+                            cart: this.cart
+                        }
+                    }));
+                }
+            };
+        };
+
+        // Delivery Modal Component
+        window.deliveryModal = function() {
+            return {
+                show: false,
+                isSaving: false,
+                selectedCust: null,
+                cartItems: [],
+                pickupAddress: '',
+                deliveryAddress: '',
+                pickupDate: '',
+                notes: '',
+
+                init() {
+                    this.$watch('show', v => {
+                        if (v) {
+                            // Set default pickup date to now + 1hr
+                            let d = new Date();
+                            d.setHours(d.getHours() + 1, 0, 0, 0);
+                            this.pickupDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16);
+                        }
+                    });
+                    window.addEventListener('open-delivery-modal', (e) => {
+                        this.selectedCust = e.detail.customer || null;
+                        this.cartItems    = e.detail.cart || [];
+                        // Pre-fill address from customer if available
+                        if (this.selectedCust && this.selectedCust.address) {
+                            this.pickupAddress = this.selectedCust.address;
+                        } else {
+                            this.pickupAddress = '';
+                        }
+                        this.deliveryAddress = '';
+                        this.notes = '';
+                        this.show = true;
+                    });
+                },
+
+                async submitDelivery() {
+                    if (!this.selectedCust) { alert('Please select a customer in POS first.'); return; }
+                    if (!this.pickupAddress.trim()) { alert('Please enter the Pickup Address.'); return; }
+                    if (!this.pickupDate) { alert('Please select Pickup Date & Time.'); return; }
+
+                    this.isSaving = true;
+                    try {
+                        const payload = {
+                            customer_id:      this.selectedCust.id,
+                            pickup_address:   this.pickupAddress,
+                            delivery_address: this.deliveryAddress || this.pickupAddress,
+                            pickup_date:      this.pickupDate,
+                            notes:            this.notes,
+                            cart:             this.cartItems.length > 0 ? this.cartItems : [],
+                            payment_mode:     'pay_on_pickup',
+                        };
+
+                        const res = await fetch('{{ route('pos.delivery.store') }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                            },
+                            body: JSON.stringify(payload)
+                        });
+
+                        const data = await res.json();
+                        if (data.success) {
+                            this.show = false;
+                            if (confirm(data.message + '\n\nGo to Delivery Management page now?')) {
+                                window.location.href = data.redirect_url;
+                            }
+                        } else {
+                            alert('Error: ' + (data.message || 'Something went wrong.'));
+                        }
+                    } catch(e) {
+                        alert('Network error. Please try again.');
+                    } finally {
+                        this.isSaving = false;
+                    }
                 }
             };
         };

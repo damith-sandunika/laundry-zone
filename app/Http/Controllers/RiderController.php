@@ -183,6 +183,12 @@ class RiderController extends Controller
             abort(403, 'Can only create orders for pickups.');
         }
 
+        // If POS already created an order for this appointment, skip item entry
+        if ($task->appointment->order_id) {
+            return redirect()->route('rider.tasks')
+                ->with('info', 'This delivery already has an order created by the branch. Proceed to complete the pickup task.');
+        }
+
         $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($task) {
             $q->where('branch_id', $task->branch_id);
         }])->where('is_active', true)->where('branch_id', $task->branch_id)->get();
