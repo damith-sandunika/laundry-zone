@@ -105,6 +105,12 @@ class EmailTemplateController extends Controller
                 'name' => 'Order Cancelled', 
                 'subject' => 'Order Cancelled - #{order_id}', 
                 'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #ef4444; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Cancelled</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your laundry order <strong>#{order_id}</strong> has been cancelled.</p><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">If this was a mistake or you need more information, please contact our support team.</p></div></div>'
+            ],
+            [
+                'type' => 'order_completed', 
+                'name' => 'Order Completed', 
+                'subject' => 'Order Completed - #{order_id}', 
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your laundry order <strong>#{order_id}</strong> is now fully completed.</p><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">Thank you for using our services. We look forward to serving you again!</p></div></div>'
             ]
         ];
 

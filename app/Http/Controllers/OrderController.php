@@ -462,6 +462,8 @@ class OrderController extends Controller
                 $commService->sendOrderProcessing($order);
             } elseif ($request->status === 'returned_from_workshop') {
                 $commService->sendOrderReturnedFromWorkshop($order);
+            } elseif ($request->status === 'completed') {
+                $commService->sendOrderCompleted($order);
             } elseif ($request->status === 'cancelled') {
                 $commService->sendOrderCancelled($order);
             }
@@ -651,6 +653,8 @@ public function bulkStatus(Request $request)
                 $commService->sendOrderProcessing($order);
             } elseif ($request->status === 'returned_from_workshop') {
                 $commService->sendOrderReturnedFromWorkshop($order);
+            } elseif ($request->status === 'completed') {
+                $commService->sendOrderCompleted($order);
             } elseif ($request->status === 'cancelled') {
                 $commService->sendOrderCancelled($order);
             }

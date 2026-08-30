@@ -155,6 +155,7 @@ class CommunicationService
     public function sendOrderProcessing(Order $order)    { $this->dispatch('order_processing', $order); }
     public function sendOrderReturnedFromWorkshop(Order $order) { $this->dispatch('order_returned_from_workshop', $order); }
     public function sendOrderCancelled(Order $order)     { $this->dispatch('order_cancelled', $order); }
+    public function sendOrderCompleted(Order $order)     { $this->dispatch('order_completed', $order); }
 
     // ─── Master Dispatch ─────────────────────────────────────────────────────
 
