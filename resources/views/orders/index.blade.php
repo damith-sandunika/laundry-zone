@@ -307,8 +307,21 @@
                     <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;">Order List</h3>
                 </div>
                 <!-- Search and Bulk Action button -->
-                <div style="display:flex;align-items:center;gap:12px;">
+                <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                    @if(auth()->user()->role === 'super_admin' && isset($allBranches) && $allBranches->count() > 0)
+                        <form action="{{ route('orders.index') }}" method="GET" style="margin:0;">
+                            @if(request('q')) <input type="hidden" name="q" value="{{ request('q') }}"> @endif
+                            <select name="branch_id" onchange="this.form.submit()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;background:white;cursor:pointer;">
+                                <option value="">All Branches</option>
+                                @foreach($allBranches as $branch)
+                                    <option value="{{ $branch->id }}" {{ (isset($filterBranchId) && $filterBranchId == $branch->id) ? 'selected' : '' }}>{{ $branch->name }}</option>
+                                @endforeach
+                            </select>
+                        </form>
+                    @endif
+
                     <form action="{{ route('orders.index') }}" method="GET" style="display:flex;gap:8px;margin:0;">
+                        @if(request('branch_id')) <input type="hidden" name="branch_id" value="{{ request('branch_id') }}"> @endif
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="Search ID or phone…"
                             style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;"
                             onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">

@@ -53,6 +53,8 @@ class OrderController extends Controller
         $isOnline = $request->input('is_online');
         $paymentReady = $request->input('payment_ready');
 
+        $filterBranchId = $request->input('branch_id');
+
         $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop', 'deliveryAppointment', 'paymentTransactions'])
             ->orderBy('created_at', 'desc');
 
@@ -61,6 +63,8 @@ class OrderController extends Controller
                 $q->where('branch_id', $branchId)
                   ->orWhere('workshop_id', $branchId);
             });
+        } elseif (auth()->user()->role === 'super_admin' && $filterBranchId) {
+            $query->where('branch_id', $filterBranchId);
         }
 
         if ($status) {
@@ -104,8 +108,9 @@ class OrderController extends Controller
         $workshops = Branch::workshops()->get();
         $riders = \App\Models\User::where('role', 'rider')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
+        $allBranches = auth()->user()->role === 'super_admin' ? Branch::all() : collect();
 
-        return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'riders', 'minimumDeliveryCost'));
+        return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'riders', 'minimumDeliveryCost', 'allBranches', 'filterBranchId'));
     }
     public function requestPayment(Order $order, Request $request)
     {
