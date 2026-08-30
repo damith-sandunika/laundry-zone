@@ -33,6 +33,15 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div style="margin-bottom:12px;padding:10px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
+
     @if($errors->any())
         <div style="margin-bottom:12px;padding:10px 14px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;font-size:12px;font-weight:700;color:#dc2626;">
             <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">

@@ -25,6 +25,15 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div style="margin-bottom:16px;padding:12px 18px;background:#fef2f2;border:1.5px solid #fecaca;border-radius:10px;font-size:13px;font-weight:700;color:#dc2626;">
+            <div style="display:flex;align-items:center;gap:6px;">
+                <i class="fa-solid fa-circle-exclamation"></i>
+                <span>{{ session('error') }}</span>
+            </div>
+        </div>
+    @endif
+
     <div x-data="{
         currentTab: 'received',
         selectedOrders: [],
