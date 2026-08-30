@@ -18,7 +18,7 @@
         <!-- Logo -->
         <div class="text-center mb-8">
             <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
-                <img src="{{ asset('images/rapid_laundromat_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
+                <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Logo" class="h-12 w-auto">
                 <span class="font-black text-2xl tracking-tight text-blue-600">360 Laundry</span>
             </a>
             <p class="text-slate-500 mt-2 text-sm">Create an account to manage your laundry easily.</p>
@@ -119,4 +119,5 @@
 
 </body>
 </html>
+
 
