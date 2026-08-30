@@ -478,8 +478,8 @@
                     // Workshops array for multi-workshop support
                     workshopsArray: workshopsArray || [],
                     nearestWorkshop: workshopsArray && workshopsArray.length > 0 ? workshopsArray[0] : null,
-                    baseLat: workshopsArray && workshopsArray.length > 0 ? parseFloat(workshopsArray[0].latitude) : 6.9322889,
-                    baseLng: workshopsArray && workshopsArray.length > 0 ? parseFloat(workshopsArray[0].longitude) : 79.8567772,
+                    baseLat: (workshopsArray && workshopsArray.length > 0 && !isNaN(parseFloat(workshopsArray[0].latitude))) ? parseFloat(workshopsArray[0].latitude) : 6.9322889,
+                    baseLng: (workshopsArray && workshopsArray.length > 0 && !isNaN(parseFloat(workshopsArray[0].longitude))) ? parseFloat(workshopsArray[0].longitude) : 79.8567772,
                     isOutOfRange: false,
 
                     initData() {

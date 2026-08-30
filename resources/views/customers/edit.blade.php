@@ -48,6 +48,13 @@
                 </div>
 
                 <div>
+                    <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Email Address</label>
+                    <input type="email" name="email" value="{{ old('email', $customer->email) }}"
+                        class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                    @error('email') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                </div>
+
+                <div>
                     <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Residential Address</label>
                     <textarea name="address" rows="3"
                         class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ old('address', $customer->address) }}</textarea>
