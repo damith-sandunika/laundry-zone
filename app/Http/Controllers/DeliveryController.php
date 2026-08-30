@@ -280,6 +280,9 @@ class DeliveryController extends Controller
                     'note' => 'Delivered via PickMe',
                 ]);
                 
+                $commService = new CommunicationService();
+                $commService->sendOrderDelivered($order);
+                
                 // For PickMe: balance remaining means customer pays COD via PickMe
                 // Do NOT auto-mark as paid - branch admin should handle cash collection
                 // Just record a pending cash transaction if balance > 0
@@ -346,7 +349,13 @@ class DeliveryController extends Controller
         ]);
 
         $appointment->update(['status' => 'out_for_delivery', 'delivery_method' => 'in_house']);
-        Order::find($request->order_id)?->update(['status' => 'out_for_delivery']);
+        
+        $order = Order::find($request->order_id);
+        if ($order) {
+            $order->update(['status' => 'out_for_delivery']);
+            $commService = new CommunicationService();
+            $commService->sendDeliveryConfirmation($order);
+        }
 
         \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Delivery Drop-off Task Assigned: Order #' . $request->order_id, route('rider.tasks')));
 
