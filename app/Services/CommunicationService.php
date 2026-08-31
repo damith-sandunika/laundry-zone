@@ -167,18 +167,8 @@ class CommunicationService
                 $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                 $message = str_replace("Your order", "Your delivery booking", $message);
                 
-                \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
-                try {
-                    if (env('SMS_API_URL')) {
-                        \Illuminate\Support\Facades\Http::timeout(10)
-                            ->withHeaders(['X-API-Key' => env('SMS_API_TOKEN')])
-                            ->post(env('SMS_API_URL'), [
-                                'mask'    => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 
-                                'to'      => $customer->phone, 
-                                'message' => $message
-                            ]);
-                    }
-                } catch (\Exception $e) {}
+                $log = \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
+                \App\Jobs\ProcessSms::dispatch($log);
             }
         }
 
@@ -187,12 +177,8 @@ class CommunicationService
             $subject = "Your Delivery Booking #{$appointment->id} is Confirmed 📅";
             $body    = str_replace("Your order", "Your delivery booking", $content['body']);
             
-            \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
-            try {
-                \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
-                    $msg->to($customer->email)->subject($subject);
-                });
-            } catch (\Exception $e) {}
+            $log = \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
+            \App\Jobs\ProcessEmail::dispatch($log);
         }
     }
 
@@ -220,18 +206,8 @@ class CommunicationService
                 $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                 $message = str_replace("delivery rider", "pickup rider", $message);
                 
-                \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
-                try {
-                    if (env('SMS_API_URL')) {
-                        \Illuminate\Support\Facades\Http::timeout(10)
-                            ->withHeaders(['X-API-Key' => env('SMS_API_TOKEN')])
-                            ->post(env('SMS_API_URL'), [
-                                'mask'    => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 
-                                'to'      => $customer->phone, 
-                                'message' => $message
-                            ]);
-                    }
-                } catch (\Exception $e) {}
+                $log = \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
+                \App\Jobs\ProcessSms::dispatch($log);
             }
         }
 
@@ -240,12 +216,8 @@ class CommunicationService
             $subject = "Your Pickup is on the Way 🚴";
             $body    = str_replace("Our delivery rider is on the way with your order", "Our rider is on the way to pick up your laundry", $content['body']);
             
-            \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
-            try {
-                \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
-                    $msg->to($customer->email)->subject($subject);
-                });
-            } catch (\Exception $e) {}
+            $log = \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
+            \App\Jobs\ProcessEmail::dispatch($log);
         }
     }
 
@@ -333,32 +305,7 @@ class CommunicationService
             'status'   => 'pending',
         ]);
 
-        try {
-            $apiUrl   = env('SMS_API_URL');
-            $apiToken = env('SMS_API_TOKEN');
-            $mask     = env('SMS_MASK', 'RAPIDLAUNDROMAT');
-
-            if (!$apiUrl || !$apiToken) {
-                throw new \Exception('SMS API credentials not configured.');
-            }
-
-            $response = Http::timeout(10)
-                ->withHeaders(['X-API-Key' => $apiToken])
-                ->post($apiUrl, [
-                    'mask'    => $mask,
-                    'to'      => $phone,
-                    'message' => $message,
-                ]);
-
-            if ($response->successful()) {
-                $log->update(['status' => 'sent', 'response' => $response->body()]);
-            } else {
-                $log->update(['status' => 'failed', 'response' => $response->body()]);
-            }
-        } catch (\Exception $e) {
-            Log::error("SMS Error: " . $e->getMessage());
-            $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
-        }
+        \App\Jobs\ProcessSms::dispatch($log);
     }
 
     // ─── Email Sender ─────────────────────────────────────────────────────────
@@ -374,56 +321,6 @@ class CommunicationService
             'status'   => 'pending',
         ]);
 
-        try {
-            $companyName = Setting::where('key', 'company_name')->value('value') ?? config('app.name');
-            $logoPath    = Setting::where('key', 'global_logo_path')->value('value');
-            $logoUrl     = null;
-            if ($logoPath) {
-                $logoUrl = \Illuminate\Support\Str::startsWith($logoPath, 'http')
-                    ? $logoPath
-                    : asset('storage/' . $logoPath);
-            }
-
-            $logoHtml = $logoUrl
-                ? "<img src=\"{$logoUrl}\" alt=\"{$companyName}\" style=\"max-height:60px;max-width:180px;object-fit:contain;\">"
-                : "<span style=\"font-size:22px;font-weight:900;color:#fff;letter-spacing:1px;\">{$companyName}</span>";
-
-            $htmlBody = "<!DOCTYPE html>
-<html lang=\"en\">
-<head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{$subject}</title></head>
-<body style=\"margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;\">
-<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"background:#f1f5f9;padding:30px 0;\">
-  <tr><td align=\"center\">
-    <table width=\"600\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:600px;width:100%;background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.07);\">
-      <tr><td style=\"background:linear-gradient(135deg,#1e40af,#3b82f6);padding:24px 36px;text-align:center;\">{$logoHtml}</td></tr>
-      <tr><td style=\"padding:32px 36px;font-size:14px;color:#374151;line-height:1.7;\">{$body}</td></tr>
-      <tr><td style=\"background:#f8fafc;padding:18px 36px;text-align:center;border-top:1px solid #e2e8f0;\">
-        <p style=\"margin:0 0 4px;font-size:12px;color:#64748b;\">&copy; " . date('Y') . " {$companyName}. All rights reserved.</p>
-        <p style=\"margin:0;font-size:11px;color:#94a3b8;\">This is an automated message. Please do not reply to this email.</p>
-      </td></tr>
-    </table>
-  </td></tr>
-</table>
-</body>
-</html>";
-
-            $fromName    = config('mail.from.name', $companyName);
-            $fromAddress = config('mail.from.address');
-
-            Mail::html($htmlBody, function ($msg) use ($email, $subject, $fromName, $fromAddress) {
-                $msg->to($email)
-                    ->subject($subject)
-                    ->replyTo($fromAddress, $fromName)
-                    ->getHeaders()
-                        ->addTextHeader('List-Unsubscribe', '<mailto:' . $fromAddress . '?subject=unsubscribe>')
-                        ->addTextHeader('Precedence', 'bulk')
-                        ->addTextHeader('X-Mailer', 'RapidLaundromat-Mailer');
-            });
-
-            $log->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);
-        } catch (\Exception $e) {
-            Log::error("Email Error: " . $e->getMessage());
-            $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
-        }
+        \App\Jobs\ProcessEmail::dispatch($log);
     }
 }
