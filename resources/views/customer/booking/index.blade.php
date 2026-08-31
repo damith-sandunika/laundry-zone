@@ -705,7 +705,6 @@
                                 this.baseLat = parseFloat(nearest.latitude);
                                 this.baseLng = parseFloat(nearest.longitude);
                                 this.cart = []; // clear cart if branch changes
-                                this.updateCart();
                                 this.updateWorkshopMarkerStyles();
                             }
                             this.calculateDeliveryFee();
