@@ -30,7 +30,7 @@ Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
 
 // ─── Root → Customer Booking ───
-Route::redirect('/', '/customer/book')->name('home');
+Route::redirect('/', '/customer/login')->name('home');
 
 // Fix for Windows PHP built-in server symlink 403 error
 Route::get('/storage/receipts/{filename}', function ($filename) {
@@ -261,3 +261,6 @@ Route::middleware(['auth'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// SMS Webhook Route
+Route::post('/sms/callback', [\App\Http\Controllers\SmsWebhookController::class, 'handleCallback']);

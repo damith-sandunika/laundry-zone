@@ -38,6 +38,10 @@ return Application::configure(basePath: dirname(__DIR__))
             }
             return '/dashboard';
         });
+
+        $middleware->validateCsrfTokens(except: [
+            'sms/callback',
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

@@ -170,7 +170,13 @@ class CommunicationService
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
                 try {
                     if (env('SMS_API_URL')) {
-                        \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
+                        \Illuminate\Support\Facades\Http::timeout(10)
+                            ->withHeaders(['X-API-Key' => env('SMS_API_TOKEN')])
+                            ->post(env('SMS_API_URL'), [
+                                'mask'    => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 
+                                'to'      => $customer->phone, 
+                                'message' => $message
+                            ]);
                     }
                 } catch (\Exception $e) {}
             }
@@ -216,7 +222,15 @@ class CommunicationService
                 
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
                 try {
-                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
+                    if (env('SMS_API_URL')) {
+                        \Illuminate\Support\Facades\Http::timeout(10)
+                            ->withHeaders(['X-API-Key' => env('SMS_API_TOKEN')])
+                            ->post(env('SMS_API_URL'), [
+                                'mask'    => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 
+                                'to'      => $customer->phone, 
+                                'message' => $message
+                            ]);
+                    }
                 } catch (\Exception $e) {}
             }
         }
@@ -328,12 +342,13 @@ class CommunicationService
                 throw new \Exception('SMS API credentials not configured.');
             }
 
-            $response = Http::timeout(10)->post($apiUrl, [
-                'token' => $apiToken,
-                'mask'  => $mask,
-                'to'    => $phone,
-                'text'  => $message,
-            ]);
+            $response = Http::timeout(10)
+                ->withHeaders(['X-API-Key' => $apiToken])
+                ->post($apiUrl, [
+                    'mask'    => $mask,
+                    'to'      => $phone,
+                    'message' => $message,
+                ]);
 
             if ($response->successful()) {
                 $log->update(['status' => 'sent', 'response' => $response->body()]);

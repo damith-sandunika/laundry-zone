@@ -87,32 +87,6 @@
                 </p>
         </div>
 
-        <!-- App Download Banner -->
-        <div class="mt-8 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white text-center shadow-xl relative overflow-hidden animate-slide-up" style="animation-delay: 200ms;">
-            <div class="absolute -right-6 -bottom-6 opacity-20 transform rotate-12">
-                <i class="fa-solid fa-mobile-screen-button text-9xl"></i>
-            </div>
-            <div class="relative z-10">
-                <h3 class="text-lg font-black mb-1">Get the RAPID Laundromat App!</h3>
-                <p class="text-blue-100 text-sm mb-5 font-medium">Book pickups, track orders, and pay online effortlessly.</p>
-                <div class="flex justify-center gap-3">
-                    <a href="#" class="bg-black/80 hover:bg-black text-white px-4 py-2.5 rounded-xl flex items-center gap-2.5 transition-all shadow-lg shadow-black/20 hover:-translate-y-1">
-                        <i class="fa-brands fa-google-play text-2xl"></i>
-                        <div class="text-left leading-none">
-                            <div class="text-[8px] uppercase tracking-wider text-slate-300 mb-0.5">Get it on</div>
-                            <div class="text-[13px] font-bold">Google Play</div>
-                        </div>
-                    </a>
-                    <a href="#" class="bg-black/80 hover:bg-black text-white px-4 py-2.5 rounded-xl flex items-center gap-2.5 transition-all shadow-lg shadow-black/20 hover:-translate-y-1">
-                        <i class="fa-brands fa-apple text-2xl mb-1"></i>
-                        <div class="text-left leading-none">
-                            <div class="text-[8px] uppercase tracking-wider text-slate-300 mb-0.5">Download on the</div>
-                            <div class="text-[13px] font-bold">App Store</div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
     </div>
 
 </body>

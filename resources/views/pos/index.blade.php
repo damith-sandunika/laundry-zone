@@ -7,6 +7,12 @@
             .pos-wrapper { display: none !important; }
             .mobile-pos-warning { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; padding: 20px; }
         }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar-hide::-webkit-scrollbar { display: none; }
+        .custom-scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
     
     <div class="mobile-pos-warning">
@@ -29,37 +35,67 @@
                 <!-- Background Decoration -->
                 <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
 
-                <!-- Search bar -->
-                <div class="px-5 py-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10">
-                    <div class="relative">
-                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <input type="text" x-model="searchQuery" placeholder="Search laundry services…"
-                            class="w-full pl-11 pr-4 py-3 bg-slate-50 hover:bg-white border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
-                    </div>
-                </div>
-
-                                <!-- Category Filters -->
-                <div class="px-5 py-2 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 overflow-x-auto scrollbar-none">
-                    <div class="flex gap-2 w-max">
-                        <button @click="activeCategory = null" 
-                            :class="activeCategory === null ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
-                            All
-                        </button>
-                        <template x-for="cat in allCategories" :key="cat.id">
-                            <button @click="activeCategory = cat.id" 
-                                :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap"
-                                x-text="cat.name">
+                <!-- Search bar & Category Filters Container -->
+                <div x-data="{ searchExpanded: false }" class="border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 relative">
+                    
+                    <!-- Search Bar (Collapsible) -->
+                    <div class="px-5 py-4 flex items-center justify-between border-b border-slate-100/50">
+                        <div class="font-black text-slate-800 text-lg">Services</div>
+                        <div class="relative flex items-center justify-end" :class="searchExpanded ? 'w-full max-w-sm ml-4' : 'w-auto'">
+                            <button @click="searchExpanded = true" x-show="!searchExpanded" class="w-10 h-10 rounded-full bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
                             </button>
-                        </template>
-                        <button @click="activeCategory = 'uncategorized'" 
-                            :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
-                            Uncategorized
+                            <div x-show="searchExpanded" x-cloak class="w-full relative flex items-center transition-all origin-right animate-fade-in">
+                                <input type="text" x-model="searchQuery" x-ref="searchInput" placeholder="Search services…"
+                                    class="w-full pl-10 pr-10 py-2.5 bg-slate-50 hover:bg-white border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
+                                <svg class="absolute left-3.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                                <button @click="searchExpanded = false; searchQuery = ''" class="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Filters (3 rows with horizontal scroll) -->
+                    <div class="px-5 py-3 relative group" x-data="{
+                        scrollCatLeft() { $refs.catScroll.scrollBy({ left: -200, behavior: 'smooth' }); },
+                        scrollCatRight() { $refs.catScroll.scrollBy({ left: 200, behavior: 'smooth' }); }
+                    }">
+                        <!-- Left Arrow -->
+                        <button @click="scrollCatLeft()" class="absolute left-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-md border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
                         </button>
+                        
+                        <!-- Right Arrow -->
+                        <button @click="scrollCatRight()" class="absolute right-1 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-white shadow-md border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+
+                        <div x-ref="catScroll" class="overflow-x-auto scrollbar-none custom-scrollbar-hide">
+                            <div class="grid grid-rows-3 grid-flow-col gap-2 w-max pb-1">
+                                <button @click="activeCategory = null" 
+                                    :class="activeCategory === null ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                                    class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[80px]">
+                                    All
+                                </button>
+                                <button @click="activeCategory = 'uncategorized'" 
+                                    :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                                    class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[80px]">
+                                    Uncategorized
+                                </button>
+                                <template x-for="cat in allCategories" :key="cat.id">
+                                    <button @click="activeCategory = cat.id" 
+                                        :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                                        class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[80px]"
+                                        x-text="cat.name">
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
