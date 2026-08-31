@@ -36,6 +36,7 @@
                         <th class="px-6 py-3 font-semibold">Branch Name</th>
                         <th class="px-6 py-3 font-semibold">Contact Info</th>
                         <th class="px-6 py-3 font-semibold">Location</th>
+                        <th class="px-6 py-3 font-semibold">Coordinates</th>
                         <th class="px-6 py-3 font-semibold text-center">Status</th>
                         <th class="px-6 py-3 font-semibold text-center">Action</th>
                     </tr>
@@ -72,6 +73,19 @@
                             <td class="px-6 py-4">
                                 <p class="text-xs text-gray-600 max-w-[200px] truncate" title="{{ $branch->address }}">{{ $branch->address ?? 'No Address' }}</p>
                             </td>
+                            <td class="px-6 py-4">
+                                @if($branch->latitude && $branch->longitude)
+                                    <a href="https://www.google.com/maps?q={{ $branch->latitude }},{{ $branch->longitude }}" target="_blank"
+                                        class="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-800 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1 transition-colors">
+                                        <i class="fa-solid fa-location-dot text-blue-500"></i>
+                                        {{ number_format($branch->latitude, 4) }}, {{ number_format($branch->longitude, 4) }}
+                                    </a>
+                                @else
+                                    <span class="text-[10px] text-red-400 font-bold flex items-center gap-1">
+                                        <i class="fa-solid fa-triangle-exclamation"></i> No coordinates
+                                    </span>
+                                @endif
+                            </td>
                             <td class="px-6 py-4 text-center">
                                 @if($branch->is_active)
                                     <span class="px-2 py-0.5 text-[10px] font-bold rounded bg-green-100 text-green-700 uppercase tracking-wider">Active</span>
@@ -80,7 +94,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-center space-x-2">
-                                <button 
+                                <button
                                     @click="openEditModal({{ json_encode($branch) }})"
                                     class="text-xs font-semibold px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded hover:bg-gray-100">
                                     Edit
@@ -142,8 +156,15 @@
                                     <input type="text" name="tagline" placeholder="e.g. Premium Laundry Services" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Location (Pick on Map) <span class="text-red-500">*</span></label>
-                                    <div id="addMap" style="height: 200px; width: 100%; border-radius: 12px; z-index: 1;"></div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Branch Location <span class="text-red-500">*</span></label>
+                                    <p class="text-[11px] text-blue-600 font-semibold mb-2"><i class="fa-solid fa-circle-info"></i> Click on the map to pin the branch location</p>
+                                    <div class="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                                        <div id="addMap" style="height: 220px; width: 100%; z-index: 1;"></div>
+                                        <div id="add_latlng_badge" class="absolute bottom-2 left-2 z-[400] hidden bg-slate-900/90 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                                            <i class="fa-solid fa-location-dot text-blue-400"></i>
+                                            <span id="add_latlng_text">—</span>
+                                        </div>
+                                    </div>
                                     <input type="hidden" name="latitude" id="add_lat" required>
                                     <input type="hidden" name="longitude" id="add_lng" required>
                                 </div>
@@ -168,12 +189,8 @@
                             </div>
                         </div>
                         <div class="bg-gray-50/80 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
-                            <button type="button" @click="addModalOpen = false" class="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm">
-                                Cancel
-                            </button>
-                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200">
-                                Save Branch
-                            </button>
+                            <button type="button" @click="addModalOpen = false" class="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Cancel</button>
+                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all">Save Branch</button>
                         </div>
                     </form>
                 </div>
@@ -223,8 +240,15 @@
                                     <input type="text" name="tagline" :value="selectedBranch?.tagline" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                                 </div>
                                 <div>
-                                    <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Location (Pick on Map) <span class="text-red-500">*</span></label>
-                                    <div id="editMap" style="height: 200px; width: 100%; border-radius: 12px; z-index: 1;"></div>
+                                    <label class="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wider">Branch Location <span class="text-red-500">*</span></label>
+                                    <p class="text-[11px] text-blue-600 font-semibold mb-2"><i class="fa-solid fa-circle-info"></i> Click on the map to move the pin to a new location</p>
+                                    <div class="relative rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+                                        <div id="editMap" style="height: 220px; width: 100%; z-index: 1;"></div>
+                                        <div id="edit_latlng_badge" class="absolute bottom-2 left-2 z-[400] bg-slate-900/90 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg flex items-center gap-1.5">
+                                            <i class="fa-solid fa-location-dot text-blue-400"></i>
+                                            <span id="edit_latlng_text">Loading...</span>
+                                        </div>
+                                    </div>
                                     <input type="hidden" name="latitude" id="edit_lat" :value="selectedBranch?.latitude" required>
                                     <input type="hidden" name="longitude" id="edit_lng" :value="selectedBranch?.longitude" required>
                                 </div>
@@ -249,24 +273,37 @@
                             </div>
                         </div>
                         <div class="bg-gray-50/80 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">
-                            <button type="button" @click="editModalOpen = false" class="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors shadow-sm">
-                                Cancel
-                            </button>
-                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all duration-200">
-                                Save Changes
-                            </button>
+                            <button type="button" @click="editModalOpen = false" class="px-5 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors shadow-sm">Cancel</button>
+                            <button type="submit" class="px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl text-sm font-bold hover:shadow-lg hover:shadow-blue-500/30 transition-all">Save Changes</button>
                         </div>
                     </form>
                 </div>
             </div>
         </div>
 
-        </div>
     </div>
 
     <x-slot name="scripts">
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
+        const CARTO_TILE = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
+        const CARTO_ATTR = '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>';
+        const DEFAULT_CENTER = [6.9271, 79.8612]; // Colombo
+
+        function makeBranchIcon() {
+            return L.divIcon({
+                html: `<div style="transform:translate(-50%,-100%)">
+                    <div style="width:30px;height:30px;background:#2563eb;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 2px 10px rgba(37,99,235,0.4);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                    </div>
+                    <div style="width:6px;height:6px;background:#2563eb;border-radius:50%;margin:2px auto 0;box-shadow:0 1px 4px rgba(37,99,235,0.3);"></div>
+                </div>`,
+                className: 'bg-transparent',
+                iconSize: [1, 1],
+                iconAnchor: [0, 0]
+            });
+        }
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('branchManager', () => ({
                 addModalOpen: false,
@@ -276,57 +313,68 @@
                 addMarker: null,
                 editMap: null,
                 editMarker: null,
-                
+
                 openAddModal() {
                     this.addModalOpen = true;
                     setTimeout(() => {
                         if (!this.addMap) {
-                            this.addMap = L.map('addMap').setView([6.9271, 79.8612], 13); // Default to Colombo
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.addMap);
-                            
+                            this.addMap = L.map('addMap', { zoomControl: false }).setView(DEFAULT_CENTER, 13);
+                            L.tileLayer(CARTO_TILE, { attribution: CARTO_ATTR, subdomains: 'abcd', maxZoom: 20 }).addTo(this.addMap);
+                            L.control.zoom({ position: 'bottomright' }).addTo(this.addMap);
+
                             this.addMap.on('click', (e) => {
                                 if (this.addMarker) this.addMap.removeLayer(this.addMarker);
-                                this.addMarker = L.marker(e.latlng).addTo(this.addMap);
-                                document.getElementById('add_lat').value = e.latlng.lat;
-                                document.getElementById('add_lng').value = e.latlng.lng;
+                                this.addMarker = L.marker(e.latlng, { icon: makeBranchIcon() }).addTo(this.addMap);
+                                document.getElementById('add_lat').value = e.latlng.lat.toFixed(6);
+                                document.getElementById('add_lng').value = e.latlng.lng.toFixed(6);
+                                const badge = document.getElementById('add_latlng_badge');
+                                badge.classList.remove('hidden');
+                                document.getElementById('add_latlng_text').textContent =
+                                    e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
                             });
                         }
                         this.addMap.invalidateSize();
-                    }, 100);
+                    }, 150);
                 },
-                
+
                 openEditModal(branch) {
                     this.selectedBranch = branch;
                     this.editModalOpen = true;
                     setTimeout(() => {
                         if (!this.editMap) {
-                            this.editMap = L.map('editMap').setView([6.9271, 79.8612], 13);
-                            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(this.editMap);
-                            
+                            this.editMap = L.map('editMap', { zoomControl: false }).setView(DEFAULT_CENTER, 13);
+                            L.tileLayer(CARTO_TILE, { attribution: CARTO_ATTR, subdomains: 'abcd', maxZoom: 20 }).addTo(this.editMap);
+                            L.control.zoom({ position: 'bottomright' }).addTo(this.editMap);
+
                             this.editMap.on('click', (e) => {
                                 if (this.editMarker) this.editMap.removeLayer(this.editMarker);
-                                this.editMarker = L.marker(e.latlng).addTo(this.editMap);
-                                document.getElementById('edit_lat').value = e.latlng.lat;
-                                document.getElementById('edit_lng').value = e.latlng.lng;
+                                this.editMarker = L.marker(e.latlng, { icon: makeBranchIcon() }).addTo(this.editMap);
+                                document.getElementById('edit_lat').value = e.latlng.lat.toFixed(6);
+                                document.getElementById('edit_lng').value = e.latlng.lng.toFixed(6);
+                                document.getElementById('edit_latlng_text').textContent =
+                                    e.latlng.lat.toFixed(5) + ', ' + e.latlng.lng.toFixed(5);
                             });
                         }
                         this.editMap.invalidateSize();
-                        
+
                         if (this.editMarker) {
                             this.editMap.removeLayer(this.editMarker);
                             this.editMarker = null;
                         }
-                        
+
                         if (branch.latitude && branch.longitude) {
-                            let latlng = [branch.latitude, branch.longitude];
-                            this.editMap.setView(latlng, 15);
-                            this.editMarker = L.marker(latlng).addTo(this.editMap);
+                            const latlng = [parseFloat(branch.latitude), parseFloat(branch.longitude)];
+                            this.editMap.setView(latlng, 16);
+                            this.editMarker = L.marker(latlng, { icon: makeBranchIcon() }).addTo(this.editMap);
                             document.getElementById('edit_lat').value = branch.latitude;
                             document.getElementById('edit_lng').value = branch.longitude;
+                            document.getElementById('edit_latlng_text').textContent =
+                                parseFloat(branch.latitude).toFixed(5) + ', ' + parseFloat(branch.longitude).toFixed(5);
                         } else {
-                            this.editMap.setView([6.9271, 79.8612], 13);
+                            this.editMap.setView(DEFAULT_CENTER, 13);
+                            document.getElementById('edit_latlng_text').textContent = 'Click map to set location';
                         }
-                    }, 100);
+                    }, 150);
                 }
             }))
         });

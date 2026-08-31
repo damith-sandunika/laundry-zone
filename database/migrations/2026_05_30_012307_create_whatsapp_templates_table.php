@@ -13,10 +13,12 @@ return new class extends Migration
     {
         Schema::create('whatsapp_templates', function (Blueprint $table) {
             $table->id();
-            $table->string('type')->unique(); // e.g. order_received, order_done, order_delivered
+            $table->string('type')->unique(); 
             $table->string('name');
-            $table->text('content');
-            $table->text('available_tags')->nullable();
+            $table->string('meta_template_name')->nullable();
+            $table->string('language_code')->default('en_US');
+            $table->boolean('is_active')->default(true);
+            $table->text('content')->nullable();
             $table->timestamps();
         });
     }

@@ -7,6 +7,8 @@ use App\Models\SmsTemplate;
 use App\Models\SmsLog;
 use App\Models\EmailLog;
 use App\Models\Order;
+use App\Models\WhatsappTemplate;
+use App\Models\WhatsappLog;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -176,6 +178,21 @@ class CommunicationService
             }
         }
 
+        $isWhatsappEnabled = Setting::where('key', 'is_whatsapp_enabled')->value('value') === 'true';
+        if ($isWhatsappEnabled && !empty($customer->phone)) {
+            $waTemplate = WhatsappTemplate::where('type', $type)->where('is_active', true)->first();
+            if ($waTemplate && !empty($waTemplate->meta_template_name)) {
+                $parameters = [
+                    $data['customer_name'],
+                    $data['order_id'],
+                    $data['total'],
+                    $data['amount_due'],
+                    $data['payment_status']
+                ];
+                $this->sendWhatsApp(null, $customer->phone, $waTemplate, $parameters);
+            }
+        }
+
         if ($isEmailEnabled && !empty($customer->email)) {
             $content = $this->getEmailContent($type, $data);
             $subject = "Your Delivery Booking #{$appointment->id} is Confirmed 📅";
@@ -221,6 +238,21 @@ class CommunicationService
             }
         }
 
+        $isWhatsappEnabled = Setting::where('key', 'is_whatsapp_enabled')->value('value') === 'true';
+        if ($isWhatsappEnabled && !empty($customer->phone)) {
+            $waTemplate = WhatsappTemplate::where('type', $type)->where('is_active', true)->first();
+            if ($waTemplate && !empty($waTemplate->meta_template_name)) {
+                $parameters = [
+                    $data['customer_name'],
+                    $data['order_id'],
+                    $data['total'],
+                    $data['amount_due'],
+                    $data['payment_status']
+                ];
+                $this->sendWhatsApp(null, $customer->phone, $waTemplate, $parameters);
+            }
+        }
+
         if ($isEmailEnabled && !empty($customer->email)) {
             $content = $this->getEmailContent($type, $data);
             $subject = "Your Pickup is on the Way 🚴";
@@ -253,6 +285,7 @@ class CommunicationService
     {
         $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
         $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
+        $isWhatsappEnabled = Setting::where('key', 'is_whatsapp_enabled')->value('value') === 'true';
 
         $customer = $order->customer;
         if (!$customer) return;
@@ -284,6 +317,24 @@ class CommunicationService
             }
         }
 
+        // Process WhatsApp
+        if ($isWhatsappEnabled && !empty($customer->phone)) {
+            $waTemplate = WhatsappTemplate::where('type', $type)->where('is_active', true)->first();
+            if ($waTemplate && !empty($waTemplate->meta_template_name)) {
+                // Meta API uses strict positional parameters inside the template.
+                // Assuming the template matches the parameters in this exact order: 
+                // {{1}}: name, {{2}}: order_id, {{3}}: total, {{4}}: amount_due, {{5}}: payment_status
+                $parameters = [
+                    $data['customer_name'],
+                    $data['order_id'],
+                    $data['total'],
+                    $data['amount_due'],
+                    $data['payment_status']
+                ];
+                $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
+            }
+        }
+
         // Process Email
         if ($isEmailEnabled && !empty($customer->email)) {
             // Use DB template body/subject if it exists, otherwise use hardcoded fallback
@@ -304,6 +355,82 @@ class CommunicationService
                 $body    = $content['body'];
             }
             $this->sendEmail($order, $customer->email, $type, $subject, $body);
+        }
+    }
+
+    // ─── WhatsApp Sender ─────────────────────────────────────────────────────
+
+    protected function sendWhatsApp(?Order $order, string $phone, WhatsappTemplate $template, array $parameters)
+    {
+        // Format phone number to E.164 without '+' (Meta API format)
+        $formattedPhone = preg_replace('/[^0-9]/', '', $phone);
+        if (substr($formattedPhone, 0, 1) === '0') {
+            $formattedPhone = '94' . substr($formattedPhone, 1); // Assuming Sri Lanka default, adjust if international
+        }
+
+        $log = WhatsappLog::create([
+            'order_id'           => $order ? $order->id : null,
+            'phone'              => $formattedPhone,
+            'type'               => $template->type,
+            'meta_template_name' => $template->meta_template_name,
+            'status'             => 'pending',
+        ]);
+
+        try {
+            $phoneId = Setting::where('key', 'whatsapp_phone_id')->value('value');
+            $accessToken = Setting::where('key', 'whatsapp_access_token')->value('value');
+
+            if (!$phoneId || !$accessToken) {
+                throw new \Exception('WhatsApp API credentials not configured.');
+            }
+
+            $apiUrl = "https://graph.facebook.com/v18.0/{$phoneId}/messages";
+
+            // Build components for Meta API
+            // Build components - only if template has variables defined
+            $components = [];
+            if (!empty($parameters) && $template->meta_template_name !== 'hello_world') {
+                $bodyParams = [];
+                foreach ($parameters as $param) {
+                    $bodyParams[] = [
+                        'type' => 'text',
+                        'text' => (string)$param
+                    ];
+                }
+                $components[] = [
+                    'type'       => 'body',
+                    'parameters' => $bodyParams
+                ];
+            }
+
+            $templatePayload = [
+                'name'     => $template->meta_template_name,
+                'language' => ['code' => $template->language_code ?? 'en_US'],
+            ];
+            if (!empty($components)) {
+                $templatePayload['components'] = $components;
+            }
+
+            $payload = [
+                'messaging_product' => 'whatsapp',
+                'to'                => $formattedPhone,
+                'type'              => 'template',
+                'template'          => $templatePayload
+            ];
+
+            $response = Http::withoutVerifying()
+                ->withToken($accessToken)
+                ->timeout(10)
+                ->post($apiUrl, $payload);
+
+            if ($response->successful()) {
+                $log->update(['status' => 'sent', 'response' => $response->body()]);
+            } else {
+                $log->update(['status' => 'failed', 'response' => $response->body()]);
+            }
+        } catch (\Exception $e) {
+            Log::error("WhatsApp Error: " . $e->getMessage());
+            $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
         }
     }
 

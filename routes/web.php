@@ -21,6 +21,7 @@ use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SmsTemplateController;
 use App\Http\Controllers\EmailTemplateController;
+use App\Http\Controllers\WhatsappTemplateController;
 use App\Http\Controllers\WorkshopController;
 use App\Models\Order;
 use Illuminate\Support\Facades\Route;
@@ -239,6 +240,11 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/sms-templates/{template}', [SmsTemplateController::class, 'update'])->name('sms-templates.update');
             Route::post('/sms-templates/toggle', [SmsTemplateController::class, 'toggleGlobal'])->name('sms-templates.toggleGlobal');
             Route::post('/sms-templates/seed', [SmsTemplateController::class, 'seedDefault'])->name('sms-templates.seedDefault');
+
+            Route::get('/whatsapp-templates', [WhatsappTemplateController::class, 'index'])->name('whatsapp-templates.index');
+            Route::put('/whatsapp-templates/{template}', [WhatsappTemplateController::class, 'update'])->name('whatsapp-templates.update');
+            Route::post('/whatsapp-templates/toggle', [WhatsappTemplateController::class, 'toggleGlobal'])->name('whatsapp-templates.toggleGlobal');
+            Route::post('/whatsapp-templates/seed', [WhatsappTemplateController::class, 'seedDefault'])->name('whatsapp-templates.seedDefault');
 
             Route::get('/email-templates', [EmailTemplateController::class, 'index'])->name('email-templates.index');
             Route::put('/email-templates/{template}', [EmailTemplateController::class, 'update'])->name('email-templates.update');

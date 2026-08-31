@@ -29,36 +29,61 @@
                 <!-- Background Decoration -->
                 <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
 
-                <!-- Search bar -->
-                <div class="px-5 py-4 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10">
-                    <div class="relative">
-                        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                        <input type="text" x-model="searchQuery" placeholder="Search laundry services…"
-                            class="w-full pl-11 pr-4 py-3 bg-slate-50 hover:bg-white border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
-                    </div>
-                </div>
-
-                                <!-- Category Filters -->
-                <div class="px-5 py-2 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 overflow-x-auto scrollbar-none">
-                    <div class="flex gap-2 w-max">
-                        <button @click="activeCategory = null" 
-                            :class="activeCategory === null ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
-                            All
-                        </button>
-                        <template x-for="cat in allCategories" :key="cat.id">
-                            <button @click="activeCategory = cat.id" 
-                                :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap"
-                                x-text="cat.name">
+                <div x-data="{ searchOpen: false }" class="px-5 py-3 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 relative h-36 flex flex-col justify-center">
+                    
+                    <!-- Search Button / Input (Absolute Top Right) -->
+                    <div class="absolute top-3 right-5 z-20 flex items-center justify-end" :class="searchOpen ? 'w-[calc(100%-40px)] max-w-sm' : 'w-auto'">
+                        <!-- Expanded Search Input -->
+                        <div x-show="searchOpen" x-transition.opacity class="relative w-full flex items-center shadow-lg rounded-xl bg-white border-2 border-blue-500 overflow-hidden">
+                            <svg class="absolute left-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <input type="text" x-model="searchQuery" x-ref="searchInput" placeholder="Search services…"
+                                class="w-full pl-9 pr-10 py-2 bg-transparent text-[12px] font-bold text-slate-800 outline-none border-none focus:ring-0">
+                            <!-- Close Button -->
+                            <button @click="searchOpen = false; searchQuery = ''" class="absolute right-2 p-1 text-slate-400 hover:text-red-500">
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
-                        </template>
-                        <button @click="activeCategory = 'uncategorized'" 
-                            :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                            class="px-4 py-2 text-[12px] font-black rounded-xl transition-all whitespace-nowrap">
-                            Uncategorized
+                        </div>
+
+                        <!-- Search Icon Button -->
+                        <button x-show="!searchOpen" @click="searchOpen = true; $nextTick(() => $refs.searchInput.focus())" 
+                            class="p-2 bg-white hover:bg-slate-50 text-slate-600 rounded-lg shadow-sm border border-slate-200 transition-colors z-30 relative">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Category Grid (Slider) -->
+                    <div x-data="{
+                        scrollLeft() { $refs.catContainer.scrollBy({ left: -200, behavior: 'smooth' }); },
+                        scrollRight() { $refs.catContainer.scrollBy({ left: 200, behavior: 'smooth' }); }
+                    }" class="relative w-full h-full flex items-center pr-12 group">
+                        
+                        <!-- Left Arrow -->
+                        <button @click="scrollLeft()" class="absolute left-0 z-20 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition-all opacity-0 group-hover:opacity-100 -ml-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        
+                        <div x-ref="catContainer" class="grid grid-rows-3 grid-flow-col gap-3 overflow-x-hidden scroll-smooth w-full h-full py-1" :class="searchOpen ? 'opacity-30 pointer-events-none transition-opacity' : 'transition-opacity'">
+                            <template x-for="cat in allCategories" :key="cat.id">
+                                <button @click="activeCategory = (activeCategory === cat.id ? null : cat.id)" 
+                                    :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                    class="px-3 py-1 text-[11px] font-black rounded-lg transition-all whitespace-nowrap h-7 flex items-center justify-center border border-transparent"
+                                    x-text="cat.name">
+                                </button>
+                            </template>
+                            <button @click="activeCategory = (activeCategory === 'uncategorized' ? null : 'uncategorized')" 
+                                :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                                class="px-3 py-1 text-[11px] font-black rounded-lg transition-all whitespace-nowrap h-7 flex items-center justify-center border border-transparent">
+                                Uncategorized
+                            </button>
+                        </div>
+
+                        <!-- Right Arrow -->
+                        <button @click="scrollRight()" class="absolute right-10 z-20 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition-all opacity-0 group-hover:opacity-100">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
                         </button>
                     </div>
                 </div>
