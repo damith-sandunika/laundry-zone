@@ -83,7 +83,7 @@ class DashboardController extends Controller
             $unifiedOrders->push((object)[
                 'id' => $appointment->id,
                 'type' => 'appointment',
-                'order_number' => 'B-' . str_pad($appointment->id, 4, '0', STR_PAD_LEFT),
+                'order_number' => 'Booking #' . $appointment->id,
                 'created_at' => $appointment->created_at,
                 'items_count' => null,
                 'total' => null,
