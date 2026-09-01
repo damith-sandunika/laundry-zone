@@ -125,7 +125,7 @@ class Order extends Model
             }
 
             $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
-            $sequence = str_pad($nextId, 7, '0', STR_PAD_LEFT);
+            $sequence = $nextId;
 
             return "{$prefix}-L-{$sequence}";
         });
