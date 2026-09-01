@@ -144,7 +144,7 @@
         </div>
 
         <!-- Add Staff Modal -->
-        <div x-show="addModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div x-show="addModalOpen" class="fixed inset-0 z-[60] overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
                 <div x-show="addModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity" @click="addModalOpen = false">
                     <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
@@ -172,11 +172,11 @@
                                     <div>
                                         <label class="block text-xs font-medium text-gray-700 mb-1">System Role</label>
                                         <select name="role" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
-                                            <option value="staff">Staff (Cashier / Washer)</option>
-                                            <option value="workshop_admin">Workshop Operator</option>
-                                            <option value="rider">Delivery Rider</option>
-                                            @if(auth()->user()->role === 'super_admin')
-                                            <option value="admin">Admin</option>
+                                            <option value="staff">Staff</option>
+                                            <option value="workshop_admin">Workshop admin</option>
+                                            <option value="branch_admin">Branch admin</option>
+                                            @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
+                                            <option value="super_admin">Super admin</option>
                                             @endif
                                         </select>
                                     </div>
@@ -240,11 +240,11 @@
                                         <textarea name="address" rows="2" class="w-full text-sm border-gray-300 rounded-md shadow-sm"></textarea>
                                     </div>
                                 </div>
-                                @if(auth()->user()->role === 'super_admin')
+                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
                                 <div>
                                     <label class="block text-xs font-medium text-gray-700 mb-1">Assign to Branch</label>
-                                    <select name="branch_id" required class="w-full text-sm border-gray-300 rounded-md shadow-sm">
-                                        <option value="">Select Branch</option>
+                                    <select name="branch_id" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
+                                        <option value="">🌍 Global (All Branches)</option>
                                         @foreach($branches as $b)
                                             <option value="{{ $b->id }}">{{ $b->name }}</option>
                                         @endforeach

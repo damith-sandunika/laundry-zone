@@ -100,7 +100,7 @@
         </div>
 
         <!-- Add Branch Modal -->
-        <div x-show="addModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div x-show="addModalOpen" class="fixed inset-0 z-[60] overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
                 <div x-show="addModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity" @click="addModalOpen = false">
                     <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
@@ -181,7 +181,7 @@
         </div>
 
         <!-- Edit Branch Modal -->
-        <div x-show="editModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div x-show="editModalOpen" class="fixed inset-0 z-[60] overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
                 <div x-show="editModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity" @click="editModalOpen = false">
                     <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>

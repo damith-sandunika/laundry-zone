@@ -32,11 +32,27 @@
                 @endif
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Full Name <span class="text-red-500">*</span></label>
-                        <input type="text" name="name" value="{{ old('name', $customer->name) }}" required
-                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
-                        @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-4 gap-6">
+                        <div class="md:col-span-1">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Title</label>
+                            <select name="title" class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                                <option value="" {{ old('title', $customer->title) == '' ? 'selected' : '' }}>None</option>
+                                <option value="Mr." {{ old('title', $customer->title) == 'Mr.' ? 'selected' : '' }}>Mr.</option>
+                                <option value="Mrs." {{ old('title', $customer->title) == 'Mrs.' ? 'selected' : '' }}>Mrs.</option>
+                                <option value="Miss" {{ old('title', $customer->title) == 'Miss' ? 'selected' : '' }}>Miss</option>
+                                <option value="Ms." {{ old('title', $customer->title) == 'Ms.' ? 'selected' : '' }}>Ms.</option>
+                                <option value="Dr." {{ old('title', $customer->title) == 'Dr.' ? 'selected' : '' }}>Dr.</option>
+                                <option value="Rev." {{ old('title', $customer->title) == 'Rev.' ? 'selected' : '' }}>Rev.</option>
+                            </select>
+                            @error('title') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
+
+                        <div class="md:col-span-3">
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Full Name <span class="text-red-500">*</span></label>
+                            <input type="text" name="name" value="{{ old('name', $customer->name) }}" required
+                                class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                            @error('name') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                        </div>
                     </div>
 
                     <div>
