@@ -554,8 +554,8 @@ class WorkshopController extends Controller
                 \Log::warning('OrderStatusHistory insert failed (complete): ' . $e->getMessage());
             }
 
-            // If this is a workshop walk-in, the order is now ready for customer pickup
-            if ($dispatch->branch_id === $dispatch->workshop_branch_id) {
+            // If this is a workshop walk-in (NOT a delivery order), send ready notification
+            if ($dispatch->branch_id === $dispatch->workshop_branch_id && !$order->is_delivery_order) {
                 try {
                     $commService = new CommunicationService();
                     $commService->sendPosWalkinReady($order);
