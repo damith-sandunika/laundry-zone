@@ -45,6 +45,11 @@ class SmsTemplateController extends Controller
     {
         $defaults = [
             [
+                'type' => 'pos_walkin_placed',
+                'name' => 'Walk-in Order Placed',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been placed successfully. We will let you know once it is completed.',
+            ],
+            [
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
                 'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - RAPID Laundromat',

@@ -47,6 +47,12 @@ class EmailTemplateController extends Controller
     {
         $defaults = [
             [
+                'type' => 'pos_walkin_placed',
+                'name' => 'Walk-in Order Placed',
+                'subject' => 'Walk-in Order Placed',
+                'body' => '<p>Hi {customer_name}, your order #{order_id} has been placed successfully. We will let you know once it is completed.</p>',
+            ],
+            [
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
                 'subject' => 'Walk-in Order Completed',

@@ -24,6 +24,13 @@ class CommunicationService
         $payment = $data['payment_status'];
 
         $templates = [
+            'pos_walkin_placed' => [
+                'subject' => "Walk-in Order Placed",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been placed successfully. We will let you know once it is completed. - RAPID Laundromat</p>
+                ",
+            ],
             'pos_walkin_completed' => [
                 'subject' => "Walk-in Order Completed",
                 'body'    => "
@@ -74,6 +81,7 @@ class CommunicationService
         return $templates[$type] ?? ['subject' => "Order #{$orderId} Update", 'body' => "<p>Hi {$name}, there is an update on order #{$orderId}.</p>"];
     }
 
+    public function sendPosWalkinPlaced(Order $order) { $this->dispatch('pos_walkin_placed', $order); }
     public function sendPosWalkinCompleted(Order $order) { $this->dispatch('pos_walkin_completed', $order); }
     public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
     public function sendCollectionOrderPlaced(Order $order) { $this->dispatch('collection_order_placed', $order); }
