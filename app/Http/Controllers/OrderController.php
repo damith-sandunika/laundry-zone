@@ -786,6 +786,14 @@ public function bulkStatus(Request $request)
                 'note' => 'Delivered via PickMe',
             ]);
 
+            // Send delivery completed notification
+            try {
+                $commService = new \App\Services\CommunicationService();
+                $commService->sendDeliveryCompleted($order);
+            } catch (\Exception $e) {
+                \Log::error('Delivery notification failed (Order PickMe): ' . $e->getMessage());
+            }
+
             return response()->json(['success' => true, 'status' => 'completed']);
         }
     }

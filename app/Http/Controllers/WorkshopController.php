@@ -772,10 +772,18 @@ class WorkshopController extends Controller
             ]);
             
             $dispatch->update([
-                'status' => 'returned_to_branch', // Terminate from workshop view
+                'status' => 'returned_to_branch',
                 'returned_by' => auth()->id(),
                 'returned_at' => now(),
             ]);
+
+            // Send delivery completed notification
+            try {
+                $commService = new \App\Services\CommunicationService();
+                $commService->sendDeliveryCompleted($order);
+            } catch (\Exception $e) {
+                \Log::error('Delivery notification failed (Workshop PickMe): ' . $e->getMessage());
+            }
 
             return response()->json(['success' => true, 'status' => 'completed']);
         }
