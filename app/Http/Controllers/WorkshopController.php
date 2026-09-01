@@ -541,12 +541,12 @@ class WorkshopController extends Controller
                 ]);
             }
 
-            $order->update(['status' => 'completed_at_workshop']);
+            $order->update(['status' => 'done']);
 
             try {
                 \App\Models\OrderStatusHistory::create([
                     'order_id'   => $order->id,
-                    'status'     => 'completed_at_workshop',
+                    'status'     => 'done',
                     'note'       => 'Completed at Workshop',
                     'changed_by' => auth()->id(),
                 ]);
@@ -903,7 +903,7 @@ class WorkshopController extends Controller
                 }
 
                 $order->update([
-                    'status'       => 'completed',
+                    'status'       => 'delivered',
                     'delivered_at' => now(),
                 ]);
 
@@ -911,7 +911,7 @@ class WorkshopController extends Controller
                 try {
                     \App\Models\OrderStatusHistory::create([
                         'order_id'   => $order->id,
-                        'status'     => 'completed',
+                        'status'     => 'delivered',
                         'note'       => 'Handed over to customer at workshop',
                         'changed_by' => auth()->id(),
                     ]);
