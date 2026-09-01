@@ -285,7 +285,7 @@ class DeliveryController extends Controller
                         'amount' => $amountToPay,
                         'payment_method' => 'cash',
                         'created_by' => auth()->id(),
-                        'collected_from_rider_at' => null, // Admin collects from PickMe
+                        'collected_from_rider_at' => null,
                         'status' => 'completed',
                         'transaction_id' => 'TXN-' . strtoupper(uniqid()),
                     ]);
@@ -294,22 +294,30 @@ class DeliveryController extends Controller
                         'payment_status' => 'paid'
                     ]);
                 } elseif ($amountToPay <= 0) {
-                    // Already fully paid (bank transfer) - just mark paid
                     $order->update(['payment_status' => 'paid']);
                 }
 
-                // Log histories to make timeline look complete
-                foreach (['out_for_delivery', 'delivered', 'completed'] as $st) {
-                    \App\Models\OrderStatusHistory::create([
-                        'order_id' => $order->id,
-                        'status' => $st,
-                        'changed_by' => auth()->id(),
-                        'note' => 'Auto-updated via PickMe/Flash dispatch',
-                    ]);
+                // Send notification FIRST (before any loop that could fail)
+                try {
+                    $commService = new CommunicationService();
+                    $commService->sendDeliveryCompleted($order);
+                } catch (\Exception $e) {
+                    \Log::error('Delivery notification failed (PickMe): ' . $e->getMessage());
                 }
-                
-                $commService = new CommunicationService();
-                $commService->sendDeliveryCompleted($order);
+
+                // Log extra histories for timeline (skip 'delivered' since already created above)
+                foreach (['out_for_delivery', 'completed'] as $st) {
+                    try {
+                        \App\Models\OrderStatusHistory::create([
+                            'order_id' => $order->id,
+                            'status' => $st,
+                            'changed_by' => auth()->id(),
+                            'note' => 'Auto-updated via PickMe/Flash dispatch',
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Status history creation skipped: ' . $e->getMessage());
+                    }
+                }
             }
 
             if ($request->filled('pickme_flash_cost')) {
@@ -398,6 +406,14 @@ class DeliveryController extends Controller
 
         $appointment->update(['status' => 'delivered']);
         $order->update(['status' => 'delivered']);
+
+        // Send delivery completed notification
+        try {
+            $commService = new CommunicationService();
+            $commService->sendDeliveryCompleted($order);
+        } catch (\Exception $e) {
+            \Log::error('Delivery notification failed (collectCash): ' . $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Verified and collected cash from rider. Order marked as completed.');
     }
