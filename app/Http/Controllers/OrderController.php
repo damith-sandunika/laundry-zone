@@ -190,7 +190,8 @@ class OrderController extends Controller
                         ->update(['default_discount' => $discountPercentage]);
                 }
 
-                $total = $subtotal - $discountAmount + $order->delivery_fee;
+                $deliveryFee = $request->has('delivery_fee') ? (float)$request->delivery_fee : $order->delivery_fee;
+                $total = $subtotal - $discountAmount + $deliveryFee;
 
                 // Adjust paid_amount if it exceeds the new total (optional, but good practice)
                 $paidAmount = $order->paid_amount;
@@ -201,6 +202,7 @@ class OrderController extends Controller
                 $order->update([
                     'subtotal' => $subtotal,
                     'discount' => $discountAmount,
+                    'delivery_fee' => $deliveryFee,
                     'total' => $total,
                     'paid_amount' => $paidAmount,
                     'requested_advance' => $request->requested_advance,

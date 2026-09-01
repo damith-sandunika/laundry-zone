@@ -41,9 +41,6 @@ class SettingsController extends Controller
             $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
         }
         $pickupTimePeriods = \App\Models\PickupTimePeriod::orderBy('start_time')->get();
-        if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
-            $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
-        }
         $workshops = Branch::workshops()->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
@@ -59,12 +56,6 @@ class SettingsController extends Controller
                 'name' => 'Online Payment',
                 'type' => 'card_transfer',
                 'is_active' => \App\Models\Setting::get('payment_online_active', '0') == '1',
-            ],
-            (object) [
-                'id' => 'cash_on_delivery',
-                'name' => 'Cash on Delivery',
-                'type' => 'cash_on_delivery',
-                'is_active' => \App\Models\Setting::get('payment_cod_active', '1') == '1',
             ],
         ];
         
