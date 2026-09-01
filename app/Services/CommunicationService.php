@@ -138,6 +138,19 @@ class CommunicationService
                     <p style='margin:0;color:#64748b;font-size:13px;'>If you have any questions, please contact your nearest RAPID Laundromat branch. We apologize for the inconvenience.</p>
                 ",
             ],
+            'order_completed' => [
+                'subject' => "Order #{$orderId} – Completed & Settled",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been fully completed and settled. Thank you for your business!</p>
+                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
+                    </table>
+                    <p style='margin:0;color:#64748b;font-size:13px;'>We look forward to serving you again. — RAPID Laundromat 🧺</p>
+                ",
+            ],
         ];
 
         return $templates[$type] ?? ['subject' => "Order #{$orderId} Update", 'body' => "<p>Hi {$name}, there is an update on order #{$orderId}.</p>"];
@@ -152,8 +165,9 @@ class CommunicationService
         $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
 
         $type = 'order_confirmation'; // Reuse order confirmation template
+        $title = $customer->title ? trim($customer->title) . ' ' : '';
         $data = [
-            'customer_name'  => $customer->name,
+            'customer_name'  => trim($title . $customer->name),
             'order_id'       => $appointment->id,
             'total'          => 'Rs.' . number_format($appointment->delivery_cost ?? 0, 2) . ' (Estimated Delivery Cost)',
             'amount_due'     => 'N/A',
@@ -191,8 +205,9 @@ class CommunicationService
         $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
 
         $type = 'delivery_confirmation'; // Reuse Rider On the Way template type
+        $title = $customer->title ? trim($customer->title) . ' ' : '';
         $data = [
-            'customer_name'  => $customer->name,
+            'customer_name'  => trim($title . $customer->name),
             'order_id'       => $appointment->id,
             'total'          => 'Rs.' . number_format($appointment->delivery_cost ?? 0, 2),
             'amount_due'     => 'N/A',
@@ -252,8 +267,9 @@ class CommunicationService
             $paymentStatusText = 'No Charge';
         }
 
+        $title = $customer->title ? trim($customer->title) . ' ' : '';
         $data = [
-            'customer_name'  => $customer->name,
+            'customer_name'  => trim($title . $customer->name),
             'order_id'       => $order->id,
             'total'          => 'Rs.' . number_format($order->total, 2),
             'amount_due'     => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
