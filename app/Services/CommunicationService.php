@@ -118,7 +118,7 @@ class CommunicationService
         $title = $customer->title ? trim($customer->title) . ' ' : '';
         $data = [
             'customer_name'  => trim($title . $customer->name),
-            'order_id'       => $order->id,
+            'order_id'       => $order->order_number,
             'total'          => 'Rs.' . number_format($order->total, 2),
             'amount_due'     => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
             'payment_status' => $paymentStatusText,
