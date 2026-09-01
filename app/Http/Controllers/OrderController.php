@@ -297,7 +297,16 @@ class OrderController extends Controller
         $branchId = auth()->user()->branch_id ?? 1;
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 
-        return view('orders.show', compact('order', 'cubbies'));
+        $pickmeCost = \App\Models\Expense::where('category', 'PickMe')
+            ->where(function($q) use ($order) {
+                $q->where('description', 'like', '%Order #' . $order->order_number . '%');
+                if ($order->delivery_appointment_id) {
+                    $q->orWhere('description', 'like', '%pickup delivery #' . $order->delivery_appointment_id . '%')
+                      ->orWhere('description', 'like', '%delivery dropoff #' . $order->delivery_appointment_id . '%');
+                }
+            })->sum('amount');
+
+        return view('orders.show', compact('order', 'cubbies', 'pickmeCost'));
     }
 
     public function printBill(Order $order)
