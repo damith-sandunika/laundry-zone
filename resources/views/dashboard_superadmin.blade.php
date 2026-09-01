@@ -107,7 +107,7 @@
                 <tbody class="divide-y divide-gray-50">
                     @forelse($recentGlobalOrders as $order)
                         <tr class="hover:bg-gray-50 transition">
-                            <td class="px-6 py-4 font-bold text-gray-900 text-sm">#{{ $order->id }}</td>
+                            <td class="px-6 py-4 font-bold text-gray-900 text-sm">#{{ $order->order_number }}</td>
                             <td class="px-6 py-4">
                                 <span class="text-[10px] uppercase font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{{ $order->branch->name ?? 'N/A' }}</span>
                             </td>

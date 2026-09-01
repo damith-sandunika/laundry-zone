@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Order #{{ $order->id }} — Track</title>
+    <title>Order #{{ $order->order_number }} — Track</title>
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -28,7 +28,7 @@
 <div class="card">
     <div style="text-align:center; margin-bottom: 20px;">
         <div style="font-size: 40px; margin-bottom: 8px;">🧺</div>
-        <h1>Order #{{ $order->id }}</h1>
+        <h1>Order #{{ $order->order_number }}</h1>
         <p class="subtitle">{{ $order->branch->name ?? 'RAPID Laundromat' }}</p>
     </div>
 
