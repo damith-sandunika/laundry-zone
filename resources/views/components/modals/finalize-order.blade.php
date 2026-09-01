@@ -83,9 +83,12 @@
                         <span class="text-sm font-black text-slate-800" x-text="'Rs.' + subtotal.toFixed(2)"></span>
                     </div>
 
-                    <div class="flex justify-between items-center mb-2 border-b border-slate-100 pb-2" x-show="orderData?.delivery_fee > 0">
-                        <span class="text-xs font-bold text-slate-500">Delivery Fee</span>
-                        <span class="text-sm font-black text-slate-800" x-text="'Rs.' + parseFloat(orderData?.delivery_fee || 0).toFixed(2)"></span>
+                    <div class="mb-4">
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Delivery Fee</label>
+                        <div class="relative">
+                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rs.</span>
+                            <input type="number" x-model.number="deliveryFee" class="w-full pl-9 pr-4 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0.00" min="0">
+                        </div>
                     </div>
                     
                     <div class="flex justify-between items-center mb-4">
@@ -120,14 +123,10 @@
                         </button>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2" x-show="context === 'branch'">
+                    <div class="grid grid-cols-1 gap-2" x-show="context === 'branch'">
                         <button @click="saveOrder('save')" :disabled="isSaving"
-                            class="w-full py-2.5 bg-white border-2 border-amber-600 text-amber-600 hover:bg-amber-50 font-black text-xs rounded-xl transition-colors">
-                            <span x-text="isSaving ? '...' : 'Save Only'"></span>
-                        </button>
-                        <button @click="saveOrder('dispatch_to_workshop')" :disabled="isSaving"
-                            class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white font-black text-xs rounded-xl transition-colors shadow-md shadow-purple-500/30">
-                            <span x-text="isSaving ? '...' : 'Confirm & Dispatch'"></span>
+                            class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl transition-colors shadow-md shadow-blue-500/30">
+                            <span x-text="isSaving ? '...' : 'Save'"></span>
                         </button>
                     </div>
                 </div>
@@ -149,6 +148,7 @@
             cart: [],
             requestedAdvance: null,
             discountPercentage: 0,
+            deliveryFee: 0,
             isSaving: false,
             orderData: null,
             minimumDeliveryCost: 0,
@@ -186,6 +186,8 @@
                 } else {
                     this.discountPercentage = 0;
                 }
+                
+                this.deliveryFee = parseFloat(this.orderData?.delivery_fee || 0);
 
                 this.showFinalizeModal = true;
             },
@@ -206,7 +208,7 @@
             },
             
             get total() {
-                let calculated = (this.subtotal * (1 - (this.discountPercentage / 100))) + parseFloat(this.orderData?.delivery_fee || 0);
+                let calculated = (this.subtotal * (1 - (this.discountPercentage / 100))) + (parseFloat(this.deliveryFee) || 0);
                 return calculated;
             },
             
@@ -238,6 +240,7 @@
                         body: JSON.stringify({
                             cart: this.cart,
                             discount_percentage: this.discountPercentage,
+                            delivery_fee: this.deliveryFee,
                             requested_advance: this.requestedAdvance,
                             next_action: action === 'save' ? null : action
                         })

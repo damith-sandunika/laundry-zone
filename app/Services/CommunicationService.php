@@ -27,7 +27,7 @@ class CommunicationService
 
         $templates = [
             'order_confirmation' => [
-                'subject' => "Order #{$orderId} Confirmed – 360 Laundry",
+                'subject' => "Order #{$orderId} Confirmed – 365 Laundry",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 12px;'>Your order <strong>#{$orderId}</strong> has been <span style='color:#16a34a;font-weight:700;'>confirmed</span> and is now being processed.</p>
@@ -36,7 +36,7 @@ class CommunicationService
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;border-radius:0 0 0 6px;'>Payment</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                     </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We'll notify you when your order is ready. Thank you for choosing 360 Laundry!</p>
+                    <p style='margin:0;color:#64748b;font-size:13px;'>We'll notify you when your order is ready. Thank you for choosing 365 Laundry!</p>
                 ",
             ],
             'bill_finalize' => [
@@ -66,7 +66,7 @@ class CommunicationService
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                     </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>Please visit your branch or await your delivery rider. Thank you for choosing 360 Laundry!</p>
+                    <p style='margin:0;color:#64748b;font-size:13px;'>Please visit your branch or await your delivery rider. Thank you for choosing 365 Laundry!</p>
                 ",
             ],
             'order_delivered' => [
@@ -79,7 +79,7 @@ class CommunicationService
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total Paid</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                     </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We look forward to serving you again. — 360 Laundry 🧺</p>
+                    <p style='margin:0;color:#64748b;font-size:13px;'>We look forward to serving you again. — 365 Laundry 🧺</p>
                 ",
             ],
             'delivery_confirmation' => [
@@ -98,14 +98,14 @@ class CommunicationService
                 ",
             ],
             'delivery_thank_you' => [
-                'subject' => "Thank You for Using 360 Laundry Delivery!",
+                'subject' => "Thank You for Using 365 Laundry Delivery!",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>Thank you for using our home delivery service for order <strong>#{$orderId}</strong>. Your satisfaction is our priority!</p>
                     <div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px 20px;margin:16px 0;'>
                         <p style='margin:0;font-weight:700;color:#15803d;'>⭐ We'd love to hear your feedback!</p>
                     </div>
-                    <p style='margin:16px 0 0;color:#64748b;font-size:13px;'>We hope to serve you again soon. — 360 Laundry 🧺</p>
+                    <p style='margin:16px 0 0;color:#64748b;font-size:13px;'>We hope to serve you again soon. — 365 Laundry 🧺</p>
                 ",
             ],
             'order_dispatched_to_workshop' => [
@@ -121,7 +121,7 @@ class CommunicationService
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is currently being processed at our workshop. We're taking great care of your items!</p>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We'll update you once it's ready. Thank you for choosing 360 Laundry!</p>
+                    <p style='margin:0;color:#64748b;font-size:13px;'>We'll update you once it's ready. Thank you for choosing 365 Laundry!</p>
                 ",
             ],
             'order_returned_from_workshop' => [
@@ -129,7 +129,7 @@ class CommunicationService
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been returned from our workshop to the branch. It will be ready for pickup/delivery shortly!</p>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>Thank you for your patience. — 360 Laundry 🧺</p>
+                    <p style='margin:0;color:#64748b;font-size:13px;'>Thank you for your patience. — 365 Laundry 🧺</p>
                 ",
             ],
             'order_cancelled' => [
@@ -137,7 +137,7 @@ class CommunicationService
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>We regret to inform you that your order <strong>#{$orderId}</strong> has been <span style='color:#dc2626;font-weight:700;'>cancelled</span>.</p>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>If you have any questions, please contact your nearest 360 Laundry branch. We apologize for the inconvenience.</p>
+                    <p style='margin:0;color:#64748b;font-size:13px;'>If you have any questions, please contact your nearest 365 Laundry branch. We apologize for the inconvenience.</p>
                 ",
             ],
         ];
@@ -172,7 +172,7 @@ class CommunicationService
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
                 try {
                     if (env('SMS_API_URL')) {
-                        \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
+                        \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', '365LAUNDRY'), 'to' => $customer->phone, 'text' => $message]);
                     }
                 } catch (\Exception $e) {}
             }
@@ -233,7 +233,7 @@ class CommunicationService
                 
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
                 try {
-                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', 'RAPIDLAUNDROMAT'), 'to' => $customer->phone, 'text' => $message]);
+                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', '365LAUNDRY'), 'to' => $customer->phone, 'text' => $message]);
                 } catch (\Exception $e) {}
             }
         }
@@ -449,7 +449,7 @@ class CommunicationService
         try {
             $apiUrl   = env('SMS_API_URL');
             $apiToken = env('SMS_API_TOKEN');
-            $mask     = env('SMS_MASK', 'RAPIDLAUNDROMAT');
+            $mask     = env('SMS_MASK', '365LAUNDRY');
 
             if (!$apiUrl || !$apiToken) {
                 throw new \Exception('SMS API credentials not configured.');
@@ -529,7 +529,7 @@ class CommunicationService
                     ->getHeaders()
                         ->addTextHeader('List-Unsubscribe', '<mailto:' . $fromAddress . '?subject=unsubscribe>')
                         ->addTextHeader('Precedence', 'bulk')
-                        ->addTextHeader('X-Mailer', 'RapidLaundromat-Mailer');
+                        ->addTextHeader('X-Mailer', '365LAUNDRY-Mailer');
             });
 
             $log->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);

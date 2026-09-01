@@ -13,7 +13,7 @@
         <div class="prose prose-slate prose-blue max-w-none">
             
             <p class="text-slate-600 mb-8 leading-relaxed text-lg">
-                At 360 Laundry, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data.
+                At 365 Laundry, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data.
             </p>
 
             <h2 class="text-2xl font-bold text-slate-800 mb-4 mt-8">1. Information We Collect</h2>

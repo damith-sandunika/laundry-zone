@@ -49,7 +49,7 @@ class BranchController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'rapid_laundromat/branch_logos',
+                        'folder' => '365_laundry/branch_logos',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);
@@ -104,7 +104,7 @@ class BranchController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'rapid_laundromat/branch_logos',
+                        'folder' => '365_laundry/branch_logos',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);

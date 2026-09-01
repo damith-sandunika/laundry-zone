@@ -258,7 +258,15 @@ class POSController extends Controller
                 // 4. Communication notification queue
                 $commService = new CommunicationService();
                 $orderForComm = Order::with('customer')->find($order->id);
-                $commService->sendOrderConfirmation($orderForComm);
+
+                if (! $orderForComm->is_delivery_order) {
+                    $branch = \App\Models\Branch::find($branchId);
+                    if ($branch && $branch->type === 'branch') {
+                        $commService->sendCollectionOrderPlaced($orderForComm);
+                    } else {
+                        $commService->sendPosWalkinPlaced($orderForComm);
+                    }
+                }
 
                 // 5. If workshop admin: auto-dispatch to operations as 'processing'
                 if ($user->role === 'workshop_admin') {

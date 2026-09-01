@@ -56,20 +56,20 @@
                 if (in_array($actualStatus, ['pending', 'received', 'dispatched_to_workshop', 'received_at_workshop'])) {
                     $actualStatus = 'picked_up';
                 }
-                if (in_array($actualStatus, ['washing', 'drying', 'ironing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
+                if (in_array($actualStatus, ['washing', 'drying', 'ironing', 'folding', 'edited', 'processing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
                     $actualStatus = 'processing';
                 }
-                if (in_array($actualStatus, ['returned_from_workshop', 'done'])) {
+                if (in_array($actualStatus, ['returned_from_workshop', 'done', 'completed_at_workshop', 'returned_to_branch'])) {
                     $actualStatus = 'ready';
                 }
             } else {
                 if (in_array($actualStatus, ['pending', 'dispatched_to_workshop', 'received_at_workshop'])) {
                     $actualStatus = 'received';
                 }
-                if (in_array($actualStatus, ['washing', 'drying', 'ironing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
+                if (in_array($actualStatus, ['washing', 'drying', 'ironing', 'folding', 'edited', 'processing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
                     $actualStatus = 'processing';
                 }
-                if (in_array($actualStatus, ['returned_from_workshop', 'done'])) {
+                if (in_array($actualStatus, ['returned_from_workshop', 'done', 'completed_at_workshop', 'returned_to_branch'])) {
                     $actualStatus = 'ready';
                 }
             }
@@ -394,7 +394,7 @@
              class="fixed inset-0 z-10 w-screen overflow-y-auto" style="display: none;">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
-                    <form action="{{ route('customer.orders.submitPayment', $order->id) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true">
+                    <form action="{{ route('customer.orders.submitPayment', $order->order_number) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true">
                         @csrf
                         <div class="bg-white px-6 pb-6 pt-8 sm:p-8">
                             <div class="sm:flex sm:items-start mb-6">

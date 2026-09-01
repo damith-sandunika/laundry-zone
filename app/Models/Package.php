@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Package extends Model
 {
-    use BelongsToBranch, HasFactory;
+    use HasFactory;
 
     protected $guarded = [];
 

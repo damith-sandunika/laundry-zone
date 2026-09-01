@@ -96,7 +96,7 @@
                                     $hasPendingGlobally = \App\Models\PaymentTransaction::where('order_id', $orderObj->id)->where('status', 'pending')->exists();
                                 @endphp
                                 @if($orderObj->payment_status === 'unpaid' && !in_array($orderObj->status, ['delivered', 'cancelled']) && !$hasPendingGlobally)
-                                    <a href="{{ route('customer.orders.show', $orderObj->id) }}" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                    <a href="{{ route('customer.orders.show', $orderObj->order_number) }}" class="text-xs font-bold text-white bg-slate-800 hover:bg-slate-900 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                         Pay Now
                                     </a>
                                 @elseif($hasPendingGlobally)
@@ -109,7 +109,7 @@
                                     </span>
                                 @endif
                                 
-                                <a href="{{ route('customer.orders.show', $orderObj->id) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
+                                <a href="{{ route('customer.orders.show', $orderObj->order_number) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
                                     View
                                 </a>
                             </div>

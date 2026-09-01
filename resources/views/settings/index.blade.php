@@ -68,7 +68,7 @@
         <div class="p-6">
             <!-- GENERAL SETTINGS TAB -->
             <div x-show="activeTab === 'general'" x-data="{ 
-                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '360 Laundry')) }}',
+                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '365 Laundry')) }}',
                 formName: '{{ addslashes($branch->name ?? 'SMART LAUNDRY') }}',
                 formAddress: '{{ addslashes($branch->address) }}',
                 formPhone: '{{ addslashes($branch->phone) }}',
@@ -273,7 +273,7 @@
                             <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
                             
                             <div style="text-align: center; font-weight: 800; font-size: 12px; margin-top: 8px;">
-                                Thank you for choosing 360 Laundry.
+                                Thank you for choosing 365 Laundry.
                             </div>
                             <div style="text-align: center; font-size: 10px; margin-top: 3px; color: #333;">
                                 If you are happy with our service, please leave us a Google Review!
@@ -734,7 +734,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Account Name</label>
-                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. 360 Laundry">
+                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. 365 Laundry">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Account Number</label>

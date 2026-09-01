@@ -1,6 +1,6 @@
 {
-    "name": "360 Laundry",
-    "short_name": "360 Laundry",
+    "name": "365 Laundry",
+    "short_name": "365 Laundry",
     "description": "Smart Laundry Management System",
     "start_url": "/stafflogin",
     "display": "standalone",

@@ -109,7 +109,7 @@ class SettingsController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'rapid_laundromat/logos',
+                        'folder' => '365_laundry/logos',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);
@@ -200,7 +200,7 @@ class SettingsController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'rapid_laundromat/categories',
+                        'folder' => '365_laundry/categories',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);
@@ -243,7 +243,7 @@ class SettingsController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'rapid_laundromat/categories',
+                        'folder' => '365_laundry/categories',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);

@@ -70,17 +70,17 @@ Route::get('/customer/branch-services/{branch}', [\App\Http\Controllers\Customer
 Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
-    Route::get('/orders/{order}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
-    Route::post('/orders/{order}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
-    Route::get('/orders/{order}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
+    Route::get('/orders/{order:order_number}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
+    Route::post('/orders/{order:order_number}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
+    Route::get('/orders/{order:order_number}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
     
     // Appointments
     Route::get('/appointments/{appointment}', [\App\Http\Controllers\Customer\DashboardController::class, 'showAppointment'])->name('appointments.show');
 
     // Payment Gateway Routes
-    Route::get('/orders/{order}/pay', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
+    Route::get('/orders/{order:order_number}/pay-gateway', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
     Route::post('/payment/process', [\App\Http\Controllers\PaymentController::class, 'process'])->name('payment.process');
-    Route::get('/orders/{order}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
+    Route::get('/orders/{order:order_number}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
 });
 
 // ─── Public Order Tracking (QR Code link) ───

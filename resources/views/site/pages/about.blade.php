@@ -18,7 +18,7 @@
                 <h2 class="text-3xl font-black text-slate-800 mb-6">Our Story</h2>
                 <div class="space-y-4 text-slate-600 leading-relaxed">
                     <p>
-                        At 360 Laundry, we believe that doing laundry shouldn't take away from the things you love doing. That’s why we’ve built a seamless, on-demand laundry and dry-cleaning service designed around your busy lifestyle.
+                        At 365 Laundry, we believe that doing laundry shouldn't take away from the things you love doing. That’s why we’ve built a seamless, on-demand laundry and dry-cleaning service designed around your busy lifestyle.
                     </p>
                     <p>
                         Founded by a team of professionals who were tired of spending their weekends washing and ironing, we understand the value of convenience and quality. We use state-of-the-art cleaning technologies and eco-friendly detergents to ensure your clothes are not just clean, but cared for.

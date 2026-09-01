@@ -191,7 +191,7 @@ class DashboardController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'rapid_laundromat/receipts',
+                        'folder' => '365_laundry/receipts',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);
@@ -246,7 +246,7 @@ class DashboardController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'rapid_laundromat/receipts',
+                        'folder' => '365_laundry/receipts',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);

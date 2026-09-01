@@ -188,7 +188,8 @@ class OrderController extends Controller
                         ->update(['default_discount' => $discountPercentage]);
                 }
 
-                $total = $subtotal - $discountAmount + $order->delivery_fee;
+                $deliveryFee = $request->has('delivery_fee') ? (float)$request->delivery_fee : $order->delivery_fee;
+                $total = $subtotal - $discountAmount + $deliveryFee;
 
                 // Adjust paid_amount if it exceeds the new total (optional, but good practice)
                 $paidAmount = $order->paid_amount;
@@ -199,6 +200,7 @@ class OrderController extends Controller
                 $order->update([
                     'subtotal' => $subtotal,
                     'discount' => $discountAmount,
+                    'delivery_fee' => $deliveryFee,
                     'total' => $total,
                     'paid_amount' => $paidAmount,
                     'requested_advance' => $request->requested_advance,
@@ -295,7 +297,16 @@ class OrderController extends Controller
         $branchId = auth()->user()->branch_id ?? 1;
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 
-        return view('orders.show', compact('order', 'cubbies'));
+        $pickmeCost = \App\Models\Expense::where('category', 'PickMe')
+            ->where(function($q) use ($order) {
+                $q->where('description', 'like', '%Order #' . $order->order_number . '%');
+                if ($order->delivery_appointment_id) {
+                    $q->orWhere('description', 'like', '%pickup delivery #' . $order->delivery_appointment_id . '%')
+                      ->orWhere('description', 'like', '%delivery dropoff #' . $order->delivery_appointment_id . '%');
+                }
+            })->sum('amount');
+
+        return view('orders.show', compact('order', 'cubbies', 'pickmeCost'));
     }
 
     public function printBill(Order $order)
@@ -439,25 +450,7 @@ class OrderController extends Controller
             \Log::info('Transaction successful for order ' . $order->id . ' status ' . $request->status);
 
             // Trigger notifications AFTER transaction commits
-            try {
-                $commService = new \App\Services\CommunicationService();
-                \Log::info('Triggering notification for status: ' . $request->status);
-                if ($request->status === 'done') {
-                    $commService->sendOrderReady($order);
-                } elseif ($request->status === 'delivered') {
-                    $commService->sendOrderDelivered($order);
-                } elseif ($request->status === 'dispatched_to_workshop') {
-                    $commService->sendOrderDispatchedToWorkshop($order);
-                } elseif ($request->status === 'returned_from_workshop') {
-                    $commService->sendOrderReturnedFromWorkshop($order);
-                } elseif ($request->status === 'completed') {
-                    $commService->sendOrderCompleted($order);
-                } elseif ($request->status === 'cancelled') {
-                    $commService->sendOrderCancelled($order);
-                }
-            } catch (\Exception $e) {
-                \Log::error('Email notification failed (updateStatus): ' . $e->getMessage());
-            }
+            $this->triggerNotifications($order, $request->status);
 
             // Return JSON for AJAX calls, redirect for form submissions
             if ($request->expectsJson() || $request->ajax()) {
@@ -818,6 +811,35 @@ public function bulkStatus(Request $request)
             ]);
 
             return response()->json(['success' => true, 'status' => 'completed']);
+        }
+    }
+
+    private function triggerNotifications(Order $order, string $status)
+    {
+        try {
+            $commService = new \App\Services\CommunicationService();
+            \Log::info('Triggering notification for status: ' . $status);
+
+            $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
+            $isCollection = false;
+
+            if (! $order->is_delivery_order && $dispatch && $dispatch->branch_id !== $dispatch->workshop_branch_id) {
+                $isCollection = true;
+            }
+
+            if ($status === 'done' && $isCollection) {
+                $commService->sendCollectionOrderReady($order);
+            } elseif ($status === 'delivered' || $status === 'completed') {
+                if ($order->is_delivery_order) {
+                    $commService->sendDeliveryCompleted($order);
+                } elseif ($isCollection) {
+                    $commService->sendCollectionOrderCompleted($order);
+                } else {
+                    $commService->sendPosWalkinCompleted($order);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Notification failed: ' . $e->getMessage());
         }
     }
 }

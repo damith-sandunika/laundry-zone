@@ -425,9 +425,7 @@ class WorkshopController extends Controller
         $branches = Branch::where('type', 'branch')->get();
         $riders = \App\Models\User::where('role', 'rider')->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->where('is_active', true)->get();
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($branchId) {
-            $q->where('branch_id', $branchId);
-        }])->where('is_active', true)->where('branch_id', $branchId)->get();
+        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
         return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'categories', 'minimumDeliveryCost'));

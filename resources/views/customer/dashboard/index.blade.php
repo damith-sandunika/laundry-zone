@@ -62,7 +62,7 @@
                                 <span class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded-md mb-2 inline-block">
                                     <i class="fa-solid fa-truck-pickup"></i> Pickup Request
                                 </span>
-                                <h4 class="font-bold text-slate-800">Booking #{{ str_pad($appointment->id, 4, '0', STR_PAD_LEFT) }}</h4>
+                                <h4 class="font-bold text-slate-800">Booking #{{ $appointment->id }}</h4>
                             </div>
                             <div class="text-right flex flex-col items-end gap-2">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
@@ -152,7 +152,7 @@
                                             <span class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded-md mb-2 inline-block">
                                                 <i class="fa-solid fa-truck-pickup"></i> Pickup Request
                                             </span>
-                                            <h4 class="font-bold text-slate-800 mb-1">Booking #{{ str_pad($deliveryAppointment->id, 4, '0', STR_PAD_LEFT) }}</h4>
+                                            <h4 class="font-bold text-slate-800 mb-1">{{ $order->order_number }}</h4>
                                             @if($deliveryAppointment->pickup_scheduled_at)
                                                 <div class="text-[11px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md mb-2 inline-flex items-center gap-1.5">
                                                     <i class="fa-solid fa-calendar-day text-indigo-500"></i> 
@@ -162,7 +162,7 @@
                                                     @endif
                                                 </div>
                                             @endif
-                                            <div class="text-xs font-bold text-slate-500 mb-2">Order {{ $order->order_number }} &middot; {{ $order->items->count() }} Items &middot; 
+                                            <div class="text-xs font-bold text-slate-500 mb-2">{{ $order->items->count() }} Items &middot; 
                                                 @if($order->paid_amount > 0)
                                                     <span class="text-blue-600">Bal: LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span> <span class="text-slate-400 font-medium text-[10px]">(Total: {{ number_format($order->total, 2) }})</span>
                                                 @else
@@ -192,11 +192,11 @@
                                     {{ str_replace('_', ' ', $order->status) }}
                                 </span>
                                 @if(!$order->payment_approved && $order->requested_advance > 0 || in_array($order->payment_status, ['unpaid', 'pending', 'partial']))
-                                    <a href="{{ route('customer.orders.show', $order) }}" class="text-[10px] font-bold uppercase tracking-wider text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm animate-pulse">
+                                    <a href="{{ route('customer.orders.show', $order->order_number) }}" class="text-[10px] font-bold uppercase tracking-wider text-white bg-red-500 hover:bg-red-600 px-3 py-1.5 rounded-lg transition-colors shadow-sm animate-pulse">
                                         Pay Now
                                     </a>
                                 @else
-                                    <a href="{{ route('customer.orders.show', $order) }}" class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
+                                    <a href="{{ route('customer.orders.show', $order->order_number) }}" class="text-[10px] font-bold uppercase tracking-wider text-blue-600 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors shadow-sm">
                                         View Details
                                     </a>
                                 @endif
@@ -220,10 +220,10 @@
                                 if(in_array($logicalStatus, ['received', 'dispatched_to_workshop'])) { 
                                     $orderProgress = '25%'; $orderStatusLevel = 2; // Rider Pick Up / Awaiting Payment
                                 }
-                                elseif($logicalStatus === 'processing') { 
+                                elseif(in_array($logicalStatus, ['processing', 'washing', 'drying', 'ironing', 'folding', 'edited'])) { 
                                     $orderProgress = '50%'; $orderStatusLevel = 3; 
                                 }
-                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'ready', 'done', 'out_for_delivery'])) { 
+                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'completed_at_workshop', 'returned_to_branch', 'ready', 'done', 'out_for_delivery'])) { 
                                     $orderProgress = '75%'; $orderStatusLevel = 4; 
                                 }
                                 elseif(in_array($logicalStatus, ['delivered', 'completed'])) { 
@@ -234,10 +234,10 @@
                                 if(in_array($logicalStatus, ['received', 'dispatched_to_workshop'])) { 
                                     $orderProgress = '0%'; $orderStatusLevel = 1; // Not working yet
                                 }
-                                elseif($logicalStatus === 'processing') { 
+                                elseif(in_array($logicalStatus, ['processing', 'washing', 'drying', 'ironing', 'folding', 'edited'])) { 
                                     $orderProgress = '33%'; $orderStatusLevel = 2; 
                                 }
-                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'ready', 'done'])) { 
+                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'completed_at_workshop', 'returned_to_branch', 'ready', 'done'])) { 
                                     $orderProgress = '66%'; $orderStatusLevel = 3; 
                                 }
                                 elseif(in_array($logicalStatus, ['delivered', 'completed'])) { 
@@ -253,7 +253,7 @@
                                         <h4 class="font-black text-lg mb-1"><i class="fa-solid fa-circle-exclamation text-yellow-300 animate-pulse mr-1"></i> Action Required</h4>
                                         <p class="text-blue-100 text-sm font-medium">To start processing your laundry, please pay the requested advance of <strong class="text-white bg-blue-800/50 px-1.5 py-0.5 rounded">LKR {{ number_format($order->requested_advance - $order->paid_amount, 2) }}</strong></p>
                                     </div>
-                                    <a href="{{ route('customer.orders.show', $order) }}" class="shrink-0 w-full sm:w-auto inline-block bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl transition-all">
+                                    <a href="{{ route('customer.orders.show', $order->order_number) }}" class="shrink-0 w-full sm:w-auto inline-block bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl transition-all">
                                         <i class="fa-solid fa-bolt mr-1"></i> PAY NOW
                                     </a>
                                 </div>

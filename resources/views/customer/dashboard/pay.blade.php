@@ -1,7 +1,7 @@
 <x-customer-layout>
     <x-slot name="header">
         <div class="flex items-center gap-3">
-            <a href="{{ route('customer.orders.show', $order) }}" class="text-slate-400 hover:text-blue-600 transition p-2 bg-white rounded-lg shadow-sm border border-slate-100"><i class="fa-solid fa-arrow-left"></i></a>
+            <a href="{{ route('customer.orders.show', $order->order_number) }}" class="text-slate-400 hover:text-blue-600 transition p-2 bg-white rounded-lg shadow-sm border border-slate-100"><i class="fa-solid fa-arrow-left"></i></a>
             <div>
                 <h2 class="font-black text-2xl text-slate-800 leading-tight">Complete Payment</h2>
                 <p class="text-sm font-bold text-slate-500">Order #{{ $order->order_number }} &middot; Amount Due: <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></p>
@@ -21,7 +21,7 @@
             </div>
         @endif
 
-        <form action="{{ route('customer.orders.process_payment', $order) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form action="{{ route('customer.orders.submitPayment', $order->order_number) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
             @csrf
             
             <!-- Step 1: Select Payment Method -->
@@ -75,7 +75,7 @@
                     <p class="text-sm font-bold text-slate-600 mb-2">Please transfer <strong class="text-blue-600">LKR {{ number_format($order->total, 2) }}</strong> to the following account:</p>
                     <div class="grid grid-cols-2 gap-y-2 text-sm">
                         <div class="text-slate-500">Bank Name:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_name', 'Commercial Bank') }}</div>
-                        <div class="text-slate-500">Account Name:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_account_name', '360 Laundry') }}</div>
+                        <div class="text-slate-500">Account Name:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_account_name', '365 Laundry') }}</div>
                         <div class="text-slate-500">Account Number:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_account_number', '1234567890') }}</div>
                         <div class="text-slate-500">Branch:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_branch', 'Colombo 07') }}</div>
                     </div>
@@ -169,4 +169,3 @@
         })
     </script>
 </x-customer-layout>
-

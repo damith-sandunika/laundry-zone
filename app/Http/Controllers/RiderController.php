@@ -69,10 +69,10 @@ class RiderController extends Controller
 
         if ($task->task_type === 'pickup' && $task->appointment) {
             $commService = new CommunicationService();
-            $commService->sendPickupConfirmation($task->appointment);
+            // $commService->sendPickupConfirmation($task->appointment);
         } elseif ($task->task_type === 'delivery' && $task->order) {
             $commService = new CommunicationService();
-            $commService->sendDeliveryConfirmation($task->order);
+            // $commService->sendDeliveryConfirmation($task->order);
         }
 
         return response()->json(['success' => true, 'status' => 'on_way']);
@@ -161,7 +161,7 @@ class RiderController extends Controller
                 ]);
 
                 $commService = new \App\Services\CommunicationService();
-                $commService->sendOrderCompleted($order);
+                $commService->sendDeliveryCompleted($order);
             }
         }
 
@@ -189,9 +189,7 @@ class RiderController extends Controller
                 ->with('info', 'This delivery already has an order created by the branch. Proceed to complete the pickup task.');
         }
 
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($task) {
-            $q->where('branch_id', $task->branch_id);
-        }])->where('is_active', true)->where('branch_id', $task->branch_id)->get();
+        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $cartData = $task->appointment->cart_json ? json_decode($task->appointment->cart_json, true) : [];
 
         return view('rider.create-order', compact('task', 'categories', 'cartData'));
@@ -263,7 +261,7 @@ class RiderController extends Controller
 
         // Notify customer
         $commService = new CommunicationService();
-        $commService->sendOrderConfirmation($order);
+        // $commService->sendOrderConfirmation($order);
 
         return redirect()->route('rider.dashboard')->with('success', 'Order created successfully! Customer notified.');
     }

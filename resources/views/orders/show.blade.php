@@ -449,24 +449,10 @@
                         <span style="color:#64748b;font-weight:600;">Paid Amount</span>
                         <span style="font-weight:800;color:#16a34a;">Rs.{{ number_format($order->paid_amount, 2) }}</span>
                     </div>
-                    @php
-                        $deliveryCost = 0;
-                        $deliveryExpense = \App\Models\Expense::whereIn('category', ['delivery', 'PickMe', 'PickMe Flash'])
-                            ->where(function($q) use ($order) {
-                                $q->where('description', 'like', '%Order #' . $order->order_number . '%')
-                                  ->orWhere('description', 'like', '%delivery dropoff #' . optional($order->deliveryAppointment)->id . '%');
-                            })
-                            ->latest()
-                            ->first();
-                        
-                        if ($deliveryExpense) {
-                            $deliveryCost = $deliveryExpense->amount;
-                        }
-                    @endphp
-                    @if($deliveryCost > 0)
+                    @if($pickmeCost > 0)
                     <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#64748b;font-weight:600;">Delivery Cost (PickMe)</span>
-                        <span style="font-weight:800;color:#0f172a;">Rs.{{ number_format($deliveryCost, 2) }}</span>
+                        <span style="color:#64748b;font-weight:600;">PickMe Expense (Shop Paid)</span>
+                        <span style="font-weight:800;color:#dc2626;">- Rs.{{ number_format($pickmeCost, 2) }}</span>
                     </div>
                     @endif
                     <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #f1f5f9;">

@@ -29,7 +29,7 @@ class RapidLaundromatSeeder extends Seeder
         // Create Super Admin
         User::create([
             'name' => 'Main Admin',
-            'email' => 'admin@rapid.com',
+            'email' => 'admin@365laundry.com',
             'phone' => '0770000000',
             'password' => Hash::make('admin123'),
             'role' => 'super_admin',
@@ -38,7 +38,7 @@ class RapidLaundromatSeeder extends Seeder
         ]);
 
         // Create Branch Admins
-        User::create(['name' => 'Colombo Manager', 'email' => 'colombo@rapid.com', 'phone' => '0770000001', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b1->id, 'is_active' => true]);
+        User::create(['name' => 'Colombo Manager', 'email' => 'colombo@365laundry.com', 'phone' => '0770000001', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b1->id, 'is_active' => true]);
         User::create(['name' => 'Nugegoda Manager', 'email' => 'nugegoda@rapid.com', 'phone' => '0770000002', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b2->id, 'is_active' => true]);
         User::create(['name' => 'Malabe Manager', 'email' => 'malabe@rapid.com', 'phone' => '0770000003', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b3->id, 'is_active' => true]);
 

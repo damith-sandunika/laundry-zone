@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Customer Login - 360 Laundry</title>
+    <title>Customer Login - 365 Laundry</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/365_laundry_logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,8 +19,8 @@
         <!-- Logo -->
         <div class="text-center mb-8">
             <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
-                <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Logo" class="h-12 w-auto">
-                <span class="font-black text-2xl tracking-tight text-blue-600">360 Laundry</span>
+                <img src="{{ asset('images/365_laundry_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
+                <span class="font-black text-2xl tracking-tight text-blue-600">365 Laundry</span>
             </a>
             <p class="text-slate-500 mt-2 text-sm">Welcome back! Please login to your account.</p>
         </div>
@@ -52,7 +53,6 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label for="password" class="block text-sm font-bold text-slate-700">Password</label>
-                            <a href="#" class="text-xs font-semibold text-blue-600 hover:text-blue-500">Forgot password?</a>
                         </div>
                         <div class="relative" x-data="{ show: false }">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -87,35 +87,7 @@
                 </p>
         </div>
 
-        <!-- App Download Banner -->
-        <div class="mt-8 bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-6 text-white text-center shadow-xl relative overflow-hidden animate-slide-up" style="animation-delay: 200ms;">
-            <div class="absolute -right-6 -bottom-6 opacity-20 transform rotate-12">
-                <i class="fa-solid fa-mobile-screen-button text-9xl"></i>
-            </div>
-            <div class="relative z-10">
-                <h3 class="text-lg font-black mb-1">Get the 360 Laundry App!</h3>
-                <p class="text-blue-100 text-sm mb-5 font-medium">Book pickups, track orders, and pay online effortlessly.</p>
-                <div class="flex justify-center gap-3">
-                    <a href="#" class="bg-black/80 hover:bg-black text-white px-4 py-2.5 rounded-xl flex items-center gap-2.5 transition-all shadow-lg shadow-black/20 hover:-translate-y-1">
-                        <i class="fa-brands fa-google-play text-2xl"></i>
-                        <div class="text-left leading-none">
-                            <div class="text-[8px] uppercase tracking-wider text-slate-300 mb-0.5">Get it on</div>
-                            <div class="text-[13px] font-bold">Google Play</div>
-                        </div>
-                    </a>
-                    <a href="#" class="bg-black/80 hover:bg-black text-white px-4 py-2.5 rounded-xl flex items-center gap-2.5 transition-all shadow-lg shadow-black/20 hover:-translate-y-1">
-                        <i class="fa-brands fa-apple text-2xl mb-1"></i>
-                        <div class="text-left leading-none">
-                            <div class="text-[8px] uppercase tracking-wider text-slate-300 mb-0.5">Download on the</div>
-                            <div class="text-[13px] font-bold">App Store</div>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </div>
     </div>
 
 </body>
 </html>
-
-

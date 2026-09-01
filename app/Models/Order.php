@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Scopes\BranchScope;
 use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Model;
 
@@ -109,18 +108,26 @@ class Order extends Model
         return $this->hasMany(PaymentTransaction::class);
     }
 
-    // Generate unique order number: U0001, U0002, ...
+    // Generate unique order number per branch - race-condition safe via DB transaction lock
     public static function generateOrderNumber(int $branchId, bool $isDelivery = false): string
     {
-        // Count existing orders for this branch (without global scope) for sequential numbering
-        $count = self::withoutGlobalScope(BranchScope::class)
-            ->where('branch_id', $branchId)
-            ->count() + 1;
+        return \DB::transaction(function () use ($branchId, $isDelivery) {
+            // Lock the branch row to prevent concurrent duplicate order numbers
+            $branch = \App\Models\Branch::lockForUpdate()->find($branchId);
 
-        $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
-        $sequence = str_pad($count, 7, '0', STR_PAD_LEFT);
+            if ($branch) {
+                $branch->order_sequence += 1;
+                $branch->save();
+                $nextId = $branch->order_sequence;
+            } else {
+                $nextId = 1;
+            }
 
-        return "{$prefix}-L-{$sequence}";
+            $paddedId = str_pad($nextId, 4, '0', STR_PAD_LEFT);
+            $prefix = $isDelivery ? "D{$branchId}" : "B{$branchId}";
+
+            return "{$prefix}-{$paddedId}";
+        });
     }
 
     public function isPackageOrder()
