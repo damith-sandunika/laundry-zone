@@ -50,6 +50,11 @@ class SmsTemplateController extends Controller
                 'message' => 'Hi {customer_name}, your order #{order_id} has been placed successfully. We will let you know once it is completed.',
             ],
             [
+                'type' => 'pos_walkin_ready',
+                'name' => 'Walk-in Order Ready',
+                'message' => 'Hi {customer_name}, your order #{order_id} is washed and ready to be picked up. Thank you! - RAPID Laundromat',
+            ],
+            [
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
                 'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - RAPID Laundromat',

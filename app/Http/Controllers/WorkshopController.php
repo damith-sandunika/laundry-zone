@@ -558,7 +558,7 @@ class WorkshopController extends Controller
             if ($dispatch->branch_id === $dispatch->workshop_branch_id) {
                 try {
                     $commService = new CommunicationService();
-                    // $commService->sendOrderReady($order);
+                    $commService->sendPosWalkinReady($order);
                 } catch (\Exception $e) {
                     \Log::error('Email notification failed (complete ready): ' . $e->getMessage());
                 }

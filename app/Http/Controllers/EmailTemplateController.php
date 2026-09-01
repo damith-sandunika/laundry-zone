@@ -53,6 +53,12 @@ class EmailTemplateController extends Controller
                 'body' => '<p>Hi {customer_name}, your order #{order_id} has been placed successfully. We will let you know once it is completed.</p>',
             ],
             [
+                'type' => 'pos_walkin_ready',
+                'name' => 'Walk-in Order Ready',
+                'subject' => 'Walk-in Order Ready',
+                'body' => '<p>Hi {customer_name}, your order #{order_id} is washed and ready to be picked up. Thank you! - RAPID Laundromat</p>',
+            ],
+            [
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
                 'subject' => 'Walk-in Order Completed',

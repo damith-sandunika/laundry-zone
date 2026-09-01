@@ -31,6 +31,13 @@ class CommunicationService
                     <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been placed successfully. We will let you know once it is completed. - RAPID Laundromat</p>
                 ",
             ],
+            'pos_walkin_ready' => [
+                'subject' => "Walk-in Order Ready",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Great news! Your walk-in order <strong>#{$orderId}</strong> is washed and ready to be picked up. Thank you! - RAPID Laundromat</p>
+                ",
+            ],
             'pos_walkin_completed' => [
                 'subject' => "Walk-in Order Completed",
                 'body'    => "
@@ -82,6 +89,7 @@ class CommunicationService
     }
 
     public function sendPosWalkinPlaced(Order $order) { $this->dispatch('pos_walkin_placed', $order); }
+    public function sendPosWalkinReady(Order $order) { $this->dispatch('pos_walkin_ready', $order); }
     public function sendPosWalkinCompleted(Order $order) { $this->dispatch('pos_walkin_completed', $order); }
     public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
     public function sendCollectionOrderPlaced(Order $order) { $this->dispatch('collection_order_placed', $order); }
