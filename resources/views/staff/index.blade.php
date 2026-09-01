@@ -211,29 +211,17 @@
                                     </div>
                                     <div class="grid grid-cols-2 gap-4 mb-3">
                                         <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
-                                            <input type="date" name="dob" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
-                                        </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">Emergency Contact</label>
-                                            <input type="text" name="emergency_contact" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
-                                        </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 mb-3">
-                                        <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">NIC (Optional)</label>
                                             <input type="text" name="nic" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                         </div>
-                                    </div>
-                                    <div class="grid grid-cols-2 gap-4 mb-3">
                                         <div>
                                             <label class="block text-xs font-medium text-gray-700 mb-1">Date of Birth</label>
                                             <input type="date" name="dob" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                         </div>
-                                        <div>
-                                            <label class="block text-xs font-medium text-gray-700 mb-1">Emergency Contact</label>
-                                            <input type="text" name="emergency_contact" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
-                                        </div>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label class="block text-xs font-medium text-gray-700 mb-1">Emergency Contact</label>
+                                        <input type="text" name="emergency_contact" class="w-full text-sm border-gray-300 rounded-md shadow-sm">
                                     </div>
                                     <div class="mb-3">
                                         <label class="block text-xs font-medium text-gray-700 mb-1">Address</label>
