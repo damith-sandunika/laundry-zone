@@ -112,14 +112,23 @@ class Order extends Model
     // Generate unique order number: U0001, U0002, ...
     public static function generateOrderNumber(int $branchId, bool $isDelivery = false): string
     {
-        // Use max('id') to ensure we never reuse a sequence number even if orders are deleted
-        $maxId = self::withoutGlobalScope(BranchScope::class)->max('id') ?? 0;
-        $nextId = $maxId + 1;
+        return \DB::transaction(function () use ($branchId, $isDelivery) {
+            // Lock the branch row to prevent concurrent race conditions
+            $branch = \App\Models\Branch::lockForUpdate()->find($branchId);
+            
+            if ($branch) {
+                $branch->order_sequence += 1;
+                $branch->save();
+                $nextId = $branch->order_sequence;
+            } else {
+                $nextId = 1;
+            }
 
-        $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
-        $sequence = str_pad($nextId, 7, '0', STR_PAD_LEFT);
+            $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
+            $sequence = str_pad($nextId, 7, '0', STR_PAD_LEFT);
 
-        return "{$prefix}-L-{$sequence}";
+            return "{$prefix}-L-{$sequence}";
+        });
     }
 
     public function isPackageOrder()
