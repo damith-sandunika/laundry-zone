@@ -112,13 +112,12 @@ class Order extends Model
     // Generate unique order number: U0001, U0002, ...
     public static function generateOrderNumber(int $branchId, bool $isDelivery = false): string
     {
-        // Count existing orders for this branch (without global scope) for sequential numbering
-        $count = self::withoutGlobalScope(BranchScope::class)
-            ->where('branch_id', $branchId)
-            ->count() + 1;
+        // Use max('id') to ensure we never reuse a sequence number even if orders are deleted
+        $maxId = self::withoutGlobalScope(BranchScope::class)->max('id') ?? 0;
+        $nextId = $maxId + 1;
 
         $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
-        $sequence = str_pad($count, 7, '0', STR_PAD_LEFT);
+        $sequence = str_pad($nextId, 7, '0', STR_PAD_LEFT);
 
         return "{$prefix}-L-{$sequence}";
     }

@@ -102,11 +102,15 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
-        if (! in_array(auth()->user()->role, ['admin', 'super_admin'])) {
+        if (! in_array(auth()->user()->role, ['admin', 'super_admin', 'branch_admin'])) {
             abort(403, 'Unauthorized action.');
         }
-        $customer->delete();
-
-        return redirect()->route('customers.index')->with('success', 'Customer deleted.');
+        
+        try {
+            $customer->delete();
+            return redirect()->route('customers.index')->with('success', 'Customer deleted.');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->route('customers.index')->withErrors(['error' => 'Cannot delete this customer because they have existing orders or records.']);
+        }
     }
 }
