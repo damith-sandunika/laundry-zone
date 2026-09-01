@@ -161,7 +161,7 @@ class RiderController extends Controller
                 ]);
 
                 $commService = new \App\Services\CommunicationService();
-                // $commService->sendOrderCompleted($order);
+                $commService->sendDeliveryCompleted($order);
             }
         }
 

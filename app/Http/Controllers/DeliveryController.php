@@ -307,6 +307,9 @@ class DeliveryController extends Controller
                         'note' => 'Auto-updated via PickMe/Flash dispatch',
                     ]);
                 }
+                
+                $commService = new CommunicationService();
+                $commService->sendDeliveryCompleted($order);
             }
 
             if ($request->filled('pickme_flash_cost')) {

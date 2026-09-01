@@ -795,7 +795,12 @@ public function bulkStatus(Request $request)
             $commService = new \App\Services\CommunicationService();
             \Log::info('Triggering notification for status: ' . $status);
             
-            $isCollection = \App\Models\WorkshopDispatch::where('order_id', $order->id)->exists();
+            $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
+            $isCollection = false;
+            
+            if (! $order->is_delivery_order && $dispatch && $dispatch->branch_id !== $dispatch->workshop_branch_id) {
+                $isCollection = true;
+            }
 
             if ($status === 'done' && $isCollection) {
                 $commService->sendCollectionOrderReady($order);
