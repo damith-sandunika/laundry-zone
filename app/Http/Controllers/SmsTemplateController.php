@@ -44,17 +44,31 @@ class SmsTemplateController extends Controller
     public function seedDefault()
     {
         $defaults = [
-            ['type' => 'order_confirmation', 'name' => 'Order Confirmation', 'message' => 'Hello {customer_name}, your order #{order_id} has been confirmed. Total: {total}'],
-            ['type' => 'order_ready', 'name' => 'Order Ready', 'message' => 'Your order #{order_id} is ready for pickup/delivery.'],
-            ['type' => 'order_delivered', 'name' => 'Order Delivered', 'message' => 'Your order #{order_id} has been delivered. Thank you!'],
-            ['type' => 'bill_finalize', 'name' => 'Bill Finalized', 'message' => 'Your bill for order #{order_id} is finalized. Please pay {amount_due}.'],
-            ['type' => 'delivery_confirmation', 'name' => 'Delivery Confirmation', 'message' => 'Our rider is on the way with your order #{order_id}.'],
-            ['type' => 'delivery_thank_you', 'name' => 'Delivery Thank You', 'message' => 'Thank you for choosing our delivery service for order #{order_id}.'],
-            ['type' => 'order_dispatched_to_workshop', 'name' => 'Sent to Workshop', 'message' => 'Your order #{order_id} has been dispatched to our workshop.'],
-            ['type' => 'order_processing', 'name' => 'Processing at Workshop', 'message' => 'We are now processing your order #{order_id} at our workshop.'],
-            ['type' => 'order_returned_from_workshop', 'name' => 'Back from Workshop', 'message' => 'Your order #{order_id} has returned from the workshop and will be ready soon.'],
-            ['type' => 'order_completed', 'name' => 'Order Completed', 'message' => 'Your order #{order_id} is fully completed. Thank you for choosing us!'],
-            ['type' => 'order_cancelled', 'name' => 'Order Cancelled', 'message' => 'Your order #{order_id} has been cancelled. Contact us for details.'],
+            [
+                'type' => 'pos_walkin_completed',
+                'name' => 'Walk-in Order Completed',
+                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - RAPID Laundromat',
+            ],
+            [
+                'type' => 'delivery_completed',
+                'name' => 'Delivery Order Completed',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} is completed. Thank you for using RAPID Laundromat!',
+            ],
+            [
+                'type' => 'collection_order_placed',
+                'name' => 'Collection Order Placed',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been placed at our collection branch and will be sent for processing.',
+            ],
+            [
+                'type' => 'collection_order_ready',
+                'name' => 'Collection Order Ready for Pickup/Delivery',
+                'message' => 'Hi {customer_name}, great news! Your order #{order_id} is completed and ready for pickup or delivery.',
+            ],
+            [
+                'type' => 'collection_order_completed',
+                'name' => 'Collection Order Completed',
+                'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing RAPID Laundromat!',
+            ]
         ];
 
         foreach ($defaults as $default) {
