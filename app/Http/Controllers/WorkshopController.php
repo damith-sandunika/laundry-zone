@@ -852,7 +852,7 @@ class WorkshopController extends Controller
 
         // Send "Ready" notification
         $commService = new CommunicationService();
-        // $commService->sendOrderReady($order);
+        $commService->sendCollectionOrderReady($order);
 
         return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
     }
@@ -934,7 +934,7 @@ class WorkshopController extends Controller
             try {
                 $order = $order->fresh();
                 $commService = new CommunicationService();
-                // $commService->sendOrderCompleted($order);
+                $commService->sendPosWalkinCompleted($order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (handover): ' . $e->getMessage());
             }
