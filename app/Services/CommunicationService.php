@@ -24,229 +24,61 @@ class CommunicationService
         $payment = $data['payment_status'];
 
         $templates = [
-            'order_confirmation' => [
-                'subject' => "Order #{$orderId} Confirmed – RAPID Laundromat",
+            'pos_walkin_completed' => [
+                'subject' => "Walk-in Order Completed",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 12px;'>Your order <strong>#{$orderId}</strong> has been <span style='color:#16a34a;font-weight:700;'>confirmed</span> and is now being processed.</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;border-radius:6px 0 0 0;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;border-radius:0 0 0 6px;'>Payment</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
-                    </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We'll notify you when your order is ready. Thank you for choosing RAPID Laundromat!</p>
-                ",
-            ],
-            'bill_finalize' => [
-                'subject' => "Order #{$orderId} – Bill Finalized",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 12px;'>Your laundry has been assessed and the final bill for order <strong>#{$orderId}</strong> is now confirmed.</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total Amount</td><td style='padding:8px 12px;background:#f8fafc;color:#dc2626;font-weight:700;'>{$total}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Amount Due</td><td style='padding:8px 12px;background:#f8fafc;color:#dc2626;font-weight:700;'>{$due}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
-                    </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>Please be ready to settle the payment when collecting your order. Thank you!</p>
-                ",
-            ],
-            'order_ready' => [
-                'subject' => "Order #{$orderId} is Ready for Pickup / Delivery 🎉",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Great news! Your order <strong>#{$orderId}</strong> is <span style='color:#16a34a;font-weight:700;'>ready</span> for pickup or delivery.</p>
-                    <div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px 20px;margin:16px 0;'>
-                        <p style='margin:0;font-weight:700;color:#15803d;font-size:15px;'>✅ Your clothes are cleaned and ready!</p>
-                    </div>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is fully completed and settled. Thank you for your business! - RAPID Laundromat</p>
                     <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                     </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>Please visit your branch or await your delivery rider. Thank you for choosing RAPID Laundromat!</p>
                 ",
             ],
-            'order_delivered' => [
-                'subject' => "Order #{$orderId} Delivered – Thank You!",
+            'delivery_completed' => [
+                'subject' => "Delivery Order Completed",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been successfully <span style='color:#16a34a;font-weight:700;'>delivered/collected</span>. We hope you're happy with our service!</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total Paid</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
-                    </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We look forward to serving you again. — RAPID Laundromat 🧺</p>
-                ",
-            ],
-            'delivery_confirmation' => [
-                'subject' => "Order #{$orderId} – Rider On the Way 🚴",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Our delivery rider is on the way with your order <strong>#{$orderId}</strong>. Please be available to receive it.</p>
-                    <div style='background:#eff6ff;border:1.5px solid #93c5fd;border-radius:12px;padding:16px 20px;margin:16px 0;'>
-                        <p style='margin:0;font-weight:700;color:#1d4ed8;font-size:15px;'>🚴 Rider is heading to your location!</p>
-                    </div>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Amount Due</td><td style='padding:8px 12px;background:#f8fafc;color:#dc2626;font-weight:700;'>{$due}</td></tr>
-                    </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>Please prepare the exact amount if paying by cash. Thank you!</p>
-                ",
-            ],
-            'delivery_thank_you' => [
-                'subject' => "Thank You for Using RAPID Laundromat Delivery!",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Thank you for using our home delivery service for order <strong>#{$orderId}</strong>. Your satisfaction is our priority!</p>
-                    <div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:16px 20px;margin:16px 0;'>
-                        <p style='margin:0;font-weight:700;color:#15803d;'>⭐ We'd love to hear your feedback!</p>
-                    </div>
-                    <p style='margin:16px 0 0;color:#64748b;font-size:13px;'>We hope to serve you again soon. — RAPID Laundromat 🧺</p>
-                ",
-            ],
-            'order_dispatched_to_workshop' => [
-                'subject' => "Order #{$orderId} – Sent to Workshop",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been dispatched to our central workshop for specialized processing.</p>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We'll notify you as soon as it's ready. Thank you for your patience!</p>
-                ",
-            ],
-            'order_processing' => [
-                'subject' => "Order #{$orderId} – Now Processing",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is currently being processed at our workshop. We're taking great care of your items!</p>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We'll update you once it's ready. Thank you for choosing RAPID Laundromat!</p>
-                ",
-            ],
-            'order_returned_from_workshop' => [
-                'subject' => "Order #{$orderId} – Back from Workshop",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been returned from our workshop to the branch. It will be ready for pickup/delivery shortly!</p>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>Thank you for your patience. — RAPID Laundromat 🧺</p>
-                ",
-            ],
-            'order_cancelled' => [
-                'subject' => "Order #{$orderId} – Cancelled",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>We regret to inform you that your order <strong>#{$orderId}</strong> has been <span style='color:#dc2626;font-weight:700;'>cancelled</span>.</p>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>If you have any questions, please contact your nearest RAPID Laundromat branch. We apologize for the inconvenience.</p>
-                ",
-            ],
-            'order_completed' => [
-                'subject' => "Order #{$orderId} – Completed & Settled",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been fully completed and settled. Thank you for your business!</p>
+                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> is completed. Thank you for using RAPID Laundromat!</p>
                     <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                     </table>
-                    <p style='margin:0;color:#64748b;font-size:13px;'>We look forward to serving you again. — RAPID Laundromat 🧺</p>
                 ",
             ],
+            'collection_order_placed' => [
+                'subject' => "Collection Order Placed",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been placed at our collection branch and will be sent for processing.</p>
+                ",
+            ],
+            'collection_order_ready' => [
+                'subject' => "Collection Order Ready for Pickup/Delivery",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Great news! Your order <strong>#{$orderId}</strong> is completed and ready for pickup or delivery.</p>
+                ",
+            ],
+            'collection_order_completed' => [
+                'subject' => "Collection Order Completed",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is completed and settled. Thank you for choosing RAPID Laundromat!</p>
+                ",
+            ]
         ];
 
         return $templates[$type] ?? ['subject' => "Order #{$orderId} Update", 'body' => "<p>Hi {$name}, there is an update on order #{$orderId}.</p>"];
     }
 
-    public function sendBookingConfirmation(\App\Models\DeliveryAppointment $appointment)
-    {
-        $customer = $appointment->customer;
-        if (!$customer) return;
-
-        $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
-        $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
-
-        $type = 'order_confirmation'; // Reuse order confirmation template
-        $title = $customer->title ? trim($customer->title) . ' ' : '';
-        $data = [
-            'customer_name'  => trim($title . $customer->name),
-            'order_id'       => $appointment->id,
-            'total'          => 'Rs.' . number_format($appointment->delivery_cost ?? 0, 2) . ' (Estimated Delivery Cost)',
-            'amount_due'     => 'N/A',
-            'payment_status' => 'Pending',
-        ];
-
-        if ($isSmsEnabled && !empty($customer->phone)) {
-            $smsTemplate = SmsTemplate::where('type', $type)->where('is_active', true)->first();
-            if ($smsTemplate) {
-                $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
-                $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
-                $message = str_replace("Your order", "Your delivery booking", $message);
-                
-                $log = \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
-                \App\Jobs\ProcessSms::dispatch($log);
-            }
-        }
-
-        if ($isEmailEnabled && !empty($customer->email)) {
-            $content = $this->getEmailContent($type, $data);
-            $subject = "Your Delivery Booking #{$appointment->id} is Confirmed 📅";
-            $body    = str_replace("Your order", "Your delivery booking", $content['body']);
-            
-            $log = \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
-            \App\Jobs\ProcessEmail::dispatch($log);
-        }
-    }
-
-    public function sendPickupConfirmation(\App\Models\DeliveryAppointment $appointment)
-    {
-        $customer = $appointment->customer;
-        if (!$customer) return;
-
-        $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
-        $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
-
-        $type = 'delivery_confirmation'; // Reuse Rider On the Way template type
-        $title = $customer->title ? trim($customer->title) . ' ' : '';
-        $data = [
-            'customer_name'  => trim($title . $customer->name),
-            'order_id'       => $appointment->id,
-            'total'          => 'Rs.' . number_format($appointment->delivery_cost ?? 0, 2),
-            'amount_due'     => 'N/A',
-            'payment_status' => 'Pending',
-        ];
-
-        if ($isSmsEnabled && !empty($customer->phone)) {
-            $smsTemplate = SmsTemplate::where('type', $type)->where('is_active', true)->first();
-            if ($smsTemplate) {
-                $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
-                $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
-                $message = str_replace("delivery rider", "pickup rider", $message);
-                
-                $log = \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
-                \App\Jobs\ProcessSms::dispatch($log);
-            }
-        }
-
-        if ($isEmailEnabled && !empty($customer->email)) {
-            $content = $this->getEmailContent($type, $data);
-            $subject = "Your Pickup is on the Way 🚴";
-            $body    = str_replace("Our delivery rider is on the way with your order", "Our rider is on the way to pick up your laundry", $content['body']);
-            
-            $log = \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
-            \App\Jobs\ProcessEmail::dispatch($log);
-        }
-    }
-
-    public function sendOrderConfirmation(Order $order) { $this->dispatch('order_confirmation', $order); }
-    public function sendOrderReady(Order $order)         { $this->dispatch('order_ready', $order); }
-    public function sendOrderDelivered(Order $order)     { $this->dispatch('order_delivered', $order); }
-    public function sendFinalizedBill(Order $order)      { $this->dispatch('bill_finalize', $order); }
-    public function sendDeliveryConfirmation(Order $order) { $this->dispatch('delivery_confirmation', $order); }
-    public function sendDeliveryThankYou(Order $order)   { $this->dispatch('delivery_thank_you', $order); }
-    public function sendOrderDispatchedToWorkshop(Order $order) { $this->dispatch('order_dispatched_to_workshop', $order); }
-    public function sendOrderProcessing(Order $order)    { $this->dispatch('order_processing', $order); }
-    public function sendOrderReturnedFromWorkshop(Order $order) { $this->dispatch('order_returned_from_workshop', $order); }
-    public function sendOrderCancelled(Order $order)     { $this->dispatch('order_cancelled', $order); }
-    public function sendOrderCompleted(Order $order)     { $this->dispatch('order_completed', $order); }
+    public function sendPosWalkinCompleted(Order $order) { $this->dispatch('pos_walkin_completed', $order); }
+    public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
+    public function sendCollectionOrderPlaced(Order $order) { $this->dispatch('collection_order_placed', $order); }
+    public function sendCollectionOrderReady(Order $order)  { $this->dispatch('collection_order_ready', $order); }
+    public function sendCollectionOrderCompleted(Order $order) { $this->dispatch('collection_order_completed', $order); }
 
     // ─── Master Dispatch ─────────────────────────────────────────────────────
 

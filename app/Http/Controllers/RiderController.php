@@ -69,10 +69,10 @@ class RiderController extends Controller
 
         if ($task->task_type === 'pickup' && $task->appointment) {
             $commService = new CommunicationService();
-            $commService->sendPickupConfirmation($task->appointment);
+            // $commService->sendPickupConfirmation($task->appointment);
         } elseif ($task->task_type === 'delivery' && $task->order) {
             $commService = new CommunicationService();
-            $commService->sendDeliveryConfirmation($task->order);
+            // $commService->sendDeliveryConfirmation($task->order);
         }
 
         return response()->json(['success' => true, 'status' => 'on_way']);
@@ -161,7 +161,7 @@ class RiderController extends Controller
                 ]);
 
                 $commService = new \App\Services\CommunicationService();
-                $commService->sendOrderCompleted($order);
+                // $commService->sendOrderCompleted($order);
             }
         }
 
@@ -263,7 +263,7 @@ class RiderController extends Controller
 
         // Notify customer
         $commService = new CommunicationService();
-        $commService->sendOrderConfirmation($order);
+        // $commService->sendOrderConfirmation($order);
 
         return redirect()->route('rider.dashboard')->with('success', 'Order created successfully! Customer notified.');
     }

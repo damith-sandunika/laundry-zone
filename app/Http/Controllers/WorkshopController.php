@@ -47,7 +47,7 @@ class WorkshopController extends Controller
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Order Dispatched from Branch: #' . $order->order_number, route('workshop.dashboard'), 'branch_dispatch'));
 
         $commService = new CommunicationService();
-        $commService->sendOrderDispatchedToWorkshop($order);
+        // $commService->sendOrderDispatchedToWorkshop($order);
 
         return redirect()->back()->with('success', 'Order dispatched to workshop successfully.');
     }
@@ -88,7 +88,7 @@ class WorkshopController extends Controller
 
         $commService = new CommunicationService();
         foreach ($orders as $order) {
-            $commService->sendOrderDispatchedToWorkshop($order);
+            // $commService->sendOrderDispatchedToWorkshop($order);
         }
 
         return redirect()->back()->with('success', count($orders).' orders dispatched to workshop.');
@@ -447,7 +447,7 @@ class WorkshopController extends Controller
 
             try {
                 $commService = new CommunicationService();
-                $commService->sendOrderProcessing($dispatch->order);
+                // $commService->sendOrderProcessing($dispatch->order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (receive): ' . $e->getMessage());
             }
@@ -481,7 +481,7 @@ class WorkshopController extends Controller
 
             try {
                 $commService = new CommunicationService();
-                $commService->sendOrderProcessing($order);
+                // $commService->sendOrderProcessing($order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (startProcessing): ' . $e->getMessage());
             }
@@ -558,7 +558,7 @@ class WorkshopController extends Controller
             if ($dispatch->branch_id === $dispatch->workshop_branch_id) {
                 try {
                     $commService = new CommunicationService();
-                    $commService->sendOrderReady($order);
+                    // $commService->sendOrderReady($order);
                 } catch (\Exception $e) {
                     \Log::error('Email notification failed (complete ready): ' . $e->getMessage());
                 }
@@ -589,7 +589,7 @@ class WorkshopController extends Controller
             $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
             
             $commService = new CommunicationService();
-            $commService->sendFinalizedBill($order);
+            // $commService->sendFinalizedBill($order);
             
             return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
@@ -689,7 +689,7 @@ class WorkshopController extends Controller
 
             try {
                 $commService = new CommunicationService();
-                $commService->sendOrderReturnedFromWorkshop($order);
+                // $commService->sendOrderReturnedFromWorkshop($order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (returnToBranch): ' . $e->getMessage());
             }
@@ -824,9 +824,9 @@ class WorkshopController extends Controller
             $dispatch = WorkshopDispatch::find($id);
             if ($dispatch && $dispatch->order) {
                 if ($status === 'processing') {
-                    $commService->sendOrderProcessing($dispatch->order);
+                    // $commService->sendOrderProcessing($dispatch->order);
                 } elseif ($status === 'returned_to_branch') {
-                    $commService->sendOrderReturnedFromWorkshop($dispatch->order);
+                    // $commService->sendOrderReturnedFromWorkshop($dispatch->order);
                 }
             }
         }
@@ -852,7 +852,7 @@ class WorkshopController extends Controller
 
         // Send "Ready" notification
         $commService = new CommunicationService();
-        $commService->sendOrderReady($order);
+        // $commService->sendOrderReady($order);
 
         return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
     }
@@ -934,7 +934,7 @@ class WorkshopController extends Controller
             try {
                 $order = $order->fresh();
                 $commService = new CommunicationService();
-                $commService->sendOrderCompleted($order);
+                // $commService->sendOrderCompleted($order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (handover): ' . $e->getMessage());
             }

@@ -94,9 +94,6 @@ class DeliveryController extends Controller
     {
         $appointment->update(['status' => 'confirmed']);
 
-        $commService = new \App\Services\CommunicationService();
-        $commService->sendBookingConfirmation($appointment);
-
         return redirect()->route('delivery.index')->with('success', 'Appointment confirmed. Customer notified.');
     }
 
@@ -142,10 +139,6 @@ class DeliveryController extends Controller
         $appointment->update(['status' => 'rider_assigned']);
 
         \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Pickup Task Assigned: #' . $appointment->id, route('rider.tasks')));
-
-        // Notification
-        $commService = new CommunicationService();
-        $commService->sendPickupConfirmation($appointment);
 
         return redirect()->route('delivery.index')->with('success', "Rider {$rider->name} assigned for pickup.");
     }
@@ -281,9 +274,6 @@ class DeliveryController extends Controller
                     'changed_by' => auth()->id(),
                     'note' => 'Delivered via PickMe',
                 ]);
-                
-                $commService = new CommunicationService();
-                $commService->sendOrderDelivered($order);
                 
                 // For PickMe: balance remaining means customer pays COD via PickMe
                 // Do NOT auto-mark as paid - branch admin should handle cash collection

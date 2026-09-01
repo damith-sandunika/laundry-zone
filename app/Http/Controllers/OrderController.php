@@ -441,25 +441,7 @@ class OrderController extends Controller
             \Log::info('Transaction successful for order ' . $order->id . ' status ' . $request->status);
 
             // Trigger notifications AFTER transaction commits
-            try {
-                $commService = new \App\Services\CommunicationService();
-                \Log::info('Triggering notification for status: ' . $request->status);
-                if ($request->status === 'done') {
-                    $commService->sendOrderReady($order);
-                } elseif ($request->status === 'delivered') {
-                    $commService->sendOrderDelivered($order);
-                } elseif ($request->status === 'dispatched_to_workshop') {
-                    $commService->sendOrderDispatchedToWorkshop($order);
-                } elseif ($request->status === 'returned_from_workshop') {
-                    $commService->sendOrderReturnedFromWorkshop($order);
-                } elseif ($request->status === 'completed') {
-                    $commService->sendOrderCompleted($order);
-                } elseif ($request->status === 'cancelled') {
-                    $commService->sendOrderCancelled($order);
-                }
-            } catch (\Exception $e) {
-                \Log::error('Email notification failed (updateStatus): ' . $e->getMessage());
-            }
+            $this->triggerNotifications($order, $request->status);
 
             // Return JSON for AJAX calls, redirect for form submissions
             if ($request->expectsJson() || $request->ajax()) {
@@ -648,24 +630,9 @@ public function bulkStatus(Request $request)
         });
 
         // Status-specific notifications - sent ONCE after transaction succeeds
-        $commService = new \App\Services\CommunicationService();
         $orders = Order::whereIn('id', $request->order_ids)->get();
         foreach ($orders as $order) {
-            if ($request->status === 'done') {
-                $commService->sendOrderReady($order);
-            } elseif ($request->status === 'delivered') {
-                $commService->sendOrderDelivered($order);
-            } elseif ($request->status === 'dispatched_to_workshop') {
-                $commService->sendOrderDispatchedToWorkshop($order);
-            } elseif ($request->status === 'processing') {
-                $commService->sendOrderProcessing($order);
-            } elseif ($request->status === 'returned_from_workshop') {
-                $commService->sendOrderReturnedFromWorkshop($order);
-            } elseif ($request->status === 'completed') {
-                $commService->sendOrderCompleted($order);
-            } elseif ($request->status === 'cancelled') {
-                $commService->sendOrderCancelled($order);
-            }
+            $this->triggerNotifications($order, $request->status);
         }
 
         return response()->json([
@@ -820,6 +787,29 @@ public function bulkStatus(Request $request)
             ]);
 
             return response()->json(['success' => true, 'status' => 'completed']);
+        }
+    }
+    private function triggerNotifications(Order $order, string $status)
+    {
+        try {
+            $commService = new \App\Services\CommunicationService();
+            \Log::info('Triggering notification for status: ' . $status);
+            
+            $isCollection = \App\Models\WorkshopDispatch::where('order_id', $order->id)->exists();
+
+            if ($status === 'done' && $isCollection) {
+                $commService->sendCollectionOrderReady($order);
+            } elseif ($status === 'delivered' || $status === 'completed') {
+                if ($order->is_delivery_order) {
+                    $commService->sendDeliveryCompleted($order);
+                } elseif ($isCollection) {
+                    $commService->sendCollectionOrderCompleted($order);
+                } else {
+                    $commService->sendPosWalkinCompleted($order);
+                }
+            }
+        } catch (\Exception $e) {
+            \Log::error('Notification failed: ' . $e->getMessage());
         }
     }
 }
