@@ -71,6 +71,9 @@ class SmsTemplateController extends Controller
             ]
         ];
 
+        $defaultTypes = array_column($defaults, 'type');
+        SmsTemplate::whereNotIn('type', $defaultTypes)->delete();
+
         foreach ($defaults as $default) {
             $default['is_active'] = true;
             SmsTemplate::updateOrCreate(['type' => $default['type']], $default);

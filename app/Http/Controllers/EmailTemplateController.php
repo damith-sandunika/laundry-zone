@@ -78,6 +78,9 @@ class EmailTemplateController extends Controller
             ]
         ];
 
+        $defaultTypes = array_column($defaults, 'type');
+        EmailTemplate::whereNotIn('type', $defaultTypes)->delete();
+
         foreach ($defaults as $default) {
             $default['is_active'] = true;
             EmailTemplate::updateOrCreate(['type' => $default['type']], $default);
