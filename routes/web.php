@@ -223,13 +223,8 @@ Route::middleware(['auth'])->group(function () {
             
             Route::post('/settings/pickup-time-periods', [SettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
             Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [SettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
-            
-            Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-            Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
-            
+
             Route::get('/branch-logs', [\App\Http\Controllers\BranchLogController::class, 'index'])->name('superadmin.branch-logs');
-            Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
-            Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
 
             Route::get('/sms-templates', [SmsTemplateController::class, 'index'])->name('sms-templates.index');
             Route::put('/sms-templates/{template}', [SmsTemplateController::class, 'update'])->name('sms-templates.update');
@@ -262,6 +257,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);
+
+        // Reports Routes (Accessible by admin, branch_admin, workshop_admin, super_admin)
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+        Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
+        Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
     });
 });
 
