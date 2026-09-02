@@ -105,6 +105,15 @@ class WorkshopController extends Controller
             ->where('status', 'open')
             ->first();
 
+        $suggestedOpeningCash = 0;
+        if (!$activeSession) {
+            $lastSession = \App\Models\RegisterSession::where('branch_id', $branchId)
+                ->where('status', 'closed')
+                ->orderBy('closed_at', 'desc')
+                ->first();
+            $suggestedOpeningCash = $lastSession ? $lastSession->closing_cash : 0;
+        }
+
         $currentBalance = 0;
         $cashBalance = 0;
         $cardPayments = 0;
@@ -158,7 +167,12 @@ class WorkshopController extends Controller
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
-            $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
+            // Bank deposits made during the shift
+            $bankDepositsLogged = \App\Models\BankDeposit::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->sum('amount');
+
+            $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged - $bankDepositsLogged;
             $currentBalance = $cashBalance;
             $totalPaymentsCollected = $cashCollected + $cardPaymentsAmount + $bankTransfers;
 
@@ -355,7 +369,16 @@ class WorkshopController extends Controller
         $allInventory = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
 
         // Fetch Laundry/Branch Name
-        $branchName = \App\Models\Branch::find($branchId)->name ?? 'Workshop';
+        $currentBranch = \App\Models\Branch::find($branchId);
+        $branchName = $currentBranch->name ?? 'Workshop';
+
+        // Fetch Branch Staff for assignment when opening shift
+        $branchStaff = \App\Models\User::where('branch_id', $branchId)->where('role', 'staff')->get();
+        
+        $activeAttendances = collect();
+        if ($activeSession) {
+            $activeAttendances = \App\Models\Attendance::where('register_session_id', $activeSession->id)->get()->keyBy('user_id');
+        }
 
         // ── Chart Data ──
         $todayLabels = [];
@@ -399,7 +422,7 @@ class WorkshopController extends Controller
             'monthly' => ['labels' => $monthlyLabels, 'pending' => $monthlyPending, 'delivered' => $monthlyDelivered],
         ];
 
-        return view('workshop.dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'branchName', 'chartData'));
+        return view('workshop.dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'suggestedOpeningCash', 'branchName', 'chartData', 'currentBranch', 'branchStaff', 'activeAttendances'));
     }
 
     // ─── Workshop Admin: Operations ───
@@ -467,6 +490,8 @@ class WorkshopController extends Controller
 
             $dispatch->update(['status' => 'processing']);
             $order->update(['status' => 'processing']);
+            
+
 
             try {
                 \App\Models\OrderStatusHistory::create([

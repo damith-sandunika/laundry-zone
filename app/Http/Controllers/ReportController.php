@@ -13,6 +13,7 @@ use App\Models\OrderItem;
 use App\Models\PackagePayment;
 use App\Models\PaymentTransaction;
 use App\Models\RegisterSession;
+use App\Models\BankDeposit;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -198,12 +199,20 @@ class ReportController extends Controller
             ->limit(5)
             ->get();
 
+        // 7. Bank Deposits
+        $depositsQuery = BankDeposit::with(['branch', 'user'])
+            ->whereBetween('deposited_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        if ($branchId) {
+            $depositsQuery->where('branch_id', $branchId);
+        }
+        $bankDeposits = $depositsQuery->orderBy('deposited_at', 'desc')->get();
+
         return view('reports.index', compact(
             'orders', 'totalSales', 'totalDeliveryFees', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank', 'totalCredit', 'totalPending',
             'services', 'expensesList', 'totalExpensesAmount', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders',
             'customerPackages', 'packagePayments', 'branches', 'branchId', 'isSuperAdmin',
             'deliveryRevenue', 'walkinRevenue', 'deliveryOrders', 'walkinOrders', 'dailyRevenue', 'topCustomers',
-            'totalBranchProfit', 'totalWorkshopProfit'
+            'totalBranchProfit', 'totalWorkshopProfit', 'bankDeposits'
         ));
     }
 

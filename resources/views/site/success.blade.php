@@ -25,7 +25,7 @@
         
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
             <div class="text-sm text-slate-500 mb-1">Booking Reference</div>
-            <div class="text-2xl font-black text-slate-800">#{{ str_pad($appointment->id, 5, '0', STR_PAD_LEFT) }}</div>
+            <div class="text-2xl font-black text-slate-800">#{{ $appointment->order->order_number ?? $appointment->id }}</div>
         </div>
 
         <div class="space-y-3 mb-8 text-left text-sm">

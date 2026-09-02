@@ -349,7 +349,7 @@
                             </th>
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">
-                                Order ID & Customer</th>
+                                Order Number & Customer</th>
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">
                                 Order Date</th>

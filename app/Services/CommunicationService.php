@@ -44,7 +44,7 @@ class CommunicationService
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is fully completed and settled. Thank you for your business! - RAPID Laundromat</p>
                     <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                     </table>
@@ -56,7 +56,7 @@ class CommunicationService
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> is completed. Thank you for using RAPID Laundromat!</p>
                     <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order ID</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                     </table>

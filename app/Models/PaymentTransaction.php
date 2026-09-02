@@ -17,4 +17,35 @@ class PaymentTransaction extends Model
     {
         return $this->belongsTo(User::class, 'created_by');
     }
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($transaction) {
+            if ($transaction->payment_method === 'cash' && $transaction->status !== 'rejected') {
+                if ($transaction->order && $transaction->order->branch_id) {
+                    app(\App\Services\CashBalanceService::class)->incrementCashBalance($transaction->order->branch_id, $transaction->amount);
+                }
+            }
+        });
+        
+        static::updated(function ($transaction) {
+            $original = $transaction->getOriginal();
+            if ($transaction->payment_method === 'cash') {
+                if ($original['status'] !== 'approved' && $transaction->status === 'approved') {
+                    // if status changed to approved (e.g. from pending/rejected) - wait, cash payments are usually approved immediately unless collected by rider.
+                    // Let's just handle simple created for now, but if it gets deleted:
+                }
+            }
+        });
+
+        static::deleted(function ($transaction) {
+            if ($transaction->payment_method === 'cash' && $transaction->status !== 'rejected') {
+                if ($transaction->order && $transaction->order->branch_id) {
+                    app(\App\Services\CashBalanceService::class)->decrementCashBalance($transaction->order->branch_id, $transaction->amount);
+                }
+            }
+        });
+    }
 }

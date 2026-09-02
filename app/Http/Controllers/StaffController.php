@@ -34,6 +34,12 @@ class StaffController extends Controller
         return view('staff.index', compact('staff', 'salaries', 'branches'));
     }
 
+    public function create()
+    {
+        $branches = \App\Models\Branch::all();
+        return view('staff.create', compact('branches'));
+    }
+
     public function store(Request $request)
     {
         $rules = [
@@ -123,7 +129,7 @@ class StaffController extends Controller
             'net_salary' => $netSalary,
         ];
 
-        return view('staff.show', compact('staff', 'salaries', 'payroll'));
+        return view('staff.show', compact('staff', 'salaries', 'payroll', 'attendancesThisMonth'));
     }
 
     public function edit(User $staff)

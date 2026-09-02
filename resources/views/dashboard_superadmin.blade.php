@@ -77,11 +77,16 @@
             </div>
         </div>
 
-        <!-- Orders by Status Chart -->
-        <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 class="text-sm font-bold text-gray-800 mb-4">Today's Orders by Status</h3>
-            <div class="relative h-64 w-full flex justify-center">
-                <canvas id="orderStatusChart"></canvas>
+        {{-- Chart 2: Branch Cash Balances --}}
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col h-[350px]">
+            <div class="flex justify-between items-center mb-6">
+                <div>
+                    <h3 class="text-base font-black text-slate-900 tracking-tight">Branch Cash Balances</h3>
+                    <p class="text-[12px] font-semibold text-slate-500">Current cash on hand</p>
+                </div>
+            </div>
+            <div class="relative flex-1">
+                <canvas id="cashBalanceChart"></canvas>
             </div>
         </div>
     </div>
@@ -96,7 +101,7 @@
             <table class="w-full text-left border-collapse">
                 <thead class="text-xs text-gray-500 uppercase font-extrabold tracking-wider bg-gray-50 border-b border-gray-100">
                     <tr>
-                        <th class="px-6 py-4">Order ID</th>
+                        <th class="px-6 py-4">Order Number</th>
                         <th class="px-6 py-4">Branch</th>
                         <th class="px-6 py-4">Customer</th>
                         <th class="px-6 py-4">Time</th>
@@ -199,47 +204,54 @@
                 }
             });
 
-            // --- Orders By Status Chart ---
-            const orderStatusCtx = document.getElementById('orderStatusChart').getContext('2d');
-            const orderStatusData = {!! json_encode($chartOrderStatus) !!};
+            // --- Cash Balances Chart ---
+            const cashBalanceCtx = document.getElementById('cashBalanceChart').getContext('2d');
+            const cashBalanceData = {!! json_encode($chartBranchBalances ?? ['labels'=>[], 'data'=>[]]) !!};
             
-            new Chart(orderStatusCtx, {
-                type: 'doughnut',
+            new Chart(cashBalanceCtx, {
+                type: 'bar',
                 data: {
-                    labels: orderStatusData.labels,
+                    labels: cashBalanceData.labels,
                     datasets: [{
-                        data: orderStatusData.data,
-                        backgroundColor: [
-                            '#f59e0b', // Amber (Received)
-                            '#3b82f6', // Blue (Processing)
-                            '#0ea5e9', // Sky (Washing)
-                            '#6366f1', // Indigo (Ironing)
-                            '#10b981', // Emerald (Ready)
-                            '#64748b'  // Slate (Delivered)
-                        ],
-                        borderWidth: 0,
-                        hoverOffset: 4
+                        label: 'Cash on Hand (Rs)',
+                        data: cashBalanceData.data,
+                        backgroundColor: '#3b82f6', // Blue 500
+                        borderRadius: 6,
+                        barPercentage: 0.6,
                     }]
                 },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '75%',
                     plugins: {
-                        legend: {
-                            position: 'right',
-                            labels: {
-                                padding: 20,
-                                usePointStyle: true,
-                                pointStyle: 'circle',
-                                font: { size: 12, weight: 'bold' }
-                            }
-                        },
+                        legend: { display: false },
                         tooltip: {
                             backgroundColor: '#1e293b',
                             padding: 12,
                             titleFont: { size: 13, weight: 'bold' },
                             bodyFont: { size: 13 },
+                            displayColors: false,
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Rs. ' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            border: { display: false },
+                            ticks: {
+                                callback: function(value) {
+                                    if(value >= 1000) return (value/1000) + 'k';
+                                    return value;
+                                }
+                            }
+                        },
+                        x: {
+                            border: { display: false },
+                            grid: { display: false }
                         }
                     }
                 }

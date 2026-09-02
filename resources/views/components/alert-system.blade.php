@@ -63,7 +63,7 @@
                 <div class="px-4 py-1.5 rounded-lg mb-3 w-full" :class="'bg-' + (activeAlert?.color || 'slate') + '-50'">
                     <p class="text-[13px] font-semibold text-slate-600">
                         <span class="text-[20px] font-black" :class="'text-' + (activeAlert?.color || 'slate') + '-600'" x-text="activeAlert?.count"></span>
-                        Pending
+                        <span x-text="activeAlert?.subtitle || 'Pending'"></span>
                     </p>
                 </div>
 

@@ -210,7 +210,7 @@ class CustomerSiteController extends Controller
             
             $customer = auth('customer')->user();
 
-            return DeliveryAppointment::create([
+            $appointment = DeliveryAppointment::create([
                 'customer_id' => $customer->id,
                 'branch_id' => $closestWorkshop->id,
                 'pickup_address' => $request->pickup_address,
@@ -234,6 +234,31 @@ class CustomerSiteController extends Controller
                 'receipt_path' => $receiptPath,
                 'delivery_cost' => $deliveryCost,
             ]);
+
+            $admin = \App\Models\User::where('branch_id', $closestWorkshop->id)->first() ?? \App\Models\User::first();
+            
+            $order = \App\Models\Order::create([
+                'order_number' => \App\Models\Order::generateOrderNumber($closestWorkshop->id, true),
+                'customer_id' => $customer->id,
+                'branch_id' => $closestWorkshop->id,
+                'status' => 'received',
+                'subtotal' => 0,
+                'total' => $deliveryCost,
+                'delivery_fee' => $deliveryCost,
+                'paid_amount' => 0,
+                'payment_status' => 'pending',
+                'payment_method' => 'cash',
+                'due_date' => \Carbon\Carbon::parse($pickupScheduledAt)->addDays(2),
+                'created_by' => $admin ? $admin->id : 1,
+                'is_delivery_order' => true,
+                'delivery_appointment_id' => $appointment->id,
+                'delivery_address' => $deliveryAddress,
+                'notes' => $request->notes,
+            ]);
+
+            $appointment->update(['order_id' => $order->id]);
+
+            return $appointment;
         });
 
 

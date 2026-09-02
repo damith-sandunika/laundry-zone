@@ -62,9 +62,9 @@ Route::get('/customer/branch-services/{branch}', [\App\Http\Controllers\Customer
 Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
     Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
     Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
-    Route::get('/orders/{order}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
-    Route::post('/orders/{order}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
-    Route::get('/orders/{order}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
+    Route::get('/orders/{order:order_number}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
+    Route::post('/orders/{order:order_number}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
+    Route::get('/orders/{order:order_number}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
     
     // Appointments
     Route::get('/appointments/{appointment}', [\App\Http\Controllers\Customer\DashboardController::class, 'showAppointment'])->name('appointments.show');
@@ -87,8 +87,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::post('/shifts/open', [DashboardController::class, 'openShift'])->name('shifts.open');
-    Route::post('/shifts/close', [DashboardController::class, 'closeShift'])->name('shifts.close');
+    Route::post('/shifts/open', [\App\Http\Controllers\DashboardController::class, 'openShift'])->name('shifts.open');
+    Route::post('/shifts/attendance/update', [\App\Http\Controllers\DashboardController::class, 'updateAttendance'])->name('shifts.attendance.update');
+    Route::post('/shifts/close', [\App\Http\Controllers\DashboardController::class, 'closeShift'])->name('shifts.close');
+
+    Route::post('/bank-deposits', [\App\Http\Controllers\BankDepositController::class, 'store'])->name('bank-deposits.store');
 
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
@@ -223,6 +226,8 @@ Route::middleware(['auth'])->group(function () {
             
             Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
             Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+            
+            Route::get('/branch-logs', [\App\Http\Controllers\BranchLogController::class, 'index'])->name('superadmin.branch-logs');
             Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
             Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
 
@@ -253,7 +258,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
         Route::get('/hr/{staff}/payslip', [StaffController::class, 'downloadPayslip'])->name('hr.payslip.download');
 
-        Route::resource('branches', BranchController::class)->except(['create', 'show', 'edit']);
+        Route::resource('branches', BranchController::class)->except(['show', 'edit']);
         Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);

@@ -101,7 +101,7 @@ class NotificationController extends Controller
                     'label'         => 'New Customer Pickup Requests',
                     'count'         => count($pendingPickups),
                     'order_numbers' => $pendingPickups,
-                    'icon'          => 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
+                    'icon'          => 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
                     'color'         => 'red',
                     'url'           => '#',
                 ];
@@ -129,6 +129,30 @@ class NotificationController extends Controller
                     'url'           => '#',
                 ];
                 $totalCount += count($pendingPayments);
+            }
+
+            // 5b. Inventory Low Stock Alerts
+            $lowStockQuery = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'min_stock')->where('is_active', true);
+            if ($user->role !== 'super_admin' && $user->role !== 'workshop_admin') {
+                $lowStockQuery->where('branch_id', $user->branch_id);
+            }
+            
+            $lowStockItems = $lowStockQuery->get()->map(function($item) {
+                return ['number' => $item->name, 'url' => route('inventory.index')];
+            })->toArray();
+
+            if (count($lowStockItems) > 0) {
+                $alerts[] = [
+                    'id'            => 'low_stock_alerts',
+                    'label'         => 'Inventory Alerts - Low Stock',
+                    'count'         => count($lowStockItems),
+                    'subtitle'      => 'Items Low',
+                    'order_numbers' => $lowStockItems,
+                    'icon'          => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+                    'color'         => 'rose',
+                    'url'           => route('inventory.index'),
+                ];
+                $totalCount += count($lowStockItems);
             }
         }
 

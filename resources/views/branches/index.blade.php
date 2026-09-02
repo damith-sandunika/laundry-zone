@@ -6,10 +6,10 @@
                 <h2 class="ph-title">Global Branches</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage all laundry branches across the network</p>
             </div>
-            <button @click="$dispatch('open-add-branch')" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <a href="{{ route('branches.create') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                 Add Branch
-            </button>
+            </a>
         </div>
     </x-slot>
 

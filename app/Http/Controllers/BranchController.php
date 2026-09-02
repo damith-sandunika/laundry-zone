@@ -20,6 +20,14 @@ class BranchController extends Controller
         return view('branches.index', compact('branches'));
     }
 
+    public function create()
+    {
+        if (auth()->user()->role !== 'super_admin') {
+            abort(403, 'Unauthorized action.');
+        }
+        return view('branches.create');
+    }
+
     public function store(Request $request)
     {
         if (auth()->user()->role !== 'super_admin') {

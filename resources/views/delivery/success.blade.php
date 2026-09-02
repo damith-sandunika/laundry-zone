@@ -27,7 +27,7 @@
     <div class="icon">✅</div>
     <h1>Booking Confirmed!</h1>
     <p>Your laundry pickup request has been received. We'll confirm shortly.</p>
-    <div class="id-badge">Booking #{{ $appointment->id }}</div>
+    <div class="id-badge">Order #{{ $appointment->order->order_number ?? $appointment->id }}</div>
 
     <div class="info-box">
         <div class="info-row">
@@ -54,7 +54,7 @@
         @endif
     </div>
 
-    <p style="font-size:13px; color:#94a3b8;">Save your Booking ID: <strong style="color:#2563eb;">#{{ $appointment->id }}</strong> to track your order.</p>
+    <p style="font-size:13px; color:#94a3b8;">Save your Order Number: <strong style="color:#2563eb;">#{{ $appointment->order->order_number ?? $appointment->id }}</strong> to track your order.</p>
     <br>
     <a href="{{ route('delivery.book') }}" class="btn">+ Book Another</a>
 </div>
