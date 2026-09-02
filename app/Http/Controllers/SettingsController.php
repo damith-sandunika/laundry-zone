@@ -127,7 +127,9 @@ class SettingsController extends Controller
             }
         }
 
-        $branch->update($data);
+        if ($branch) {
+            $branch->update($data);
+        }
 
         if (auth()->user()->role === 'super_admin') {
             if ($request->has('company_name')) {
