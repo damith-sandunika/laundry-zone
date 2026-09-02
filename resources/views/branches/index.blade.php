@@ -47,7 +47,7 @@
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-3">
                                     @if($branch->logo_path)
-                                        <img src="{{ Storage::url($branch->logo_path) }}" alt="{{ $branch->name }}" class="w-8 h-8 rounded-full object-cover border border-gray-200">
+                                        <img src="{{ str_starts_with($branch->logo_path, 'http') ? $branch->logo_path : asset($branch->logo_path) }}" alt="{{ $branch->name }}" class="w-8 h-8 rounded-full object-cover border border-gray-200">
                                     @else
                                         <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs">
                                             {{ substr($branch->name, 0, 1) }}
