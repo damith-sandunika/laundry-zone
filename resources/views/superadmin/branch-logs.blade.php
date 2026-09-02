@@ -1,14 +1,14 @@
-@extends('layouts.app')
-
-@section('content')
-<div class="max-w-7xl mx-auto">
-    <div class="flex justify-between items-center mb-6">
-        <div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Branch Logs</h1>
-            <p class="text-[13px] font-semibold text-slate-500 mt-1">Monitor all activity across branches</p>
+<x-app-layout>
+    <x-slot name="header">
+        <div class="flex flex-wrap justify-between items-start gap-3">
+            <div>
+                <h2 class="ph-title">Branch Logs</h2>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Monitor all activity across branches</p>
+            </div>
         </div>
-    </div>
+    </x-slot>
 
+<div class="max-w-7xl mx-auto">
     {{-- Filters --}}
     <div class="bg-white rounded-2xl border border-slate-200/60 shadow-sm p-4 mb-6">
         <form action="{{ route('superadmin.branch-logs') }}" method="GET" class="flex flex-wrap items-end gap-4">
@@ -100,4 +100,5 @@
         @endif
     </div>
 </div>
-@endsection
+</x-app-layout>
+
