@@ -69,12 +69,12 @@
             <!-- GENERAL SETTINGS TAB -->
             <div x-show="activeTab === 'general'" x-data="{ 
                 formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '365 Laundry')) }}',
-                formName: '{{ addslashes($branch->name ?? 'SMART LAUNDRY') }}',
-                formAddress: '{{ addslashes($branch->address) }}',
-                formPhone: '{{ addslashes($branch->phone) }}',
-                formTagline: '{{ addslashes($branch->tagline ?? 'Fast & Clean Laundry Service') }}',
-                formLogoSize: {{ $branch->logo_size ?? 140 }},
-                previewUrl: '{{ $branch->logo_path ? asset($branch->logo_path) : '' }}'
+                formName: '{{ addslashes(optional($branch)->name ?? 'SMART LAUNDRY') }}',
+                formAddress: '{{ addslashes(optional($branch)->address ?? '') }}',
+                formPhone: '{{ addslashes(optional($branch)->phone ?? '') }}',
+                formTagline: '{{ addslashes(optional($branch)->tagline ?? 'Fast & Clean Laundry Service') }}',
+                formLogoSize: {{ optional($branch)->logo_size ?? 140 }},
+                previewUrl: '{{ optional($branch)->logo_path ? asset($branch->logo_path) : '' }}'
             }">
                 <form action="{{ route('settings.updateGeneral') }}" method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-6">
                     <div class="flex-1 space-y-4 max-w-xl">
@@ -98,11 +98,11 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Latitude</label>
-                            <input type="text" name="latitude" value="{{ old('latitude', $branch->latitude) }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                            <input type="text" name="latitude" value="{{ old('latitude', optional($branch)->latitude) }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Longitude</label>
-                            <input type="text" name="longitude" value="{{ old('longitude', $branch->longitude) }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                            <input type="text" name="longitude" value="{{ old('longitude', optional($branch)->longitude) }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -112,7 +112,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">WhatsApp Number</label>
-                            <input type="text" name="whatsapp_number" value="{{ $branch->whatsapp_number ?? '' }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                            <input type="text" name="whatsapp_number" value="{{ optional($branch)->whatsapp_number ?? '' }}" class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                         </div>
                     </div>
                     <div>
@@ -124,7 +124,7 @@
                     <div class="pt-2">
                         <label class="block text-xs font-bold text-gray-800 uppercase mb-1">Global Auto-Close Time</label>
                         <p class="text-[11px] text-gray-500 mb-2">All branches will be automatically closed and their daily shift reports will be generated at this time.</p>
-                        <input type="time" name="auto_close_time" value="{{ $branch->auto_close_time ?? '' }}" class="w-48 text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500 font-mono">
+                        <input type="time" name="auto_close_time" value="{{ optional($branch)->auto_close_time ?? '' }}" class="w-48 text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500 font-mono">
                     </div>
                     @endif
 
