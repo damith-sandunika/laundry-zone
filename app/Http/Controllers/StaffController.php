@@ -11,7 +11,7 @@ class StaffController extends Controller
 {
     public function index()
     {
-        $branchId = auth()->user()->branch_id;
+        $branchId = auth()->user()->role === 'super_admin' ? null : auth()->user()->branch_id;
 
         $query = User::query();
         if ($branchId) {
