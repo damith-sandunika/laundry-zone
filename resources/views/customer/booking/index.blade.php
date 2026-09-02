@@ -104,7 +104,7 @@
                                         
                                         <!-- Category Image -->
                                         <template x-if="category.image_path">
-                                            <img :src="'/' + category.image_path" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Category">
+                                            <img :src="category.image_path.startsWith('http') ? category.image_path : '/' + category.image_path" class="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" alt="Category">
                                         </template>
                                         <template x-if="!category.image_path">
                                             <div class="w-full h-full bg-slate-200 flex items-center justify-center transition-transform duration-500 group-hover:scale-110">

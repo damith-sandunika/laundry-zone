@@ -119,7 +119,7 @@
                 getReceipts(order) {
                     if (!order || !order.payment_transactions) return [];
                     return order.payment_transactions.filter(p => p.receipt_path).map(p => ({
-                        id: p.id, amount: p.amount, url: '/storage/' + p.receipt_path,
+                        id: p.id, amount: p.amount, url: p.receipt_path.startsWith('http') ? p.receipt_path : '/storage/' + p.receipt_path,
                         status: p.status, reject_reason: p.reject_reason,
                         created_at: p.created_at ? new Date(p.created_at).toLocaleString() : ''
                     }));
