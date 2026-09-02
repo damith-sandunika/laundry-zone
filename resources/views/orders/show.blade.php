@@ -91,8 +91,13 @@
                                 $history = $order->statusHistory->sortBy('created_at')->values();
                                 $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
                                 
-                                function getLog($history, $status) {
-                                    return $history->firstWhere('status', $status);
+                                function getLog($history, $status, $noteMatch = null) {
+                                    return $history->first(function($log) use ($status, $noteMatch) {
+                                        if ($noteMatch && str_contains(strtolower($log->note ?? ''), strtolower($noteMatch))) {
+                                            return true;
+                                        }
+                                        return $log->status === $status;
+                                    });
                                 }
                                 
                                 if ($order->is_delivery_order) {
@@ -120,7 +125,7 @@
                                         'label' => 'Rider Assigned',
                                         'icon' => '🏍️',
                                         'time' => $pickupTask?->created_at,
-                                        'user' => $pickupTask?->rider?->name,
+                                        'user' => $pickupTask?->rider?->name ?? 'System',
                                         'active' => $pickupTask != null || $order->deliveryAppointment?->delivery_method === 'pickme_flash'
                                     ]);
                                     
@@ -129,13 +134,13 @@
                                         'label' => 'Workshop Received',
                                         'icon' => '📥',
                                         'time' => $dispatch?->received_at_workshop_at,
-                                        'user' => $dispatch?->receivedBy?->name,
+                                        'user' => $dispatch?->receivedBy?->name ?? 'System',
                                         'active' => $dispatch?->received_at_workshop_at != null
                                     ]);
                                     
                                     // 5. Payment & Start (Processing)
                                     $firstPayment = $order->paymentTransactions()->orderBy('created_at')->first();
-                                    $processingLog = getLog($history, 'processing');
+                                    $processingLog = getLog($history, 'processing', 'processing started');
                                     
                                     $payLabel = 'Payment & Processing Started';
                                     if ($firstPayment) {
@@ -146,17 +151,17 @@
                                         'label' => $payLabel,
                                         'icon' => '⚙️',
                                         'time' => $processingLog?->created_at ?? $firstPayment?->created_at,
-                                        'user' => $processingLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'user' => $processingLog?->changedBy?->name ?? $firstPayment?->createdBy?->name ?? 'System',
                                         'active' => $processingLog != null || $order->status === 'processing' || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 6. Done (Workshop Completed)
-                                    $doneWorkshopLog = getLog($history, 'completed_at_workshop');
+                                    $doneWorkshopLog = getLog($history, 'done', 'completed at workshop');
                                     $steps->push([
                                         'label' => 'Done',
                                         'icon' => '✨',
                                         'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
-                                        'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'user' => $doneWorkshopLog?->changedBy?->name ?? $dispatch?->completedBy?->name ?? 'System',
                                         'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
@@ -186,53 +191,53 @@
                                     ]);
                                     
                                     // 2. Transfer to Workshop
-                                    $dispatchLog = getLog($history, 'dispatched_to_workshop');
+                                    $dispatchLog = getLog($history, 'dispatched_to_workshop', 'dispatched');
                                     $steps->push([
                                         'label' => 'Transfer to Workshop',
                                         'icon' => '📤',
                                         'time' => $dispatchLog?->created_at ?? $dispatch?->dispatched_at,
-                                        'user' => $dispatchLog?->changedBy?->name ?? $dispatch?->dispatchedBy?->name,
+                                        'user' => $dispatchLog?->changedBy?->name ?? $dispatch?->dispatchedBy?->name ?? 'System',
                                         'active' => $dispatch != null
                                     ]);
                                     
                                     // 3. Arrive Workshop & Washing (Processing)
                                     $arriveLog = getLog($history, 'received_at_workshop');
-                                    $processingLog = getLog($history, 'processing');
+                                    $processingLog = getLog($history, 'processing', 'processing started');
                                     $steps->push([
                                         'label' => 'Arrive Workshop & Washing',
                                         'icon' => '⚙️',
                                         'time' => $arriveLog?->created_at ?? $processingLog?->created_at ?? $dispatch?->received_at_workshop_at,
-                                        'user' => $arriveLog?->changedBy?->name ?? $processingLog?->changedBy?->name ?? $dispatch?->receivedBy?->name,
+                                        'user' => $arriveLog?->changedBy?->name ?? $processingLog?->changedBy?->name ?? $dispatch?->receivedBy?->name ?? 'System',
                                         'active' => $arriveLog != null || $processingLog != null || $dispatch?->received_at_workshop_at != null || in_array($order->status, ['processing', 'returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 4. Done (at Workshop)
-                                    $doneWorkshopLog = getLog($history, 'completed_at_workshop');
+                                    $doneWorkshopLog = getLog($history, 'done', 'completed at workshop');
                                     $steps->push([
                                         'label' => 'Done',
                                         'icon' => '✨',
                                         'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
-                                        'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'user' => $doneWorkshopLog?->changedBy?->name ?? $dispatch?->completedBy?->name ?? 'System',
                                         'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 5. Delivery to Branch (Returning)
-                                    $returnLog = getLog($history, 'returned_from_workshop');
+                                    $returnLog = getLog($history, 'returned_from_workshop', 'dispatched back');
                                     $steps->push([
                                         'label' => 'Delivery to Branch',
                                         'icon' => '🚚',
                                         'time' => $returnLog?->created_at ?? $dispatch?->returned_at,
-                                        'user' => $returnLog?->changedBy?->name ?? $dispatch?->returnedBy?->name,
+                                        'user' => $returnLog?->changedBy?->name ?? $dispatch?->returnedBy?->name ?? 'System',
                                         'active' => $returnLog != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 6. Received to Branch (Done state)
-                                    $doneLog = getLog($history, 'done');
+                                    $doneLog = getLog($history, 'done', 'status updated to done');
                                     $steps->push([
                                         'label' => 'Received to Branch',
                                         'icon' => '🏢',
                                         'time' => $doneLog?->created_at ?? $dispatch?->received_at_branch_at,
-                                        'user' => $doneLog?->changedBy?->name ?? 'Branch Admin',
+                                        'user' => $doneLog?->changedBy?->name ?? $dispatch?->receivedAtBranchBy?->name ?? 'System',
                                         'active' => $doneLog != null || in_array($order->status, ['done', 'delivered'])
                                     ]);
                                     
