@@ -156,7 +156,7 @@ class CommunicationService
         $type = 'order_confirmation'; // Reuse order confirmation template
         $data = [
             'customer_name'  => $customer->name,
-            'order_id'       => $appointment->id,
+            'order_id'       => $appointment->order_number ?? '#' . str_pad($appointment->id, 4, '0', STR_PAD_LEFT),
             'total'          => 'Rs.' . number_format($appointment->delivery_cost ?? 0, 2) . ' (Estimated Delivery Cost)',
             'amount_due'     => 'N/A',
             'payment_status' => 'Pending',
@@ -227,7 +227,7 @@ class CommunicationService
         $type = 'delivery_confirmation'; // Reuse Rider On the Way template type
         $data = [
             'customer_name'  => $customer->name,
-            'order_id'       => $appointment->id,
+            'order_id'       => $appointment->order_number ?? '#' . str_pad($appointment->id, 4, '0', STR_PAD_LEFT),
             'total'          => 'Rs.' . number_format($appointment->delivery_cost ?? 0, 2),
             'amount_due'     => 'N/A',
             'payment_status' => 'Pending',

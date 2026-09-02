@@ -85,9 +85,9 @@
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;{{ $appt->status === 'cancelled' ? 'opacity:0.7;background:#fff5f5;' : '' }}" onmouseover="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '0.85' }}'" onmouseout="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '1' }}'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id)
-                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</a>
+                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ $appt->order_number ?? '#' . str_pad($appt->id, 4, '0', STR_PAD_LEFT) }}</a>
                                     @else
-                                        <div style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }}">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</div>
+                                        <div style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }}">{{ $appt->order_number ?? '#' . str_pad($appt->id, 4, '0', STR_PAD_LEFT) }}</div>
                                     @endif
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
                                         <span style="font-weight:700;color:#0f172a;">{{ $appt->customer->name ?? 'Unknown' }}</span>
@@ -218,7 +218,8 @@
                                     @if($appt->order_id)
                                         <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</a>
                                     @else
-                                        <div style="font-size:13px;font-weight:800;color:#1d4ed8;">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</div>
+                                        <div style="font-size:13px;font-weight:800;color:#1d4ed8;">{{ $appt->order_number ?? '#' . str_pad($appt->id, 4, '0', STR_PAD_LEFT) }}</div>
+                                        <div style="font-size:11px;font-weight:600;color:#64748b;margin-top:2px;">{{ $appt->pickup_scheduled_at->format('d M, h:i A') }}</div>
                                     @endif
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
                                         <span style="font-weight:700;color:#0f172a;">{{ $appt->customer->name ?? 'Unknown' }}</span>
