@@ -27,7 +27,7 @@
     <div class="icon">✅</div>
     <h1>Booking Confirmed!</h1>
     <p>Your laundry pickup request has been received. We'll confirm shortly.</p>
-    <div class="id-badge">Booking #{{ $appointment->id }}</div>
+    <div class="id-badge">{{ $appointment->order_number ?? 'Booking #' . $appointment->id }}</div>
 
     <div class="info-box">
         <div class="info-row">

@@ -46,7 +46,7 @@
                                         Pay Now
                                     </button>
                                 @endif
-                                <a href="{{ route('customer.appointments.show', $orderObj->id) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
+                                <a href="{{ route('customer.appointments.show', $orderObj->order_number ?? $orderObj->id) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
                                     View
                                 </a>
                             </div>

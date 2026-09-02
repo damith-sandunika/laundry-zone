@@ -99,4 +99,9 @@ class DeliveryAppointment extends Model
             default => 'gray',
         };
     }
+
+    public function getRouteKeyName()
+    {
+        return 'order_number';
+    }
 }

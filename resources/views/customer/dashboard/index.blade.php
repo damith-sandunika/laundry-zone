@@ -62,13 +62,13 @@
                                 <span class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded-md mb-2 inline-block">
                                     <i class="fa-solid fa-truck-pickup"></i> Pickup Request
                                 </span>
-                                <h4 class="font-bold text-slate-800">Booking #{{ $appointment->id }}</h4>
+                                <h4 class="font-bold text-slate-800">{{ $appointment->order_number ?? 'Booking #' . $appointment->id }}</h4>
                             </div>
                             <div class="text-right flex flex-col items-end gap-2">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">
                                     {{ ucfirst(str_replace('_', ' ', $appointment->status)) }}
                                 </span>
-                                <a href="{{ route('customer.appointments.show', $appointment->id) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
+                                <a href="{{ route('customer.appointments.show', $appointment->order_number ?? $appointment->id) }}" class="text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-100 px-3 py-1.5 rounded-lg transition-colors inline-block">
                                     View Details
                                 </a>
                             </div>

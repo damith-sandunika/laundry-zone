@@ -4,7 +4,7 @@
             <div class="flex items-center gap-3">
                 <a href="{{ route('customer.orders') }}" class="text-slate-400 hover:text-blue-600 transition p-2 bg-white rounded-lg shadow-sm border border-slate-100"><i class="fa-solid fa-arrow-left"></i></a>
                 <div>
-                    <h2 class="font-black text-2xl text-slate-800 leading-tight">Booking #{{ str_pad($appointment->id, 4, '0', STR_PAD_LEFT) }}</h2>
+                    <h2 class="font-black text-2xl text-slate-800 leading-tight">{{ $appointment->order_number ?? 'Booking #' . str_pad($appointment->id, 4, '0', STR_PAD_LEFT) }}</h2>
                     <p class="text-sm font-bold text-slate-500">Requested on {{ $appointment->created_at->format('M d, Y h:i A') }}</p>
                 </div>
             </div>

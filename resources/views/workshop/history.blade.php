@@ -123,7 +123,7 @@
                                     <div style="position:fixed;inset:0;background:rgba(15,23,42,0.4);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:9999;">
                                         <div @click.outside="open = false" style="background:white;border-radius:16px;padding:24px;width:100%;max-width:400px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.1),0 8px 10px -6px rgba(0,0,0,0.1);text-align:left;">
                                             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-                                                <h3 style="font-size:16px;font-weight:800;color:#0f172a;margin:0;">Booking #{{ str_pad($booking->id, 5, '0', STR_PAD_LEFT) }} Details</h3>
+                                                <h3 style="font-size:16px;font-weight:800;color:#0f172a;margin:0;">{{ $booking->order_number ?? 'Booking #' . str_pad($booking->id, 5, '0', STR_PAD_LEFT) }} Details</h3>
                                                 <button @click="open = false" style="background:none;border:none;color:#94a3b8;font-size:16px;cursor:pointer;padding:4px;"><i class="fa-solid fa-xmark"></i></button>
                                             </div>
                                             <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;color:#334155;">
