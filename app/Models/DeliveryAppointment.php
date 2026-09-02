@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class DeliveryAppointment extends Model
 {
     protected $fillable = [
-        'customer_id', 'branch_id', 'pickup_address', 'delivery_address',
+        'order_number', 'customer_id', 'branch_id', 'pickup_address', 'delivery_address',
         'latitude', 'longitude', 'map_address', 'item_description',
         'pickup_scheduled_at', 'delivery_scheduled_at', 'status', 'notes', 'contact_phone',
         'order_id', 'picked_up_at', 'payment_method', 'payment_timing', 'delivery_preference',

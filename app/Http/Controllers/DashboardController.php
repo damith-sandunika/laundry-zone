@@ -227,7 +227,7 @@ class DashboardController extends Controller
             ->get();
 
         // Low stock items
-        $lowStockItems = InventoryItem::whereColumn('current_stock', '<=', 'min_stock');
+        $lowStockItems = InventoryItem::whereColumn('current_stock', '<=', 'low_stock_threshold');
         if ($branchId) {
             $lowStockItems->where('branch_id', $branchId);
         }

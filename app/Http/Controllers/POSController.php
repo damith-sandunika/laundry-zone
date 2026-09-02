@@ -262,9 +262,9 @@ class POSController extends Controller
                 if (! $orderForComm->is_delivery_order) {
                     $branch = \App\Models\Branch::find($branchId);
                     if ($branch && $branch->type === 'branch') {
-                        $commService->sendCollectionOrderPlaced($orderForComm);
+                        $commService->sendOrderConfirmation($orderForComm);
                     } else {
-                        $commService->sendPosWalkinPlaced($orderForComm);
+                        $commService->sendOrderConfirmation($orderForComm);
                     }
                 }
 
@@ -341,7 +341,9 @@ class POSController extends Controller
                 $cart       = $request->cart ?? [];
 
                 // 1. Create the DeliveryAppointment (auto-confirmed since staff created it)
+                $orderNumber = \App\Models\Order::generateOrderNumber($branchId, true);
                 $appointment = \App\Models\DeliveryAppointment::create([
+                    'order_number'         => $orderNumber,
                     'customer_id'          => $request->customer_id,
                     'branch_id'            => $branchId,
                     'pickup_address'       => $request->pickup_address,
@@ -355,7 +357,6 @@ class POSController extends Controller
                 ]);
 
                 $orderId     = null;
-                $orderNumber = null;
 
                 // 2. If cart items were provided, create the Order now
                 if (! empty($cart)) {
@@ -368,7 +369,7 @@ class POSController extends Controller
                     $paidAmount  = $paymentMode === 'pay_now' ? $subtotal : 0;
 
                     $order = Order::create([
-                        'order_number'            => Order::generateOrderNumber($branchId, true),
+                        'order_number'            => $orderNumber,
                         'branch_id'               => $branchId,
                         'customer_id'             => $request->customer_id,
                         'created_by'              => auth()->id(),

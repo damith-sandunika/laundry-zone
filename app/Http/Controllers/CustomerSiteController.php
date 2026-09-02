@@ -205,6 +205,7 @@ class CustomerSiteController extends Controller
             $customer = auth('customer')->user();
 
             return DeliveryAppointment::create([
+                'order_number' => \App\Models\Order::generateOrderNumber($closestWorkshop->id, true),
                 'customer_id' => $customer->id,
                 'branch_id' => $closestWorkshop->id,
                 'pickup_address' => $request->pickup_address,

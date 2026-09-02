@@ -275,7 +275,7 @@
                         <div class="flex justify-between items-center p-4 bg-red-50/50 border border-red-100 rounded-2xl hover:bg-red-50 transition-colors">
                             <div>
                                 <p class="text-[13px] font-black text-slate-900 mb-1">{{ $item->name }}</p>
-                                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-widest">Min: {{ $item->min_stock }}</p>
+                                <p class="text-[10px] font-extrabold text-red-500 uppercase tracking-widest">Min: {{ $item->low_stock_threshold }}</p>
                             </div>
                             <div class="text-center bg-white border border-red-100 rounded-xl px-4 py-2 shadow-sm">
                                 <p class="text-xl font-black text-red-600 leading-none">{{ $item->current_stock }}</p>
@@ -321,7 +321,7 @@
                                                     <span class="text-[11px] font-bold text-slate-500">{{ $inv->unit }}</span>
                                                 </td>
                                                 <td class="px-6 py-4">
-                                                    @if($inv->current_stock <= $inv->min_stock)
+                                                    @if($inv->current_stock <= $inv->low_stock_threshold)
                                                         <span class="inline-flex px-2.5 py-1 bg-red-50 text-red-700 border border-red-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Low Stock</span>
                                                     @else
                                                         <span class="inline-flex px-2.5 py-1 bg-green-50 text-green-700 border border-green-200 rounded-lg text-[10px] font-extrabold uppercase tracking-wide">Good</span>

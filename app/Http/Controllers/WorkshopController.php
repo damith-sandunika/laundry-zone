@@ -347,7 +347,7 @@ class WorkshopController extends Controller
             ->get();
 
         // Low stock items
-        $lowStockItems = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'min_stock')
+        $lowStockItems = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'low_stock_threshold')
             ->where('branch_id', $branchId)
             ->get();
 

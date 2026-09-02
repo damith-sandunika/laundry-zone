@@ -219,7 +219,7 @@ class RiderController extends Controller
         $order = null;
         DB::transaction(function () use ($request, $task, $appointment, $branchId, $subtotal, &$order) {
             $order = Order::create([
-                'order_number' => Order::generateOrderNumber($branchId, true),
+                'order_number' => $appointment->order_number ?: Order::generateOrderNumber($branchId, true),
                 'branch_id' => $branchId,
                 'customer_id' => $appointment->customer_id,
                 'created_by' => auth()->id(),

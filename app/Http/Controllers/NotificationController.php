@@ -101,8 +101,8 @@ class NotificationController extends Controller
                     'label'         => 'New Customer Pickup Requests',
                     'count'         => count($pendingPickups),
                     'order_numbers' => $pendingPickups,
-                    'icon'          => 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
-                    'color'         => 'red',
+                    'icon'          => 'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12',
+                    'color'         => 'teal',
                     'url'           => '#',
                 ];
                 $totalCount += count($pendingPickups);
@@ -152,6 +152,30 @@ class NotificationController extends Controller
                     'url'           => '#',
                 ];
                 $totalCount += count($incomingReturn);
+            }
+        }
+
+        if (in_array($user->role, ['branch_admin', 'workshop_admin', 'super_admin'])) {
+            // 8. Low Stock Alerts
+            $lowStockQuery = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'low_stock_threshold');
+            if ($user->role !== 'super_admin') {
+                $lowStockQuery->where('branch_id', $user->branch_id);
+            }
+            $lowStockItems = $lowStockQuery->get()->map(function($i) {
+                return ['number' => $i->name . ' (' . $i->current_stock . '/' . $i->low_stock_threshold . ' ' . $i->unit . ')', 'url' => route('inventory.index')];
+            })->toArray();
+
+            if (count($lowStockItems) > 0) {
+                $alerts[] = [
+                    'id'            => 'low_stock',
+                    'label'         => 'Low Stock Warnings',
+                    'count'         => count($lowStockItems),
+                    'order_numbers' => $lowStockItems,
+                    'icon'          => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
+                    'color'         => 'orange',
+                    'url'           => route('inventory.index'),
+                ];
+                $totalCount += count($lowStockItems);
             }
         }
 
