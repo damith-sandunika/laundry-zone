@@ -34,13 +34,13 @@
         <!-- Mobile overlay -->
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen=false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" x-cloak></div>
 
-        <!-- ══════════ SIDEBAR ══════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â• -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 transition-transform duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/60 lg:static lg:translate-x-0">
             
             <!-- Brand & Logo -->
             <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50">
                 <div class="w-20 h-20 rounded-[1.25rem] bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 mb-3 ring-4 ring-white transition-transform hover:scale-105 duration-300">
-                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
+                    <img src="{{ asset('images/365_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
                 <div>
                     <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '365 Laundry') }}</div>
@@ -58,7 +58,7 @@
                     Dashboard
                 </a>
 
-                {{-- ── SUPER ADMIN ── --}}
+                {{-- â”€â”€ SUPER ADMIN â”€â”€ --}}
                 @if($role === 'super_admin')
                     <a href="{{ route('branches.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('branches.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -102,7 +102,7 @@
                     </a>
                 @endif
 
-                {{-- ── RIDER ── --}}
+                {{-- â”€â”€ RIDER â”€â”€ --}}
                 @if($role === 'rider')
                     <a href="{{ route('rider.tasks') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('rider.tasks') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
@@ -110,7 +110,7 @@
                     </a>
                 @endif
 
-                {{-- ── WORKSHOP ADMIN ── --}}
+                {{-- â”€â”€ WORKSHOP ADMIN â”€â”€ --}}
                 @if($role === 'workshop_admin')
                     <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
@@ -150,7 +150,7 @@
                     </a>
                 @endif
 
-                {{-- ── BRANCH ADMIN / ADMIN / STAFF ── --}}
+                {{-- â”€â”€ BRANCH ADMIN / ADMIN / STAFF â”€â”€ --}}
                 @if(in_array($role, ['branch_admin', 'admin', 'staff']))
                     <a href="{{ route('pos.index') }}" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
@@ -208,7 +208,7 @@
             </div>
         </aside>
 
-        <!-- ══════════ MAIN AREA ══════════ -->
+        <!-- â•â•â•â•â•â•â•â•â•â• MAIN AREA â•â•â•â•â•â•â•â•â•â• -->
         <div class="flex-1 flex flex-col min-w-0 overflow-hidden relative">
 
             <!-- Topbar -->
@@ -422,7 +422,7 @@
             if (e.persisted) NProgress.done();
         });
 
-        // ─── Order Quick Search Alpine Component ───
+        // â”€â”€â”€ Order Quick Search Alpine Component â”€â”€â”€
         function orderSearch() {
             return {
                 query: '',

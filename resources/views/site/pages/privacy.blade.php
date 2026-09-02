@@ -56,7 +56,7 @@
                 <h3 class="text-lg font-bold text-slate-800 mb-2">Contact Us</h3>
                 <p class="text-slate-600">
                     If you have any questions about this Privacy Policy, please contact us at:<br>
-                    <strong>Email:</strong> privacy@360laundry.lk<br>
+                    <strong>Email:</strong> privacy@365laundry.lk<br>
                     <strong>Phone:</strong> +94 77 123 4567
                 </p>
             </div>
