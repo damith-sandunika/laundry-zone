@@ -170,11 +170,18 @@ class CommunicationService
                 $message = str_replace("Your order", "Your delivery booking", $message);
                 
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
-                try {
-                    if (env('SMS_API_URL')) {
-                        \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', '365LAUNDRY'), 'to' => $customer->phone, 'text' => $message]);
-                    }
-                } catch (\Exception $e) {}
+                
+                $apiUrl = env('SMS_API_URL');
+                $apiToken = env('SMS_API_TOKEN');
+                $mask = env('SMS_MASK', '365LAUNDRY');
+                
+                if ($apiUrl && $apiToken) {
+                    dispatch(function () use ($apiUrl, $apiToken, $mask, $customer, $message) {
+                        try {
+                            \Illuminate\Support\Facades\Http::timeout(10)->post($apiUrl, ['token' => $apiToken, 'mask' => $mask, 'to' => $customer->phone, 'text' => $message]);
+                        } catch (\Exception $e) {}
+                    });
+                }
             }
         }
 
@@ -199,11 +206,13 @@ class CommunicationService
             $body    = str_replace("Your order", "Your delivery booking", $content['body']);
             
             \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
-            try {
-                \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
-                    $msg->to($customer->email)->subject($subject);
-                });
-            } catch (\Exception $e) {}
+            dispatch(function () use ($customer, $subject, $body) {
+                try {
+                    \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
+                        $msg->to($customer->email)->subject($subject);
+                    });
+                } catch (\Exception $e) {}
+            });
         }
     }
 
@@ -232,9 +241,18 @@ class CommunicationService
                 $message = str_replace("delivery rider", "pickup rider", $message);
                 
                 \App\Models\SmsLog::create(['order_id' => null, 'phone' => $customer->phone, 'type' => $type, 'message' => $message, 'status' => 'pending']);
-                try {
-                    \Illuminate\Support\Facades\Http::timeout(10)->post(env('SMS_API_URL'), ['token' => env('SMS_API_TOKEN'), 'mask' => env('SMS_MASK', '365LAUNDRY'), 'to' => $customer->phone, 'text' => $message]);
-                } catch (\Exception $e) {}
+                
+                $apiUrl = env('SMS_API_URL');
+                $apiToken = env('SMS_API_TOKEN');
+                $mask = env('SMS_MASK', '365LAUNDRY');
+                
+                if ($apiUrl && $apiToken) {
+                    dispatch(function () use ($apiUrl, $apiToken, $mask, $customer, $message) {
+                        try {
+                            \Illuminate\Support\Facades\Http::timeout(10)->post($apiUrl, ['token' => $apiToken, 'mask' => $mask, 'to' => $customer->phone, 'text' => $message]);
+                        } catch (\Exception $e) {}
+                    });
+                }
             }
         }
 
@@ -259,11 +277,13 @@ class CommunicationService
             $body    = str_replace("Our delivery rider is on the way with your order", "Our rider is on the way to pick up your laundry", $content['body']);
             
             \App\Models\EmailLog::create(['order_id' => null, 'email' => $customer->email, 'type' => $type, 'subject' => $subject, 'body' => $body, 'status' => 'pending']);
-            try {
-                \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
-                    $msg->to($customer->email)->subject($subject);
-                });
-            } catch (\Exception $e) {}
+            dispatch(function () use ($customer, $subject, $body) {
+                try {
+                    \Illuminate\Support\Facades\Mail::html($body, function($msg) use($customer, $subject) {
+                        $msg->to($customer->email)->subject($subject);
+                    });
+                } catch (\Exception $e) {}
+            });
         }
     }
 
@@ -376,62 +396,63 @@ class CommunicationService
             'status'             => 'pending',
         ]);
 
-        try {
-            $phoneId = Setting::where('key', 'whatsapp_phone_id')->value('value');
-            $accessToken = Setting::where('key', 'whatsapp_access_token')->value('value');
+        $phoneId = Setting::where('key', 'whatsapp_phone_id')->value('value');
+        $accessToken = Setting::where('key', 'whatsapp_access_token')->value('value');
 
-            if (!$phoneId || !$accessToken) {
-                throw new \Exception('WhatsApp API credentials not configured.');
-            }
+        if (!$phoneId || !$accessToken) {
+            $log->update(['status' => 'failed', 'response' => 'WhatsApp API credentials not configured.']);
+            return;
+        }
 
-            $apiUrl = "https://graph.facebook.com/v18.0/{$phoneId}/messages";
+        dispatch(function () use ($log, $phoneId, $accessToken, $formattedPhone, $template, $parameters) {
+            try {
+                $apiUrl = "https://graph.facebook.com/v18.0/{$phoneId}/messages";
 
-            // Build components for Meta API
-            // Build components - only if template has variables defined
-            $components = [];
-            if (!empty($parameters) && $template->meta_template_name !== 'hello_world') {
-                $bodyParams = [];
-                foreach ($parameters as $param) {
-                    $bodyParams[] = [
-                        'type' => 'text',
-                        'text' => (string)$param
+                $components = [];
+                if (!empty($parameters) && $template->meta_template_name !== 'hello_world') {
+                    $bodyParams = [];
+                    foreach ($parameters as $param) {
+                        $bodyParams[] = [
+                            'type' => 'text',
+                            'text' => (string)$param
+                        ];
+                    }
+                    $components[] = [
+                        'type'       => 'body',
+                        'parameters' => $bodyParams
                     ];
                 }
-                $components[] = [
-                    'type'       => 'body',
-                    'parameters' => $bodyParams
+
+                $templatePayload = [
+                    'name'     => $template->meta_template_name,
+                    'language' => ['code' => $template->language_code ?? 'en_US'],
                 ];
+                if (!empty($components)) {
+                    $templatePayload['components'] = $components;
+                }
+
+                $payload = [
+                    'messaging_product' => 'whatsapp',
+                    'to'                => $formattedPhone,
+                    'type'              => 'template',
+                    'template'          => $templatePayload
+                ];
+
+                $response = Http::withoutVerifying()
+                    ->withToken($accessToken)
+                    ->timeout(10)
+                    ->post($apiUrl, $payload);
+
+                if ($response->successful()) {
+                    $log->update(['status' => 'sent', 'response' => $response->body()]);
+                } else {
+                    $log->update(['status' => 'failed', 'response' => $response->body()]);
+                }
+            } catch (\Exception $e) {
+                Log::error("WhatsApp Error: " . $e->getMessage());
+                $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
             }
-
-            $templatePayload = [
-                'name'     => $template->meta_template_name,
-                'language' => ['code' => $template->language_code ?? 'en_US'],
-            ];
-            if (!empty($components)) {
-                $templatePayload['components'] = $components;
-            }
-
-            $payload = [
-                'messaging_product' => 'whatsapp',
-                'to'                => $formattedPhone,
-                'type'              => 'template',
-                'template'          => $templatePayload
-            ];
-
-            $response = Http::withoutVerifying()
-                ->withToken($accessToken)
-                ->timeout(10)
-                ->post($apiUrl, $payload);
-
-            if ($response->successful()) {
-                $log->update(['status' => 'sent', 'response' => $response->body()]);
-            } else {
-                $log->update(['status' => 'failed', 'response' => $response->body()]);
-            }
-        } catch (\Exception $e) {
-            Log::error("WhatsApp Error: " . $e->getMessage());
-            $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
-        }
+        });
     }
 
     // ─── SMS Sender ──────────────────────────────────────────────────────────
@@ -446,31 +467,34 @@ class CommunicationService
             'status'   => 'pending',
         ]);
 
-        try {
-            $apiUrl   = env('SMS_API_URL');
-            $apiToken = env('SMS_API_TOKEN');
-            $mask     = env('SMS_MASK', '365LAUNDRY');
+        $apiUrl   = env('SMS_API_URL');
+        $apiToken = env('SMS_API_TOKEN');
+        $mask     = env('SMS_MASK', '365LAUNDRY');
 
-            if (!$apiUrl || !$apiToken) {
-                throw new \Exception('SMS API credentials not configured.');
-            }
-
-            $response = Http::timeout(10)->post($apiUrl, [
-                'token' => $apiToken,
-                'mask'  => $mask,
-                'to'    => $phone,
-                'text'  => $message,
-            ]);
-
-            if ($response->successful()) {
-                $log->update(['status' => 'sent', 'response' => $response->body()]);
-            } else {
-                $log->update(['status' => 'failed', 'response' => $response->body()]);
-            }
-        } catch (\Exception $e) {
-            Log::error("SMS Error: " . $e->getMessage());
-            $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
+        if (!$apiUrl || !$apiToken) {
+            $log->update(['status' => 'failed', 'response' => 'SMS API credentials not configured.']);
+            return;
         }
+
+        dispatch(function () use ($log, $apiUrl, $apiToken, $mask, $phone, $message) {
+            try {
+                $response = Http::timeout(10)->post($apiUrl, [
+                    'token' => $apiToken,
+                    'mask'  => $mask,
+                    'to'    => $phone,
+                    'text'  => $message,
+                ]);
+
+                if ($response->successful()) {
+                    $log->update(['status' => 'sent', 'response' => $response->body()]);
+                } else {
+                    $log->update(['status' => 'failed', 'response' => $response->body()]);
+                }
+            } catch (\Exception $e) {
+                Log::error("SMS Error: " . $e->getMessage());
+                $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
+            }
+        });
     }
 
     // ─── Email Sender ─────────────────────────────────────────────────────────
@@ -486,21 +510,23 @@ class CommunicationService
             'status'   => 'pending',
         ]);
 
-        try {
-            $companyName = Setting::where('key', 'company_name')->value('value') ?? config('app.name');
-            $logoPath    = Setting::where('key', 'global_logo_path')->value('value');
-            $logoUrl     = null;
-            if ($logoPath) {
-                $logoUrl = \Illuminate\Support\Str::startsWith($logoPath, 'http')
-                    ? $logoPath
-                    : asset('storage/' . $logoPath);
-            }
+        $companyName = Setting::where('key', 'company_name')->value('value') ?? config('app.name');
+        $logoPath    = Setting::where('key', 'global_logo_path')->value('value');
+        
+        dispatch(function () use ($log, $email, $subject, $body, $companyName, $logoPath) {
+            try {
+                $logoUrl     = null;
+                if ($logoPath) {
+                    $logoUrl = \Illuminate\Support\Str::startsWith($logoPath, 'http')
+                        ? $logoPath
+                        : asset('storage/' . $logoPath);
+                }
 
-            $logoHtml = $logoUrl
-                ? "<img src=\"{$logoUrl}\" alt=\"{$companyName}\" style=\"max-height:60px;max-width:180px;object-fit:contain;\">"
-                : "<span style=\"font-size:22px;font-weight:900;color:#fff;letter-spacing:1px;\">{$companyName}</span>";
+                $logoHtml = $logoUrl
+                    ? "<img src=\"{$logoUrl}\" alt=\"{$companyName}\" style=\"max-height:60px;max-width:180px;object-fit:contain;\">"
+                    : "<span style=\"font-size:22px;font-weight:900;color:#fff;letter-spacing:1px;\">{$companyName}</span>";
 
-            $htmlBody = "<!DOCTYPE html>
+                $htmlBody = "<!DOCTYPE html>
 <html lang=\"en\">
 <head><meta charset=\"UTF-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>{$subject}</title></head>
 <body style=\"margin:0;padding:0;background:#f1f5f9;font-family:Arial,sans-serif;\">
@@ -519,24 +545,25 @@ class CommunicationService
 </body>
 </html>";
 
-            $fromName    = config('mail.from.name', $companyName);
-            $fromAddress = config('mail.from.address');
+                $fromName    = config('mail.from.name', $companyName);
+                $fromAddress = config('mail.from.address');
 
-            Mail::html($htmlBody, function ($msg) use ($email, $subject, $fromName, $fromAddress) {
-                $msg->to($email)
-                    ->subject($subject)
-                    ->replyTo($fromAddress, $fromName)
-                    ->getHeaders()
-                        ->addTextHeader('List-Unsubscribe', '<mailto:' . $fromAddress . '?subject=unsubscribe>')
-                        ->addTextHeader('Precedence', 'bulk')
-                        ->addTextHeader('X-Mailer', '365LAUNDRY-Mailer');
-            });
+                Mail::html($htmlBody, function ($msg) use ($email, $subject, $fromName, $fromAddress) {
+                    $msg->to($email)
+                        ->subject($subject)
+                        ->replyTo($fromAddress, $fromName)
+                        ->getHeaders()
+                            ->addTextHeader('List-Unsubscribe', '<mailto:' . $fromAddress . '?subject=unsubscribe>')
+                            ->addTextHeader('Precedence', 'bulk')
+                            ->addTextHeader('X-Mailer', '365LAUNDRY-Mailer');
+                });
 
-            $log->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);
-        } catch (\Exception $e) {
-            Log::error("Email Error: " . $e->getMessage());
-            $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
-        }
+                $log->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);
+            } catch (\Exception $e) {
+                Log::error("Email Error: " . $e->getMessage());
+                $log->update(['status' => 'failed', 'response' => $e->getMessage()]);
+            }
+        });
     }
 }
 
