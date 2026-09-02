@@ -14,7 +14,7 @@
     <link rel="manifest" href="/manifest.json">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased bg-white min-h-screen flex m-0">
+<body class="font-sans antialiased bg-slate-900 min-h-screen flex m-0">
 
     <!-- ──────── LEFT PANEL ──────── -->
     <div class="hidden lg:flex flex-col justify-between w-[55%] min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 px-14 py-14">
@@ -67,37 +67,37 @@
     </div>
 
     <!-- ──────── RIGHT PANEL: Form ──────── -->
-    <div class="flex-1 flex items-center justify-center bg-white p-10 md:p-14 w-full">
+    <div class="flex-1 flex items-center justify-center bg-slate-900 p-10 md:p-14 w-full">
         <div class="w-full max-w-[380px]">
 
             <!-- Mobile brand -->
             <div class="flex lg:hidden flex-col items-center justify-center mb-10 animate-slide-up">
-                <div class="w-24 h-24 rounded-[1.5rem] bg-white flex items-center justify-center shadow-2xl shadow-blue-500/20 mb-4 ring-8 ring-slate-50">
+                <div class="w-24 h-24 rounded-[1.5rem] bg-slate-800 flex items-center justify-center shadow-2xl shadow-blue-900/20 mb-4 ring-8 ring-slate-900">
                     <img src="{{ asset('images/rapid_laundromat_logo.png') }}" alt="Logo" class="max-w-[64px] max-h-[64px] object-contain" onerror="this.style.display='none'">
                 </div>
-                <h1 class="font-black text-3xl text-slate-900 tracking-tight">RAPID Laundromat</h1>
-                <p class="text-[11px] font-extrabold text-blue-600 uppercase tracking-widest mt-1.5">Management System</p>
+                <h1 class="font-black text-3xl text-white tracking-tight">RAPID Laundromat</h1>
+                <p class="text-[11px] font-extrabold text-blue-400 uppercase tracking-widest mt-1.5">Management System</p>
             </div>
 
             <!-- Heading (Desktop) -->
             <div class="mb-10 hidden lg:block animate-slide-up" style="animation-delay: 100ms;">
-                <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2">Welcome back</h1>
-                <p class="text-sm font-semibold text-slate-500">Sign in to access your management dashboard</p>
+                <h1 class="text-4xl font-black text-white tracking-tight mb-2">Welcome back</h1>
+                <p class="text-sm font-semibold text-slate-400">Sign in to access your management dashboard</p>
             </div>
             
             <!-- Install App Button -->
-            <button id="installPwaBtn" class="hidden w-full mb-8 p-1 bg-gradient-to-r from-emerald-400 to-teal-500 rounded-2xl shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 transition-all group animate-fade-in">
-                <div class="w-full bg-white/95 backdrop-blur-sm rounded-[14px] px-4 py-3.5 flex items-center justify-between group-hover:bg-transparent transition-colors">
+            <button id="installPwaBtn" class="hidden w-full mb-8 p-1 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-900/50 transition-all group animate-fade-in">
+                <div class="w-full bg-slate-900/95 backdrop-blur-sm rounded-[14px] px-4 py-3.5 flex items-center justify-between group-hover:bg-transparent transition-colors">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-100 flex items-center justify-center group-hover:bg-white/20 transition-colors">
-                            <svg class="w-5 h-5 text-emerald-600 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        <div class="w-10 h-10 rounded-xl bg-emerald-900/50 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                            <svg class="w-5 h-5 text-emerald-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         </div>
                         <div class="text-left">
-                            <p class="text-[13px] font-black text-slate-900 group-hover:text-white transition-colors">Install App</p>
-                            <p class="text-[11px] font-bold text-slate-500 group-hover:text-emerald-100 transition-colors">Add to Home Screen</p>
+                            <p class="text-[13px] font-black text-white group-hover:text-white transition-colors">Install App</p>
+                            <p class="text-[11px] font-bold text-slate-400 group-hover:text-emerald-100 transition-colors">Add to Home Screen</p>
                         </div>
                     </div>
-                    <svg class="w-5 h-5 text-emerald-500 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    <svg class="w-5 h-5 text-emerald-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
                 </div>
             </button>
 
@@ -112,10 +112,10 @@
     <style>
         /* These classes will be automatically styled by Tailwind if used inside forms */
         input[type="email"], input[type="password"], input[type="text"] {
-            @apply w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-slate-400;
+            @apply w-full px-4 py-3.5 bg-slate-800 border-2 border-slate-700 rounded-xl text-sm font-semibold text-white focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all outline-none placeholder:text-slate-500;
         }
         button[type="submit"] {
-            @apply w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-[15px] rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300;
+            @apply w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-[15px] rounded-xl shadow-lg shadow-blue-900/50 hover:shadow-blue-900/70 hover:-translate-y-0.5 transition-all duration-300;
         }
     </style>
     

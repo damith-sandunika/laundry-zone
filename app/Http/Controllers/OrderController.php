@@ -54,6 +54,8 @@ class OrderController extends Controller
         $paymentReady = $request->input('payment_ready');
 
         $filterBranchId = $request->input('branch_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop', 'deliveryAppointment', 'paymentTransactions'])
             ->orderBy('created_at', 'desc');
@@ -69,6 +71,14 @@ class OrderController extends Controller
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
         }
 
         if ($isOnline) {
