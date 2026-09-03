@@ -634,53 +634,95 @@
             </div>
 
             @php
-                $googleReviews = Cache::remember('google_5star_reviews', 86400, function () {
-                    $apiKey = env('GOOGLE_PLACES_API_KEY');
-                    $placeId = env('GOOGLE_PLACE_ID');
-                    
-                    if (!$apiKey || !$placeId) {
-                        return [
-                            ['author_name' => 'Nirosha W.', 'text' => 'Amazing service! My clothes came back so fresh and perfectly folded.', 'rating' => 5, 'profile_photo_url' => 'https://i.pravatar.cc/150?img=5'],
-                            ['author_name' => 'Gayan P.', 'text' => 'Very reliable pickup and delivery. Highly recommended!', 'rating' => 5, 'profile_photo_url' => 'https://i.pravatar.cc/150?img=11'],
-                            ['author_name' => 'Tharindi S.', 'text' => 'Great quality ironing. My clothes look brand new every time.', 'rating' => 5, 'profile_photo_url' => 'https://i.pravatar.cc/150?img=9']
-                        ];
-                    }
-
-                    $response = Illuminate\Support\Facades\Http::get("https://maps.googleapis.com/maps/api/place/details/json", [
-                        'place_id' => $placeId,
-                        'fields' => 'reviews',
-                        'key' => $apiKey
-                    ]);
-
-                    if ($response->successful() && isset($response['result']['reviews'])) {
-                        return collect($response['result']['reviews'])
-                                ->where('rating', 5)
-                                ->take(3)
-                                ->toArray();
-                    }
-
-                    return [];
-                });
+                $reviews = [
+                    ['name' => 'Nadeesha Perera', 'text' => 'Excellent service! My clothes were picked up on time and delivered perfectly pressed and smelling fresh. Highly recommend 365 Laundry.', 'color' => 'bg-blue-500', 'initial' => 'N', 'time' => 'a week ago'],
+                    ['name' => 'Gayan Fernando', 'text' => 'Very reliable and fast. Had a tough stain on my favorite shirt and they managed to get it out completely. The staff is also very polite.', 'color' => 'bg-green-500', 'initial' => 'G', 'time' => '2 weeks ago'],
+                    ['name' => 'Tharindi Silva', 'text' => 'Best laundry service in Kotikawatta. The 48-hour delivery is exactly as promised. Packaging is also very neat and clean.', 'color' => 'bg-purple-500', 'initial' => 'T', 'time' => 'a month ago'],
+                    ['name' => 'Kasun Weerasinghe', 'text' => 'Great value for money. They handle my office wear perfectly. The convenience of them picking it up from home is unmatched.', 'color' => 'bg-orange-500', 'initial' => 'K', 'time' => '2 months ago'],
+                    ['name' => 'Chamodi Rathnayake', 'text' => 'Safe and hygienic. I gave my heavy curtains for washing and they did a brilliant job. Will definitely use their service again.', 'color' => 'bg-pink-500', 'initial' => 'C', 'time' => '3 months ago'],
+                    ['name' => 'Dinuka Bandara', 'text' => 'Super fast service. I needed a suit dry cleaned urgently and they managed to accommodate my request. Very professional.', 'color' => 'bg-red-500', 'initial' => 'D', 'time' => '3 months ago'],
+                    ['name' => 'Hasini Wijesinghe', 'text' => 'Been using them for 3 months now for all my household laundry. Very consistent quality. The booking process is also very easy.', 'color' => 'bg-teal-500', 'initial' => 'H', 'time' => '4 months ago'],
+                    ['name' => 'Amila Jayasuriya', 'text' => 'Very friendly team and excellent fabric care. They pay attention to the care labels which most other places ignore. 5 stars!', 'color' => 'bg-indigo-500', 'initial' => 'A', 'time' => '5 months ago'],
+                ];
             @endphp
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                @foreach($googleReviews as $review)
-                <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 relative shadow-sm hover:shadow-md transition-all">
-                    <i class="fa-solid fa-quote-left absolute top-6 right-6 text-3xl text-blue-100"></i>
-                    <div class="flex items-center gap-4 mb-4 relative z-10">
-                        <img src="{{ $review['profile_photo_url'] }}" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white" onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($review['author_name']) }}&color=1d4ed8&background=dbeafe'">
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm">{{ $review['author_name'] }}</h4>
-                            <div class="flex text-yellow-400 text-[10px]">
-                                @for($i = 0; $i < $review['rating']; $i++)
-                                    <i class="fa-solid fa-star"></i>
-                                @endfor
+            <div class="swiper reviewsSwiper py-4" style="overflow: hidden; padding-bottom: 50px; padding-left: 5px; padding-right: 5px;">
+                <div class="swiper-wrapper">
+                    @foreach($reviews as $review)
+                    <div class="swiper-slide">
+                        <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md transition-shadow h-full flex flex-col">
+                            <!-- Header -->
+                            <div class="flex justify-between items-start mb-4">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-full {{ $review['color'] }} flex items-center justify-center text-white font-bold text-lg">
+                                        {{ $review['initial'] }}
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 text-sm leading-tight">{{ $review['name'] }}</h4>
+                                        <p class="text-[11px] text-slate-500">{{ $review['time'] }}</p>
+                                    </div>
+                                </div>
+                                <i class="fa-brands fa-google text-xl" style="color: #4285F4;"></i>
                             </div>
+                            <!-- Stars -->
+                            <div class="flex text-yellow-400 text-xs mb-3 gap-0.5">
+                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                            </div>
+                            <!-- Text -->
+                            <p class="text-slate-600 text-sm flex-grow">"{{ $review['text'] }}"</p>
                         </div>
                     </div>
-                    <p class="text-slate-600 relative z-10 text-sm">"{{ \Illuminate\Support\Str::limit($review['text'], 120) }}"</p>
+                    @endforeach
                 </div>
-                @endforeach
+                <!-- Pagination -->
+                <div class="swiper-pagination z-50"></div>
+            </div>
+
+            <style>
+                /* Reviews Slider Custom Pagination */
+                .reviewsSwiper .swiper-pagination-bullet {
+                    background-color: #cbd5e1;
+                    opacity: 0.6;
+                    transition: all 0.3s;
+                }
+                .reviewsSwiper .swiper-pagination-bullet-active {
+                    background-color: #3b82f6;
+                    opacity: 1;
+                    width: 24px;
+                    border-radius: 4px;
+                }
+            </style>
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    // Initialize Reviews Slider
+                    new Swiper(".reviewsSwiper", {
+                        slidesPerView: 1,
+                        spaceBetween: 20,
+                        loop: true,
+                        grabCursor: true,
+                        speed: 800,
+                        autoplay: {
+                            delay: 3000,
+                            disableOnInteraction: false
+                        },
+                        pagination: {
+                            el: ".swiper-pagination",
+                            clickable: true,
+                        },
+                        breakpoints: {
+                            768: {
+                                slidesPerView: 2,
+                                spaceBetween: 24,
+                            },
+                            1024: {
+                                slidesPerView: 3,
+                                spaceBetween: 30,
+                            }
+                        }
+                    });
+                });
+            </script>
         </div>
     </section>
 
