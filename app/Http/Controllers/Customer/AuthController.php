@@ -52,7 +52,7 @@ class AuthController extends Controller
             'phone' => $request->phone,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'branch_id' => 1, // Default branch, could be changed
+            'branch_id' => \App\Models\Branch::where('is_active', true)->value('id') ?? \App\Models\Branch::value('id') ?? 1, // Default to first active branch
         ]);
 
         Auth::guard('customer')->login($customer);
@@ -106,7 +106,7 @@ class AuthController extends Controller
                 'phone' => $request->phone,
                 'email' => $request->email,
                 'password' => Hash::make($request->password),
-                'branch_id' => 1,
+                'branch_id' => \App\Models\Branch::where('is_active', true)->value('id') ?? \App\Models\Branch::value('id') ?? 1,
             ]);
 
             Auth::guard('customer')->login($customer);
