@@ -52,17 +52,17 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'pos_walkin_ready',
                 'name' => 'Walk-in Order Ready',
-                'message' => 'Hi {customer_name}, your order #{order_id} is washed and ready to be picked up. Thank you! - 365 Laundry',
+                'message' => 'Hi {customer_name}, your order #{order_id} is washed and ready to be picked up. Thank you! - 365laundry.lk',
             ],
             [
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
-                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - 365 Laundry',
+                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - 365laundry.lk',
             ],
             [
                 'type' => 'delivery_completed',
                 'name' => 'Delivery Order Completed',
-                'message' => 'Hi {customer_name}, your delivery order #{order_id} is completed. Thank you for using 365 Laundry!',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} is completed. Thank you for using 365laundry.lk!',
             ],
             [
                 'type' => 'collection_order_placed',
@@ -77,7 +77,7 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'collection_order_completed',
                 'name' => 'Collection Order Completed',
-                'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing 365 Laundry!',
+                'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing 365laundry.lk!',
             ]
         ];
 

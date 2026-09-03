@@ -13,12 +13,12 @@
         <div class="prose prose-slate prose-blue max-w-none">
             <h2 class="text-2xl font-bold text-slate-800 mb-4 mt-8">1. Introduction</h2>
             <p class="text-slate-600 mb-6 leading-relaxed">
-                Welcome to 365 Laundry. By accessing our website, using our mobile application, or utilizing our services, you agree to comply with and be bound by the following terms and conditions of use, which together with our privacy policy govern 365 Laundry's relationship with you in relation to this website and service.
+                Welcome to 365laundry.lk. By accessing our website, using our mobile application, or utilizing our services, you agree to comply with and be bound by the following terms and conditions of use, which together with our privacy policy govern 365laundry.lk's relationship with you in relation to this website and service.
             </p>
 
             <h2 class="text-2xl font-bold text-slate-800 mb-4 mt-8">2. Services Provided</h2>
             <p class="text-slate-600 mb-6 leading-relaxed">
-                365 Laundry provides pick-up and delivery laundry, dry cleaning, and ironing services. We exercise the utmost care in cleaning and processing garments entrusted to us and use processes which, in our opinion, are best suited to the nature and conditions of each individual garment.
+                365laundry.lk provides pick-up and delivery laundry, dry cleaning, and ironing services. We exercise the utmost care in cleaning and processing garments entrusted to us and use processes which, in our opinion, are best suited to the nature and conditions of each individual garment.
             </p>
 
             <h2 class="text-2xl font-bold text-slate-800 mb-4 mt-8">3. Suitability for Cleaning</h2>
