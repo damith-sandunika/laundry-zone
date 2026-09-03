@@ -56,7 +56,7 @@ class StaffController extends Controller
         }
         $request->validate($rules);
 
-        $branchId = auth()->user()->role === 'super_admin' ? $request->branch_id : (auth()->user()->branch_id ?? 1);
+        $branchId = auth()->user()->role === 'super_admin' ? $request->branch_id : (auth()->user()->branch_id ?? \App\Models\Branch::first()->id);
         $currentUserRole = auth()->user()->role;
 
         $role = $request->role;
@@ -188,7 +188,7 @@ class StaffController extends Controller
         ]);
 
         $user = User::find($request->user_id);
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
 
         Expense::create([
             'branch_id' => $branchId,

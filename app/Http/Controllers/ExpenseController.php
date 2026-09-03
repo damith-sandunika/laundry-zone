@@ -12,7 +12,7 @@ class ExpenseController extends Controller
     {
         $branchId = auth()->user()->branch_id;
 
-        $activeSession = RegisterSession::where('branch_id', $branchId ?? 1)
+        $activeSession = RegisterSession::where('branch_id', $branchId ?? \App\Models\Branch::first()->id)
             ->where('status', 'open')
             ->first();
 
@@ -66,7 +66,7 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
 
         Expense::create([
             'branch_id' => $branchId,

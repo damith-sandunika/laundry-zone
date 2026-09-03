@@ -22,7 +22,7 @@ class POSController extends Controller
     {
         $user = auth()->user();
         // For super admin without a branch_id, fetch all, otherwise fetch branch specific
-        $branchId = $user->branch_id ?? 1;
+        $branchId = $user->branch_id ?? \App\Models\Branch::first()->id;
 
         // Workshop admins bypass shift requirement (they don't have a register/cash till)
         if ($user->role !== 'workshop_admin') {
@@ -61,7 +61,7 @@ class POSController extends Controller
         ]);
 
         $user = auth()->user();
-        $branchId = $user->branch_id ?? 1;
+        $branchId = $user->branch_id ?? \App\Models\Branch::first()->id;
 
         // Workshop admins skip register session check
         if ($user->role !== 'workshop_admin') {
@@ -333,7 +333,7 @@ class POSController extends Controller
         ]);
 
         $user     = auth()->user();
-        $branchId = $user->branch_id ?? 1;
+        $branchId = $user->branch_id ?? \App\Models\Branch::first()->id;
 
         try {
             $result = DB::transaction(function () use ($request, $user, $branchId) {

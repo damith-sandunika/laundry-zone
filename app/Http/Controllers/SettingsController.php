@@ -18,14 +18,14 @@ class SettingsController extends Controller
     public function servicesIndex()
     {
         $services = ServiceType::all();
-        $inventoryItems = InventoryItem::where('branch_id', auth()->user()->branch_id ?? 1)->get();
+        $inventoryItems = InventoryItem::where('branch_id', auth()->user()->branch_id ?? \App\Models\Branch::first()->id)->get();
 
         return view('services.index', compact('services', 'inventoryItems'));
     }
 
     public function index()
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $branch = Branch::find($branchId);
         $serviceCategories = ServiceCategory::with('services')->get();
         $services = ServiceType::with(['inventoryItems', 'category'])->get();
@@ -85,7 +85,7 @@ class SettingsController extends Controller
 
     public function updateGeneral(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $branch = Branch::find($branchId);
 
         $request->validate([
@@ -278,7 +278,7 @@ class SettingsController extends Controller
     public function storeCubby(Request $request)
     {
         $request->validate(['name' => 'required|string|max:50']);
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         Cubby::create([
             'branch_id' => $branchId,
             'name' => $request->name,
@@ -305,7 +305,7 @@ class SettingsController extends Controller
 
     public function storeInventory(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $request->validate([
             'name' => 'required|string|max:255',
             'unit' => 'required|string|max:50',
@@ -345,7 +345,7 @@ class SettingsController extends Controller
 
     public function whatsappStatus()
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         try {
             $response = Http::timeout(5)->get("http://127.0.0.1:3005/api/whatsapp/status/{$branchId}");
 
@@ -357,7 +357,7 @@ class SettingsController extends Controller
 
     public function whatsappLogout()
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         try {
             $response = Http::post("http://127.0.0.1:3005/api/whatsapp/logout/{$branchId}");
 
@@ -369,7 +369,7 @@ class SettingsController extends Controller
 
     public function whatsappReset()
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         try {
             $response = Http::post("http://127.0.0.1:3005/api/whatsapp/start/{$branchId}");
 
@@ -381,7 +381,7 @@ class SettingsController extends Controller
 
     public function storePackage(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -485,7 +485,7 @@ class SettingsController extends Controller
         ]);
 
         \App\Models\DeliveryRange::create([
-            'branch_id' => auth()->user()->branch_id ?? 1,
+            'branch_id' => auth()->user()->branch_id ?? \App\Models\Branch::first()->id,
             'min_distance_km' => $request->min_distance_km,
             'max_distance_km' => $request->max_distance_km,
             'cost' => $request->cost,

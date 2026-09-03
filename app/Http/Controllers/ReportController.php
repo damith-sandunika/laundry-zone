@@ -340,7 +340,7 @@ class ReportController extends Controller
         }
         $customerPackages = $customerPackagesQuery->latest()->get();
 
-        $branch = Branch::find($branchId ?? 1);
+        $branch = Branch::find($branchId ?? \App\Models\Branch::first()->id);
 
         // Limit orders passed to PDF to keep it clean (latest 15)
         $recentOrders = collect(); // User requested to remove recent orders
@@ -355,7 +355,7 @@ class ReportController extends Controller
 
     public function closeShiftReport(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $branch = Branch::find($branchId);
 
         // Latest active shift

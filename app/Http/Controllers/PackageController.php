@@ -19,7 +19,7 @@ class PackageController extends Controller
 {
     public function index()
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $customerPackages = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -32,7 +32,7 @@ class PackageController extends Controller
 
     public function store(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'package_id' => 'required|exists:packages,id',

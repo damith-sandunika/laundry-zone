@@ -342,7 +342,7 @@ class DashboardController extends Controller
             'opening_cash' => 'required|numeric|min:0',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
 
         // Check if there is already an open session
         $existing = RegisterSession::where('branch_id', $branchId)
@@ -368,7 +368,7 @@ class DashboardController extends Controller
 
     public function closeShift(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $session = RegisterSession::where('branch_id', $branchId)
             ->where('status', 'open')
             ->first();
