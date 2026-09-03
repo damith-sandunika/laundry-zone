@@ -380,7 +380,7 @@ class ReportController extends Controller
                 \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue')
             )
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
-            ->leftJoin('service_categories', 'service_categories.id', '=', 'service_types.service_category_id')
+            ->leftJoin('service_categories', 'service_categories.id', '=', 'service_types.category_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', '!=', 'cancelled')
             ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
@@ -421,7 +421,7 @@ class ReportController extends Controller
                 \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue')
             )
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
-            ->leftJoin('service_categories', 'service_categories.id', '=', 'service_types.service_category_id')
+            ->leftJoin('service_categories', 'service_categories.id', '=', 'service_types.category_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', '!=', 'cancelled')
             ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
