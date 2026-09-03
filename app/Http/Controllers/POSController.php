@@ -25,7 +25,8 @@ class POSController extends Controller
         $branchId = $user->branch_id ?? 1;
 
         // Workshop admins bypass shift requirement (they don't have a register/cash till)
-        if ($user->role !== 'workshop_admin') {
+        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+        if (!$isWorkshopAdmin) {
             $activeSession = RegisterSession::where('branch_id', $branchId)
                 ->whereNull('closed_at')
                 ->first();
@@ -64,7 +65,8 @@ class POSController extends Controller
         $branchId = $user->branch_id ?? 1;
 
         // Workshop admins skip register session check
-        if ($user->role !== 'workshop_admin') {
+        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+        if (!$isWorkshopAdmin) {
             $activeSession = RegisterSession::where('branch_id', $branchId)
                 ->whereNull('closed_at')
                 ->first();
@@ -269,7 +271,8 @@ class POSController extends Controller
                 }
 
                 // 5. If workshop admin: auto-dispatch to operations as 'processing'
-                if ($user->role === 'workshop_admin') {
+                $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $branch && $branch->type === 'workshop');
+                if ($isWorkshopAdmin) {
                     \App\Models\WorkshopDispatch::create([
                         'order_id'           => $order->id,
                         'branch_id'          => $branchId,

@@ -43,7 +43,7 @@ class WorkshopController extends Controller
             'dispatched_to_workshop_at' => now(),
         ]);
 
-        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
+        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $request->workshop_branch_id)->get();
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Order Dispatched from Branch: #' . $order->order_number, route('workshop.dashboard'), 'branch_dispatch'));
 
         $commService = new CommunicationService();
@@ -83,7 +83,7 @@ class WorkshopController extends Controller
             ]);
         }
 
-        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
+        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $request->workshop_branch_id)->get();
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification(count($orders) . ' Orders Dispatched from Branch', route('workshop.dashboard'), 'branch_dispatch'));
 
         $commService = new CommunicationService();
@@ -698,7 +698,7 @@ class WorkshopController extends Controller
             }
 
             try {
-                $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin'])
+                $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin', 'staff'])
                     ->where('branch_id', $dispatch->branch_id)->get();
                 \Illuminate\Support\Facades\Notification::send(
                     $branchAdmins,

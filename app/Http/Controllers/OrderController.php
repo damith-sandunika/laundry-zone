@@ -498,7 +498,7 @@ class OrderController extends Controller
             'password' => 'required|string',
         ]);
 
-        $admins = User::whereIn('role', ['admin', 'super_admin'])->get();
+        $admins = User::whereIn('role', ['admin', 'super_admin', 'branch_admin', 'staff'])->get();
         $authorized = false;
         foreach ($admins as $admin) {
             if (\Hash::check($request->password, $admin->password)) {

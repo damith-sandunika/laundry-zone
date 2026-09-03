@@ -24,7 +24,8 @@ class DeliveryController extends Controller
         $branchId = $user->branch_id;
 
         // Super admins and workshop admins have full access
-        $hasFullAccess = $user->isSuperAdmin() || $user->role === 'workshop_admin';
+        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+        $hasFullAccess = $user->isSuperAdmin() || $isWorkshopAdmin;
 
         // Branch admins and staff can only access if delivery is enabled for their branch
         if (! $hasFullAccess && (! $user->branch || ! $user->branch->is_delivery_enabled)) {
@@ -235,8 +236,9 @@ class DeliveryController extends Controller
             ]);
         });
 
-        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $appointment->branch_id)->get();
-        $targetRouteName = auth()->user()->role === 'workshop_admin' ? 'workshop.operations' : 'orders.index';
+        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $appointment->branch_id)->get();
+        $isWorkshopAdmin = auth()->user()->role === 'workshop_admin' || (auth()->user()->role === 'staff' && auth()->user()->branch && auth()->user()->branch->type === 'workshop');
+        $targetRouteName = $isWorkshopAdmin ? 'workshop.operations' : 'orders.index';
         
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Delivery Order Arrived: #' . $dispatch->order->order_number, route($targetRouteName), 'delivery_arrived'));
 
