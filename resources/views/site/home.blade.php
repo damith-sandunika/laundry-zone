@@ -2,8 +2,8 @@
 
 @section('content')
     <!-- Hero Section with Slides -->
-    <section x-data="{ slide: 1, timer: null, direction: 1 }" x-init="timer = setInterval(() => { 
-            if (slide === 3) direction = -1;
+    <section x-data="{ slide: 1, timer: null, direction: 1, maxSlide: 3 }" x-init="timer = setInterval(() => { 
+            if (slide === maxSlide) direction = -1;
             else if (slide === 1) direction = 1;
             slide = slide + direction;
          }, 5000)"
@@ -96,6 +96,17 @@
                             <i class="fa-regular fa-circle-play text-base"></i> Services
                         </a>
                     </div>
+
+                    <!-- Mobile Features (Below Buttons) -->
+                    <div x-show="slide === 1" x-transition:enter="transition ease-out duration-700 delay-800"
+                        x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="grid grid-cols-2 gap-2 mt-6 w-full max-w-[320px] mx-auto lg:hidden" style="display: none;">
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-truck-fast text-blue-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Pickup & Delivery</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-orange-500"></i><p class="font-bold text-[10px] text-brand leading-tight">48-Hour Service</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-moon text-purple-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Open Till 10 PM</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-shield-virus text-green-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Safe & Hygienic</p></div>
+                    </div>
                 </div>
 
                 <!-- Slide 2 Text (Extreme Right) -->
@@ -157,6 +168,17 @@
                             class="w-full bg-white text-accent border border-slate-200 px-2 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-sm lg:text-base hover:bg-slate-50 transition flex items-center justify-center gap-2 shadow-sm">
                             <i class="fa-regular fa-circle-play text-base"></i> Services
                         </a>
+                    </div>
+
+                    <!-- Mobile Features (Below Buttons) -->
+                    <div x-show="slide === 2" x-transition:enter="transition ease-out duration-700 delay-800"
+                        x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="grid grid-cols-2 gap-2 mt-6 w-full max-w-[320px] mx-auto lg:hidden" style="display: none;">
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-truck-fast text-blue-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Pickup & Delivery</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-orange-500"></i><p class="font-bold text-[10px] text-brand leading-tight">48-Hour Service</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-moon text-purple-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Open Till 10 PM</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-shield-virus text-green-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Safe & Hygienic</p></div>
                     </div>
                 </div>
 
@@ -220,12 +242,23 @@
                             <i class="fa-regular fa-circle-play text-base"></i> Services
                         </a>
                     </div>
+
+                    <!-- Mobile Features (Below Buttons) -->
+                    <div x-show="slide === 3" x-transition:enter="transition ease-out duration-700 delay-800"
+                        x-transition:enter-start="opacity-0 translate-y-8" x-transition:enter-end="opacity-100 translate-y-0"
+                        x-transition:leave="transition ease-in duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                        class="grid grid-cols-2 gap-2 mt-6 w-full max-w-[320px] mx-auto lg:hidden" style="display: none;">
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-truck-fast text-blue-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Pickup & Delivery</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-orange-500"></i><p class="font-bold text-[10px] text-brand leading-tight">48-Hour Service</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-moon text-purple-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Open Till 10 PM</p></div>
+                        <div class="bg-white/95 backdrop-blur-xl rounded-xl p-2 shadow-sm border border-white flex items-center gap-2"><i class="fa-solid fa-shield-virus text-green-600"></i><p class="font-bold text-[10px] text-brand leading-tight">Safe & Hygienic</p></div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- 4 Separate Feature Cards (Always visible on all slides) -->
-        <div class="absolute bottom-2 lg:bottom-10 left-0 right-0 z-20 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 w-full"
+        <!-- 4 Separate Feature Cards (Always visible on desktop only) -->
+        <div class="absolute bottom-2 lg:bottom-10 left-0 right-0 z-20 max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 w-full hidden lg:block"
              x-data="{ activeFeature: 1 }" 
              x-init="setInterval(() => { activeFeature = activeFeature === 4 ? 1 : activeFeature + 1 }, 2500)">
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-4 w-full">
@@ -281,7 +314,7 @@
         </div>
 
         <!-- Slider Indicators -->
-        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-3 z-30">
+        <div class="absolute bottom-4 left-1/2 -translate-x-1/2 hidden lg:flex gap-3 z-30">
             <template x-for="i in maxSlide">
                 <button @click="slide = i" class="h-2.5 rounded-full transition-all duration-300 shadow-md"
                     :class="slide === i ? 'w-10 bg-accent' : 'w-2.5 bg-white/70 hover:bg-white'"></button>
@@ -357,70 +390,134 @@
         </div>
     </section>
 
-    <!-- Pricing Section -->
-    <section id="pricing" class="py-10 lg:py-20 bg-slate-50 relative overflow-hidden">
-        <div class="absolute top-0 right-0 w-64 h-64 bg-blue-100 rounded-full blur-3xl opacity-50 -translate-y-1/2 translate-x-1/2"></div>
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-            <div class="text-center mb-16">
-                <span class="bg-blue-100 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">Affordable & Transparent</span>
-                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">Simple & Transparent Pricing</h2>
-                <p class="text-slate-500 max-w-2xl mx-auto">Choose a package that best fits your laundry needs. Save more with our bundle deals.</p>
+    <!-- Promotions Section -->
+    <section id="promotions" class="py-16 lg:py-24 bg-slate-50 relative overflow-hidden">
+        <div class="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2"></div>
+        <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-200 rounded-full blur-3xl opacity-30 translate-y-1/2 -translate-x-1/2"></div>
+        
+        @php
+            $promotions = \App\Models\Promotion::where('is_active', true)->orderBy('order_sequence')->get();
+        @endphp
+        
+        @if($promotions->count() > 0)
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-30">
+            
+            <div class="text-center mb-10">
+                <span class="bg-blue-100 text-blue-600 text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">Special Offers</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">Our Promotions</h2>
+                <p class="text-slate-500 max-w-2xl mx-auto text-sm md:text-base font-medium">Grab these exclusive deals while they last. Enjoy premium laundry services at unbeatable prices.</p>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center max-w-5xl mx-auto">
-                <!-- Basic Wash -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow hover:shadow-lg transition-all">
-                    <h3 class="text-xl font-bold text-center text-brand mb-1">Basic Wash</h3>
-                    <p class="text-center text-xs text-slate-500 mb-4">Wash & Fold</p>
-                    <div class="text-center mb-4">
-                        <span class="text-xs text-slate-500 font-medium">From</span><br>
-                        <span class="text-3xl font-extrabold text-slate-800">Rs. 1,500</span>
+            <!-- Include Swiper CSS/JS for beautiful sliding effect -->
+            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+            
+            <div class="swiper promotionsSwiper py-12 px-4" style="overflow: hidden; padding-bottom: 60px;">
+                <div class="swiper-wrapper">
+                    @foreach($promotions as $promo)
+                    <div class="swiper-slide">
+                        <a href="{{ route('customer.login') ?? '/login' }}" class="block outline-none">
+                            <div class="promo-card">
+                                <img src="{{ asset('storage/' . $promo->image_path) }}" class="w-full h-auto object-cover rounded-[1.5rem]" alt="Promotion">
+                            </div>
+                        </a>
                     </div>
-                    <ul class="space-y-2.5 mb-6">
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Standard Wash <span class="text-slate-400 text-[10px] ml-auto">Up to 3kg</span></li>
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Crisp Folding</li>
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> 48-Hour Delivery</li>
-                    </ul>
-                    <a href="{{ route('customer.booking') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all bg-blue-50 text-blue-600 hover:bg-blue-100">Book Now</a>
+                    @endforeach
                 </div>
+                <!-- Pagination -->
+                <div class="swiper-pagination z-50"></div>
+            </div>
+
+            <style>
+                .promotionsSwiper {
+                    padding-top: 2rem;
+                    padding-bottom: 4rem;
+                }
+                .promotionsSwiper .swiper-slide {
+                    width: 260px; /* Base size */
+                    opacity: 0.5;
+                    transform: scale(0.85);
+                    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    filter: blur(1.5px);
+                }
+                @media (min-width: 768px) {
+                    .promotionsSwiper .swiper-slide {
+                        width: 320px;
+                    }
+                }
+                .promotionsSwiper .swiper-slide-active {
+                    opacity: 1;
+                    transform: scale(1.15); /* Pop out the active slide */
+                    z-index: 20;
+                    filter: blur(0px);
+                }
                 
-                <!-- Premium Care -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow-2xl ring-2 ring-blue-500/20 md:-translate-y-2 scale-105 relative transition-all">
-                    <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                        <span class="bg-accent text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">Most Popular</span>
-                    </div>
-                    <h3 class="text-xl font-bold text-center text-brand mb-1">Premium Care</h3>
-                    <p class="text-center text-xs text-slate-500 mb-4">Wash & Iron</p>
-                    <div class="text-center mb-4">
-                        <span class="text-xs text-slate-500 font-medium">From</span><br>
-                        <span class="text-3xl font-extrabold text-slate-800">Rs. 2,500</span>
-                    </div>
-                    <ul class="space-y-2.5 mb-6">
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Premium Wash <span class="text-slate-400 text-[10px] ml-auto">Up to 3kg</span></li>
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Professional Ironing</li>
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Fabric Softener</li>
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Free Delivery</li>
-                    </ul>
-                    <a href="{{ route('customer.booking') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all bg-accent text-white hover:bg-blue-700 shadow-md">Book Now</a>
-                </div>
+                /* Premium Card Wrapper */
+                .promo-card {
+                    background: linear-gradient(135deg, rgba(255,255,255,0.95), rgba(255,255,255,0.8));
+                    backdrop-filter: blur(10px);
+                    padding: 0.5rem;
+                    border-radius: 1.8rem;
+                    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+                    border: 1px solid rgba(255, 255, 255, 0.8);
+                    transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+                    position: relative;
+                }
+                /* Active Card Styling */
+                .promotionsSwiper .swiper-slide-active .promo-card {
+                    background: #ffffff;
+                    /* Elegant deep glow */
+                    box-shadow: 0 30px 60px -15px rgba(37, 99, 235, 0.25), 
+                                0 0 40px rgba(59, 130, 246, 0.15),
+                                inset 0 0 0 2px rgba(59, 130, 246, 0.1);
+                    border-color: transparent;
+                }
 
-                <!-- Family Bundle -->
-                <div class="bg-white rounded-2xl p-6 border border-slate-100 shadow hover:shadow-lg transition-all">
-                    <h3 class="text-xl font-bold text-center text-brand mb-1">Family Bundle</h3>
-                    <p class="text-center text-xs text-slate-500 mb-4">Bulk Wash</p>
-                    <div class="text-center mb-4">
-                        <span class="text-xs text-slate-500 font-medium">From</span><br>
-                        <span class="text-3xl font-extrabold text-slate-800">Rs. 5,000</span>
-                    </div>
-                    <ul class="space-y-2.5 mb-6">
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Family Size Wash <span class="text-slate-400 text-[10px] ml-auto">Up to 8kg</span></li>
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Separate Whites & Colors</li>
-                        <li class="flex items-center gap-2 text-xs text-slate-600"><i class="fa-solid fa-check text-accent bg-blue-50 w-5 h-5 rounded-full flex items-center justify-center text-[10px]"></i> Free Delivery</li>
-                    </ul>
-                    <a href="{{ route('customer.booking') }}" class="block w-full text-center py-2.5 rounded-lg font-bold text-sm transition-all bg-blue-50 text-blue-600 hover:bg-blue-100">Book Now</a>
-                </div>
-            </div>
+                /* Pagination Dots */
+                .promotionsSwiper .swiper-pagination-bullet {
+                    background-color: #cbd5e1;
+                    opacity: 0.6;
+                    width: 8px;
+                    height: 8px;
+                    transition: all 0.4s ease;
+                }
+                .promotionsSwiper .swiper-pagination-bullet-active {
+                    background-color: #3b82f6; /* Tailwind blue-500 */
+                    opacity: 1;
+                    width: 32px;
+                    border-radius: 4px;
+                    box-shadow: 0 0 10px rgba(59,130,246,0.5);
+                }
+            </style>
+            
+            <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+            <script>
+                document.addEventListener('DOMContentLoaded', function () {
+                    new Swiper(".promotionsSwiper", {
+                        effect: "slide", /* Simple clean slide effect */
+                        grabCursor: true,
+                        centeredSlides: true,
+                        slidesPerView: "auto",
+                        spaceBetween: 30, /* Space between cards */
+                        loop: {{ $promotions->count() > 3 ? 'true' : 'false' }},
+                        speed: 1000, /* Smooth transition speed */
+                        autoplay: {
+                            delay: 2500,
+                            disableOnInteraction: false /* Keeps looping */
+                        },
+                        pagination: {
+                            el: ".swiper-pagination",
+                            clickable: true,
+                        },
+                        breakpoints: {
+                            768: {
+                                spaceBetween: 50,
+                            }
+                        }
+                    });
+                });
+            </script>
         </div>
+        @endif
     </section>
 
     <!-- How It Works -->
@@ -517,68 +614,73 @@
                 </div>
             </div>
 
-            <div class="flex justify-center">
-                <img src="{{ asset('images/why_choose_us.png') }}" alt="Premium Laundry" class="w-full rounded-[2rem] shadow-2xl object-cover border border-slate-200">
-            </div>
         </div>
     </section>
 
-    <!-- Testimonials -->
+    <!-- Google Reviews -->
     <section id="testimonials" class="py-16 lg:py-20 bg-white border-t border-slate-100">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex flex-col md:flex-row justify-between items-center mb-12 gap-6">
-                <div class="text-center md:text-left">
-                    <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What Our Customers Say</span>
-                    <h2 class="text-3xl md:text-4xl font-extrabold text-brand mt-4">Testimonials</h2>
+                <div class="text-center md:text-left flex items-center gap-4">
+                    <i class="fa-brands fa-google text-4xl text-blue-500 hidden sm:block"></i>
+                    <div>
+                        <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What Our Customers Say</span>
+                        <h2 class="text-3xl md:text-4xl font-extrabold text-brand mt-4">Google Reviews</h2>
+                    </div>
                 </div>
-                <a href="#" class="bg-brand hover:bg-blue-900 text-white font-bold py-2.5 px-6 rounded-xl shadow-md transition-colors flex items-center gap-2 text-sm">
-                    <i class="fa-solid fa-pen-nib"></i> Write a Review
+                <a href="{{ env('GOOGLE_REVIEW_LINK', '#') }}" target="_blank" class="bg-white border-2 border-brand text-brand hover:bg-brand hover:text-white font-bold py-2.5 px-6 rounded-xl shadow-sm transition-colors flex items-center gap-2 text-sm">
+                    <i class="fa-solid fa-star text-yellow-400"></i> Write a Review
                 </a>
             </div>
 
+            @php
+                $googleReviews = Cache::remember('google_5star_reviews', 86400, function () {
+                    $apiKey = env('GOOGLE_PLACES_API_KEY');
+                    $placeId = env('GOOGLE_PLACE_ID');
+                    
+                    if (!$apiKey || !$placeId) {
+                        return [
+                            ['author_name' => 'Nirosha W.', 'text' => 'Amazing service! My clothes came back so fresh and perfectly folded.', 'rating' => 5, 'profile_photo_url' => 'https://i.pravatar.cc/150?img=5'],
+                            ['author_name' => 'Gayan P.', 'text' => 'Very reliable pickup and delivery. Highly recommended!', 'rating' => 5, 'profile_photo_url' => 'https://i.pravatar.cc/150?img=11'],
+                            ['author_name' => 'Tharindi S.', 'text' => 'Great quality ironing. My clothes look brand new every time.', 'rating' => 5, 'profile_photo_url' => 'https://i.pravatar.cc/150?img=9']
+                        ];
+                    }
+
+                    $response = Illuminate\Support\Facades\Http::get("https://maps.googleapis.com/maps/api/place/details/json", [
+                        'place_id' => $placeId,
+                        'fields' => 'reviews',
+                        'key' => $apiKey
+                    ]);
+
+                    if ($response->successful() && isset($response['result']['reviews'])) {
+                        return collect($response['result']['reviews'])
+                                ->where('rating', 5)
+                                ->take(3)
+                                ->toArray();
+                    }
+
+                    return [];
+                });
+            @endphp
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                @foreach($googleReviews as $review)
                 <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 relative shadow-sm hover:shadow-md transition-all">
                     <i class="fa-solid fa-quote-left absolute top-6 right-6 text-3xl text-blue-100"></i>
                     <div class="flex items-center gap-4 mb-4 relative z-10">
-                        <img src="https://i.pravatar.cc/150?img=5" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white">
+                        <img src="{{ $review['profile_photo_url'] }}" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white" onerror="this.src='https://ui-avatars.com/api/?name={{ urlencode($review['author_name']) }}&color=1d4ed8&background=dbeafe'">
                         <div>
-                            <h4 class="font-bold text-slate-800 text-sm">Nirosha W.</h4>
+                            <h4 class="font-bold text-slate-800 text-sm">{{ $review['author_name'] }}</h4>
                             <div class="flex text-yellow-400 text-[10px]">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+                                @for($i = 0; $i < $review['rating']; $i++)
+                                    <i class="fa-solid fa-star"></i>
+                                @endfor
                             </div>
                         </div>
                     </div>
-                    <p class="text-slate-600 relative z-10 text-sm">"Amazing service! My clothes came back so fresh and perfectly folded. Saves me so much time every week."</p>
+                    <p class="text-slate-600 relative z-10 text-sm">"{{ \Illuminate\Support\Str::limit($review['text'], 120) }}"</p>
                 </div>
-
-                <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 relative shadow-sm hover:shadow-md transition-all">
-                    <i class="fa-solid fa-quote-left absolute top-6 right-6 text-3xl text-blue-100"></i>
-                    <div class="flex items-center gap-4 mb-4 relative z-10">
-                        <img src="https://i.pravatar.cc/150?img=11" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white">
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm">Gayan P.</h4>
-                            <div class="flex text-yellow-400 text-[10px]">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star-half-stroke"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 relative z-10 text-sm">"Very reliable pickup and delivery. Their dry cleaning removed a tough stain from my suit. Highly recommended!"</p>
-                </div>
-
-                <div class="bg-slate-50 rounded-3xl p-6 border border-slate-100 relative shadow-sm hover:shadow-md transition-all">
-                    <i class="fa-solid fa-quote-left absolute top-6 right-6 text-3xl text-blue-100"></i>
-                    <div class="flex items-center gap-4 mb-4 relative z-10">
-                        <img src="https://i.pravatar.cc/150?img=9" alt="User" class="w-12 h-12 rounded-full object-cover shadow-sm border-2 border-white">
-                        <div>
-                            <h4 class="font-bold text-slate-800 text-sm">Tharindi S.</h4>
-                            <div class="flex text-yellow-400 text-[10px]">
-                                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
-                            </div>
-                        </div>
-                    </div>
-                    <p class="text-slate-600 relative z-10 text-sm">"Great quality ironing. My clothes look brand new every time. The booking process is extremely easy."</p>
-                </div>
-            </div>
+                @endforeach
         </div>
     </section>
 
@@ -646,58 +748,39 @@
                 <!-- Contact Info (No Scroll) -->
                 <div class="flex-1 p-6 lg:p-10 flex flex-col justify-center">
                     <div class="grid gap-6">
-                        <!-- Main Branch - Colombo -->
+                        @foreach($branches as $branch)
+                        <!-- Branch -->
                         <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                            <h3 class="font-bold text-base text-brand mb-3 pb-2 border-b border-slate-200"><i class="fa-solid fa-building text-accent mr-2"></i>Main Branch - Colombo</h3>
+                            <h3 class="font-bold text-base text-brand mb-3 pb-2 border-b border-slate-200">
+                                @if($branch->type === 'workshop')
+                                    <i class="fa-solid fa-cogs text-accent mr-2"></i>
+                                @else
+                                    <i class="fa-solid fa-store text-accent mr-2"></i>
+                                @endif
+                                {{ $branch->name }}
+                            </h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                @if($branch->phone)
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-phone"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Phone</p><p class="text-sm font-semibold text-slate-700">0112345678</p></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Phone</p><p class="text-sm font-semibold text-slate-700">{{ $branch->phone }}</p></div>
                                 </div>
+                                @endif
+                                @if($branch->whatsapp_number)
                                 <div class="flex items-center gap-3">
                                     <div class="w-8 h-8 bg-white text-green-500 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm"><i class="fa-brands fa-whatsapp"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">WhatsApp</p><p class="text-sm font-semibold text-slate-700">94771234567</p></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">WhatsApp</p><p class="text-sm font-semibold text-slate-700">{{ $branch->whatsapp_number }}</p></div>
                                 </div>
+                                @endif
+                                @if($branch->address)
                                 <div class="flex items-center gap-3 sm:col-span-2 mt-1">
                                     <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-location-dot"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Address</p><p class="text-sm font-semibold text-slate-700">No. 45, Main Street, Colombo 03</p></div>
+                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Address</p><p class="text-sm font-semibold text-slate-700">{{ $branch->address }}</p></div>
                                 </div>
+                                @endif
                             </div>
                         </div>
-
-                        <!-- Branch 2 - Kandy -->
-                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                            <h3 class="font-bold text-base text-brand mb-3 pb-2 border-b border-slate-200"><i class="fa-solid fa-store text-accent mr-2"></i>Branch 2 - Kandy</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-phone"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Phone</p><p class="text-sm font-semibold text-slate-700">0812345678</p></div>
-                                </div>
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-white text-green-500 rounded-full flex items-center justify-center text-sm shrink-0 shadow-sm"><i class="fa-brands fa-whatsapp"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">WhatsApp</p><p class="text-sm font-semibold text-slate-700">94761234567</p></div>
-                                </div>
-                                <div class="flex items-center gap-3 sm:col-span-2 mt-1">
-                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-location-dot"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Address</p><p class="text-sm font-semibold text-slate-700">No. 12, Peradeniya Road, Kandy</p></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Main Branch 2 -->
-                        <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100">
-                            <h3 class="font-bold text-base text-brand mb-3 pb-2 border-b border-slate-200"><i class="fa-solid fa-building text-accent mr-2"></i>Main Branch</h3>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-phone"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Phone</p><p class="text-sm font-semibold text-slate-700">0112223334</p></div>
-                                </div>
-                                <div class="flex items-center gap-3 sm:col-span-2 mt-1">
-                                    <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-xs shrink-0 shadow-sm"><i class="fa-solid fa-location-dot"></i></div>
-                                    <div><p class="text-[10px] font-bold text-slate-400 uppercase">Address</p><p class="text-sm font-semibold text-slate-700">123 Branch St, Colombo</p></div>
-                                </div>
-                            </div>
-                        </div>
+                        @endforeach
                     </div>
                 </div>
 

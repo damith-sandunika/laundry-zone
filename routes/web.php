@@ -250,6 +250,9 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/email-templates/{template}', [EmailTemplateController::class, 'update'])->name('email-templates.update');
             Route::post('/email-templates/toggle', [EmailTemplateController::class, 'toggleGlobal'])->name('email-templates.toggleGlobal');
             Route::post('/email-templates/seed', [EmailTemplateController::class, 'seedDefault'])->name('email-templates.seedDefault');
+
+            Route::post('/promotions/reorder', [App\Http\Controllers\PromotionController::class, 'reorder'])->name('promotions.reorder');
+            Route::resource('promotions', App\Http\Controllers\PromotionController::class)->except(['create', 'show', 'edit']);
         });
 
         Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
