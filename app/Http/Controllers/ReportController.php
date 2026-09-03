@@ -396,7 +396,7 @@ class ReportController extends Controller
 
         $services = $query->groupBy('service_categories.name', 'service_types.name')
             ->having('total_qty', '>', 0)
-            ->orderBy('total_qty', 'desc')
+            ->orderBy('total_revenue', 'desc')
             ->get();
 
         $totalQty = $services->sum('total_qty');
@@ -436,7 +436,7 @@ class ReportController extends Controller
 
         $services = $query->groupBy('service_categories.name', 'service_types.name')
             ->having('total_qty', '>', 0)
-            ->orderBy('total_qty', 'desc')
+            ->orderBy('total_revenue', 'desc')
             ->get();
 
         $totalQty = $services->sum('total_qty');
