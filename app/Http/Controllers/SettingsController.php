@@ -485,7 +485,7 @@ class SettingsController extends Controller
         ]);
 
         \App\Models\DeliveryRange::create([
-            'branch_id' => auth()->user()->branch_id ?? \App\Models\Branch::first()->id,
+            'branch_id' => auth()->user()->role === 'super_admin' ? null : auth()->user()->branch_id,
             'min_distance_km' => $request->min_distance_km,
             'max_distance_km' => $request->max_distance_km,
             'cost' => $request->cost,
