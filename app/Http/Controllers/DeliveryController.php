@@ -151,9 +151,9 @@ class DeliveryController extends Controller
 
         if ($request->filled('pickme_flash_cost')) {
             \App\Models\Expense::create([
-                'branch_id' => auth()->user()->branch_id, // Workshop's branch
+                'branch_id' => $appointment->branch_id,
                 'category' => 'PickMe',
-                'description' => 'PickMe payment for pickup delivery #' . $appointment->id,
+                'description' => 'PickMe payment for pickup delivery Order #' . ($appointment->order ? $appointment->order->order_number : $appointment->order_id),
                 'amount' => $request->pickme_flash_cost,
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
@@ -254,9 +254,6 @@ class DeliveryController extends Controller
 
         if ($request->rider_id === 'pickme_flash') {
             $order = Order::find($request->order_id);
-            if ($order && $order->paid_amount < $order->total) {
-                return redirect()->back()->with('error', 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.');
-            }
 
             $appointment->update([
                 'status' => 'delivered', 
@@ -277,17 +274,15 @@ class DeliveryController extends Controller
                     'note' => 'Delivered via PickMe',
                 ]);
                 
-                // For PickMe: balance remaining means customer pays COD via PickMe
-                // Do NOT auto-mark as paid - branch admin should handle cash collection
-                // Just record a pending cash transaction if balance > 0
                 $amountToPay = $order->total - $order->paid_amount;
-                if ($amountToPay > 0 && in_array($order->payment_method, ['cash', null])) {
+                if ($amountToPay > 0) {
+                    $paymentMethod = $request->input('payment_method', 'cash');
                     \App\Models\PaymentTransaction::create([
                         'order_id' => $order->id,
                         'amount' => $amountToPay,
-                        'payment_method' => 'cash',
+                        'payment_method' => $paymentMethod,
                         'created_by' => auth()->id(),
-                        'collected_from_rider_at' => null,
+                        'collected_from_rider_at' => now(), // Auto-collected per user request
                         'status' => 'completed',
                         'transaction_id' => 'TXN-' . strtoupper(uniqid()),
                     ]);
@@ -324,16 +319,16 @@ class DeliveryController extends Controller
 
             if ($request->filled('pickme_flash_cost')) {
                 \App\Models\Expense::create([
-                    'branch_id' => $appointment->branch_id,
+                    'branch_id' => auth()->user()->branch_id,
                     'category' => 'PickMe',
-                    'description' => 'PickMe payment for delivery dropoff #' . $appointment->id,
+                    'description' => 'PickMe payment for delivery dropoff Order #' . ($appointment->order ? $appointment->order->order_number : $appointment->order_id),
                     'amount' => $request->pickme_flash_cost,
                     'expense_date' => now(),
                     'created_by' => auth()->id(),
                 ]);
             }
 
-            return redirect()->back()->with('success', "Assigned to PickMe/Flash. Order automatically marked as Delivered & Completed.")->with('print_url', route('orders.printChit', $request->order_id));
+            return redirect()->back()->with('success', "Assigned to PickMe/Flash. Order automatically marked as Delivered & Completed.")->with('print_url', route('orders.printChit', $appointment->order->order_number));
         }
 
         $request->validate([
@@ -362,9 +357,9 @@ class DeliveryController extends Controller
             $commService->sendDeliveryConfirmation($order);
         }
 
-        \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Delivery Drop-off Task Assigned: Order #' . $request->order_id, route('rider.tasks')));
+        \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Delivery Drop-off Task Assigned: Order #' . $appointment->order->order_number, route('rider.tasks')));
 
-        return redirect()->back()->with('success', "Rider {$rider->name} assigned for delivery.")->with('print_url', route('orders.printChit', $request->order_id));
+        return redirect()->back()->with('success', "Rider {$rider->name} assigned for delivery.")->with('print_url', route('orders.printChit', $appointment->order->order_number));
     }
 
     public function collectCash(Request $request, DeliveryAppointment $appointment)

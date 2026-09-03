@@ -27,8 +27,10 @@ class SettingsController extends Controller
     {
         $branchId = auth()->user()->branch_id ?? 1;
         $branch = Branch::find($branchId);
-        $serviceCategories = ServiceCategory::with('services')->where('branch_id', $branchId)->get();
-        $services = ServiceType::with(['inventoryItems', 'category'])->where('branch_id', $branchId)->get();
+        $serviceCategories = ServiceCategory::with(['services' => function($q) {
+            $q->orderBy('order_index');
+        }])->where('branch_id', $branchId)->orderBy('order_index')->get();
+        $services = ServiceType::with(['inventoryItems', 'category'])->where('branch_id', $branchId)->orderBy('order_index')->get();
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
         $packages = Package::with('services.serviceType')->where('branch_id', $branchId)->get();
@@ -148,9 +150,10 @@ class SettingsController extends Controller
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
             'price_type' => $request->price_type,
-            'icon' => $request->icon ?? '👕',
+            'icon' => $request->icon ?? '🧺',
             'color' => $request->color ?? 'blue',
             'is_active' => true,
+            'is_visible_on_website' => $request->has('is_visible_on_website'),
         ]);
 
         return redirect()->back()->with('success', 'Service added.');
@@ -166,7 +169,9 @@ class SettingsController extends Controller
             'is_active' => 'boolean',
             'inventory' => 'nullable|array',
         ]);
-        $service->update($request->only(['name', 'category_id', 'base_price', 'price_type', 'is_active', 'icon', 'color']));
+        $updateData = $request->only(['name', 'category_id', 'base_price', 'price_type', 'is_active', 'icon', 'color']);
+        $updateData['is_visible_on_website'] = $request->has('is_visible_on_website');
+        $service->update($updateData);
 
         return redirect()->back()->with('success', 'Service updated.');
     }
@@ -263,7 +268,36 @@ class SettingsController extends Controller
     {
         $category->delete();
 
-        return redirect()->back()->with('success', 'Service Category deleted.');
+        return redirect()->back()->with('success', 'Category deleted.');
+    }
+
+    public function reorderCategories(Request $request)
+    {
+        $request->validate(['ordered_ids' => 'required|array']);
+        foreach ($request->ordered_ids as $index => $id) {
+            ServiceCategory::where('id', $id)->update(['order_index' => $index]);
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function reorderServices(Request $request)
+    {
+        $request->validate([
+            'ordered_ids' => 'required|array',
+            'category_id' => 'nullable'
+        ]);
+        $categoryId = $request->category_id;
+        if ($categoryId === 'null') {
+            $categoryId = null;
+        }
+        
+        foreach ($request->ordered_ids as $index => $id) {
+            ServiceType::where('id', $id)->update([
+                'order_index' => $index,
+                'category_id' => $categoryId
+            ]);
+        }
+        return response()->json(['success' => true]);
     }
 
     public function storeCubby(Request $request)

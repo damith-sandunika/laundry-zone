@@ -326,7 +326,7 @@ let a = {
                 if (shouldPrint && data.print_bill_id) {
                     window.open(`/orders/${data.print_bill_id}/print`, '_blank');
                 } else if (shouldPrint) {
-                    window.open(`/orders/${this.deliverOrder.id}/print`, '_blank');
+                    window.open(`/orders/${this.deliverOrder.order_number}/print`, '_blank');
                 }
                 
                 window.location.reload();

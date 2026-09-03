@@ -77,23 +77,18 @@
 
                         <div x-ref="catScroll" class="overflow-x-auto scrollbar-none custom-scrollbar-hide">
                             <div class="grid grid-rows-3 grid-flow-col gap-2 w-max pb-1">
-                                <button @click="activeCategory = null" 
-                                    :class="activeCategory === null ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
-                                    class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[80px]">
-                                    All
-                                </button>
-                                <button @click="activeCategory = 'uncategorized'" 
-                                    :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
-                                    class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[80px]">
-                                    Uncategorized
-                                </button>
-                                <template x-for="cat in allCategories" :key="cat.id">
+                                <template x-for="cat in filteredCategories" :key="cat.id">
                                     <button @click="activeCategory = cat.id" 
                                         :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
                                         class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[80px]"
                                         x-text="cat.name">
                                     </button>
                                 </template>
+                                <button @click="activeCategory = 'uncategorized'" 
+                                    :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                                    class="px-3 py-1.5 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[80px]">
+                                    Uncategorized
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -101,10 +96,10 @@
 
                 <!-- Services Grid -->
                 <div class="flex-1 overflow-y-auto p-4 custom-scrollbar z-10">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+                    <div class="grid grid-cols-4 sm:grid-cols-6 xl:grid-cols-8 gap-2 lg:gap-3">
                         
                         <!-- Special Service Card -->
-                        <div class="flex flex-col p-4 rounded-[20px] bg-gradient-to-br from-fuchsia-50 to-purple-50 border-2 border-dashed border-purple-300 shadow-sm hover:shadow-md transition-shadow group">
+                        <div class="col-span-4 sm:col-span-2 xl:col-span-2 flex flex-col p-4 rounded-[20px] bg-gradient-to-br from-fuchsia-50 to-purple-50 border-2 border-dashed border-purple-300 shadow-sm hover:shadow-md transition-shadow group">
                             <input type="text" x-model="specialName" placeholder="Custom Service…"
                                 @click.stop @keydown.enter.prevent="$el.nextElementSibling.focus()"
                                 class="w-full px-3 py-2 bg-white/80 border-2 border-purple-200 focus:border-purple-500 rounded-xl text-[13px] font-bold text-purple-900 mb-2 outline-none placeholder:text-purple-300 transition-colors">
@@ -120,21 +115,21 @@
                         <!-- Service Cards -->
                         <template x-for="service in filteredServices" :key="service.id">
                             <button @click="addToCart(service)"
-                                class="flex flex-col p-4 rounded-[20px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 text-left group overflow-hidden relative"
+                                class="col-span-2 sm:col-span-1 xl:col-span-1 flex flex-col p-2.5 rounded-[16px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 text-left group overflow-hidden relative"
                                 :class="{'border-blue-200': service.color === 'blue', 'border-green-200': service.color === 'green', 'border-purple-200': service.color === 'purple', 'border-orange-200': service.color === 'orange', 'border-teal-200': service.color === 'teal', 'border-red-200': service.color === 'red'}">
                                 
-                                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110"
+                                <div class="w-8 h-8 rounded-xl flex items-center justify-center mb-2 transition-transform duration-300 group-hover:scale-110"
                                     :class="getColorStyle(service.color).bg + ' ' + getColorStyle(service.color).text">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
                                     </svg>
                                 </div>
 
-                                <div class="flex flex-col gap-1 mt-auto">
-                                    <span class="text-[14px] font-black text-slate-800 leading-tight tracking-tight" x-text="service.name"></span>
-                                    <div class="flex items-end justify-between mt-1">
-                                        <span class="text-[15px] font-black text-blue-600" x-text="'Rs. ' + parseFloat(service.base_price).toFixed(0)"></span>
-                                        <span class="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest" x-text="service.price_type === 'per_kg' ? '/KG' : '/ITEM'"></span>
+                                <div class="flex flex-col gap-0.5 mt-auto">
+                                    <span class="text-[11px] font-black text-slate-800 leading-tight tracking-tight line-clamp-2" x-text="service.name"></span>
+                                    <div class="flex items-end justify-between mt-1 flex-wrap gap-1">
+                                        <span class="text-[12px] font-black text-blue-600" x-text="'Rs. ' + parseFloat(service.base_price).toFixed(0)"></span>
+                                        <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest" x-text="service.price_type === 'per_kg' ? '/KG' : '/ITM'"></span>
                                     </div>
                                 </div>
                             </button>
@@ -503,7 +498,7 @@
 
         <!-- ===================== Order Success Modal ===================== -->
         <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
-            x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderId);"
+            x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderNum);"
             x-show="show" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 70;">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity></div>
             
@@ -540,7 +535,7 @@
                 </div>
 
                 <div class="flex flex-col gap-3">
-                    <button @click="printReceipt(orderId)"
+                    <button @click="printReceipt(orderNum)"
                         class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[14px] font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                         Print Thermal Bill
@@ -754,7 +749,15 @@
                     };
                 },
 
-                                get filteredServices() {
+                get filteredCategories() {
+                    let filtered = this.allCategories;
+                    if (this.searchQuery) {
+                        filtered = filtered.filter(c => c.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                    }
+                    return filtered;
+                },
+
+                get filteredServices() {
                     let filtered = this.allServices;
                     
                     if (this.activeCategory === 'uncategorized') {
@@ -763,9 +766,6 @@
                         filtered = filtered.filter(s => s.category_id === this.activeCategory);
                     }
                     
-                    if (this.searchQuery) {
-                        filtered = filtered.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
-                    }
                     return filtered;
                 },
 
@@ -943,7 +943,7 @@
                                     cart: data.cart
                                 }
                             }));
-                            printOrderChit(data.order_id);
+                            printOrderChit(data.order_number);
                             this.cart = [];
                             this.selectedCustomer = null;
                             this.paymentMode = 'pay_on_pickup';

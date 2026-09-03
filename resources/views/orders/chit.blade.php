@@ -16,7 +16,7 @@
         .header {
             text-align: center;
             margin-bottom: 10px;
-            border-bottom: 2px dashed #000;
+            border-bottom: 1px dashed #000;
             padding-bottom: 5px;
         }
 
@@ -53,11 +53,21 @@
         .item-row {
             display: flex;
             justify-content: space-between;
-            font-weight: 900;
-            font-size: 14px;
+            font-weight: bold;
+            font-size: 11px;
             margin-bottom: 5px;
-            border-bottom: 1px dashed #000;
             padding-bottom: 2px;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-weight: bold;
+            font-size: 12px;
+            margin-top: 5px;
+            border-bottom: 1px dashed #000;
+            padding: 5px 0;
+            margin-bottom: 15px;
         }
 
         .process-list {
@@ -107,23 +117,34 @@
 
     <div class="items">
         @foreach($order->items as $item)
+            @php
+                $catName = $item->serviceType && $item->serviceType->category ? $item->serviceType->category->name : 'General';
+                $itemName = $item->serviceType ? $item->serviceType->name : $item->item_description;
+            @endphp
             <div class="item-row">
-                <span>{{ $item->item_description }}</span>
+                <span>&bull; {{ $catName }} - {{ $itemName }}</span>
                 <span>x{{ $item->quantity }}</span>
             </div>
         @endforeach
     </div>
 
-    <div class="process-list">
-        <div>Collected</div>
-        <div>Wash</div>
-        <div>Iron</div>
-        <div>Quality check</div>
-        <div>Final inspection</div>
+    <div class="total-row">
+        <span>TOTAL</span>
+        <span>Rs. {{ number_format($order->total, 2) }}</span>
     </div>
 
     <div class="special-note">
         <div>Special Note :</div>
+        <div class="note-line"></div>
+        <div class="note-line"></div>
+    </div>
+
+    <div class="process-list">
+        <div>Collected :</div>
+        <div>Wash :</div>
+        <div>Iron :</div>
+        <div>Quality check :</div>
+        <div>Final inspection :</div>
     </div>
 
     <script>

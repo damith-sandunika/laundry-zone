@@ -102,15 +102,18 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customers', CustomerController::class);
 
     Route::post('/orders/{order}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
+    Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store');
+    Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve');
+    Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject');
     Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
-    Route::get('/orders/{order}/print', [OrderController::class, 'printBill'])->name('orders.print');
-    Route::get('/orders/{order}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
-    Route::get('/orders/{order}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
-    Route::post('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::post('/orders/{order}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
-    Route::post('/orders/{order}/dispatch-delivery', [OrderController::class, 'dispatchDelivery'])->name('orders.dispatchDelivery');
-    Route::post('/orders/{order}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
-    Route::post('/orders/{order}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
+    Route::get('/orders/{order:order_number}/print', [OrderController::class, 'printBill'])->name('orders.print');
+    Route::get('/orders/{order:order_number}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
+    Route::get('/orders/{order:order_number}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+    Route::post('/orders/{order:order_number}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{order:order_number}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
+    Route::post('/orders/{order:order_number}/dispatch-delivery', [OrderController::class, 'dispatchDelivery'])->name('orders.dispatchDelivery');
+    Route::post('/orders/{order:order_number}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
+    Route::post('/orders/{order:order_number}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
     Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve');
     Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject');
     // Workshop dispatch from order
@@ -203,10 +206,12 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
         Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
 
+        Route::post('/settings/services/reorder', [SettingsController::class, 'reorderServices'])->name('settings.reorderServices');
         Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
         Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
         Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');
 
+        Route::post('/settings/service-categories/reorder', [SettingsController::class, 'reorderCategories'])->name('settings.reorderCategories');
         Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
         Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
         Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');

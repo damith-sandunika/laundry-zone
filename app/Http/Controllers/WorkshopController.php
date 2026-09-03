@@ -511,7 +511,7 @@ class WorkshopController extends Controller
                 \Log::error('Email notification failed (startProcessing): ' . $e->getMessage());
             }
 
-            return response()->json(['success' => true, 'status' => 'processing', 'order_id' => $order->id]);
+            return response()->json(['success' => true, 'status' => 'processing', 'order_number' => $order->order_number]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::startProcessing error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -767,11 +767,6 @@ class WorkshopController extends Controller
             return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
 
         } else {
-            // PickMe
-            if ($order->paid_amount < $order->total) {
-                return response()->json(['success' => false, 'message' => 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.'], 403);
-            }
-
             \App\Models\Expense::create([
                 'branch_id' => $dispatch->workshop_branch_id,
                 'amount' => $request->pickme_cost,
@@ -780,6 +775,24 @@ class WorkshopController extends Controller
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
             ]);
+
+            $amountToPay = $order->total - $order->paid_amount;
+            if ($amountToPay > 0) {
+                $paymentMethod = $request->input('payment_method', 'cash');
+                \App\Models\PaymentTransaction::create([
+                    'order_id'       => $order->id,
+                    'amount'         => $amountToPay,
+                    'payment_method' => $paymentMethod,
+                    'created_by'     => auth()->id(),
+                    'collected_from_rider_at' => now(), // Auto-collected per user request
+                    'status'         => 'completed',
+                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                ]);
+                $order->update([
+                    'paid_amount' => $order->total,
+                    'payment_status' => 'paid',
+                ]);
+            }
 
             if ($appointment) {
                 $appointment->update(['status' => 'delivered']);

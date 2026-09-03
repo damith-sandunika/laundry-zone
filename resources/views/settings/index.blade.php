@@ -335,20 +335,19 @@
                     </div>
                 </div>
 
-                <div class="space-y-6">
+                <div id="categories-sortable" class="space-y-4">
                     @foreach($serviceCategories as $category)
-                    <div x-data="{ expanded: true }" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div @click="expanded = !expanded" class="category-group-header flex justify-between items-center p-4 border-b border-gray-100 transition-colors">
-                            <div class="flex items-center gap-3">
+                    <div class="category-item bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" data-id="{{ $category->id }}">
+                        <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-slate-50">
+                            <div class="flex items-center gap-3 cursor-move category-handle">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
                                 @if($category->image_path)
-                                    <img src="{{ asset($category->image_path) }}" alt="{{ $category->name }}" class="w-8 h-8 object-cover rounded-md border border-gray-200">
-                                @else
-                                    <svg :class="expanded ? 'rotate-90' : 'rotate-0'" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    <img src="{{ asset($category->image_path) }}" alt="{{ $category->name }}" class="w-6 h-6 object-cover rounded-md border border-gray-200">
                                 @endif
                                 <h4 class="font-bold text-gray-800">{{ $category->name }}</h4>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $category->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">{{ $category->is_active ? 'Active' : 'Inactive' }}</span>
                             </div>
-                            <div class="flex gap-2" @click.stop>
+                            <div class="flex gap-2">
                                 <button onclick="openEditCategoryModal({{ $category->id }}, '{{ addslashes($category->name) }}', {{ $category->is_active ? 1 : 0 }})" class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
                                 <form method="POST" action="{{ route('settings.destroyServiceCategory', $category) }}" onsubmit="return confirm('Are you sure you want to delete this category? All related services will be uncategorized.')" class="m-0">
                                     @csrf @method('DELETE')
@@ -357,58 +356,33 @@
                             </div>
                         </div>
 
-                        <div x-show="expanded" x-collapse>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px;background:#f8fafc;">
-                                @forelse($category->services as $service)
-                                @php
-                                    $style = $colorStyles[$service->color ?? 'blue'] ?? $colorStyles['blue'];
-                                @endphp
-                                <div style="background:white;border-radius:16px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;transition:box-shadow 0.15s;"
-                                    onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.04)'">
-                                    <div style="padding:20px 20px 14px;border-bottom:1px solid #f1f5f9;">
-                                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                                            <div style="display:flex;align-items:center;gap:12px;">
-                                                <div style="width:40px;height:40px;border-radius:12px;background:{{ $style['bg'] }};border:1.5px solid {{ $style['border'] }};color:{{ $style['text'] }};display:flex;align-items:center;justify-content:center;">
-                                                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 style="font-size:16px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-0.01em;">{{ $service->name }}</h3>
-                                                    <p style="font-size:12px;font-weight:600;color:#64748b;margin:0;text-transform:uppercase;letter-spacing:0.05em;">
-                                                        {{ $service->price_type === 'per_kg' ? 'Per Kilogram' : 'Per Item' }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.06em;
-                                                {{ $service->is_active ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;' }}">
-                                                {{ $service->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
-                                        <span style="font-size:22px;font-weight:900;color:{{ $style['text'] }};letter-spacing:-0.02em;">Rs.{{ number_format($service->base_price, 2) }}</span>
-                                        <div style="display:flex;gap:8px;">
-                                            <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', {{ $service->category_id ?? 'null' }})"
-                                                style="padding:7px 14px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;border:1.5px solid #bfdbfe;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
-                                                Edit
-                                            </button>
-                                            <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" style="margin:0;">
-                                                @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    style="padding:7px 14px;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:700;border:1.5px solid #fecaca;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                    onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
+                        <div class="services-sortable" data-category-id="{{ $category->id }}">
+                            @forelse($category->services as $service)
+                            <div class="service-item flex justify-between items-center p-3 border-b border-gray-50 bg-white hover:bg-gray-50 transition-colors" data-id="{{ $service->id }}">
+                                <div class="flex items-center gap-3 cursor-move service-handle">
+                                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                    <div>
+                                        <span class="font-bold text-gray-800 text-sm">{{ $service->name }}</span>
+                                        <span class="text-xs text-gray-500 ml-2">Rs.{{ number_format($service->base_price, 2) }} ({{ $service->price_type === 'per_kg' ? 'Per KG' : 'Per Item' }})</span>
+                                        <span class="ml-2 text-[10px] font-bold uppercase {{ $service->is_active ? 'text-green-600' : 'text-red-600' }}">{{ $service->is_active ? 'Active' : 'Inactive' }}</span>
+                                        @if($service->is_visible_on_website)
+                                            <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">🌐 Website</span>
+                                        @endif
                                     </div>
                                 </div>
-                                @empty
-                                <div style="grid-column:1/-1;padding:30px;text-align:center;color:#64748b;font-size:13px;font-weight:500;">
-                                    No services in this category.
+                                <div class="flex gap-2">
+                                    <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', {{ $service->category_id ?? 'null' }}, {{ $service->is_visible_on_website ? 1 : 0 }})" class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
+                                    <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" class="m-0">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 rounded">Delete</button>
+                                    </form>
                                 </div>
-                                @endforelse
                             </div>
+                            @empty
+                            <div class="p-4 text-center text-xs text-gray-400 font-medium bg-gray-50/50">
+                                No services in this category.
+                            </div>
+                            @endforelse
                         </div>
                     </div>
                     @endforeach
@@ -418,71 +392,45 @@
                         $uncategorizedServices = $services->whereNull('category_id');
                     @endphp
                     @if($uncategorizedServices->count() > 0)
-                    <div x-data="{ expanded: true }" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div @click="expanded = !expanded" class="category-group-header flex justify-between items-center p-4 border-b border-gray-100 transition-colors">
+                    <div class="category-item bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-slate-50">
                             <div class="flex items-center gap-3">
-                                <svg :class="expanded ? 'rotate-90' : 'rotate-0'" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 <h4 class="font-bold text-gray-800">Uncategorized Services</h4>
                             </div>
                         </div>
 
-                        <div x-show="expanded" x-collapse>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px;background:#f8fafc;">
-                                @foreach($uncategorizedServices as $service)
-                                @php
-                                    $style = $colorStyles[$service->color ?? 'blue'] ?? $colorStyles['blue'];
-                                @endphp
-                                <div style="background:white;border-radius:16px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;transition:box-shadow 0.15s;"
-                                    onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.04)'">
-                                    <div style="padding:20px 20px 14px;border-bottom:1px solid #f1f5f9;">
-                                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                                            <div style="display:flex;align-items:center;gap:12px;">
-                                                <div style="width:40px;height:40px;border-radius:12px;background:{{ $style['bg'] }};border:1.5px solid {{ $style['border'] }};color:{{ $style['text'] }};display:flex;align-items:center;justify-content:center;">
-                                                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 style="font-size:16px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-0.01em;">{{ $service->name }}</h3>
-                                                    <p style="font-size:12px;font-weight:600;color:#64748b;margin:0;text-transform:uppercase;letter-spacing:0.05em;">
-                                                        {{ $service->price_type === 'per_kg' ? 'Per Kilogram' : 'Per Item' }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.06em;
-                                                {{ $service->is_active ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;' }}">
-                                                {{ $service->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
-                                        <span style="font-size:22px;font-weight:900;color:{{ $style['text'] }};letter-spacing:-0.02em;">Rs.{{ number_format($service->base_price, 2) }}</span>
-                                        <div style="display:flex;gap:8px;">
-                                            <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', null)"
-                                                style="padding:7px 14px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;border:1.5px solid #bfdbfe;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
-                                                Edit
-                                            </button>
-                                            <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" style="margin:0;">
-                                                @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    style="padding:7px 14px;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:700;border:1.5px solid #fecaca;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                    onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
+                        <div class="services-sortable">
+                            @foreach($uncategorizedServices as $service)
+                            <div class="service-item flex justify-between items-center p-3 border-b border-gray-50 bg-white hover:bg-gray-50 transition-colors" data-id="{{ $service->id }}">
+                                <div class="flex items-center gap-3 cursor-move service-handle">
+                                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                    <div>
+                                        <span class="font-bold text-gray-800 text-sm">{{ $service->name }}</span>
+                                        <span class="text-xs text-gray-500 ml-2">Rs.{{ number_format($service->base_price, 2) }} ({{ $service->price_type === 'per_kg' ? 'Per KG' : 'Per Item' }})</span>
+                                        <span class="ml-2 text-[10px] font-bold uppercase {{ $service->is_active ? 'text-green-600' : 'text-red-600' }}">{{ $service->is_active ? 'Active' : 'Inactive' }}</span>
+                                        @if($service->is_visible_on_website)
+                                            <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">🌐 Website</span>
+                                        @endif
                                     </div>
                                 </div>
-                                @endforeach
+                                <div class="flex gap-2">
+                                    <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', null, {{ $service->is_visible_on_website ? 1 : 0 }})" class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
+                                    <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" class="m-0">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 rounded">Delete</button>
+                                    </form>
+                                </div>
                             </div>
+                            @endforeach
                         </div>
                     </div>
                     @endif
                     
                     @if($serviceCategories->count() === 0 && $uncategorizedServices->count() === 0)
-                    <div style="grid-column:1/-1;padding:60px;text-align:center;background:white;border-radius:16px;border:1.5px solid #e2e8f0;">
+                    <div class="p-10 text-center bg-white rounded-xl border border-gray-200">
                         <svg width="48" height="48" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 16px;display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        <p style="font-size:15px;font-weight:800;color:#0f172a;margin:0 0 6px;">No services yet</p>
-                        <p style="font-size:13px;color:#94a3b8;font-weight:500;">Click "Add Category" and "Add New Service" to get started.</p>
+                        <p class="text-sm font-bold text-gray-800 mb-1">No services yet</p>
+                        <p class="text-xs text-gray-500 font-medium">Click "Add Category" and "Add New Service" to get started.</p>
                     </div>
                     @endif
                 </div>
@@ -1138,6 +1086,12 @@
                     </div>
                 </div>
 
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="is_visible_on_website" id="add-website-visible" value="1" checked
+                        style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
+                    <label for="add-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website for Customers</label>
+                </div>
+                
                 <div style="display:flex;gap:10px;margin-top:4px;">
                     <button type="button" onclick="document.getElementById('add-service-modal').style.display='none'"
                         style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
@@ -1218,6 +1172,12 @@
                         <option value="1">Active</option>
                         <option value="0">Inactive</option>
                     </select>
+                </div>
+                
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="is_visible_on_website" id="edit-website-visible" value="1"
+                        style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
+                    <label for="edit-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website for Customers</label>
                 </div>
                 
                 <div style="display:flex;gap:10px;margin-top:4px;">
@@ -1401,12 +1361,13 @@
     </div>
 
 <script>
-                function openEditModal(id, name, price, priceType, isActive, icon, color, categoryId) {
+                function openEditModal(id, name, price, priceType, isActive, icon, color, categoryId, isVisibleOnWebsite) {
             document.getElementById('edit-name').value = name;
             document.getElementById('edit-price').value = price;
             document.getElementById('edit-price-type').value = priceType;
             document.getElementById('edit-active').value = isActive;
             document.getElementById('edit-category-id').value = categoryId || '';
+            document.getElementById('edit-website-visible').checked = isVisibleOnWebsite == 1;
             document.getElementById('edit-service-form').action = '/settings/services/' + id;
 
             // Select the color
@@ -1441,6 +1402,56 @@
         });
         document.getElementById('add-pickup-time-modal').addEventListener('click', function(e) {
             if(e.target === this) this.style.display = 'none';
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            // Sort Categories
+            const categoriesSortable = document.getElementById('categories-sortable');
+            if (categoriesSortable) {
+                new Sortable(categoriesSortable, {
+                    handle: '.category-handle',
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const orderedIds = Array.from(categoriesSortable.querySelectorAll('.category-item')).map(item => item.getAttribute('data-id'));
+                        fetch('{{ route("settings.reorderCategories") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ ordered_ids: orderedIds })
+                        });
+                    }
+                });
+            }
+
+            // Sort Services within Categories
+            document.querySelectorAll('.services-sortable').forEach(function (el) {
+                new Sortable(el, {
+                    handle: '.service-handle',
+                    group: 'shared', // set both lists to same group if dragging between categories is needed
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const targetList = evt.to;
+                        const categoryId = targetList.getAttribute('data-category-id') || 'null';
+                        const orderedIds = Array.from(targetList.querySelectorAll('.service-item')).map(item => item.getAttribute('data-id'));
+                        
+                        fetch('{{ route("settings.reorderServices") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ ordered_ids: orderedIds, category_id: categoryId })
+                        });
+                    }
+                });
+            });
         });
     </script>
 </x-app-layout>

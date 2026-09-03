@@ -83,33 +83,45 @@
                         <span class="text-sm font-black text-slate-800" x-text="'Rs.' + subtotal.toFixed(2)"></span>
                     </div>
 
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Delivery Fee</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rs.</span>
-                            <input type="number" x-model.number="deliveryFee" class="w-full pl-9 pr-4 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0.00" min="0">
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Discount (%)</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">%</span>
+                                <input type="number" x-model.number="discountPercentage" class="w-full pl-9 pr-2 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0" min="0" max="100">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Delivery Fee</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rs.</span>
+                                <input type="number" x-model.number="deliveryFee" class="w-full pl-9 pr-2 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div>
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Advance Amount</label>
+                            <div class="relative">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rs.</span>
+                                <input type="number" x-model.number="requestedAdvance" class="w-full pl-9 pr-2 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0.00" min="0">
+                            </div>
+                        </div>
+
+                        <div x-show="context === 'correction'">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method</label>
+                            <select x-model="paymentMethod" class="w-full px-3 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200">
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="bank">Bank Transfer</option>
+                                <option value="credit">Credit</option>
+                            </select>
                         </div>
                     </div>
                     
-                    <div class="flex justify-between items-center mb-4">
+                    <div class="flex justify-between items-center mb-4 pt-2 border-t border-slate-100">
                         <span class="text-xs font-bold text-slate-500" x-text="'Total' + (minimumDeliveryCost > 0 ? ' (Min Rs.' + minimumDeliveryCost + ')' : '')"></span>
                         <span class="text-lg font-black text-blue-700" x-text="'Rs.' + total.toFixed(2)"></span>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Discount (%)</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">%</span>
-                            <input type="number" x-model.number="discountPercentage" class="w-full pl-9 pr-4 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0" min="0" max="100">
-                        </div>
-                    </div>
-
-                    <div class="mb-4">
-                        <label class="block text-xs font-bold text-slate-700 mb-1">Advance Amount</label>
-                        <div class="relative">
-                            <span class="absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-slate-400">Rs.</span>
-                            <input type="number" x-model.number="requestedAdvance" class="w-full pl-9 pr-4 py-2 text-sm font-black bg-white border border-slate-300 rounded-lg outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200" placeholder="0.00" min="0">
-                        </div>
                     </div>
                     
                     <div class="grid grid-cols-2 gap-2" x-show="context === 'workshop'">
@@ -127,6 +139,13 @@
                         <button @click="saveOrder('save')" :disabled="isSaving"
                             class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl transition-colors shadow-md shadow-blue-500/30">
                             <span x-text="isSaving ? '...' : 'Save'"></span>
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 gap-2" x-show="context === 'correction'">
+                        <button @click="saveOrder('correction')" :disabled="isSaving"
+                            class="w-full py-2.5 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl transition-colors shadow-md shadow-amber-500/30">
+                            <span x-text="isSaving ? 'Submitting...' : 'Submit Correction Request'"></span>
                         </button>
                     </div>
                 </div>
@@ -149,6 +168,7 @@
             requestedAdvance: null,
             discountPercentage: 0,
             deliveryFee: 0,
+            paymentMethod: 'cash',
             isSaving: false,
             orderData: null,
             minimumDeliveryCost: 0,
@@ -180,6 +200,7 @@
                 this.cart = detail.cart || [];
                 this.requestedAdvance = detail.advance || null;
                 this.minimumDeliveryCost = parseFloat(detail.minimumDeliveryCost || 0);
+                this.paymentMethod = this.orderData?.payment_method || 'cash';
                 
                 if (this.orderData && this.orderData.customer && this.orderData.customer.default_discount) {
                     this.discountPercentage = parseFloat(this.orderData.customer.default_discount) || 0;
@@ -228,22 +249,43 @@
             
             async saveOrder(action) {
                 if(this.cart.length === 0) return alert('Cart is empty!');
+                
+                let endpoint = `/orders/${this.orderData.order_number}/update`;
+                let payload = {
+                    cart: this.cart,
+                    discount_percentage: this.discountPercentage,
+                    delivery_fee: this.deliveryFee,
+                    requested_advance: this.requestedAdvance,
+                    next_action: action === 'save' ? null : action
+                };
+
+                if (this.context === 'correction') {
+                    let reason = prompt('Please enter a reason for this correction request:');
+                    if (!reason) {
+                        return;
+                    }
+                    
+                    // Include the payment method only for correction
+                    payload.payment_method = this.paymentMethod;
+
+                    endpoint = `/orders/${this.orderData.order_number}/corrections`;
+                    payload = {
+                        type: 'order_change',
+                        reason: reason,
+                        new_data: payload
+                    };
+                }
+
                 this.isSaving = true;
                 
                 try {
-                    const res = await fetch(`/orders/${this.orderData.id}/update`, {
+                    const res = await fetch(endpoint, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
                         },
-                        body: JSON.stringify({
-                            cart: this.cart,
-                            discount_percentage: this.discountPercentage,
-                            delivery_fee: this.deliveryFee,
-                            requested_advance: this.requestedAdvance,
-                            next_action: action === 'save' ? null : action
-                        })
+                        body: JSON.stringify(payload)
                     });
                     const data = await res.json();
                     if (data.success) {

@@ -69,6 +69,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function correctionRequests()
+    {
+        return $this->hasMany(OrderCorrectionRequest::class);
+    }
+
     public function statusHistory()
     {
         return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'desc');
@@ -139,5 +144,10 @@ class Order extends Model
     public function deliveryAppointment()
     {
         return $this->hasOne(DeliveryAppointment::class, 'order_id');
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'order_number';
     }
 }

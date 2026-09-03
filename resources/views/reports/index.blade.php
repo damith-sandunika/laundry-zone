@@ -201,7 +201,7 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($expensesList as $exp)
                                 <tr x-show="expenseCategoryFilter === '' || expenseCategoryFilter === '{{ $exp->category }}'" class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ $exp->expense_date }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ \Carbon\Carbon::parse($exp->created_at)->format('M d, Y h:i A') }}</td>
                                     <td class="px-2 py-2 md:px-6 md:py-4">
                                         <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200 rounded-lg">
                                             {{ str_replace('_', ' ', $exp->category) }}

@@ -305,7 +305,7 @@ class OrderController extends Controller
     public function showByNumber($orderNumber)
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
-        $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment']);
+        $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment', 'correctionRequests.requestedBy', 'correctionRequests.approvedBy']);
         $branchId = auth()->user()->branch_id ?? 1;
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 
@@ -318,7 +318,11 @@ class OrderController extends Controller
                 }
             })->sum('amount');
 
-        return view('orders.show', compact('order', 'cubbies', 'pickmeCost'));
+        $categories = \App\Models\ServiceCategory::with(['services' => function($q) {
+            $q->where('is_active', true);
+        }])->orderBy('name')->get();
+
+        return view('orders.show', compact('order', 'cubbies', 'pickmeCost', 'categories'));
     }
 
     public function printBill(Order $order)
@@ -468,7 +472,7 @@ class OrderController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 $payload = ['success' => true, 'message' => 'Status updated successfully!'];
                 if ($request->status === 'delivered') {
-                    $payload['print_bill_id'] = $order->id;
+                    $payload['print_bill_id'] = $order->order_number;
                 }
                 return response()->json($payload);
             }
@@ -476,7 +480,7 @@ class OrderController extends Controller
             if ($request->status === 'delivered') {
                 return redirect()->back()
                     ->with('success', 'Order delivered successfully!')
-                    ->with('print_bill_id', $order->id);
+                    ->with('print_bill_id', $order->order_number);
             }
 
             return redirect()->back()->with('success', 'Status updated successfully!');
@@ -778,11 +782,6 @@ public function bulkStatus(Request $request)
             return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
 
         } else {
-            // PickMe
-            if ($order->paid_amount < $order->total) {
-                return response()->json(['success' => false, 'message' => 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.'], 403);
-            }
-
             \App\Models\Expense::create([
                 'branch_id' => $branchId,
                 'amount' => $request->pickme_cost,
@@ -791,6 +790,24 @@ public function bulkStatus(Request $request)
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
             ]);
+
+            $amountToPay = $order->total - $order->paid_amount;
+            if ($amountToPay > 0) {
+                $paymentMethod = $request->input('payment_method', 'cash');
+                \App\Models\PaymentTransaction::create([
+                    'order_id'       => $order->id,
+                    'amount'         => $amountToPay,
+                    'payment_method' => $paymentMethod,
+                    'created_by'     => auth()->id(),
+                    'collected_from_rider_at' => now(), // Auto-collected per user request
+                    'status'         => 'completed',
+                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                ]);
+                $order->update([
+                    'paid_amount' => $order->total,
+                    'payment_status' => 'paid',
+                ]);
+            }
 
             if ($appointment) {
                 $appointment->update(['status' => 'delivered']);

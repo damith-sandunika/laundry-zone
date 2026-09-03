@@ -23,10 +23,26 @@
             let order = dispatch.order;
             let cart = (order.items || []).map(i => ({
                 service_type_id: i.service_type_id,
-                name: i.serviceType ? i.serviceType.name : i.item_description,
+                name: i.service_type ? i.service_type.name : i.item_description,
                 base_price: i.unit_price,
                 qty: i.quantity
             }));
+            
+            if (cart.length === 0 && order.delivery_appointment && order.delivery_appointment.cart_json) {
+                try {
+                    let parsedCart = JSON.parse(order.delivery_appointment.cart_json);
+                    cart = parsedCart.map(i => {
+                        let service = i.service || i;
+                        let sId = service.id || service.service_id || service.service_type_id;
+                        return {
+                            service_type_id: sId,
+                            name: service.name || service.item_description,
+                            base_price: service.base_price || service.unit_price || 0,
+                            qty: i.quantity || i.qty || 1
+                        };
+                    });
+                } catch(e) { console.error('Error parsing cart_json', e); }
+            }
             window.dispatchEvent(new CustomEvent('open-finalize-modal', {
                 detail: {
                     context: 'workshop',
@@ -90,6 +106,7 @@
         deliveryMethod: 'rider',
         deliveryRiderId: '',
         deliveryPickmeCost: '',
+        deliveryPaymentMethod: 'cash',
         isDispatchingDelivery: false,
 
         openDeliveryModal(dispatch) {
@@ -97,6 +114,7 @@
             this.deliveryMethod = 'rider';
             this.deliveryRiderId = '';
             this.deliveryPickmeCost = '';
+            this.deliveryPaymentMethod = 'cash';
             this.showDeliveryModal = true;
         },
 
@@ -117,7 +135,8 @@
                     body: JSON.stringify({
                         delivery_method: this.deliveryMethod,
                         rider_id: this.deliveryRiderId,
-                        pickme_cost: this.deliveryPickmeCost
+                        pickme_cost: this.deliveryPickmeCost,
+                        payment_method: this.deliveryPaymentMethod
                     })
                 });
                 const data = await res.json();
@@ -194,8 +213,8 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    if (action === 'start-processing' && data.order_id) {
-                        window.open(`/orders/${data.order_id}/chit`, '_blank');
+                    if (action === 'start-processing' && data.order_number) {
+                        window.open(`/orders/${data.order_number}/chit`, '_blank');
                     }
                     window.location.reload();
                 } else {
@@ -242,7 +261,7 @@
                 const data = await res.json();
                 if (data.success) {
                     if (this.handoverPrintReceipt && data.order_id) {
-                        window.open(`/orders/${data.order_id}/print`, '_blank');
+                        window.open(`/orders/${data.order_number}/print`, '_blank');
                     }
                     window.location.reload();
                 } else {
@@ -508,54 +527,12 @@
                                                     onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                                                     Finalize Bill
                                                 </button>
-                                                
-                                                <template x-if="dispatch.order && dispatch.order.is_delivery_order && !dispatch.order.payment_approved">
-                                                    <div style="display:flex;gap:6px;flex-direction:column;align-items:center;background:#f8fafc;padding:10px;border-radius:10px;border:1px solid #e2e8f0;width:100%;margin-top:4px;">
-                                                        <div style="font-size:11px;font-weight:800;color:#334155;">
-                                                            Paid: <span style="color:#16a34a;">LKR <span x-text="parseFloat(dispatch.order.paid_amount || 0).toFixed(2)"></span></span> / 
-                                                            <span style="color:#0f172a;">LKR <span x-text="parseFloat(dispatch.order.total || 0).toFixed(2)"></span></span>
-                                                        </div>
-                                                        
-                                                        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;width:100%;">
-                                                            <template x-for="(receipt, idx) in getReceipts(dispatch)" :key="idx">
-                                                                <button @click="openSlipModal(receipt, dispatch.order)"
-                                                                    :style="
-                                                                        receipt.status === 'pending' ? 'border-color:#fbbf24;background:#fffbeb;color:#b45309;' : 
-                                                                        receipt.status === 'rejected' ? 'border-color:#fca5a5;background:#fef2f2;color:#b91c1c;text-decoration:line-through;' : 
-                                                                        'border-color:#c7d2fe;background:white;color:#4f46e5;'
-                                                                    "
-                                                                    style="padding:5px 12px;border-width:1.5px;border-style:dashed;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.02);transition:all 0.15s;display:flex;align-items:center;gap:6px;"
-                                                                    onmouseover="this.style.transform='scale(1.05)'; this.style.borderStyle='solid'" onmouseout="this.style.transform='scale(1)'; this.style.borderStyle='dashed'">
-                                                                    <i class="fa-solid fa-file-invoice"></i> <span x-text="'Slip ' + (idx + 1)"></span>
-                                                                    <template x-if="receipt.status === 'pending'"><i class="fa-solid fa-circle-exclamation" style="font-size:10px;"></i></template>
-                                                                    <template x-if="receipt.status === 'rejected'"><i class="fa-solid fa-circle-xmark" style="font-size:10px;"></i></template>
-                                                                    <template x-if="receipt.status === 'completed'"><i class="fa-solid fa-circle-check" style="font-size:10px;"></i></template>
-                                                                </button>
-                                                            </template>
 
-                                                            <template x-if="getReceipts(dispatch).length === 0">
-                                                                <button @click="openPaymentModal(dispatch)"
-                                                                    style="padding:5px 12px;background:white;color:#0d9488;border:1.5px dashed #5eead4;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(20,184,166,0.05);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                                                    onmouseover="this.style.transform='scale(1.03)'; this.style.borderStyle='solid'" onmouseout="this.style.transform='scale(1)'; this.style.borderStyle='dashed'">
-                                                                    <i class="fa-solid fa-bell"></i> Request
-                                                                </button>
-                                                            </template>
-                                                            <button @click="workshopAction(dispatch.id, 'start-processing')"
-                                                                style="padding:5px 12px;background:linear-gradient(to right, #eab308, #d97706);color:white;border:none;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                                <i class="fa-solid fa-play"></i> Start Washing
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </template>
-
-                                                <template x-if="!(dispatch.order && dispatch.order.is_delivery_order && !dispatch.order.payment_approved)">
-                                                    <button @click="workshopAction(dispatch.id, 'start-processing')"
-                                                        style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;"
-                                                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                        Start Washing
-                                                    </button>
-                                                </template>
+                                                <button @click="workshopAction(dispatch.id, 'start-processing')"
+                                                    style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;"
+                                                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                                    Start Washing
+                                                </button>
                                             </div>
                                         </template>
 
@@ -658,18 +635,12 @@
                             <button @click="deliveryMethod = 'rider'" :class="deliveryMethod === 'rider' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600'" class="p-3 border rounded-xl font-bold text-sm transition-all text-center">
                                 Rider
                             </button>
-                            <button @click="deliveryDispatch?.order?.paid_amount >= deliveryDispatch?.order?.total ? deliveryMethod = 'pickme_flash' : null" 
+                            <button @click="deliveryMethod = 'pickme_flash'" 
                                 :class="[
-                                    deliveryMethod === 'pickme_flash' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300',
-                                    deliveryDispatch?.order?.paid_amount < deliveryDispatch?.order?.total ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200' : ''
+                                    deliveryMethod === 'pickme_flash' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
                                 ]"
                                 class="p-3 border rounded-xl font-bold text-sm transition-all text-center relative group">
                                 PickMe
-                                <template x-if="deliveryDispatch?.order?.paid_amount < deliveryDispatch?.order?.total">
-                                    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10">
-                                        Requires full payment
-                                    </div>
-                                </template>
                             </button>
                         </div>
                     </div>
@@ -688,6 +659,16 @@
                         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">PickMe Cost (Rs.)</label>
                         <input type="number" x-model="deliveryPickmeCost" placeholder="e.g. 500" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                         <p style="font-size:11px;color:#64748b;margin-top:6px;font-weight:600;">This will automatically be added as a Workshop Expense.</p>
+                        
+                        <div x-show="deliveryDispatch && deliveryDispatch.order && (deliveryDispatch.order.total - (deliveryDispatch.order.paid_amount || 0) > 0)" style="margin-top:12px;">
+                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Balance to Collect: LKR <span x-text="deliveryDispatch && deliveryDispatch.order ? (deliveryDispatch.order.total - (deliveryDispatch.order.paid_amount || 0)).toFixed(2) : '0.00'"></span></label>
+                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Balance Payment Method</label>
+                            <select x-model="deliveryPaymentMethod" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;">
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div style="display:flex;gap:12px;margin-top:8px;">

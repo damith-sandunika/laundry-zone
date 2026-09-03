@@ -385,7 +385,9 @@
                     @endif
 
                     <!-- Notifications Dropdown -->
+                @if(auth()->check())
                     <x-alert-system />
+                @endif
 
                     <!-- Profile Dropdown (Desktop) -->
                     <div class="relative hidden lg:block">

@@ -145,7 +145,7 @@
         <tbody>
             @foreach($expenses as $e)
             <tr>
-                <td>{{ \Carbon\Carbon::parse($e->expense_date)->format('M d, Y') }}</td>
+                <td>{{ \Carbon\Carbon::parse($e->created_at)->format('M d, Y h:i A') }}</td>
                 <td>{{ ucfirst($e->category) }}</td>
                 <td>{{ $e->description ?? '—' }}</td>
                 <td class="text-right" style="color: #dc2626;">Rs.{{ number_format($e->amount, 2) }}</td>

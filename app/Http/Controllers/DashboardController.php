@@ -40,6 +40,13 @@ class DashboardController extends Controller
         $activeOrders = Order::whereNotIn('status', ['delivered', 'cancelled']);
         $pendingDeliveries = Order::where('status', 'done');
         $completedToday = Order::where('status', 'delivered')->whereDate('delivered_at', today());
+
+        $pendingCorrections = \App\Models\OrderCorrectionRequest::with('order', 'requestedBy')
+            ->where('status', 'pending')
+            ->whereHas('order', function($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            })
+            ->get();
         $totalCustomers = Customer::query();
 
         if (! $isSuperAdmin && $branchId) {
@@ -355,7 +362,7 @@ class DashboardController extends Controller
             return view('dashboard_superadmin', compact('superAdminStats', 'recentGlobalOrders', 'branchName', 'chartBranchSales', 'chartBranchBalances'));
         }
 
-        return view('dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'suggestedOpeningCash', 'branchName', 'chartData', 'currentBranch', 'branchStaff', 'activeAttendances'));
+        return view('dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'suggestedOpeningCash', 'branchName', 'chartData', 'currentBranch', 'branchStaff', 'activeAttendances', 'pendingCorrections'));
     }
 
     public function openShift(Request $request)

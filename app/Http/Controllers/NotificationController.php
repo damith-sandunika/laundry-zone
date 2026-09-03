@@ -134,6 +134,30 @@ class NotificationController extends Controller
                 $totalCount += count($pendingPayments);
             }
 
+            // 5a. Pending Correction Requests
+            $pendingCorrectionsQuery = \App\Models\OrderCorrectionRequest::with('order')->where('status', 'pending');
+            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
+                $pendingCorrectionsQuery->whereHas('order', function ($q) use ($user) {
+                    $q->where('branch_id', $user->branch_id);
+                });
+            }
+            $pendingCorrections = $pendingCorrectionsQuery->get()->map(function($cr) {
+                return ['number' => $cr->order->order_number . ' (' . str_replace('_', ' ', $cr->type) . ')', 'url' => route('orders.show', $cr->order->order_number)];
+            })->toArray();
+
+            if (count($pendingCorrections) > 0) {
+                $alerts[] = [
+                    'id'            => 'pending_corrections',
+                    'label'         => 'Order Correction Requests',
+                    'count'         => count($pendingCorrections),
+                    'order_numbers' => $pendingCorrections,
+                    'icon'          => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+                    'color'         => 'orange',
+                    'url'           => '#',
+                ];
+                $totalCount += count($pendingCorrections);
+            }
+
             // 5b. Inventory Low Stock Alerts
             $lowStockQuery = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'min_stock')->where('is_active', true);
             $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');

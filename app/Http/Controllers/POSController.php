@@ -36,8 +36,8 @@ class POSController extends Controller
             }
         }
 
-        $services = ServiceType::where('is_active', true)->where('branch_id', $branchId)->get();
-        $categories = ServiceCategory::where('is_active', true)->where('branch_id', $branchId)->get();
+        $services = ServiceType::where('is_active', true)->where('branch_id', $branchId)->orderBy('order_index')->get();
+        $categories = ServiceCategory::where('is_active', true)->where('branch_id', $branchId)->orderBy('order_index')->get();
 
         $customers = Customer::withoutGlobalScopes()->where('is_active', true)->get();
 
@@ -288,6 +288,7 @@ class POSController extends Controller
                 }
 
                 return [
+                    'success' => true,
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'customer_name' => $orderForComm->customer->name ?? 'Walk-in Customer',
