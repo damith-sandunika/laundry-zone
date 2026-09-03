@@ -309,25 +309,45 @@
                 <div class="w-16 h-1 bg-accent mx-auto rounded-full"></div>
             </div>
 
-            <!-- Category Cards Grid -->
-            <div class="max-w-4xl mx-auto grid grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3 sm:gap-4 mb-8">
-                @foreach($categories as $category)
-                    <a href="{{ route('customer.booking') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center">
-                        <!-- Category Image -->
-                        <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full overflow-hidden bg-slate-50 mb-2 sm:mb-3 group-hover:scale-105 transition-transform">
-                            @if($category->image_path)
-                                <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
-                            @else
-                                <div class="w-full h-full flex items-center justify-center">
-                                    <i class="fa-solid fa-image text-xl text-slate-400"></i>
+            <!-- Category Cards Slider -->
+            <div class="max-w-5xl mx-auto mb-8 relative px-10" 
+                 x-data="{ 
+                    scrollNext() { $refs.slider.scrollBy({ left: 300, behavior: 'smooth' }) }, 
+                    scrollPrev() { $refs.slider.scrollBy({ left: -300, behavior: 'smooth' }) } 
+                 }">
+                
+                <!-- Prev Button -->
+                <button @click="scrollPrev" class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
+                    <i class="fa-solid fa-chevron-left"></i>
+                </button>
+                
+                <!-- Slider Container -->
+                <div x-ref="slider" class="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide py-2 px-2">
+                    @foreach($categories as $category)
+                        <div class="snap-start shrink-0 w-[110px] sm:w-[140px]">
+                            <a href="{{ route('customer.booking') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center h-full">
+                                <!-- Category Image -->
+                                <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full overflow-hidden bg-slate-50 mb-2 sm:mb-3 group-hover:scale-105 transition-transform shadow-sm">
+                                    @if($category->image_path)
+                                        <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
+                                    @else
+                                        <div class="w-full h-full flex items-center justify-center">
+                                            <i class="fa-solid fa-image text-xl text-slate-400"></i>
+                                        </div>
+                                    @endif
                                 </div>
-                            @endif
+                                
+                                <!-- Title -->
+                                <h4 class="text-slate-800 text-[11px] sm:text-xs font-bold leading-tight">{{ $category->name }}</h4>
+                            </a>
                         </div>
-                        
-                        <!-- Title -->
-                        <h4 class="text-slate-800 text-[11px] sm:text-xs font-bold leading-tight">{{ $category->name }}</h4>
-                    </a>
-                @endforeach
+                    @endforeach
+                </div>
+
+                <!-- Next Button -->
+                <button @click="scrollNext" class="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
+                    <i class="fa-solid fa-chevron-right"></i>
+                </button>
             </div>
             <div class="text-center mt-8">
                 <a href="{{ route('customer.booking') }}" class="inline-flex items-center gap-2 bg-accent hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-200 transition-all">
