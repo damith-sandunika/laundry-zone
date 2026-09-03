@@ -1,6 +1,10 @@
 @extends('layouts.site')
 
 @section('content')
+    <!-- Swiper CSS & JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
+
     <!-- Hero Section with Slides -->
     <section x-data="{ slide: 1, timer: null, direction: 1, maxSlide: 3 }" x-init="timer = setInterval(() => { 
             if (slide === maxSlide) direction = -1;
@@ -407,10 +411,6 @@
                 <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">Our Promotions</h2>
                 <p class="text-slate-500 max-w-2xl mx-auto text-sm md:text-base font-medium">Grab these exclusive deals while they last. Enjoy premium laundry services at unbeatable prices.</p>
             </div>
-
-            <!-- Include Swiper CSS/JS for beautiful sliding effect -->
-            <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.css" />
-            
             <div class="swiper promotionsSwiper py-12 px-4" style="overflow: hidden; padding-bottom: 60px;">
                 <div class="swiper-wrapper">
                     @foreach($promotions as $promo)
@@ -489,7 +489,6 @@
                 }
             </style>
             
-            <script src="https://cdn.jsdelivr.net/npm/swiper@10/swiper-bundle.min.js"></script>
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
                     new Swiper(".promotionsSwiper", {
