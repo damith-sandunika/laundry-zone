@@ -258,9 +258,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);
 
-        // Reports Routes (Accessible by admin, branch_admin, workshop_admin, super_admin)
+        // Reports Routes (Accessible by admin, branch_admin, workshop_admin, super_admin, staff)
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+        
+        Route::get('/reports/services', [ReportController::class, 'serviceReport'])->name('reports.services');
+        Route::get('/reports/services/pdf', [ReportController::class, 'serviceReportPdf'])->name('reports.services.pdf');
+        
+        Route::get('/reports/customers', [ReportController::class, 'customerReport'])->name('reports.customers');
+        Route::get('/reports/customers/pdf', [ReportController::class, 'customerReportPdf'])->name('reports.customers.pdf');
+
         Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
         Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
     });

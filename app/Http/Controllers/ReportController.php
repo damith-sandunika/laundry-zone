@@ -362,6 +362,165 @@ class ReportController extends Controller
         ));
     }
 
+    public function serviceReport(Request $request)
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $branches = $isSuperAdmin ? Branch::where('is_active', true)->get() : collect();
+
+        $query = OrderItem::select(
+                'service_categories.name as category_name',
+                'service_types.name as service_name',
+                \DB::raw('SUM(order_items.quantity) as total_qty'),
+                \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue')
+            )
+            ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
+            ->leftJoin('service_categories', 'service_categories.id', '=', 'service_types.service_category_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', '!=', 'cancelled')
+            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+        if ($branchId) {
+            $query->where('orders.branch_id', $branchId);
+        } else if ($isSuperAdmin) {
+            // Include branch name if viewing all branches
+            $query->addSelect('branches.name as branch_name')
+                  ->join('branches', 'branches.id', '=', 'orders.branch_id')
+                  ->groupBy('branches.name');
+        }
+
+        $services = $query->groupBy('service_categories.name', 'service_types.name')
+            ->having('total_qty', '>', 0)
+            ->orderBy('total_qty', 'desc')
+            ->get();
+
+        $totalQty = $services->sum('total_qty');
+        $totalRevenue = $services->sum('total_revenue');
+
+        return view('reports.services', compact('services', 'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'totalQty', 'totalRevenue'));
+    }
+
+    public function serviceReportPdf(Request $request)
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $query = OrderItem::select(
+                'service_categories.name as category_name',
+                'service_types.name as service_name',
+                \DB::raw('SUM(order_items.quantity) as total_qty'),
+                \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue')
+            )
+            ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
+            ->leftJoin('service_categories', 'service_categories.id', '=', 'service_types.service_category_id')
+            ->join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', '!=', 'cancelled')
+            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+        if ($branchId) {
+            $query->where('orders.branch_id', $branchId);
+        } else if ($isSuperAdmin) {
+            $query->addSelect('branches.name as branch_name')
+                  ->join('branches', 'branches.id', '=', 'orders.branch_id')
+                  ->groupBy('branches.name');
+        }
+
+        $services = $query->groupBy('service_categories.name', 'service_types.name')
+            ->having('total_qty', '>', 0)
+            ->orderBy('total_qty', 'desc')
+            ->get();
+
+        $totalQty = $services->sum('total_qty');
+        $totalRevenue = $services->sum('total_revenue');
+        $branch = Branch::find($branchId ?? 1);
+
+        return view('reports.services_pdf', compact('services', 'startDate', 'endDate', 'branch', 'totalQty', 'totalRevenue', 'isSuperAdmin', 'branchId'));
+    }
+
+    public function customerReport(Request $request)
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $branches = $isSuperAdmin ? Branch::where('is_active', true)->get() : collect();
+
+        $query = Order::select(
+                'customers.name as customer_name',
+                \DB::raw('COUNT(orders.id) as order_count'),
+                \DB::raw('SUM(orders.total) as total_revenue')
+            )
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->where('orders.status', '!=', 'cancelled')
+            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+        if ($branchId) {
+            $query->where('orders.branch_id', $branchId);
+        } else if ($isSuperAdmin) {
+            $query->addSelect('branches.name as branch_name')
+                  ->join('branches', 'branches.id', '=', 'orders.branch_id')
+                  ->groupBy('branches.name');
+        }
+
+        $customers = $query->groupBy('customers.id', 'customers.name')
+            ->orderBy('total_revenue', 'desc')
+            ->get();
+
+        $totalOrders = $customers->sum('order_count');
+        $totalRevenue = $customers->sum('total_revenue');
+
+        return view('reports.customers', compact('customers', 'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'totalOrders', 'totalRevenue'));
+    }
+
+    public function customerReportPdf(Request $request)
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $query = Order::select(
+                'customers.name as customer_name',
+                \DB::raw('COUNT(orders.id) as order_count'),
+                \DB::raw('SUM(orders.total) as total_revenue')
+            )
+            ->join('customers', 'customers.id', '=', 'orders.customer_id')
+            ->where('orders.status', '!=', 'cancelled')
+            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+        if ($branchId) {
+            $query->where('orders.branch_id', $branchId);
+        } else if ($isSuperAdmin) {
+            $query->addSelect('branches.name as branch_name')
+                  ->join('branches', 'branches.id', '=', 'orders.branch_id')
+                  ->groupBy('branches.name');
+        }
+
+        $customers = $query->groupBy('customers.id', 'customers.name')
+            ->orderBy('total_revenue', 'desc')
+            ->get();
+
+        $totalOrders = $customers->sum('order_count');
+        $totalRevenue = $customers->sum('total_revenue');
+        $branch = Branch::find($branchId ?? 1);
+
+        return view('reports.customers_pdf', compact('customers', 'startDate', 'endDate', 'branch', 'totalOrders', 'totalRevenue', 'isSuperAdmin', 'branchId'));
+    }
+
     public function closeShiftReport(Request $request)
     {
         $branchId = auth()->user()->branch_id ?? 1;
