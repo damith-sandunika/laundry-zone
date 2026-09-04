@@ -29,7 +29,7 @@
     <div style="text-align:center; margin-bottom: 20px;">
         <div style="font-size: 40px; margin-bottom: 8px;">🧺</div>
         <h1>Order #{{ $order->order_number }}</h1>
-        <p class="subtitle">{{ $order->branch->name ?? 'RAPID Laundromat' }}</p>
+        <p class="subtitle">{{ $order->branch->name ?? '360 Laundry' }}</p>
     </div>
 
     <div class="section-title">Order Info</div>
@@ -93,3 +93,4 @@
 </div>
 </body>
 </html>
+

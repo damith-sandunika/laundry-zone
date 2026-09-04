@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Customer Registration - RAPID Laundromat</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
+    <title>Customer Registration - 360 Laundry</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/365_laundry_logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -19,8 +19,8 @@
         <!-- Logo -->
         <div class="text-center mb-8">
             <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
-                <img src="{{ asset('images/rapid_laundromat_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
-                <span class="font-black text-2xl tracking-tight text-blue-600">RAPID Laundromat</span>
+                <img src="{{ asset('images/365_laundry_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
+                <span class="font-black text-2xl tracking-tight text-blue-600">360 Laundry</span>
             </a>
             <p class="text-slate-500 mt-2 text-sm">Create an account to manage your laundry easily.</p>
         </div>
@@ -120,3 +120,4 @@
 
 </body>
 </html>
+

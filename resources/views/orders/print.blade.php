@@ -206,7 +206,7 @@
     </div>
 
     <div class="divider"></div>
-    <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing Rapid Laundromat.</div>
+    <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing 360 Laundry.</div>
     <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
         leave us a Google Review!</div>
 
