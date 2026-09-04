@@ -56,3 +56,4 @@ class BookingController extends Controller
         return view('booking.success', compact('booking', 'branch'));
     }
 }
+

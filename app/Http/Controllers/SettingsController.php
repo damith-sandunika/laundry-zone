@@ -665,3 +665,4 @@ class SettingsController extends Controller
         return redirect()->back()->with('success', 'Turnaround type deleted successfully.');
     }
 }
+

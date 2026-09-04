@@ -16,3 +16,4 @@ class Promotion extends Model
         'is_active',
     ];
 }
+

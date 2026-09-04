@@ -33,3 +33,4 @@ class ServiceType extends Model
             ->withTimestamps();
     }
 }
+

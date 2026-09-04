@@ -43,3 +43,4 @@ class BankDeposit extends Model
         });
     }
 }
+

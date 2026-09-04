@@ -101,3 +101,4 @@ class BookingsController extends Controller
         ]);
     }
 }
+

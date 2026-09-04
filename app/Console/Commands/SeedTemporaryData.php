@@ -163,3 +163,4 @@ class SeedTemporaryData extends Command
         $this->info('Dummy data seeded successfully! You can now test the settings and POS interfaces.');
     }
 }
+

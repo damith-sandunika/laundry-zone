@@ -26,3 +26,4 @@ class BranchLogController extends Controller
         return view('superadmin.branch-logs', compact('logs', 'branches'));
     }
 }
+

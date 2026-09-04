@@ -134,3 +134,4 @@ class HRController extends Controller
         return back()->with('success', 'Salary advance recorded.');
     }
 }
+

@@ -18,3 +18,4 @@ class CustomerPackageService extends Model
         return $this->belongsTo(CustomerPackage::class);
     }
 }
+

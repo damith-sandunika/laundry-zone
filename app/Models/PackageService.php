@@ -13,3 +13,4 @@ class PackageService extends Model
         return $this->belongsTo(ServiceType::class);
     }
 }
+

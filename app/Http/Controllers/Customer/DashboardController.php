@@ -305,3 +305,4 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Payment submitted successfully. Thank you!');
     }
 }
+

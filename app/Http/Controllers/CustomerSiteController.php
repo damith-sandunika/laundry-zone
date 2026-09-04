@@ -298,3 +298,4 @@ class CustomerSiteController extends Controller
         return view('booking.success', compact('appointment'));
     }
 }
+

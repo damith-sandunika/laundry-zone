@@ -67,3 +67,4 @@ class PaymentController extends Controller
         return view('payment.success', compact('order'));
     }
 }
+

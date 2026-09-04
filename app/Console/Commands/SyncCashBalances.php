@@ -50,3 +50,4 @@ class SyncCashBalances extends Command
         $this->info("Sync complete!");
     }
 }
+

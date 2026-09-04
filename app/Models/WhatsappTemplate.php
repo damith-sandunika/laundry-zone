@@ -18,3 +18,4 @@ class WhatsappTemplate extends Model
         'content'
     ];
 }
+

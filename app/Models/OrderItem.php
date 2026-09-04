@@ -32,3 +32,4 @@ class OrderItem extends Model
         return $this->hasMany(OrderItemExtra::class);
     }
 }
+

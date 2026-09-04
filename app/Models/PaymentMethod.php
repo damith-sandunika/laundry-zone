@@ -13,3 +13,4 @@ class PaymentMethod extends Model
         'is_active',
     ];
 }
+

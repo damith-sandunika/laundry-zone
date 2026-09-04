@@ -11,3 +11,4 @@ class EmailTemplate extends Model
 
     protected $fillable = ['type', 'name', 'subject', 'body', 'is_active'];
 }
+

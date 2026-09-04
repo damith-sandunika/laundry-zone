@@ -23,3 +23,4 @@ class RiderMiddleware
         abort(403, 'Access denied. Riders only.');
     }
 }
+

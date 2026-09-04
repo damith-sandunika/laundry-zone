@@ -23,3 +23,4 @@ class WhatsappLog extends Model
         return $this->belongsTo(Order::class);
     }
 }
+

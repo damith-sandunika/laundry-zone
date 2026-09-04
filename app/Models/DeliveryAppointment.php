@@ -100,3 +100,4 @@ class DeliveryAppointment extends Model
         };
     }
 }
+

@@ -145,3 +145,4 @@ class BranchController extends Controller
         }
     }
 }
+

@@ -13,3 +13,4 @@ class DeliveryRange extends Model
         return $this->belongsTo(Branch::class);
     }
 }
+

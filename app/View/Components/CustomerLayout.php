@@ -15,3 +15,4 @@ class CustomerLayout extends Component
         return view('layouts.customer');
     }
 }
+

@@ -49,3 +49,4 @@ class SystemAlertNotification extends Notification
         ];
     }
 }
+

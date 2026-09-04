@@ -1045,3 +1045,4 @@ class WorkshopController extends Controller
         return view('workshop.history', compact('dispatches', 'cancelledBookings'));
     }
 }
+

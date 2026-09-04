@@ -81,3 +81,4 @@ class PaymentSettingsController extends Controller
         return redirect()->route('settings.index')->with('success', 'Payment methods updated successfully.');
     }
 }
+

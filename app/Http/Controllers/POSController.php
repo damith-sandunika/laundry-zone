@@ -524,3 +524,4 @@ class POSController extends Controller
         }
     }
 }
+

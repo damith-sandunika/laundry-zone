@@ -106,3 +106,4 @@ class ExpenseController extends Controller
         return redirect()->route('expenses.index')->with('success', 'Expense deleted successfully.');
     }
 }
+

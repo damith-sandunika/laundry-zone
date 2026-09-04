@@ -25,3 +25,4 @@ class ServiceTurnaroundPrice extends Model
         return $this->belongsTo(TurnaroundType::class);
     }
 }
+

@@ -128,3 +128,4 @@ class InventoryController extends Controller
         return redirect()->back()->with('success', 'Stock deducted successfully.');
     }
 }
+

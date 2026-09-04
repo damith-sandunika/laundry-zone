@@ -78,3 +78,4 @@ class BankDepositController extends Controller
         return redirect()->back()->with('success', 'Bank deposit recorded successfully. Cash balance updated.');
     }
 }
+

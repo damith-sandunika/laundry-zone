@@ -23,3 +23,4 @@ class WorkshopMiddleware
         abort(403, 'Access denied. Workshop admins only.');
     }
 }
+

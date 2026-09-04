@@ -70,3 +70,4 @@ class AutoCloseShifts extends Command
         $this->info(count($openSessions).' shifts auto-closed.');
     }
 }
+

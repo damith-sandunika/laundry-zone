@@ -902,3 +902,4 @@ public function bulkStatus(Request $request)
         }
     }
 }
+

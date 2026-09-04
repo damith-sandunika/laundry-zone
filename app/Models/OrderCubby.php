@@ -25,3 +25,4 @@ class OrderCubby extends Model
         return $this->belongsTo(Cubby::class)->withoutGlobalScopes();
     }
 }
+

@@ -82,3 +82,4 @@ class WhatsappTemplateController extends Controller
         return redirect()->route('whatsapp-templates.index')->with('success', 'Default templates seeded');
     }
 }
+

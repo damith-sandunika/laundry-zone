@@ -25,3 +25,4 @@ class ProcessCommunicationJob implements ShouldQueue
         //
     }
 }
+

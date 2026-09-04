@@ -32,3 +32,4 @@ class OnlineBookingController extends Controller
         return redirect()->back()->with('success', 'Booking status updated to '.ucfirst($request->status));
     }
 }
+

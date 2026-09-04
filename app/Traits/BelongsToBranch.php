@@ -33,3 +33,4 @@ trait BelongsToBranch
         return $this->belongsTo(Branch::class);
     }
 }
+

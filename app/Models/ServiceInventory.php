@@ -22,3 +22,4 @@ class ServiceInventory extends Model
         return $this->belongsTo(InventoryItem::class);
     }
 }
+

@@ -31,3 +31,4 @@ class CustomerPackage extends Model
         return $this->hasMany(CustomerPackageService::class);
     }
 }
+

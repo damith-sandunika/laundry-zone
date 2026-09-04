@@ -30,3 +30,4 @@ class Cubby extends Model
         return $this->status === 'occupied';
     }
 }
+

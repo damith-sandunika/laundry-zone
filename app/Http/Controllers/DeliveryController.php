@@ -418,3 +418,4 @@ class DeliveryController extends Controller
         return redirect()->back()->with('success', 'Verified and collected cash from rider. Order marked as completed.');
     }
 }
+

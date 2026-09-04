@@ -36,3 +36,4 @@ class BranchScope implements Scope
         }
     }
 }
+

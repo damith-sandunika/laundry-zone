@@ -92,3 +92,4 @@ class SmsTemplateController extends Controller
         return redirect()->route('sms-templates.index')->with('success', 'Default templates seeded');
     }
 }
+

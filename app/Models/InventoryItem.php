@@ -36,3 +36,4 @@ class InventoryItem extends Model
         return $this->current_stock <= $this->min_stock;
     }
 }
+

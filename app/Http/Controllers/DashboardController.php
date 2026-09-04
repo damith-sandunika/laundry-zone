@@ -572,3 +572,4 @@ class DashboardController extends Controller
         return redirect()->back()->with('success', 'Shift closed. Final Cash: Rs.'.number_format($finalCash, 2).'.');
     }
 }
+

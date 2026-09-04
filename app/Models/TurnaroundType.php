@@ -23,3 +23,4 @@ class TurnaroundType extends Model
         return $this->belongsTo(Branch::class);
     }
 }
+

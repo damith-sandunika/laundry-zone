@@ -30,8 +30,8 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
 
-// ─── Root → Customer Booking ───
-Route::redirect('/', '/customer/login')->name('home');
+// ─── Root → Customer Site Home ───
+Route::get('/', [\App\Http\Controllers\CustomerSiteController::class, 'home'])->name('home');
 
 // Fix for Windows PHP built-in server symlink 403 error
 Route::get('/storage/receipts/{filename}', function ($filename) {

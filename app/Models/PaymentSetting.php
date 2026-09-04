@@ -32,3 +32,4 @@ class PaymentSetting extends Model
         ];
     }
 }
+

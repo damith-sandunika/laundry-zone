@@ -150,3 +150,4 @@ class PackageController extends Controller
         return view('packages.print', compact('customerPackage', 'branch'));
     }
 }
+
