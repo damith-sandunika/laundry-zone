@@ -231,7 +231,6 @@ class SettingsController extends Controller
         }
 
         ServiceCategory::create([
-            'branch_id' => auth()->user()->branch_id ?? 1,
             'parent_id' => $request->parent_id,
             'name' => $request->name,
             'is_active' => true,
