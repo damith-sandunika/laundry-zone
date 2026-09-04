@@ -129,7 +129,7 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Brand -->
                 <a href="{{ route('customer.booking') }}" class="flex items-center gap-2">
-                    <span class="text-blue-700 font-black text-xl tracking-tight">⚡ 365laundry.lk</span>
+                    <img src="{{ asset('images/365_laundry_logo_site.png') }}" alt="365 Laundry Logo" class="h-10 w-auto">
                 </a>
 
                 <!-- Right: Sign In + Book Now -->
