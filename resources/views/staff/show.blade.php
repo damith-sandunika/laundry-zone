@@ -92,37 +92,89 @@
             
             <!-- Left Column: Attendance & Leaves -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Attendance -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <!-- Attendance Calendar -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-visible">
                     <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                         <div>
-                            <h3 class="font-bold text-gray-800">Recent Attendance</h3>
-                            <p class="text-[10px] text-gray-400 font-semibold uppercase">Last 7 days</p>
+                            <h3 class="font-bold text-gray-800">Attendance Calendar</h3>
+                            <p class="text-[10px] text-gray-400 font-semibold uppercase">{{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }}</p>
                         </div>
-                        <button @click="attendanceModalOpen = true" class="text-xs font-bold px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100 hover:bg-blue-100 transition">
-                            Mark Today
-                        </button>
+                        <div class="flex gap-2">
+                            <!-- Legends -->
+                            <div class="hidden md:flex items-center gap-3 mr-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400"></span> Present</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400"></span> Absent</span>
+                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-400"></span> Late</span>
+                            </div>
+                            <button @click="attendanceModalOpen = true" class="text-xs font-bold px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100 hover:bg-blue-100 transition">
+                                Mark Today
+                            </button>
+                        </div>
                     </div>
-                    <div class="p-0 divide-y divide-gray-50">
-                        @forelse($staff->attendances()->latest('date')->take(7)->get() as $att)
-                            <div class="p-4 flex justify-between items-center hover:bg-gray-50/50 transition">
-                                <div>
-                                    <p class="text-xs font-bold text-gray-700">{{ \Carbon\Carbon::parse($att->date)->format('D, M d, Y') }}</p>
-                                    <p class="text-[10px] text-gray-500">
-                                        In: <span class="font-bold">{{ $att->clock_in ? \Carbon\Carbon::parse($att->clock_in)->format('h:i A') : '--' }}</span>
-                                        | Out: <span class="font-bold">{{ $att->clock_out ? \Carbon\Carbon::parse($att->clock_out)->format('h:i A') : '--' }}</span>
-                                    </p>
+                    <div class="p-5">
+                        @php
+                            $startOfMonth = \Carbon\Carbon::createFromDate($payroll->year, $payroll->month, 1);
+                            $endOfMonth = $startOfMonth->copy()->endOfMonth();
+                            $startDayOfWeek = $startOfMonth->dayOfWeek; // 0 (Sun) to 6 (Sat)
+                            $attendanceMap = $attendancesThisMonth->keyBy('date');
+                        @endphp
+                        
+                        <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                            @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $day)
+                                <div class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">{{ $day }}</div>
+                            @endforeach
+                        </div>
+                        <div class="grid grid-cols-7 gap-2 text-center">
+                            @for($i = 0; $i < $startDayOfWeek; $i++)
+                                <div class="p-2 border border-transparent"></div>
+                            @endfor
+                            
+                            @for($day = 1; $day <= $endOfMonth->day; $day++)
+                                @php
+                                    $currentDateStr = $startOfMonth->copy()->addDays($day - 1)->toDateString();
+                                    $isToday = $currentDateStr === now()->toDateString();
+                                    $att = $attendanceMap->get($currentDateStr);
+                                    
+                                    // Default (No Record / Future / Weekend)
+                                    $statusColor = 'bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100'; 
+                                    
+                                    if($att) {
+                                        if($att->status === 'present') {
+                                            $statusColor = 'bg-green-50 border-green-200 text-green-700 shadow-sm shadow-green-100 hover:bg-green-100';
+                                        } elseif($att->status === 'hold') {
+                                            $statusColor = 'bg-red-50 border-red-200 text-red-700 shadow-sm shadow-red-100 hover:bg-red-100';
+                                        } elseif($att->status === 'late') {
+                                            $statusColor = 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm shadow-orange-100 hover:bg-orange-100';
+                                        } elseif($att->status === 'half_day') {
+                                            $statusColor = 'bg-yellow-50 border-yellow-200 text-yellow-700 shadow-sm shadow-yellow-100 hover:bg-yellow-100';
+                                        }
+                                    }
+                                @endphp
+                                <div class="aspect-square flex flex-col items-center justify-center rounded-xl border transition-all relative group cursor-pointer {{ $statusColor }} {{ $isToday ? 'ring-2 ring-blue-500 ring-offset-2' : '' }}">
+                                    <span class="text-sm font-black {{ $isToday && !$att ? 'text-blue-600' : '' }}">{{ $day }}</span>
+                                    
+                                    @if($att)
+                                        <span class="text-[9px] font-bold uppercase mt-0.5 tracking-tighter hidden md:block">
+                                            {{ $att->status === 'hold' ? 'Absent' : str_replace('_', ' ', $att->status) }}
+                                        </span>
+                                        
+                                        <!-- Tooltip -->
+                                        <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10 shadow-xl">
+                                            <div class="font-bold border-b border-gray-600 pb-1 mb-1">{{ \Carbon\Carbon::parse($currentDateStr)->format('M d, Y') }}</div>
+                                            <div class="text-gray-300">Status: <span class="text-white font-bold">{{ ucfirst(str_replace('_', ' ', $att->status)) }}</span></div>
+                                            @if($att->clock_in)
+                                                <div class="text-gray-300">In: <span class="text-white">{{ \Carbon\Carbon::parse($att->clock_in)->format('h:i A') }}</span></div>
+                                            @endif
+                                            @if($att->clock_out)
+                                                <div class="text-gray-300">Out: <span class="text-white">{{ \Carbon\Carbon::parse($att->clock_out)->format('h:i A') }}</span></div>
+                                            @endif
+                                            <!-- Tooltip Arrow -->
+                                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent border-t-gray-800"></div>
+                                        </div>
+                                    @endif
                                 </div>
-                                <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase {{ $att->status === 'present' ? 'bg-green-100 text-green-700' : ($att->status === 'half_day' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700') }}">
-                                    {{ str_replace('_', ' ', $att->status) }}
-                                </span>
-                            </div>
-                        @empty
-                            <div class="text-center py-8">
-                                <svg class="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <p class="text-sm font-semibold text-gray-400">No attendance records found yet.</p>
-                            </div>
-                        @endforelse
+                            @endfor
+                        </div>
                     </div>
                 </div>
 

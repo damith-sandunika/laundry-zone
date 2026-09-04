@@ -146,10 +146,11 @@
             <h3 class="text-[10px] md:text-sm font-black text-slate-900 mb-4">Daily Revenue Trend</h3>
             <div id="revenueChart" class="h-[300px] w-full"></div>
         </div>
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm flex flex-col">
-            <h3 class="text-[10px] md:text-sm font-black text-slate-900 mb-4">Order Channels</h3>
+        <!-- Payment Breakdown Chart -->
+        <div class="bg-white/80 backdrop-blur-xl border border-slate-200/60 rounded-3xl p-6 shadow-sm flex flex-col h-[350px]">
+            <h3 class="text-[10px] md:text-sm font-black text-slate-900 mb-4">Payment Breakdown</h3>
             <div class="flex-1 flex items-center justify-center">
-                <div id="channelChart" class="w-full"></div>
+                <div id="paymentChart" class="w-full"></div>
             </div>
         </div>
     </div>
@@ -160,136 +161,20 @@
         <!-- Premium Horizontally Scrollable Tab Header -->
         <div class="p-4 border-b border-slate-100 bg-slate-50 overflow-x-auto scrollbar-none">
             <div class="flex gap-2 w-max bg-slate-200/60 p-1.5 rounded-2xl">
-                <button @click="activeReport = 'services'" :class="activeReport === 'services' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
-                    Service Breakdown
-                </button>
-                <button @click="activeReport = 'sales'" :class="activeReport === 'sales' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
-                    Sales Log
-                </button>
-                <button @click="activeReport = 'customers'" :class="activeReport === 'customers' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
-                    Top Customers
-                </button>
                 <button @click="activeReport = 'expenses'" :class="activeReport === 'expenses' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
                     Expenses Log
                 </button>
                 <button @click="activeReport = 'inventory'" :class="activeReport === 'inventory' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
                     Inventory Usage
                 </button>
-                <button @click="activeReport = 'credit'" :class="activeReport === 'credit' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
-                    Credit Customers
-                </button>
-                <button @click="activeReport = 'packages'" :class="activeReport === 'packages' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
-                    Package Payments
+                <button @click="activeReport = 'deposits'" :class="activeReport === 'deposits' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
+                    Bank Deposits
                 </button>
             </div>
         </div>
 
         <div>
-            <!-- SALES LOG -->
-            <div x-show="activeReport === 'sales'" style="display:none;" x-transition>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($orders as $order)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-bold">
-                                        <a href="{{ route('orders.show', $order->order_number) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
-                                    </td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No sales record in this range.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <!-- TOP CUSTOMERS -->
-            <div x-show="activeReport === 'customers'" style="display:none;" x-transition>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Rank</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Orders</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total Spent</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($topCustomers as $index => $tc)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-black text-[11px] md:text-base text-slate-300">#{{ $index + 1 }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4">
-                                        <div class="font-bold text-slate-900 text-[10px] md:text-sm">{{ $tc->customer->name ?? 'Deleted Customer' }}</div>
-                                        <div class="text-[10px] md:text-sm font-semibold text-slate-500">{{ $tc->customer->phone ?? '' }}</div>
-                                    </td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-500 text-[10px] md:text-sm">{{ $tc->total_orders }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500 text-[11px] md:text-base">Rs.{{ number_format($tc->total_spent, 2) }}</td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No customer data available.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            <!-- SERVICE BREAKDOWN -->
-            <div x-show="activeReport === 'services'" style="display:none;" x-transition>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Service Name</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Total Count</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Full Total</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Collected</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Pending Due</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($services as $serv)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900 text-[10px] md:text-sm">{{ $serv->name }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center font-bold text-slate-500">{{ number_format($serv->total_qty, 1) }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-blue-600">Rs.{{ number_format($serv->total_revenue, 2) }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($serv->done_payment, 2) }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right">
-                                        <div class="flex justify-end items-center gap-3">
-                                            <span class="font-black text-rose-500">Rs.{{ number_format($serv->pending_payment + $serv->credit_payment, 2) }}</span>
-                                            @if($serv->pending_payment > 0 || $serv->credit_payment > 0)
-                                                <button @click="openPendingOrders('{{ addslashes($serv->name) }}')" class="px-3 py-1.5 text-[9px] md:text-xs font-bold uppercase tracking-widest bg-blue-50 text-blue-600 border-2 border-blue-100 rounded-lg hover:bg-blue-100 transition-colors">View</button>
-                                            @else
-                                                <button class="px-3 py-1.5 text-[9px] md:text-xs font-bold uppercase tracking-widest bg-slate-50 text-slate-300 border-2 border-slate-100 rounded-lg cursor-not-allowed" disabled>View</button>
-                                            @endif
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="5" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No service usage tracked in this range.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
             <!-- EXPENSES LOG -->
             <div x-show="activeReport === 'expenses'" style="display:none;" x-transition>
@@ -316,7 +201,7 @@
                         <tbody class="divide-y divide-slate-100">
                             @forelse($expensesList as $exp)
                                 <tr x-show="expenseCategoryFilter === '' || expenseCategoryFilter === '{{ $exp->category }}'" class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ $exp->expense_date }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ \Carbon\Carbon::parse($exp->created_at)->format('M d, Y h:i A') }}</td>
                                     <td class="px-2 py-2 md:px-6 md:py-4">
                                         <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-slate-100 text-slate-600 border border-slate-200 rounded-lg">
                                             {{ str_replace('_', ' ', $exp->category) }}
@@ -375,101 +260,36 @@
                 </div>
             </div>
 
-            <!-- CREDIT CUSTOMERS LOG -->
-            <div x-show="activeReport === 'credit'" style="display:none;" x-transition>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
-                        <thead class="bg-slate-50 border-b border-slate-100">
-                            <tr>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Order No</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Date Issued</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Balance Due</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($creditOrders as $order)
-                                <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-bold">
-                                        <a href="{{ route('orders.show', $order->order_number) }}" class="text-blue-600 hover:underline">{{ $order->order_number }}</a>
-                                    </td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->customer->name }} <br><span class="text-[9px] md:text-xs text-slate-500">{{ $order->customer->phone }}</span></td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ $order->created_at->format('Y-m-d h:i A') }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-bold text-slate-900">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-orange-600 text-[10px] md:text-sm">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center">
-                                        <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="flex gap-2 items-center justify-center">
-                                            @csrf
-                                            <input type="number" name="amount" value="{{ $order->total - $order->paid_amount }}" step="0.01" max="{{ $order->total - $order->paid_amount }}" class="w-20 px-3 py-1.5 border-2 border-slate-200 rounded-lg text-[10px] md:text-sm font-bold focus:ring-0 focus:border-blue-500" required>
-                                            <select name="payment_method" class="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-[10px] md:text-sm font-bold bg-white focus:ring-0 focus:border-blue-500">
-                                                <option value="cash">💵 Cash</option>
-                                                <option value="card">💳 Card</option>
-                                            </select>
-                                            <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[9px] md:text-xs font-black shadow-md shadow-emerald-500/20 transition-all">✓ Pay</button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="6" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No active credit customers.</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
-            <!-- PACKAGE PAYMENTS LOG -->
-            <div x-show="activeReport === 'packages'" style="display:none;" x-transition>
+
+            <!-- BANK DEPOSITS LOG -->
+            <div x-show="activeReport === 'deposits'" style="display:none;" x-transition>
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse text-[10px] md:text-sm">
                         <thead class="bg-slate-50 border-b border-slate-100">
                             <tr>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Package Details</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Issue Date</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Price</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Status</th>
-                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Branch</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Deposit Date</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Reference / Notes</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Logged By</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Amount</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
-                            @forelse($customerPackages as $cp)
+                            @forelse($bankDeposits ?? [] as $deposit)
                                 <tr class="hover:bg-slate-50 transition-colors">
-                                    <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $cp->customer->name ?? 'Deleted' }} <br><span class="text-[9px] md:text-xs text-slate-500">{{ $cp->customer->phone ?? '' }}</span></td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $deposit->branch->name ?? 'N/A' }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ $deposit->deposited_at->format('Y-m-d h:i A') }}</td>
                                     <td class="px-2 py-2 md:px-6 md:py-4">
-                                        <div class="font-black text-blue-600">{{ $cp->package->name ?? 'Unknown' }}</div>
-                                        <div class="text-[9px] md:text-xs font-semibold text-slate-500">Exp: {{ $cp->end_date->format('Y-m-d') }}</div>
+                                        <div class="font-black text-slate-700">{{ $deposit->reference_number ?? '-' }}</div>
+                                        <div class="text-[9px] md:text-xs font-semibold text-slate-400 mt-1">{{ $deposit->notes ?? '' }}</div>
                                     </td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-[10px] md:text-sm font-semibold text-slate-500">{{ $cp->start_date->format('Y-m-d') }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-slate-900">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center">
-                                        @if($cp->payment_status === 'paid')
-                                            <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-lg">PAID</span>
-                                        @else
-                                            <span class="px-2.5 py-1 text-[10px] font-bold uppercase tracking-widest bg-rose-50 text-rose-700 border border-rose-200 rounded-lg">PENDING</span>
-                                        @endif
-                                    </td>
-                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center">
-                                        @if($cp->payment_status === 'pending')
-                                            <form action="{{ route('reports.approvePackagePayment', $cp->id) }}" method="POST" class="flex gap-2 items-center justify-center">
-                                                @csrf
-                                                <select name="payment_method" class="px-3 py-1.5 border-2 border-slate-200 rounded-lg text-[10px] md:text-sm font-bold bg-white focus:ring-0 focus:border-blue-500">
-                                                    <option value="cash">💵 Cash</option>
-                                                    <option value="card">💳 Card</option>
-                                                </select>
-                                                <button type="submit" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[9px] md:text-xs font-black shadow-md shadow-emerald-500/20 transition-all">✓ Approve</button>
-                                            </form>
-                                        @else
-                                            <span class="text-[10px] md:text-sm font-bold text-slate-400 italic">Approved</span>
-                                        @endif
-                                    </td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 font-semibold text-slate-700">{{ $deposit->user->name ?? 'System' }}</td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-600">Rs.{{ number_format($deposit->amount, 2) }}</td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="6" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No packages issued in this range.</td>
+                                    <td colspan="5" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No bank deposits found in this range.</td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -590,13 +410,18 @@
             var revChart = new ApexCharts(document.querySelector("#revenueChart"), revOptions);
             revChart.render();
 
-            // Channel Chart (Donut)
-            if (walkinRev > 0 || deliveryRev > 0) {
-                var chanOptions = {
-                    series: [walkinRev, deliveryRev],
-                    labels: ['Walk-in', 'Delivery'],
+            // Payment Chart (Donut)
+            let collectedCash = {{ $collectedCash ?? 0 }};
+            let collectedCard = {{ $collectedCard ?? 0 }};
+            let collectedBank = {{ $collectedBank ?? 0 }};
+            let totalPending = {{ $totalPending ?? 0 }};
+
+            if (collectedCash > 0 || collectedCard > 0 || collectedBank > 0 || totalPending > 0) {
+                var payOptions = {
+                    series: [collectedCash, collectedCard, collectedBank, totalPending],
+                    labels: ['Cash', 'Card', 'Bank Transfer', 'Pending Receivables'],
                     chart: { type: 'donut', height: 280, fontFamily: 'inherit' },
-                    colors: ['#0f172a', '#8b5cf6'],
+                    colors: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'],
                     plotOptions: {
                         pie: {
                             donut: {
@@ -607,7 +432,7 @@
                                     value: { fontSize: '24px', fontWeight: 900, color: '#0f172a', formatter: function(val) { return "Rs." + val.toLocaleString() } },
                                     total: {
                                         show: true,
-                                        label: 'Total',
+                                        label: 'Total Expected',
                                         formatter: function (w) {
                                             return "Rs." + (w.globals.seriesTotals.reduce((a, b) => a + b, 0)).toLocaleString()
                                         }
@@ -621,16 +446,16 @@
                     legend: { position: 'bottom', horizontalAlign: 'center', fontWeight: 700, markers: { radius: 12 } },
                     tooltip: { theme: 'light', y: { formatter: function(val) { return "Rs." + val.toLocaleString() } } }
                 };
-                var chanChart = new ApexCharts(document.querySelector("#channelChart"), chanOptions);
-                chanChart.render();
+                var payChart = new ApexCharts(document.querySelector("#paymentChart"), payOptions);
+                payChart.render();
             } else {
-                document.querySelector("#channelChart").innerHTML = '<div class="text-center text-slate-400 font-semibold p-10">No revenue data to display</div>';
+                document.querySelector("#paymentChart").innerHTML = '<div class="text-center text-slate-400 font-semibold p-10">No payment data to display</div>';
             }
         });
 
         function reportData() {
             return {
-                activeReport: 'services',
+                activeReport: 'expenses',
                 expenseCategoryFilter: '',
                 orders: @json($orders),
                 pendingModalOpen: false,

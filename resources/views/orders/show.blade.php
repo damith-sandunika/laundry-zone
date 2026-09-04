@@ -13,12 +13,21 @@
                 </p>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <a href="{{ route('orders.invoice', $order->id) }}" target="_blank"
+                <div x-data>
+                    <button @click="
+                        window.location.href = '{{ route('orders.edit', $order->id) }}'
+                    " 
+                    style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#ea580c;border:1.5px solid #fdba74;font-size:13px;font-weight:700;border-radius:10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
+                    onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fb923c'" onmouseout="this.style.background='white';this.style.borderColor='#fdba74'">
+                        ✏️ Edit Order
+                    </button>
+                </div>
+                <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank"
                     style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#dc2626;border:1.5px solid #fecaca;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
                     onmouseover="this.style.background='#fef2f2';this.style.borderColor='#fca5a5'" onmouseout="this.style.background='white';this.style.borderColor='#fecaca'">
                     📄 Download PDF
                 </a>
-                <a href="{{ route('orders.print', $order->id) }}" target="_blank"
+                <a href="{{ route('orders.print', $order->order_number) }}" target="_blank"
                     style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#334155;border:1.5px solid #e2e8f0;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
                     onmouseover="this.style.background='#f8fafc';this.style.borderColor='#cbd5e1'" onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0'">
                     🖨️ Print Bill
@@ -74,25 +83,142 @@
         <span style="font-size:16px;font-weight:900;">{{ $order->status }}</span>
     </div>
 
-    <div class="flex flex-col md:flex-row gap-4 items-start">
+    @if($order->correctionRequests->count() > 0)
+        @foreach($order->correctionRequests->sortByDesc('created_at') as $cr)
+            <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;font-size:13px;
+                {{ $cr->status === 'pending' ? 'background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;' : 
+                ($cr->status === 'approved' ? 'background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;' : 
+                'background:#fef2f2;color:#991b1b;border:1.5px solid #fecaca;') }}">
+                <div>
+                    <strong style="text-transform:uppercase;font-size:11px;">{{ ucfirst($cr->status) }} Correction Request ({{ str_replace('_', ' ', $cr->type) }})</strong><br>
+                    Requested by <strong>{{ $cr->requestedBy->name ?? 'Unknown' }}</strong> on {{ $cr->created_at->format('M d, Y h:i A') }}<br>
+                    <span style="font-style:italic;">"{{ $cr->reason }}"</span>
+                    
+                    @if(is_array($cr->old_data) && is_array($cr->new_data))
+                        @php
+                            $oldTotal = $cr->old_data['total'] ?? $order->total;
+                            $newTotal = $cr->new_data['calculated_total'] ?? $cr->old_data['total'] ?? $order->total;
+                            $oldMethod = $cr->old_data['payment_method'] ?? $order->payment_method;
+                            $newMethod = $cr->new_data['payment_method'] ?? $cr->old_data['payment_method'] ?? $order->payment_method;
+                        @endphp
+                        <div style="margin-top:6px;background:rgba(255,255,255,0.6);padding:8px 12px;border-radius:8px;font-size:11.5px;border:1px solid rgba(0,0,0,0.06);display:inline-block;width:100%;">
+                            @if((isset($cr->old_data['total']) || isset($cr->new_data['calculated_total'])) && $oldTotal != $newTotal)
+                                <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,0.04);padding-bottom:4px;margin-bottom:4px;">
+                                    <strong style="color:#475569;">Total Amount:</strong>
+                                    <span>
+                                        <span style="color:#dc2626;text-decoration:line-through;">Rs.{{ number_format($oldTotal, 2) }}</span>
+                                        <i class="fa-solid fa-arrow-right" style="font-size:9px;margin:0 6px;color:#94a3b8;"></i> 
+                                        <strong style="color:#16a34a;">Rs.{{ number_format($newTotal, 2) }}</strong>
+                                    </span>
+                                </div>
+                            @endif
+                            @if((isset($cr->old_data['payment_method']) || isset($cr->new_data['payment_method'])) && $oldMethod != $newMethod)
+                                <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,0.04);padding-bottom:4px;margin-bottom:4px;">
+                                    <strong style="color:#475569;">Payment Method:</strong>
+                                    <span>
+                                        <span style="color:#dc2626;text-decoration:line-through;">{{ ucfirst($oldMethod) }}</span>
+                                        <i class="fa-solid fa-arrow-right" style="font-size:9px;margin:0 6px;color:#94a3b8;"></i> 
+                                        <strong style="color:#16a34a;">{{ ucfirst($newMethod) }}</strong>
+                                    </span>
+                                </div>
+                            @endif
+                            
+                            @if($cr->type === 'items_change' || $cr->type === 'order_change')
+                                @php
+                                    $oldCart = collect($cr->old_data['cart'] ?? []);
+                                    $newCart = collect($cr->new_data['cart'] ?? []);
+                                    $diff = [];
+                                    
+                                    foreach ($newCart as $newItem) {
+                                        $oldItem = $oldCart->firstWhere('service_type_id', $newItem['service_type_id']);
+                                        if (!$oldItem && !isset($newItem['service_type_id'])) {
+                                            $oldItem = $oldCart->firstWhere('name', $newItem['name']);
+                                        }
+                                        
+                                        if (!$oldItem) {
+                                            $diff[] = ['type' => 'added', 'item' => $newItem];
+                                        } elseif ($oldItem['qty'] != $newItem['qty']) {
+                                            $diff[] = ['type' => 'changed', 'item' => $newItem, 'old_qty' => $oldItem['qty']];
+                                        }
+                                    }
+                                    foreach ($oldCart as $oldItem) {
+                                        $newItem = $newCart->firstWhere('service_type_id', $oldItem['service_type_id']);
+                                        if (!$newItem && !isset($oldItem['service_type_id'])) {
+                                            $newItem = $newCart->firstWhere('name', $oldItem['name']);
+                                        }
+                                        if (!$newItem) {
+                                            $diff[] = ['type' => 'removed', 'item' => $oldItem];
+                                        }
+                                    }
+                                @endphp
 
-        <!-- ======= LEFT COLUMN: Status + Items ======= -->
-        <div class="w-full md:w-2/3 flex flex-col gap-4">
+                                @if(count($diff) > 0)
+                                <div style="margin-top:6px; font-size:11px;">
+                                    <strong style="color:#475569;">Cart Updates:</strong>
+                                    <ul style="padding-left:15px; margin-top:4px; color:#334155; list-style-type:circle;">
+                                        @foreach($diff as $change)
+                                            @if($change['type'] === 'added')
+                                                <li><span style="color:#16a34a;font-weight:bold;">[+]</span> {{ $change['item']['qty'] ?? 1 }}x {{ $change['item']['name'] ?? 'Service' }} (Rs.{{ number_format((float)($change['item']['base_price'] ?? 0) * (float)($change['item']['qty'] ?? 1), 2) }})</li>
+                                            @elseif($change['type'] === 'changed')
+                                                <li><span style="color:#ca8a04;font-weight:bold;">[~]</span> <span style="text-decoration:line-through;color:#94a3b8;">{{ $change['old_qty'] }}x</span> <i class="fa-solid fa-arrow-right" style="font-size:8px;"></i> {{ $change['item']['qty'] }}x {{ $change['item']['name'] ?? 'Service' }}</li>
+                                            @elseif($change['type'] === 'removed')
+                                                <li><span style="color:#dc2626;font-weight:bold;">[-]</span> <span style="text-decoration:line-through;color:#94a3b8;">{{ $change['item']['qty'] ?? 1 }}x {{ $change['item']['name'] ?? 'Service' }}</span></li>
+                                            @endif
+                                        @endforeach
+                                    </ul>
+                                </div>
+                                @endif
+                            @endif
+                        </div>
+                    @endif
+                    @if($cr->status !== 'pending' && $cr->approvedBy)
+                        <div style="margin-top:4px;font-size:11px;">
+                            {{ ucfirst($cr->status) }} by <strong>{{ $cr->approvedBy->name }}</strong> on {{ $cr->resolved_at ? $cr->resolved_at->format('M d, Y h:i A') : 'Unknown' }}
+                        </div>
+                    @endif
+                </div>
+                
+                @if($cr->status === 'pending' && in_array(auth()->user()->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']))
+                    <div style="display:flex;gap:8px;">
+                        <form action="{{ route('corrections.approve', $cr->id) }}" method="POST" onsubmit="return confirm('Approve this request? This will permanently alter the order details.')">
+                            @csrf
+                            <button type="submit" style="padding:6px 12px;background:#16a34a;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Approve</button>
+                        </form>
+                        <form action="{{ route('corrections.reject', $cr->id) }}" method="POST" onsubmit="return confirm('Reject this request?')">
+                            @csrf
+                            <button type="submit" style="padding:6px 12px;background:#dc2626;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Reject</button>
+                        </form>
+                    </div>
+                @endif
+            </div>
+        @endforeach
+    @endif
+
+    <div class="flex flex-col gap-4 items-start">
+
+        <!-- ======= MAIN COLUMN: Status + Items ======= -->
+        <div class="w-full flex flex-col gap-4">
 
             <!-- Status Progress -->
             <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
                 <div class="mb-4 px-2">
                     <h3 class="text-sm font-black text-slate-800 mb-4">Order Journey</h3>
-                    <div class="relative">
-                        <div class="absolute left-[15px] top-4 bottom-4 w-[2px] bg-slate-100"></div>
-                        <div class="space-y-5">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <div class="flex-1 relative">
+                            <div class="absolute left-[15px] top-4 bottom-4 w-[2px] bg-slate-100"></div>
+                            <div class="space-y-5">
                             @php
                                 $steps = collect();
                                 $history = $order->statusHistory->sortBy('created_at')->values();
                                 $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
                                 
-                                function getLog($history, $status) {
-                                    return $history->firstWhere('status', $status);
+                                function getLog($history, $status, $noteMatch = null) {
+                                    return $history->first(function($log) use ($status, $noteMatch) {
+                                        if ($noteMatch && str_contains(strtolower($log->note ?? ''), strtolower($noteMatch))) {
+                                            return true;
+                                        }
+                                        return $log->status === $status;
+                                    });
                                 }
                                 
                                 if ($order->is_delivery_order) {
@@ -120,7 +246,7 @@
                                         'label' => 'Rider Assigned',
                                         'icon' => '🏍️',
                                         'time' => $pickupTask?->created_at,
-                                        'user' => $pickupTask?->rider?->name,
+                                        'user' => $pickupTask?->rider?->name ?? 'System',
                                         'active' => $pickupTask != null || $order->deliveryAppointment?->delivery_method === 'pickme_flash'
                                     ]);
                                     
@@ -129,13 +255,13 @@
                                         'label' => 'Workshop Received',
                                         'icon' => '📥',
                                         'time' => $dispatch?->received_at_workshop_at,
-                                        'user' => $dispatch?->receivedBy?->name,
+                                        'user' => $dispatch?->receivedBy?->name ?? 'System',
                                         'active' => $dispatch?->received_at_workshop_at != null
                                     ]);
                                     
                                     // 5. Payment & Start (Processing)
                                     $firstPayment = $order->paymentTransactions()->orderBy('created_at')->first();
-                                    $processingLog = getLog($history, 'processing');
+                                    $processingLog = getLog($history, 'processing', 'processing started');
                                     
                                     $payLabel = 'Payment & Processing Started';
                                     if ($firstPayment) {
@@ -146,17 +272,17 @@
                                         'label' => $payLabel,
                                         'icon' => '⚙️',
                                         'time' => $processingLog?->created_at ?? $firstPayment?->created_at,
-                                        'user' => $processingLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'user' => $processingLog?->changedBy?->name ?? $firstPayment?->createdBy?->name ?? 'System',
                                         'active' => $processingLog != null || $order->status === 'processing' || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 6. Done (Workshop Completed)
-                                    $doneWorkshopLog = getLog($history, 'completed_at_workshop');
+                                    $doneWorkshopLog = getLog($history, 'done', 'completed at workshop');
                                     $steps->push([
                                         'label' => 'Done',
                                         'icon' => '✨',
                                         'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
-                                        'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'user' => $doneWorkshopLog?->changedBy?->name ?? $dispatch?->completedBy?->name ?? 'System',
                                         'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
@@ -186,53 +312,53 @@
                                     ]);
                                     
                                     // 2. Transfer to Workshop
-                                    $dispatchLog = getLog($history, 'dispatched_to_workshop');
+                                    $dispatchLog = getLog($history, 'dispatched_to_workshop', 'dispatched');
                                     $steps->push([
                                         'label' => 'Transfer to Workshop',
                                         'icon' => '📤',
                                         'time' => $dispatchLog?->created_at ?? $dispatch?->dispatched_at,
-                                        'user' => $dispatchLog?->changedBy?->name ?? $dispatch?->dispatchedBy?->name,
+                                        'user' => $dispatchLog?->changedBy?->name ?? $dispatch?->dispatchedBy?->name ?? 'System',
                                         'active' => $dispatch != null
                                     ]);
                                     
                                     // 3. Arrive Workshop & Washing (Processing)
                                     $arriveLog = getLog($history, 'received_at_workshop');
-                                    $processingLog = getLog($history, 'processing');
+                                    $processingLog = getLog($history, 'processing', 'processing started');
                                     $steps->push([
                                         'label' => 'Arrive Workshop & Washing',
                                         'icon' => '⚙️',
                                         'time' => $arriveLog?->created_at ?? $processingLog?->created_at ?? $dispatch?->received_at_workshop_at,
-                                        'user' => $arriveLog?->changedBy?->name ?? $processingLog?->changedBy?->name ?? $dispatch?->receivedBy?->name,
+                                        'user' => $arriveLog?->changedBy?->name ?? $processingLog?->changedBy?->name ?? $dispatch?->receivedBy?->name ?? 'System',
                                         'active' => $arriveLog != null || $processingLog != null || $dispatch?->received_at_workshop_at != null || in_array($order->status, ['processing', 'returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 4. Done (at Workshop)
-                                    $doneWorkshopLog = getLog($history, 'completed_at_workshop');
+                                    $doneWorkshopLog = getLog($history, 'done', 'completed at workshop');
                                     $steps->push([
                                         'label' => 'Done',
                                         'icon' => '✨',
                                         'time' => $doneWorkshopLog?->created_at ?? $dispatch?->completed_at_workshop_at,
-                                        'user' => $doneWorkshopLog?->changedBy?->name ?? 'Workshop Admin',
+                                        'user' => $doneWorkshopLog?->changedBy?->name ?? $dispatch?->completedBy?->name ?? 'System',
                                         'active' => $doneWorkshopLog != null || $dispatch?->completed_at_workshop_at != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 5. Delivery to Branch (Returning)
-                                    $returnLog = getLog($history, 'returned_from_workshop');
+                                    $returnLog = getLog($history, 'returned_from_workshop', 'dispatched back');
                                     $steps->push([
                                         'label' => 'Delivery to Branch',
                                         'icon' => '🚚',
                                         'time' => $returnLog?->created_at ?? $dispatch?->returned_at,
-                                        'user' => $returnLog?->changedBy?->name ?? $dispatch?->returnedBy?->name,
+                                        'user' => $returnLog?->changedBy?->name ?? $dispatch?->returnedBy?->name ?? 'System',
                                         'active' => $returnLog != null || in_array($order->status, ['returned_from_workshop', 'done', 'delivered'])
                                     ]);
                                     
                                     // 6. Received to Branch (Done state)
-                                    $doneLog = getLog($history, 'done');
+                                    $doneLog = getLog($history, 'done', 'status updated to done');
                                     $steps->push([
                                         'label' => 'Received to Branch',
                                         'icon' => '🏢',
                                         'time' => $doneLog?->created_at ?? $dispatch?->received_at_branch_at,
-                                        'user' => $doneLog?->changedBy?->name ?? 'Branch Admin',
+                                        'user' => $doneLog?->changedBy?->name ?? $dispatch?->receivedAtBranchBy?->name ?? 'System',
                                         'active' => $doneLog != null || in_array($order->status, ['done', 'delivered'])
                                     ]);
                                     
@@ -270,75 +396,88 @@
                             </div>
                             @endforeach
                         </div>
+                        </div>
+
+                        <!-- Right Side: Details -->
+                        <div class="w-full md:w-[260px] flex flex-col gap-6 pt-4 md:pt-0 md:pl-6 md:border-l border-slate-100">
+                            
+                            <!-- Timeline Info -->
+                            <div>
+                                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Timeline</h3>
+                                <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Order Date</span>
+                                        <p style="font-weight:700;color:#0f172a;margin:0;">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y h:i A') }}</p>
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup Date</span>
+                                        <p style="font-weight:700;color:#0f172a;margin:0;">{{ $order->due_date ? \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') : 'Not specified' }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Customer Info -->
+                            <div>
+                                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Customer</h3>
+                                <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                                    <div>
+                                        <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Full Name</span>
+                                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->name ?? 'Unknown Customer' }}</p>
+                                    </div>
+                                    <div>
+                                        <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Phone</span>
+                                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->phone ?? 'N/A' }}</p>
+                                    </div>
+                                    @if(optional($order->customer)->address)
+                                    <div>
+                                        <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Address</span>
+                                        <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">{{ $order->customer->address }}</p>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                            <!-- Payment Info -->
+                            <div>
+                                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Payment</h3>
+                                <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="color:#64748b;font-weight:600;">Total Bill</span>
+                                        <span style="font-weight:800;color:#0f172a;">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</span>
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="color:#64748b;font-weight:600;">Paid Amount</span>
+                                        <span style="font-weight:800;color:#16a34a;">Rs.{{ number_format($order->paid_amount, 2) }}</span>
+                                    </div>
+                                    @if($pickmeCost > 0)
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="color:#64748b;font-weight:600;">PickMe Expense (Shop Paid)</span>
+                                        <span style="font-weight:800;color:#dc2626;">- Rs.{{ number_format($pickmeCost, 2) }}</span>
+                                    </div>
+                                    @endif
+                                    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #f1f5f9;">
+                                        <span style="color:#64748b;font-weight:600;">Balance Due</span>
+                                        <span style="font-weight:900;color:#dc2626;">Rs.{{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
+                                        <span style="color:#64748b;font-weight:600;">Status</span>
+                                        <span style="font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;
+                                            {{ $order->payment_status === 'paid' ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;' }}">
+                                            {{ $order->payment_status }}
+                                        </span>
+                                    </div>
+                                    @if($order->payment_method)
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <span style="color:#64748b;font-weight:600;">Method</span>
+                                        <span style="font-weight:700;color:#334155;text-transform:capitalize;">{{ $order->payment_method }}</span>
+                                    </div>
+                                    @endif
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
-
-                <!-- Update Status Form -->
-                @if($order->status !== 'completed' && $order->status !== 'cancelled')
-                    <div style="border-top:1px solid #f1f5f9;padding-top:12px;">
-                        <form id="statusForm" action="{{ route('orders.updateStatus', $order->id) }}" method="POST" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:10px;margin:0;">
-                            @csrf
-                            <div style="display:flex;flex-direction:column;gap:4px;">
-                                <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">New Status</label>
-                                <select id="statusSelect" name="status" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
-                                    @if($order->status === 'received')
-                                        <option value="done">✅ Done</option>
-                                        <option value="cancelled">❌ Cancel</option>
-                                    @elseif($order->status === 'done')
-                                        <option value="delivered">🚚 Delivered (Walk-in)</option>
-                                        <option value="cancelled">❌ Cancel</option>
-                                    @elseif($order->status === 'delivered')
-                                        <option value="completed">💰 Settle & Complete</option>
-                                    @endif
-                                </select>
-                            </div>
-
-                            @if($cubbies->count())
-                            <div id="cubby-wrapper" style="display:none;flex-direction:column;gap:4px;">
-                                <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Cubbet</label>
-                                <select name="cubby_id" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
-                                    <option value="">— Select —</option>
-                                    @foreach($cubbies as $cubby)
-                                        <option value="{{ $cubby->id }}">{{ $cubby->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                            @endif
-
-                            <div id="payment-method-wrapper" style="display:none;flex-direction:column;gap:4px;">
-                                <label style="font-size:10px;font-weight:800;color:#475569;text-transform:uppercase;letter-spacing:0.05em;">Payment</label>
-                                <select name="payment_method" style="padding:6px 10px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;font-weight:600;outline:none;background:white;color:#334155;">
-                                    <option value="cash">💵 Cash</option>
-                                    <option value="card">💳 Card</option>
-                                    <option value="bank">🏦 Bank Transfer</option>
-                                    <option value="credit">⏳ Credit</option>
-                                </select>
-                            </div>
-
-                            <button type="submit" style="padding:7px 14px;background:#1d4ed8;color:white;font-size:12px;font-weight:700;border:none;border-radius:8px;cursor:pointer;transition:background 0.15s;"
-                                onmouseover="this.style.background='#1e40af'" onmouseout="this.style.background='#1d4ed8'">
-                                Update
-                            </button>
-                        </form>
-                        <script>
-                            (function() {
-                                var sel = document.getElementById('statusSelect');
-                                var cubbyWrap = document.getElementById('cubby-wrapper');
-                                var payWrap = document.getElementById('payment-method-wrapper');
-                                function updateVisibility() {
-                                    var val = sel ? sel.value : '';
-                                    if (cubbyWrap) cubbyWrap.style.display = val === 'done' ? 'flex' : 'none';
-                                    if (payWrap) payWrap.style.display = (val === 'delivered' || val === 'completed') ? 'flex' : 'none';
-                                }
-                                if (sel) {
-                                    sel.addEventListener('change', updateVisibility);
-                                    updateVisibility(); // run on load
-                                }
-                            })();
-                        </script>
-                    </div>
-                @endif
-            </div>
 
             <!-- Laundry Items Card -->
             <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);overflow:hidden;">
@@ -355,19 +494,122 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($order->items as $item)
+                        @php
+                            // Fallback to cart_json if no order items yet (unfinalized delivery order)
+                            $adminDisplayRows = collect();
+                            $cartSubtotal = $order->subtotal;
+
+                            if ($order->items->count() > 0) {
+                                foreach ($order->items as $item) {
+                                    $adminDisplayRows->push([
+                                        'type' => 'item',
+                                        'name' => $item->serviceType ? ($item->serviceType->category ? $item->serviceType->category->name . ' - ' : '') . $item->serviceType->name : $item->item_description,
+                                        'turnaround_name' => ($item->turnaroundType && !$item->turnaroundType->is_default) ? $item->turnaroundType->name : null,
+                                        'extras' => $item->extras->map(fn($e) => ['name' => optional($e->extra)->name, 'qty' => $e->quantity, 'price' => $e->unit_price]),
+                                        'qty' => $item->quantity,
+                                        'unit_price' => $item->unit_price,
+                                        'total_price' => $item->total_price,
+                                        'turnaround_charge' => $item->turnaround_extra_charge ?? 0,
+                                    ]);
+                                }
+                            } elseif ($order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
+                                $cartArr = json_decode($order->deliveryAppointment->cart_json, true) ?? [];
+                                $calcSub = 0;
+                                foreach ($cartArr as $ci) {
+                                    $svc = \App\Models\ServiceType::find($ci['service_type_id'] ?? $ci['id'] ?? null);
+                                    $svcName = $ci['name'] ?? ($svc ? $svc->name : 'Service');
+                                    $qty = (float)($ci['qty'] ?? 1);
+                                    $price = (float)($ci['base_price'] ?? 0);
+                                    $lineTotal = $price * $qty;
+
+                                    // Turnaround
+                                    $ttId = $ci['turnaround_type_id'] ?? null;
+                                    $ttName = null;
+                                    $ttCharge = 0;
+                                    if ($ttId) {
+                                        $tt = \App\Models\TurnaroundType::find($ttId);
+                                        if ($tt && !$tt->is_default) {
+                                            $ttName = $tt->name;
+                                            if ($tt->markup_type === 'percentage') {
+                                                $ttCharge = $lineTotal * ($tt->markup_value / 100);
+                                            } else {
+                                                $ttCharge = $tt->markup_value * $qty;
+                                            }
+                                        }
+                                    }
+
+                                    // Extras
+                                    $extras = [];
+                                    foreach ($ci['selected_extras'] ?? [] as $se) {
+                                        $exId = is_array($se) ? ($se['id'] ?? null) : $se;
+                                        $exQty = is_array($se) ? ($se['qty'] ?? 1) : 1;
+                                        $ex = \App\Models\Extra::find($exId);
+                                        if ($ex) {
+                                            $extras[] = ['name' => $ex->name, 'qty' => $exQty, 'price' => $ex->price];
+                                        }
+                                    }
+
+                                    $calcSub += $lineTotal + $ttCharge + array_sum(array_column($extras, 'price'));
+
+                                    $adminDisplayRows->push([
+                                        'type' => 'item',
+                                        'name' => $svcName,
+                                        'turnaround_name' => $ttName,
+                                        'extras' => collect($extras),
+                                        'qty' => $qty,
+                                        'unit_price' => $price,
+                                        'total_price' => $lineTotal,
+                                        'turnaround_charge' => $ttCharge,
+                                    ]);
+                                }
+                                $cartSubtotal = $calcSub;
+                            }
+                        @endphp
+
+                        @forelse($adminDisplayRows as $row)
                         <tr style="border-bottom:1px solid #f1f5f9;">
-                            <td style="padding:10px 16px;font-weight:700;color:#0f172a;">{{ $item->serviceType->name ?? $item->item_description }}</td>
-                            <td style="padding:10px 16px;text-align:center;font-weight:700;color:#334155;">{{ $item->quantity }}</td>
-                            <td style="padding:10px 16px;text-align:right;font-weight:600;color:#475569;">Rs.{{ number_format($item->unit_price, 2) }}</td>
-                            <td style="padding:10px 16px;text-align:right;font-weight:800;color:#0f172a;">Rs.{{ number_format($item->total_price, 2) }}</td>
+                            <td style="padding:10px 16px;font-weight:700;color:#0f172a;">
+                                {{ $row['name'] }}
+                                @if($row['turnaround_name'])
+                                    <span style="display:inline-block;margin-left:6px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;">
+                                        ⚡ {{ $row['turnaround_name'] }}
+                                    </span>
+                                @endif
+                                @foreach($row['extras'] as $e)
+                                    <br><small style="color:#64748b;">+ {{ $e['name'] }} (x{{ $e['qty'] }} @ Rs.{{ number_format($e['price'], 2) }})</small>
+                                @endforeach
+                            </td>
+                            <td style="padding:10px 16px;text-align:center;font-weight:700;color:#334155;">{{ $row['qty'] }}</td>
+                            <td style="padding:10px 16px;text-align:right;font-weight:600;color:#475569;">Rs.{{ number_format($row['unit_price'], 2) }}</td>
+                            <td style="padding:10px 16px;text-align:right;font-weight:800;color:#0f172a;">Rs.{{ number_format($row['total_price'], 2) }}</td>
+                        </tr>
+                        @if($row['turnaround_charge'] > 0)
+                        <tr style="border-bottom:1px solid #f1f5f9;background:#fffbeb;">
+                            <td style="padding:6px 16px 6px 32px;font-weight:600;color:#d97706;font-size:11px;">
+                                ⚡ {{ $row['turnaround_name'] ?? 'Express' }} Surcharge
+                                <span style="color:#94a3b8;font-weight:500;"> for {{ $row['name'] }}</span>
+                            </td>
+                            <td style="padding:6px 16px;text-align:center;font-size:11px;color:#d97706;">{{ $row['qty'] }}</td>
+                            <td style="padding:6px 16px;text-align:right;font-size:11px;color:#d97706;">Rs.{{ number_format($row['turnaround_charge'] / max(1,$row['qty']), 2) }}</td>
+                            <td style="padding:6px 16px;text-align:right;font-size:12px;font-weight:800;color:#d97706;">+ Rs.{{ number_format($row['turnaround_charge'], 2) }}</td>
+                        </tr>
+                        @endif
+                        @foreach($row['extras'] as $e)
+                        <tr style="border-bottom:1px solid #f1f5f9;background:#f8faff;">
+                            <td style="padding:6px 16px 6px 32px;font-weight:600;color:#6366f1;font-size:11px;">+ {{ $e['name'] }}</td>
+                            <td style="padding:6px 16px;text-align:center;font-size:11px;color:#6366f1;">{{ $e['qty'] }}</td>
+                            <td style="padding:6px 16px;text-align:right;font-size:11px;color:#6366f1;">Rs.{{ number_format($e['price'], 2) }}</td>
+                            <td style="padding:6px 16px;text-align:right;font-size:12px;font-weight:800;color:#6366f1;">Rs.{{ number_format($e['price'] * $e['qty'], 2) }}</td>
                         </tr>
                         @endforeach
+                        @empty
+                        <tr><td colspan="4" style="padding:20px 16px;text-align:center;color:#94a3b8;font-size:12px;font-weight:700;">No items added yet.</td></tr>
+                        @endforelse
                     </tbody>
                     <tfoot>
                         <tr>
                             <td colspan="3" style="padding:8px 16px;text-align:right;font-size:11px;font-weight:600;color:#64748b;">Subtotal</td>
-                            <td style="padding:8px 16px;text-align:right;font-weight:700;color:#334155;">Rs.{{ number_format($order->subtotal, 2) }}</td>
+                            <td style="padding:8px 16px;text-align:right;font-weight:700;color:#334155;">Rs.{{ number_format($cartSubtotal, 2) }}</td>
                         </tr>
                         @if($order->additional > 0)
                         <tr>
@@ -389,7 +631,13 @@
                         @endif
                         <tr style="background:#f8fafc;border-top:1.5px solid #e2e8f0;">
                             <td colspan="3" style="padding:12px 16px;text-align:right;font-size:12px;font-weight:800;color:#0f172a;">Total</td>
-                            <td style="padding:12px 16px;text-align:right;font-size:15px;font-weight:900;color:#1d4ed8;">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
+                            @php
+                                $displayTotal = $order->total;
+                                if ($order->items->count() === 0 && $cartSubtotal > 0) {
+                                    $displayTotal = $cartSubtotal + ($order->delivery_fee ?? 0) - ($order->discount ?? 0);
+                                }
+                            @endphp
+                            <td style="padding:12px 16px;text-align:right;font-size:15px;font-weight:900;color:#1d4ed8;">{{ $order->isPackageOrder() && $displayTotal == 0 ? 'Package' : 'Rs.' . number_format($displayTotal, 2) }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -398,82 +646,8 @@
 
         </div>
 
-        <!-- ======= RIGHT COLUMN: Payment & Customer ======= -->
-        <div class="w-full md:w-1/3 flex flex-col gap-4">
-
-            <!-- Dates Card -->
-            <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
-                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Timeline</h3>
-                <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Order Date</span>
-                        <p style="font-weight:700;color:#0f172a;margin:0;">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y h:i A') }}</p>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup Date</span>
-                        <p style="font-weight:700;color:#0f172a;margin:0;">{{ $order->due_date ? \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') : 'Not specified' }}</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Customer Details Card -->
-            <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
-                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Customer</h3>
-                <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
-                    <div>
-                        <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Full Name</span>
-                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->name ?? 'Unknown Customer' }}</p>
-                    </div>
-                    <div>
-                        <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Phone</span>
-                        <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">{{ $order->customer->phone ?? 'N/A' }}</p>
-                    </div>
-                    @if(optional($order->customer)->address)
-                    <div>
-                        <span style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Address</span>
-                        <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">{{ $order->customer->address }}</p>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
-            <!-- Payment Details Card -->
-            <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
-                <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">Payment</h3>
-                <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;">
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#64748b;font-weight:600;">Total Bill</span>
-                        <span style="font-weight:800;color:#0f172a;">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#64748b;font-weight:600;">Paid Amount</span>
-                        <span style="font-weight:800;color:#16a34a;">Rs.{{ number_format($order->paid_amount, 2) }}</span>
-                    </div>
-                    @if($pickmeCost > 0)
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#64748b;font-weight:600;">PickMe Expense (Shop Paid)</span>
-                        <span style="font-weight:800;color:#dc2626;">- Rs.{{ number_format($pickmeCost, 2) }}</span>
-                    </div>
-                    @endif
-                    <div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #f1f5f9;">
-                        <span style="color:#64748b;font-weight:600;">Balance Due</span>
-                        <span style="font-weight:900;color:#dc2626;">Rs.{{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
-                        <span style="color:#64748b;font-weight:600;">Status</span>
-                        <span style="font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;
-                            {{ $order->payment_status === 'paid' ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;' }}">
-                            {{ $order->payment_status }}
-                        </span>
-                    </div>
-                    @if($order->payment_method)
-                    <div style="display:flex;justify-content:space-between;align-items:center;">
-                        <span style="color:#64748b;font-weight:600;">Method</span>
-                        <span style="font-weight:700;color:#334155;text-transform:capitalize;">{{ $order->payment_method }}</span>
-                    </div>
-                    @endif
-                </div>
-            </div>
+        <!-- ======= PAYMENT SLIPS ======= -->
+        <div class="w-full flex flex-col gap-4 mt-2">
 
             <!-- Storage Location / Cubby -->
             @php
@@ -556,7 +730,7 @@
                                         <div x-data="{ mode: 'review' }">
                                             <!-- Action Buttons -->
                                             <div x-show="mode === 'review'" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                                                <form method="POST" action="{{ route('orders.payments.approve', [$order->id, $tx->id]) }}" style="margin:0;">
+                                                <form method="POST" action="{{ route('orders.payments.approve', [$order->order_number, $tx->id]) }}" style="margin:0;">
                                                     @csrf
                                                     <button type="submit" style="width:100%;height:100%;padding:12px;background:linear-gradient(to right, #16a34a, #15803d);color:white;border:none;border-radius:12px;font-size:13px;font-weight:900;cursor:pointer;box-shadow:0 4px 12px rgba(22,163,74,0.3);display:flex;align-items:center;justify-content:center;gap:6px;transition:transform 0.15s;" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                                                         <i class="fa-solid fa-check"></i> Approve
@@ -568,7 +742,7 @@
                                             </div>
 
                                             <!-- Reject Form -->
-                                            <form x-cloak x-show="mode === 'reject'" method="POST" action="{{ route('orders.payments.reject', [$order->id, $tx->id]) }}" style="margin-top:8px;display:flex;flex-direction:column;gap:12px;background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
+                                            <form x-cloak x-show="mode === 'reject'" method="POST" action="{{ route('orders.payments.reject', [$order->order_number, $tx->id]) }}" style="margin-top:8px;display:flex;flex-direction:column;gap:12px;background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;">
                                                 @csrf
                                                 <div>
                                                     <label style="font-size:11px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:6px;"><i class="fa-solid fa-circle-info"></i> Rejection Reason</label>
@@ -624,4 +798,6 @@
             @endif
         </div>
     </div>
+
 </x-app-layout>
+

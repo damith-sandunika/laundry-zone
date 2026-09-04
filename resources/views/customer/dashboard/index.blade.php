@@ -62,7 +62,7 @@
                                 <span class="text-xs font-bold bg-purple-100 text-purple-700 px-2 py-1 rounded-md mb-2 inline-block">
                                     <i class="fa-solid fa-truck-pickup"></i> Pickup Request
                                 </span>
-                                <h4 class="font-bold text-slate-800">{{ $appointment->order_number ?? 'Booking #' . $appointment->id }}</h4>
+                                <h4 class="font-bold text-slate-800">#{{ $appointment->order->order_number ?? $appointment->id }}</h4>
                             </div>
                             <div class="text-right flex flex-col items-end gap-2">
                                 <span class="px-2.5 py-1 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">

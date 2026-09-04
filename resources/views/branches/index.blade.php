@@ -6,10 +6,10 @@
                 <h2 class="ph-title">Global Branches</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage all laundry branches across the network</p>
             </div>
-            <button @click="$dispatch('open-add-branch')" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <a href="{{ route('branches.create') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
                 <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
                 Add Branch
-            </button>
+            </a>
         </div>
     </x-slot>
 
@@ -114,7 +114,7 @@
         </div>
 
         <!-- Add Branch Modal -->
-        <div x-show="addModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div x-show="addModalOpen" class="fixed inset-0 z-[60] overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
                 <div x-show="addModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity" @click="addModalOpen = false">
                     <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>
@@ -198,7 +198,7 @@
         </div>
 
         <!-- Edit Branch Modal -->
-        <div x-show="editModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+        <div x-show="editModalOpen" class="fixed inset-0 z-[60] overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
                 <div x-show="editModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity" @click="editModalOpen = false">
                     <div class="absolute inset-0 bg-gray-900/40 backdrop-blur-sm"></div>

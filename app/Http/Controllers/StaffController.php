@@ -34,6 +34,12 @@ class StaffController extends Controller
         return view('staff.index', compact('staff', 'salaries', 'branches'));
     }
 
+    public function create()
+    {
+        $branches = \App\Models\Branch::all();
+        return view('staff.create', compact('branches'));
+    }
+
     public function store(Request $request)
     {
         $rules = [
@@ -51,12 +57,12 @@ class StaffController extends Controller
             'standard_working_hours' => 'nullable|numeric|min:0',
             'ot_rate_per_hour' => 'nullable|numeric|min:0',
         ];
-        if (auth()->user()->role === 'super_admin') {
-            $rules['branch_id'] = 'required|exists:branches,id';
+        if (auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin') {
+            $rules['branch_id'] = 'nullable|exists:branches,id';
         }
         $request->validate($rules);
 
-        $branchId = auth()->user()->role === 'super_admin' ? $request->branch_id : (auth()->user()->branch_id ?? \App\Models\Branch::first()->id);
+        $branchId = (auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin') ? $request->branch_id : (auth()->user()->branch_id ?? 1);
         $currentUserRole = auth()->user()->role;
 
         $role = $request->role;
@@ -123,7 +129,7 @@ class StaffController extends Controller
             'net_salary' => $netSalary,
         ];
 
-        return view('staff.show', compact('staff', 'salaries', 'payroll'));
+        return view('staff.show', compact('staff', 'salaries', 'payroll', 'attendancesThisMonth'));
     }
 
     public function edit(User $staff)
@@ -151,8 +157,8 @@ class StaffController extends Controller
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
         }
-        if (auth()->user()->role === 'super_admin') {
-            $rules['branch_id'] = 'required|exists:branches,id';
+        if (auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin') {
+            $rules['branch_id'] = 'nullable|exists:branches,id';
         }
         $request->validate($rules);
 

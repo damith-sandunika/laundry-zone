@@ -51,11 +51,11 @@ class PaymentController extends Controller
         // You might also want to create a PaymentTransaction record here in a real scenario
         
         // Notify Admins
-        $branchAdmins = \App\Models\User::where('role', 'branch_admin')->where('branch_id', $order->branch_id)->get();
+        $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'staff'])->where('branch_id', $order->branch_id)->get();
         \Illuminate\Support\Facades\Notification::send($branchAdmins, new \App\Notifications\SystemAlertNotification('Payment Received for Order #' . $order->order_number, route('orders.show', $order->order_number), 'payment'));
 
         if ($order->workshop_id) {
-            $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $order->workshop_id)->get();
+            $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $order->workshop_id)->get();
             \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('Payment Received for Order #' . $order->order_number, route('workshop.history'), 'payment'));
         }
 

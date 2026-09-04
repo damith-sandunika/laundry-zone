@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="ph-title">🚚 Assign Rider — #{{ $appointment->id }}</div>
+        <div class="ph-title">🚚 Assign Rider — #{{ $appointment->order->order_number ?? $appointment->id }}</div>
         <div class="ph-sub">{{ $appointment->customer->name ?? 'Unknown Customer' }} • {{ $appointment->pickup_address }}</div>
     </x-slot>
 

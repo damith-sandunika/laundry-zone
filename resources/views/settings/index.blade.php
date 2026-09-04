@@ -28,12 +28,22 @@
                 @if(auth()->user()->role === 'super_admin')
                     <button @click="activeTab = 'services'; localStorage.setItem('settingsActiveTab', 'services')" 
                         :class="activeTab === 'services' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200">
                         Services
+                    </button>
+                    <button @click="activeTab = 'extras'; localStorage.setItem('settingsActiveTab', 'extras')" 
+                        :class="activeTab === 'extras' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
+                        Extras
+                    </button>
+                    <button @click="activeTab = 'turnaround_types'; localStorage.setItem('settingsActiveTab', 'turnaround_types')" 
+                        :class="activeTab === 'turnaround_types' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
+                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
+                        Turnarounds
                     </button>
                     <button @click="activeTab = 'packages'; localStorage.setItem('settingsActiveTab', 'packages')" 
                         :class="activeTab === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'" 
-                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200">
                         Packages
                     </button>
                 @endif
@@ -68,13 +78,13 @@
         <div class="p-6">
             <!-- GENERAL SETTINGS TAB -->
             <div x-show="activeTab === 'general'" x-data="{ 
-                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '365laundry.lk')) }}',
-                formName: '{{ addslashes(optional($branch)->name ?? 'SMART LAUNDRY') }}',
-                formAddress: '{{ addslashes(optional($branch)->address ?? '') }}',
-                formPhone: '{{ addslashes(optional($branch)->phone ?? '') }}',
-                formTagline: '{{ addslashes(optional($branch)->tagline ?? 'Fast & Clean Laundry Service') }}',
-                formLogoSize: {{ optional($branch)->logo_size ?? 140 }},
-                previewUrl: '{{ optional($branch)->logo_path ? asset($branch->logo_path) : '' }}'
+                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '')) }}',
+                formName: '{{ addslashes($branch->name ?? '') }}',
+                formAddress: '{{ addslashes($branch->address ?? '') }}',
+                formPhone: '{{ addslashes($branch->phone ?? '') }}',
+                formTagline: '{{ addslashes($branch->tagline ?? '') }}',
+                formLogoSize: {{ $branch->logo_size ?? 140 }},
+                previewUrl: '{{ $branch->logo_path ? asset($branch->logo_path) : '' }}'
             }">
                 <form action="{{ route('settings.updateGeneral') }}" method="POST" enctype="multipart/form-data" class="flex flex-col lg:flex-row gap-6">
                     <div class="flex-1 space-y-4 max-w-xl">
@@ -273,7 +283,7 @@
                             <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
                             
                             <div style="text-align: center; font-weight: 800; font-size: 12px; margin-top: 8px;">
-                                Thank you for choosing 365laundry.lk.
+                                Thank you for choosing Rapid Laundromat.
                             </div>
                             <div style="text-align: center; font-size: 10px; margin-top: 3px; color: #333;">
                                 If you are happy with our service, please leave us a Google Review!
@@ -335,21 +345,20 @@
                     </div>
                 </div>
 
-                <div class="space-y-6">
-                    @foreach($serviceCategories as $category)
-                    <div x-data="{ expanded: true }" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div @click="expanded = !expanded" class="category-group-header flex justify-between items-center p-4 border-b border-gray-100 transition-colors">
-                            <div class="flex items-center gap-3">
+                <div id="categories-sortable" class="space-y-4">
+                    @foreach($mainCategories as $category)
+                    <div class="category-item bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden" data-id="{{ $category->id }}">
+                        <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-slate-50">
+                            <div class="flex items-center gap-3 cursor-move category-handle">
+                                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
                                 @if($category->image_path)
-                                    <img src="{{ asset($category->image_path) }}" alt="{{ $category->name }}" class="w-8 h-8 object-cover rounded-md border border-gray-200">
-                                @else
-                                    <svg :class="expanded ? 'rotate-90' : 'rotate-0'" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                    <img src="{{ asset($category->image_path) }}" alt="{{ $category->name }}" class="w-6 h-6 object-cover rounded-md border border-gray-200">
                                 @endif
                                 <h4 class="font-bold text-gray-800">{{ $category->name }}</h4>
                                 <span class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $category->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">{{ $category->is_active ? 'Active' : 'Inactive' }}</span>
                             </div>
-                            <div class="flex gap-2" @click.stop>
-                                <button onclick="openEditCategoryModal({{ $category->id }}, '{{ addslashes($category->name) }}', {{ $category->is_active ? 1 : 0 }})" class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
+                            <div class="flex gap-2">
+                                <button onclick="openEditCategoryModal({{ $category->id }}, '{{ addslashes($category->name) }}', {{ $category->is_active ? 1 : 0 }}, {{ $category->parent_id ?? 'null' }})" class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
                                 <form method="POST" action="{{ route('settings.destroyServiceCategory', $category) }}" onsubmit="return confirm('Are you sure you want to delete this category? All related services will be uncategorized.')" class="m-0">
                                     @csrf @method('DELETE')
                                     <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 rounded">Delete</button>
@@ -357,58 +366,84 @@
                             </div>
                         </div>
 
-                        <div x-show="expanded" x-collapse>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px;background:#f8fafc;">
-                                @forelse($category->services as $service)
-                                @php
-                                    $style = $colorStyles[$service->color ?? 'blue'] ?? $colorStyles['blue'];
-                                @endphp
-                                <div style="background:white;border-radius:16px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;transition:box-shadow 0.15s;"
-                                    onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.04)'">
-                                    <div style="padding:20px 20px 14px;border-bottom:1px solid #f1f5f9;">
-                                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                                            <div style="display:flex;align-items:center;gap:12px;">
-                                                <div style="width:40px;height:40px;border-radius:12px;background:{{ $style['bg'] }};border:1.5px solid {{ $style['border'] }};color:{{ $style['text'] }};display:flex;align-items:center;justify-content:center;">
-                                                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 style="font-size:16px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-0.01em;">{{ $service->name }}</h3>
-                                                    <p style="font-size:12px;font-weight:600;color:#64748b;margin:0;text-transform:uppercase;letter-spacing:0.05em;">
-                                                        {{ $service->price_type === 'per_kg' ? 'Per Kilogram' : 'Per Item' }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.06em;
-                                                {{ $service->is_active ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;' }}">
-                                                {{ $service->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
+                        <!-- Subcategories -->
+                        @if($category->children->count() > 0)
+                        <div class="bg-slate-50/50 p-3 border-b border-gray-100">
+                            <h5 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 pl-2">Subcategories</h5>
+                            <div class="space-y-2 pl-4">
+                                @foreach($category->children as $child)
+                                <div class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm">
+                                    <div class="flex justify-between items-center p-3 border-b border-slate-100 bg-slate-50/80">
+                                        <div class="flex items-center gap-2">
+                                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                                            <h5 class="font-bold text-slate-700 text-sm">{{ $child->name }}</h5>
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider {{ $child->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">{{ $child->is_active ? 'Active' : 'Inactive' }}</span>
                                         </div>
-                                    </div>
-                                    <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
-                                        <span style="font-size:22px;font-weight:900;color:{{ $style['text'] }};letter-spacing:-0.02em;">Rs.{{ number_format($service->base_price, 2) }}</span>
-                                        <div style="display:flex;gap:8px;">
-                                            <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', {{ $service->category_id ?? 'null' }})"
-                                                style="padding:7px 14px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;border:1.5px solid #bfdbfe;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
-                                                Edit
-                                            </button>
-                                            <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" style="margin:0;">
+                                        <div class="flex gap-2">
+                                            <button onclick="openEditCategoryModal({{ $child->id }}, '{{ addslashes($child->name) }}', {{ $child->is_active ? 1 : 0 }}, {{ $child->parent_id ?? 'null' }})" class="text-[10px] font-semibold text-blue-600 hover:text-blue-800 px-1.5 py-0.5 bg-blue-50 rounded">Edit</button>
+                                            <form method="POST" action="{{ route('settings.destroyServiceCategory', $child) }}" onsubmit="return confirm('Are you sure?')" class="m-0">
                                                 @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    style="padding:7px 14px;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:700;border:1.5px solid #fecaca;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                    onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-                                                    Delete
-                                                </button>
+                                                <button type="submit" class="text-[10px] font-semibold text-red-600 hover:text-red-800 px-1.5 py-0.5 bg-red-50 rounded">Delete</button>
                                             </form>
                                         </div>
                                     </div>
+                                    <div class="services-sortable" data-category-id="{{ $child->id }}">
+                                        @forelse($child->services as $service)
+                                        <div class="service-item flex justify-between items-center p-2.5 border-b border-slate-50 bg-white hover:bg-slate-50 transition-colors" data-id="{{ $service->id }}">
+                                            <div class="flex items-center gap-3 cursor-move service-handle">
+                                                <svg class="w-3.5 h-3.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                                <div>
+                                                    <span class="font-bold text-slate-700 text-[13px]">{{ $service->name }}</span>
+                                                    <span class="text-[11px] text-slate-500 ml-2">Rs.{{ number_format($service->base_price, 2) }}</span>
+                                                </div>
+                                            </div>
+                                            <div class="flex gap-2">
+                                                <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? 'dY` ' }}', '{{ $service->color ?? 'blue' }}', {{ $service->category_id ?? 'null' }}, {{ $service->is_visible_on_website ? 1 : 0 }})" class="text-[10px] font-semibold text-blue-600 hover:text-blue-800 px-1.5 py-0.5 bg-blue-50 rounded">Edit</button>
+                                                <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" class="m-0">
+                                                    @csrf @method('DELETE')
+                                                    <button type="submit" class="text-[10px] font-semibold text-red-600 hover:text-red-800 px-1.5 py-0.5 bg-red-50 rounded">Delete</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                        @empty
+                                        <div class="p-2 text-center text-[11px] text-slate-400 font-medium bg-slate-50/30">
+                                            No services in this subcategory.
+                                        </div>
+                                        @endforelse
+                                    </div>
                                 </div>
-                                @empty
-                                <div style="grid-column:1/-1;padding:30px;text-align:center;color:#64748b;font-size:13px;font-weight:500;">
-                                    No services in this category.
-                                </div>
-                                @endforelse
+                                @endforeach
                             </div>
+                        </div>
+                        @endif
+
+                        <div class="services-sortable" data-category-id="{{ $category->id }}">
+                            @forelse($category->services as $service)
+                            <div class="service-item flex justify-between items-center p-3 border-b border-gray-50 bg-white hover:bg-gray-50 transition-colors" data-id="{{ $service->id }}">
+                                <div class="flex items-center gap-3 cursor-move service-handle">
+                                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                    <div>
+                                        <span class="font-bold text-gray-800 text-sm">{{ $service->name }}</span>
+                                        <span class="text-xs text-gray-500 ml-2">Rs.{{ number_format($service->base_price, 2) }} ({{ $service->price_type === 'per_kg' ? 'Per KG' : 'Per Item' }})</span>
+                                        <span class="ml-2 text-[10px] font-bold uppercase {{ $service->is_active ? 'text-green-600' : 'text-red-600' }}">{{ $service->is_active ? 'Active' : 'Inactive' }}</span>
+                                        @if($service->is_visible_on_website)
+                                            <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">🌐 Website</span>
+                                        @endif
+                                    </div>
+                                </div>
+                                <div class="flex gap-2">
+                                    <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', {{ $service->category_id ?? 'null' }}, {{ $service->is_visible_on_website ? 1 : 0 }})" class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
+                                    <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" class="m-0">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 rounded">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="p-4 text-center text-xs text-gray-400 font-medium bg-gray-50/50">
+                                No services in this category.
+                            </div>
+                            @endforelse
                         </div>
                     </div>
                     @endforeach
@@ -418,76 +453,189 @@
                         $uncategorizedServices = $services->whereNull('category_id');
                     @endphp
                     @if($uncategorizedServices->count() > 0)
-                    <div x-data="{ expanded: true }" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                        <div @click="expanded = !expanded" class="category-group-header flex justify-between items-center p-4 border-b border-gray-100 transition-colors">
+                    <div class="category-item bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="flex justify-between items-center p-4 border-b border-gray-100 bg-slate-50">
                             <div class="flex items-center gap-3">
-                                <svg :class="expanded ? 'rotate-90' : 'rotate-0'" class="w-5 h-5 text-gray-400 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
                                 <h4 class="font-bold text-gray-800">Uncategorized Services</h4>
                             </div>
                         </div>
 
-                        <div x-show="expanded" x-collapse>
-                            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;padding:16px;background:#f8fafc;">
-                                @foreach($uncategorizedServices as $service)
-                                @php
-                                    $style = $colorStyles[$service->color ?? 'blue'] ?? $colorStyles['blue'];
-                                @endphp
-                                <div style="background:white;border-radius:16px;border:1.5px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;transition:box-shadow 0.15s;"
-                                    onmouseover="this.style.boxShadow='0 4px 16px rgba(0,0,0,0.08)'" onmouseout="this.style.boxShadow='0 1px 4px rgba(0,0,0,0.04)'">
-                                    <div style="padding:20px 20px 14px;border-bottom:1px solid #f1f5f9;">
-                                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;">
-                                            <div style="display:flex;align-items:center;gap:12px;">
-                                                <div style="width:40px;height:40px;border-radius:12px;background:{{ $style['bg'] }};border:1.5px solid {{ $style['border'] }};color:{{ $style['text'] }};display:flex;align-items:center;justify-content:center;">
-                                                    <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 style="font-size:16px;font-weight:800;color:#0f172a;margin:0;letter-spacing:-0.01em;">{{ $service->name }}</h3>
-                                                    <p style="font-size:12px;font-weight:600;color:#64748b;margin:0;text-transform:uppercase;letter-spacing:0.05em;">
-                                                        {{ $service->price_type === 'per_kg' ? 'Per Kilogram' : 'Per Item' }}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                            <span style="font-size:10px;font-weight:800;padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.06em;
-                                                {{ $service->is_active ? 'background:#f0fdf4;color:#16a34a;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;' }}">
-                                                {{ $service->is_active ? 'Active' : 'Inactive' }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div style="padding:14px 20px;display:flex;justify-content:space-between;align-items:center;">
-                                        <span style="font-size:22px;font-weight:900;color:{{ $style['text'] }};letter-spacing:-0.02em;">Rs.{{ number_format($service->base_price, 2) }}</span>
-                                        <div style="display:flex;gap:8px;">
-                                            <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', null)"
-                                                style="padding:7px 14px;background:#eff6ff;color:#1d4ed8;font-size:12px;font-weight:700;border:1.5px solid #bfdbfe;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'">
-                                                Edit
-                                            </button>
-                                            <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" style="margin:0;">
-                                                @csrf @method('DELETE')
-                                                <button type="submit"
-                                                    style="padding:7px 14px;background:#fef2f2;color:#dc2626;font-size:12px;font-weight:700;border:1.5px solid #fecaca;border-radius:8px;cursor:pointer;transition:all 0.15s;"
-                                                    onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                        </div>
+                        <div class="services-sortable">
+                            @foreach($uncategorizedServices as $service)
+                            <div class="service-item flex justify-between items-center p-3 border-b border-gray-50 bg-white hover:bg-gray-50 transition-colors" data-id="{{ $service->id }}">
+                                <div class="flex items-center gap-3 cursor-move service-handle">
+                                    <svg class="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/></svg>
+                                    <div>
+                                        <span class="font-bold text-gray-800 text-sm">{{ $service->name }}</span>
+                                        <span class="text-xs text-gray-500 ml-2">Rs.{{ number_format($service->base_price, 2) }} ({{ $service->price_type === 'per_kg' ? 'Per KG' : 'Per Item' }})</span>
+                                        <span class="ml-2 text-[10px] font-bold uppercase {{ $service->is_active ? 'text-green-600' : 'text-red-600' }}">{{ $service->is_active ? 'Active' : 'Inactive' }}</span>
+                                        @if($service->is_visible_on_website)
+                                            <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">🌐 Website</span>
+                                        @endif
                                     </div>
                                 </div>
-                                @endforeach
+                                <div class="flex gap-2">
+                                    <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '👕' }}', '{{ $service->color ?? 'blue' }}', null, {{ $service->is_visible_on_website ? 1 : 0 }})" class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
+                                    <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" class="m-0">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-xs font-semibold text-red-600 hover:text-red-800 px-2 py-1 bg-red-50 rounded">Delete</button>
+                                    </form>
+                                </div>
                             </div>
+                            @endforeach
                         </div>
                     </div>
                     @endif
                     
                     @if($serviceCategories->count() === 0 && $uncategorizedServices->count() === 0)
-                    <div style="grid-column:1/-1;padding:60px;text-align:center;background:white;border-radius:16px;border:1.5px solid #e2e8f0;">
+                    <div class="p-10 text-center bg-white rounded-xl border border-gray-200">
                         <svg width="48" height="48" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 16px;display:block;"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        <p style="font-size:15px;font-weight:800;color:#0f172a;margin:0 0 6px;">No services yet</p>
-                        <p style="font-size:13px;color:#94a3b8;font-weight:500;">Click "Add Category" and "Add New Service" to get started.</p>
+                        <p class="text-sm font-bold text-gray-800 mb-1">No services yet</p>
+                        <p class="text-xs text-gray-500 font-medium">Click "Add Category" and "Add New Service" to get started.</p>
                     </div>
                     @endif
                 </div>
             </div>
-<!-- CUBBIES (STOCK LOCATIONS) TAB -->
+            <!-- EXTRAS TAB -->
+            <div x-show="activeTab === 'extras'" style="display: none;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-semibold text-gray-800">Extras (e.g., Hangers, Special Detergent)</h3>
+                    <button onclick="document.getElementById('add-extra-modal').style.display='flex'" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
+                        + Add Extra
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                    @forelse($extras ?? [] as $extra)
+                        <div x-data="{ editing: false, newName: '{{ addslashes($extra->name) }}', newPrice: {{ $extra->price }}, newPriceType: '{{ $extra->price_type }}', newIsActive: {{ $extra->is_active ? 1 : 0 }} }" class="p-4 border rounded-md text-center relative {{ $extra->is_active ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200' }}">
+                            <div class="absolute top-1 right-1 flex gap-1">
+                                <button type="button" @click="editing = true" class="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition-colors" title="Edit">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                                <form action="{{ route('settings.destroyExtra', $extra) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors" title="Delete">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div x-show="!editing">
+                                <h4 class="font-bold text-gray-800 mt-2">{{ $extra->name }}</h4>
+                                <p class="text-xs text-gray-500 mt-1">Rs. {{ number_format($extra->price, 2) }} ({{ $extra->price_type == 'per_piece' ? 'Per Piece' : 'Per KG' }})</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded mt-2 inline-block {{ $extra->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700' }}">
+                                    {{ $extra->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                            
+                            <div x-show="editing" class="mt-4" style="display:none;">
+                                <form action="{{ route('settings.updateExtra', $extra) }}" method="POST" class="flex flex-col gap-2">
+                                    @csrf @method('PUT')
+                                    <input type="text" name="name" x-model="newName" class="w-full text-xs border-gray-300 rounded px-2 py-1" required placeholder="Name">
+                                    <select name="price_type" x-model="newPriceType" class="w-full text-xs border-gray-300 rounded px-2 py-1">
+                                        <option value="per_piece">Per Piece</option>
+                                        <option value="per_kg">Per KG</option>
+                                    </select>
+                                    <input type="number" step="0.01" name="price" x-model="newPrice" class="w-full text-xs border-gray-300 rounded px-2 py-1" required placeholder="Price">
+                                    <select name="is_active" x-model="newIsActive" class="w-full text-xs border-gray-300 rounded px-2 py-1">
+                                        <option value="1">Active</option>
+                                        <option value="0">Inactive</option>
+                                    </select>
+                                    <div class="flex gap-1 justify-center mt-1">
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-3 py-1.5 rounded font-bold">Save</button>
+                                        <button type="button" @click="editing = false" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-[10px] px-3 py-1.5 rounded font-bold">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-span-full p-4 border rounded-md text-center bg-gray-50 border-gray-200">
+                            <span class="text-gray-500 text-sm font-medium">No extras added yet.</span>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- TURNAROUND TYPES TAB -->
+            <div x-show="activeTab === 'turnaround_types'" style="display: none;">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-sm font-semibold text-gray-800">Turnaround Types (e.g., Normal, Express)</h3>
+                    <button onclick="document.getElementById('add-turnaround-type-modal').style.display='flex'" class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
+                        + Add Type
+                    </button>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    @forelse($turnaroundTypes ?? [] as $tt)
+                        <div x-data="{ editing: false, newName: '{{ addslashes($tt->name) }}', newMarkupType: '{{ $tt->markup_type }}', newMarkupValue: {{ $tt->markup_value }}, newIsDefault: {{ $tt->is_default ? 1 : 0 }}, newIsActive: {{ $tt->is_active ? 1 : 0 }} }" class="p-4 border rounded-md text-center relative {{ $tt->is_active ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200' }}">
+                            <div class="absolute top-1 right-1 flex gap-1">
+                                <button type="button" @click="editing = true" class="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition-colors" title="Edit">
+                                    <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                </button>
+                                <form action="{{ route('settings.destroyTurnaroundType', $tt) }}" method="POST" onsubmit="return confirm('Are you sure?');">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition-colors" title="Delete">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                            
+                            <div x-show="!editing">
+                                <h4 class="font-bold text-gray-800 mt-2">
+                                    {{ $tt->name }}
+                                    @if($tt->is_default)
+                                        <span class="inline-flex items-center justify-center px-2 py-0.5 ml-1 text-[10px] font-bold leading-none text-white bg-blue-600 rounded-full">DEFAULT</span>
+                                    @endif
+                                </h4>
+                                <p class="text-xs text-gray-500 mt-1">Extra: {{ $tt->markup_type == 'percentage' ? $tt->markup_value.'%' : 'Rs. '.number_format($tt->markup_value, 2) }}</p>
+                                <span class="text-xs font-semibold px-2 py-0.5 rounded mt-2 inline-block {{ $tt->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700' }}">
+                                    {{ $tt->is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </div>
+                            
+                            <div x-show="editing" class="mt-4 text-left" style="display:none;">
+                                <form action="{{ route('settings.updateTurnaroundType', $tt) }}" method="POST" class="flex flex-col gap-2">
+                                    @csrf @method('PUT')
+                                    <div>
+                                        <label class="text-[10px] text-gray-600 font-bold uppercase mb-0.5 block">Name</label>
+                                        <input type="text" name="name" x-model="newName" class="w-full text-xs border-gray-300 rounded px-2 py-1" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-gray-600 font-bold uppercase mb-0.5 block">Markup Type</label>
+                                        <select name="markup_type" x-model="newMarkupType" class="w-full text-xs border-gray-300 rounded px-2 py-1">
+                                            <option value="percentage">Percentage (%)</option>
+                                            <option value="flat">Flat Amount (Rs)</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-gray-600 font-bold uppercase mb-0.5 block">Markup Value</label>
+                                        <input type="number" step="0.01" name="markup_value" x-model="newMarkupValue" class="w-full text-xs border-gray-300 rounded px-2 py-1" required>
+                                    </div>
+                                    <div>
+                                        <label class="text-[10px] text-gray-600 font-bold uppercase mb-0.5 block">Status</label>
+                                        <select name="is_active" x-model="newIsActive" class="w-full text-xs border-gray-300 rounded px-2 py-1">
+                                            <option value="1">Active</option>
+                                            <option value="0">Inactive</option>
+                                        </select>
+                                    </div>
+                                    <div class="flex items-center gap-2 mt-1">
+                                        <input type="checkbox" name="is_default" value="1" x-model="newIsDefault" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 w-3 h-3">
+                                        <label class="text-[10px] text-gray-600 font-bold">Set as Default</label>
+                                    </div>
+                                    <div class="flex gap-1 justify-center mt-2">
+                                        <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white text-[10px] px-3 py-1.5 rounded font-bold">Save</button>
+                                        <button type="button" @click="editing = false" class="bg-gray-200 hover:bg-gray-300 text-gray-700 text-[10px] px-3 py-1.5 rounded font-bold">Cancel</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    @empty
+                        <div class="col-span-full p-4 border rounded-md text-center bg-gray-50 border-gray-200">
+                            <span class="text-gray-500 text-sm font-medium">No turnaround types added yet.</span>
+                        </div>
+                    @endforelse
+                </div>
+            </div>
+
+            <!-- CUBBIES (STOCK LOCATIONS) TAB -->
             <div x-show="activeTab === 'cubbies'" style="display: none;">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Cubbets / Racks</h3>
@@ -734,7 +882,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Account Name</label>
-                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. 365laundry.lk">
+                                    <input type="text" name="bank_account_name" value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}" class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold" placeholder="e.g. RAPID Laundromat">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Account Number</label>
@@ -1138,6 +1286,12 @@
                     </div>
                 </div>
 
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="is_visible_on_website" id="add-website-visible" value="1" checked
+                        style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
+                    <label for="add-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website for Customers</label>
+                </div>
+                
                 <div style="display:flex;gap:10px;margin-top:4px;">
                     <button type="button" onclick="document.getElementById('add-service-modal').style.display='none'"
                         style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
@@ -1220,6 +1374,12 @@
                     </select>
                 </div>
                 
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="is_visible_on_website" id="edit-website-visible" value="1"
+                        style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
+                    <label for="edit-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website for Customers</label>
+                </div>
+                
                 <div style="display:flex;gap:10px;margin-top:4px;">
                     <button type="button" onclick="document.getElementById('edit-service-modal').style.display='none'"
                         style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
@@ -1256,6 +1416,15 @@
                     <input type="text" name="name" required placeholder="e.g. Wash & Fold"
                         style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
                         onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Parent Category (Optional)</label>
+                    <select name="parent_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                        <option value="">-- None (Main Category) --</option>
+                        @foreach($mainCategories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 
                 <div style="display:flex;gap:10px;margin-top:4px;">
@@ -1294,6 +1463,15 @@
                     <input type="text" id="edit-category-name" name="name" required
                         style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
                         onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Parent Category (Optional)</label>
+                    <select id="edit-category-parent" name="parent_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                        <option value="">-- None (Main Category) --</option>
+                        @foreach($mainCategories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
                 </div>
                 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Status</label>
@@ -1401,12 +1579,14 @@
     </div>
 
 <script>
-                function openEditModal(id, name, price, priceType, isActive, icon, color, categoryId) {
+                function openEditModal(id, name, price, priceType, isActive, icon, color, categoryId, isVisibleOnWebsite) {
             document.getElementById('edit-name').value = name;
             document.getElementById('edit-price').value = price;
             document.getElementById('edit-price-type').value = priceType;
             document.getElementById('edit-active').value = isActive;
             document.getElementById('edit-category-id').value = categoryId || '';
+            window.dispatchEvent(new CustomEvent('update-edit-category', { detail: categoryId || '' }));
+            document.getElementById('edit-website-visible').checked = isVisibleOnWebsite == 1;
             document.getElementById('edit-service-form').action = '/settings/services/' + id;
 
             // Select the color
@@ -1417,9 +1597,10 @@
             document.getElementById('edit-service-modal').style.display = 'flex';
         }
         
-        function openEditCategoryModal(id, name, isActive) {
+        function openEditCategoryModal(id, name, isActive, parentId) {
             document.getElementById('edit-category-name').value = name;
             document.getElementById('edit-category-active').value = isActive;
+            document.getElementById('edit-category-parent').value = parentId || '';
             document.getElementById('edit-category-form').action = '/settings/service-categories/' + id;
             document.getElementById('edit-category-modal').style.display = 'flex';
         }
@@ -1443,5 +1624,144 @@
             if(e.target === this) this.style.display = 'none';
         });
     </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+            // Sort Categories
+            const categoriesSortable = document.getElementById('categories-sortable');
+            if (categoriesSortable) {
+                new Sortable(categoriesSortable, {
+                    handle: '.category-handle',
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const orderedIds = Array.from(categoriesSortable.querySelectorAll('.category-item')).map(item => item.getAttribute('data-id'));
+                        fetch('{{ route("settings.reorderCategories") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ ordered_ids: orderedIds })
+                        });
+                    }
+                });
+            }
+
+            // Sort Services within Categories
+            document.querySelectorAll('.services-sortable').forEach(function (el) {
+                new Sortable(el, {
+                    handle: '.service-handle',
+                    group: 'shared', // set both lists to same group if dragging between categories is needed
+                    animation: 150,
+                    onEnd: function (evt) {
+                        const targetList = evt.to;
+                        const categoryId = targetList.getAttribute('data-category-id') || 'null';
+                        const orderedIds = Array.from(targetList.querySelectorAll('.service-item')).map(item => item.getAttribute('data-id'));
+                        
+                        fetch('{{ route("settings.reorderServices") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: JSON.stringify({ ordered_ids: orderedIds, category_id: categoryId })
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+    <!-- Add Extra Modal -->
+    <div id="add-extra-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Add Extra</h3>
+                </div>
+                <button onclick="document.getElementById('add-extra-modal').style.display='none'" style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('settings.storeExtra') }}" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+                @csrf
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Extra Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Hangers"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Price Type</label>
+                    <select name="price_type" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                        <option value="per_piece">Per Piece</option>
+                        <option value="per_kg">Per KG</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Price</label>
+                    <input type="number" step="0.01" name="price" required placeholder="e.g. 50.00"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button type="button" onclick="document.getElementById('add-extra-modal').style.display='none'"
+                        style="flex:1;padding:12px;background:#f1f5f9;border:none;border-radius:12px;font-size:13px;font-weight:700;color:#475569;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:2;padding:12px;background:#2563eb;border:none;border-radius:12px;font-size:13px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,0.2);">Add Extra</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Turnaround Type Modal -->
+    <div id="add-turnaround-type-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Add Turnaround Type</h3>
+                </div>
+                <button onclick="document.getElementById('add-turnaround-type-modal').style.display='none'" style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('settings.storeTurnaroundType') }}" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+                @csrf
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Type Name</label>
+                    <input type="text" name="name" required placeholder="e.g. Express"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Markup Type</label>
+                    <select name="markup_type" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                        <option value="percentage">Percentage (%)</option>
+                        <option value="flat">Flat Amount (Rs)</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Markup Value</label>
+                    <input type="number" step="0.01" name="markup_value" required placeholder="e.g. 50"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div style="display:flex; align-items:center; gap:8px;">
+                    <input type="checkbox" name="is_default" value="1" style="width:16px;height:16px;border-radius:4px;border-color:#e2e8f0;accent-color:#2563eb;">
+                    <label style="font-size:13px;font-weight:600;color:#475569;">Set as Default</label>
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button type="button" onclick="document.getElementById('add-turnaround-type-modal').style.display='none'"
+                        style="flex:1;padding:12px;background:#f1f5f9;border:none;border-radius:12px;font-size:13px;font-weight:700;color:#475569;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:2;padding:12px;background:#2563eb;border:none;border-radius:12px;font-size:13px;font-weight:700;color:white;cursor:pointer;box-shadow:0 4px 14px rgba(37,99,235,0.2);">Add Type</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
 </x-app-layout>
+
 

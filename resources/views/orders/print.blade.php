@@ -152,12 +152,25 @@
     <div class="divider"></div>
     @foreach($order->items as $item)
         <div class="row" style="margin-bottom: 2px;">
-            <span
-                class="item-name">{{ ($item->serviceType && $item->serviceType->name !== 'Special Service') ? $item->serviceType->name : $item->item_description }}</span>
+            <span class="item-name">
+                @if($item->serviceType && $item->serviceType->name !== 'Special Service')
+                    {{ $item->serviceType->category ? $item->serviceType->category->name . ' - ' : '' }}{{ $item->serviceType->name }}
+                @else
+                    {{ $item->item_description }}
+                @endif
+            </span>
             <span class="bold">Rs.{{ number_format($item->total_price, 2) }}</span>
         </div>
         <div style="font-size: 12px; margin-bottom: 6px;">
-            {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
+            {{ $item->quantity }} x Rs.{{ number_format(($item->total_price - $item->extras->sum('total_price')) / $item->quantity, 2) }}
+            @if($item->turnaroundType && $item->turnaroundType->name !== 'Standard')
+                [{{ $item->turnaroundType->name }}]
+            @endif
+            @if($item->extras->count() > 0)
+                @foreach($item->extras as $e)
+                <br> <small>+ {{ $e->extra->name }} (x{{ $e->quantity }} @ Rs.{{ number_format($e->unit_price, 2) }})</small>
+                @endforeach
+            @endif
         </div>
     @endforeach
 
@@ -193,7 +206,7 @@
     </div>
 
     <div class="divider"></div>
-    <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing 365laundry.lk.</div>
+    <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing Rapid Laundromat.</div>
     <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
         leave us a Google Review!</div>
 

@@ -68,6 +68,11 @@ class Order extends Model
         return $this->hasMany(OrderItem::class);
     }
 
+    public function correctionRequests()
+    {
+        return $this->hasMany(OrderCorrectionRequest::class);
+    }
+
     public function statusHistory()
     {
         return $this->hasMany(OrderStatusHistory::class)->orderBy('created_at', 'desc');
@@ -112,9 +117,9 @@ class Order extends Model
     public static function generateOrderNumber(int $branchId, bool $isDelivery = false): string
     {
         return \DB::transaction(function () use ($branchId, $isDelivery) {
-            // Lock the branch row to prevent concurrent duplicate order numbers
+            // Lock the branch row to prevent concurrent race conditions
             $branch = \App\Models\Branch::lockForUpdate()->find($branchId);
-
+            
             if ($branch) {
                 $branch->order_sequence += 1;
                 $branch->save();
@@ -123,10 +128,10 @@ class Order extends Model
                 $nextId = 1;
             }
 
-            $paddedId = str_pad($nextId, 4, '0', STR_PAD_LEFT);
-            $prefix = $isDelivery ? "D{$branchId}" : "B{$branchId}";
+            $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
+            $sequence = $nextId;
 
-            return "{$prefix}-{$paddedId}";
+            return "{$prefix}-L-{$sequence}";
         });
     }
 
@@ -138,5 +143,10 @@ class Order extends Model
     public function deliveryAppointment()
     {
         return $this->hasOne(DeliveryAppointment::class, 'order_id');
+    }
+
+    public function getRouteKeyName()
+    {
+        return 'order_number';
     }
 }

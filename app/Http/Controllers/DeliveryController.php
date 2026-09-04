@@ -24,7 +24,8 @@ class DeliveryController extends Controller
         $branchId = $user->branch_id;
 
         // Super admins and workshop admins have full access
-        $hasFullAccess = $user->isSuperAdmin() || $user->role === 'workshop_admin';
+        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+        $hasFullAccess = $user->isSuperAdmin() || $isWorkshopAdmin;
 
         // Branch admins and staff can only access if delivery is enabled for their branch
         if (! $hasFullAccess && (! $user->branch || ! $user->branch->is_delivery_enabled)) {
@@ -143,10 +144,6 @@ class DeliveryController extends Controller
 
         \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Pickup Task Assigned: #' . $appointment->id, route('rider.tasks')));
 
-        // Notification
-        $commService = new CommunicationService();
-        $commService->sendPickupConfirmation($appointment);
-
         return redirect()->route('delivery.index')->with('success', "Rider {$rider->name} assigned for pickup.");
     }
 
@@ -157,9 +154,9 @@ class DeliveryController extends Controller
 
         if ($request->filled('pickme_flash_cost')) {
             \App\Models\Expense::create([
-                'branch_id' => auth()->user()->branch_id, // Workshop's branch
+                'branch_id' => $appointment->branch_id,
                 'category' => 'PickMe',
-                'description' => 'PickMe payment for pickup delivery #' . $appointment->id,
+                'description' => 'PickMe payment for pickup delivery Order #' . ($appointment->order ? $appointment->order->order_number : $appointment->order_id),
                 'amount' => $request->pickme_flash_cost,
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
@@ -242,8 +239,9 @@ class DeliveryController extends Controller
             ]);
         });
 
-        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $appointment->branch_id)->get();
-        $targetRouteName = auth()->user()->role === 'workshop_admin' ? 'workshop.operations' : 'orders.index';
+        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $appointment->branch_id)->get();
+        $isWorkshopAdmin = auth()->user()->role === 'workshop_admin' || (auth()->user()->role === 'staff' && auth()->user()->branch && auth()->user()->branch->type === 'workshop');
+        $targetRouteName = $isWorkshopAdmin ? 'workshop.operations' : 'orders.index';
         
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Delivery Order Arrived: #' . $dispatch->order->order_number, route($targetRouteName), 'delivery_arrived'));
 
@@ -259,9 +257,6 @@ class DeliveryController extends Controller
 
         if ($request->rider_id === 'pickme_flash') {
             $order = Order::find($request->order_id);
-            if ($order && $order->paid_amount < $order->total) {
-                return redirect()->back()->with('error', 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.');
-            }
 
             $appointment->update([
                 'status' => 'delivered', 
@@ -282,20 +277,15 @@ class DeliveryController extends Controller
                     'note' => 'Delivered via PickMe',
                 ]);
                 
-                $commService = new CommunicationService();
-                $commService->sendOrderDelivered($order);
-                
-                // For PickMe: balance remaining means customer pays COD via PickMe
-                // Do NOT auto-mark as paid - branch admin should handle cash collection
-                // Just record a pending cash transaction if balance > 0
                 $amountToPay = $order->total - $order->paid_amount;
-                if ($amountToPay > 0 && in_array($order->payment_method, ['cash', null])) {
+                if ($amountToPay > 0) {
+                    $paymentMethod = $request->input('payment_method', 'cash');
                     \App\Models\PaymentTransaction::create([
                         'order_id' => $order->id,
                         'amount' => $amountToPay,
-                        'payment_method' => 'cash',
+                        'payment_method' => $paymentMethod,
                         'created_by' => auth()->id(),
-                        'collected_from_rider_at' => null, // Admin collects from PickMe
+                        'collected_from_rider_at' => now(), // Auto-collected per user request
                         'status' => 'completed',
                         'transaction_id' => 'TXN-' . strtoupper(uniqid()),
                     ]);
@@ -304,33 +294,44 @@ class DeliveryController extends Controller
                         'payment_status' => 'paid'
                     ]);
                 } elseif ($amountToPay <= 0) {
-                    // Already fully paid (bank transfer) - just mark paid
                     $order->update(['payment_status' => 'paid']);
                 }
 
-                // Log histories to make timeline look complete
-                foreach (['out_for_delivery', 'delivered', 'completed'] as $st) {
-                    \App\Models\OrderStatusHistory::create([
-                        'order_id' => $order->id,
-                        'status' => $st,
-                        'changed_by' => auth()->id(),
-                        'note' => 'Auto-updated via PickMe/Flash dispatch',
-                    ]);
+                // Send notification FIRST (before any loop that could fail)
+                try {
+                    $commService = new CommunicationService();
+                    $commService->sendDeliveryCompleted($order);
+                } catch (\Exception $e) {
+                    \Log::error('Delivery notification failed (PickMe): ' . $e->getMessage());
+                }
+
+                // Log extra histories for timeline (skip 'delivered' since already created above)
+                foreach (['out_for_delivery', 'completed'] as $st) {
+                    try {
+                        \App\Models\OrderStatusHistory::create([
+                            'order_id' => $order->id,
+                            'status' => $st,
+                            'changed_by' => auth()->id(),
+                            'note' => 'Auto-updated via PickMe/Flash dispatch',
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('Status history creation skipped: ' . $e->getMessage());
+                    }
                 }
             }
 
             if ($request->filled('pickme_flash_cost')) {
                 \App\Models\Expense::create([
-                    'branch_id' => $appointment->branch_id,
+                    'branch_id' => auth()->user()->branch_id,
                     'category' => 'PickMe',
-                    'description' => 'PickMe payment for delivery dropoff #' . $appointment->id,
+                    'description' => 'PickMe payment for delivery dropoff Order #' . ($appointment->order ? $appointment->order->order_number : $appointment->order_id),
                     'amount' => $request->pickme_flash_cost,
                     'expense_date' => now(),
                     'created_by' => auth()->id(),
                 ]);
             }
 
-            return redirect()->back()->with('success', "Assigned to PickMe/Flash. Order automatically marked as Delivered & Completed.")->with('print_url', route('orders.printChit', $request->order_id));
+            return redirect()->back()->with('success', "Assigned to PickMe/Flash. Order automatically marked as Delivered & Completed.")->with('print_url', route('orders.printChit', $appointment->order->order_number));
         }
 
         $request->validate([
@@ -359,9 +360,9 @@ class DeliveryController extends Controller
             $commService->sendDeliveryConfirmation($order);
         }
 
-        \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Delivery Drop-off Task Assigned: Order #' . $request->order_id, route('rider.tasks')));
+        \Illuminate\Support\Facades\Notification::send($rider, new \App\Notifications\SystemAlertNotification('New Delivery Drop-off Task Assigned: Order #' . $appointment->order->order_number, route('rider.tasks')));
 
-        return redirect()->back()->with('success', "Rider {$rider->name} assigned for delivery.")->with('print_url', route('orders.printChit', $request->order_id));
+        return redirect()->back()->with('success', "Rider {$rider->name} assigned for delivery.")->with('print_url', route('orders.printChit', $appointment->order->order_number));
     }
 
     public function collectCash(Request $request, DeliveryAppointment $appointment)
@@ -405,6 +406,14 @@ class DeliveryController extends Controller
 
         $appointment->update(['status' => 'delivered']);
         $order->update(['status' => 'delivered']);
+
+        // Send delivery completed notification
+        try {
+            $commService = new CommunicationService();
+            $commService->sendDeliveryCompleted($order);
+        } catch (\Exception $e) {
+            \Log::error('Delivery notification failed (collectCash): ' . $e->getMessage());
+        }
 
         return redirect()->back()->with('success', 'Verified and collected cash from rider. Order marked as completed.');
     }

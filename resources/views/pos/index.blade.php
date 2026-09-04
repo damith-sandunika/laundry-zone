@@ -7,6 +7,20 @@
             .pos-wrapper { display: none !important; }
             .mobile-pos-warning { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; text-align: center; padding: 20px; }
         }
+        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .custom-scrollbar-hide::-webkit-scrollbar { display: none; }
+        .custom-scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        .hide-arrows::-webkit-outer-spin-button,
+        .hide-arrows::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+        .hide-arrows {
+            -moz-appearance: textfield;
+        }
     </style>
     
     <div class="mobile-pos-warning">
@@ -29,102 +43,114 @@
                 <!-- Background Decoration -->
                 <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
 
-                <div x-data="{ searchOpen: false }" class="px-5 py-3 border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 relative h-36 flex flex-col justify-center">
+                <!-- Search bar & Category Filters Container -->
+                <div x-data="{ searchExpanded: false }" class="border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 relative flex items-start gap-2 p-3">
                     
-                    <!-- Search Button / Input (Absolute Top Right) -->
-                    <div class="absolute top-3 right-5 z-20 flex items-center justify-end" :class="searchOpen ? 'w-[calc(100%-40px)] max-w-sm' : 'w-auto'">
-                        <!-- Expanded Search Input -->
-                        <div x-show="searchOpen" x-transition.opacity class="relative w-full flex items-center shadow-lg rounded-xl bg-white border-2 border-blue-500 overflow-hidden">
-                            <svg class="absolute left-3 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <input type="text" x-model="searchQuery" x-ref="searchInput" placeholder="Search services…"
-                                class="w-full pl-9 pr-10 py-2 bg-transparent text-[12px] font-bold text-slate-800 outline-none border-none focus:ring-0">
-                            <!-- Close Button -->
-                            <button @click="searchOpen = false; searchQuery = ''" class="absolute right-2 p-1 text-slate-400 hover:text-red-500">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                            </button>
-                        </div>
-
-                        <!-- Search Icon Button -->
-                        <button x-show="!searchOpen" @click="searchOpen = true; $nextTick(() => $refs.searchInput.focus())" 
-                            class="p-2 bg-white hover:bg-slate-50 text-slate-600 rounded-lg shadow-sm border border-slate-200 transition-colors z-30 relative">
+                    <!-- Search Bar Icon (Collapsible) -->
+                    <div class="relative shrink-0 mt-0.5" :class="searchExpanded ? 'w-full max-w-sm absolute top-2 left-2 z-50 bg-white rounded-xl shadow-lg' : ''">
+                        <button @click="searchExpanded = true" x-show="!searchExpanded" class="w-9 h-9 rounded-full bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                             </svg>
                         </button>
-                    </div>
-
-                    <!-- Category Grid (Slider) -->
-                    <div x-data="{
-                        scrollLeft() { $refs.catContainer.scrollBy({ left: -200, behavior: 'smooth' }); },
-                        scrollRight() { $refs.catContainer.scrollBy({ left: 200, behavior: 'smooth' }); }
-                    }" class="relative w-full h-full flex items-center pr-12 group">
-                        
-                        <!-- Left Arrow -->
-                        <button @click="scrollLeft()" class="absolute left-0 z-20 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition-all opacity-0 group-hover:opacity-100 -ml-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
-                        </button>
-                        
-                        <div x-ref="catContainer" class="grid grid-rows-3 grid-flow-col gap-3 overflow-x-hidden scroll-smooth w-full h-full py-1" :class="searchOpen ? 'opacity-30 pointer-events-none transition-opacity' : 'transition-opacity'">
-                            <template x-for="cat in allCategories" :key="cat.id">
-                                <button @click="activeCategory = (activeCategory === cat.id ? null : cat.id)" 
-                                    :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                    class="px-3 py-1 text-[11px] font-black rounded-lg transition-all whitespace-nowrap h-7 flex items-center justify-center border border-transparent"
-                                    x-text="cat.name">
-                                </button>
-                            </template>
-                            <button @click="activeCategory = (activeCategory === 'uncategorized' ? null : 'uncategorized')" 
-                                :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                                class="px-3 py-1 text-[11px] font-black rounded-lg transition-all whitespace-nowrap h-7 flex items-center justify-center border border-transparent">
-                                Uncategorized
+                        <div x-show="searchExpanded" x-cloak class="w-full relative flex items-center transition-all animate-fade-in">
+                            <input type="text" x-model="searchQuery" x-ref="searchInput" placeholder="Search services..."
+                                class="w-full pl-10 pr-10 py-2 bg-slate-50 hover:bg-white border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[12px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
+                            <svg class="absolute left-3.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                            <button @click="searchExpanded = false; searchQuery = ''" class="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                             </button>
                         </div>
+                    </div>
 
-                        <!-- Right Arrow -->
-                        <button @click="scrollRight()" class="absolute right-10 z-20 w-7 h-7 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-sm text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition-all opacity-0 group-hover:opacity-100">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                    <!-- Category Filters (2 rows with horizontal scroll) -->
+                    <div class="flex-1 min-w-0 relative group" x-data="{
+                        hasOverflow: false,
+                        checkOverflow() {
+                            this.$nextTick(() => {
+                                if (this.$refs.catScroll) {
+                                    this.hasOverflow = this.$refs.catScroll.scrollWidth > this.$refs.catScroll.clientWidth;
+                                }
+                            });
+                        },
+                        init() {
+                            this.checkOverflow();
+                            // If you have search filtering that alters width, it'll trigger resize or you can call checkOverflow
+                        },
+                        scrollCatLeft() { $refs.catScroll.scrollBy({ left: -200, behavior: 'smooth' }); },
+                        scrollCatRight() { $refs.catScroll.scrollBy({ left: 200, behavior: 'smooth' }); }
+                    }" @resize.window="checkOverflow()">
+                        <!-- Left Arrow -->
+                        <button x-show="hasOverflow" x-transition @click="scrollCatLeft()" class="absolute -left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" /></svg>
                         </button>
+                        
+                        <!-- Right Arrow -->
+                        <button x-show="hasOverflow" x-transition @click="scrollCatRight()" class="absolute -right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" /></svg>
+                        </button>
+
+                        <div class="flex flex-col min-w-0 gap-1.5 pb-1">
+                            <!-- Bottom Layer: Parent Categories View (2 Rows) -->
+                            <div class="relative w-full">
+                                <div x-ref="catScroll" class="overflow-x-auto scrollbar-none custom-scrollbar-hide">
+                                    <div class="grid grid-rows-2 grid-flow-col gap-1.5 w-max">
+                                        <template x-for="cat in filteredCategories" :key="cat.id">
+                                            <button @click="activeCategory = cat.id; activeSubcategory = (cat.children && cat.children.length > 0) ? cat.children[0].id : null" 
+                                                :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                                                class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[70px] flex items-center gap-1 justify-center">
+                                                <span x-text="cat.name"></span>
+                                                <template x-if="cat.children && cat.children.length > 0">
+                                                    <svg class="w-3 h-3 opacity-60 shrink-0" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" /></svg>
+                                                </template>
+                                            </button>
+                                        </template>
+                                        <button @click="activeCategory = 'uncategorized'; activeSubcategory = null" 
+                                            :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                                            class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[70px]">
+                                            Uncategorized
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Distinct 3rd Row: Subcategories -->
+                            <template x-if="activeCategoryData && activeCategoryData.children && activeCategoryData.children.length > 0">
+                                <div class="overflow-x-auto custom-scrollbar mt-1 pt-1.5 border-t border-slate-200/60 pb-1">
+                                    <div class="flex items-center gap-2 w-max pl-1 pr-2">
+
+                                        <template x-for="sub in activeCategoryData.children" :key="sub.id">
+                                            <button @click="activeSubcategory = sub.id" 
+                                                :class="activeSubcategory === sub.id ? 'bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-700' : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'"
+                                                class="px-3 py-0.5 text-[10px] font-bold rounded-md transition-all whitespace-nowrap min-w-[60px]"
+                                                x-text="sub.name">
+                                            </button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
                     </div>
                 </div>
 
                 <!-- Services Grid -->
                 <div class="flex-1 overflow-y-auto p-4 custom-scrollbar z-10">
-                    <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3 lg:gap-4">
+                    <div class="grid grid-cols-4 sm:grid-cols-6 xl:grid-cols-6 gap-2 lg:gap-3 auto-rows-max">
                         
-                        <!-- Special Service Card -->
-                        <div class="flex flex-col p-4 rounded-[20px] bg-gradient-to-br from-fuchsia-50 to-purple-50 border-2 border-dashed border-purple-300 shadow-sm hover:shadow-md transition-shadow group">
-                            <input type="text" x-model="specialName" placeholder="Custom Service…"
-                                @click.stop @keydown.enter.prevent="$el.nextElementSibling.focus()"
-                                class="w-full px-3 py-2 bg-white/80 border-2 border-purple-200 focus:border-purple-500 rounded-xl text-[13px] font-bold text-purple-900 mb-2 outline-none placeholder:text-purple-300 transition-colors">
-                            <input type="number" x-model.number="specialPrice" placeholder="Price (Rs.)"
-                                @click.stop @keydown.enter.prevent="addSpecialToCart()"
-                                class="w-full px-3 py-2 bg-white/80 border-2 border-purple-200 focus:border-purple-500 rounded-xl text-[13px] font-bold text-purple-900 mb-3 outline-none placeholder:text-purple-300 transition-colors" min="0">
-                            <button @click="addSpecialToCart()"
-                                class="w-full py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-[13px] font-black rounded-xl shadow-md shadow-purple-500/20 group-hover:shadow-purple-500/40 transition-all hover:-translate-y-0.5">
-                                + Add Custom
-                            </button>
-                        </div>
+
 
                         <!-- Service Cards -->
                         <template x-for="service in filteredServices" :key="service.id">
                             <button @click="addToCart(service)"
-                                class="flex flex-col p-4 rounded-[20px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_12px_24px_rgba(0,0,0,0.06)] hover:-translate-y-1 transition-all duration-300 text-left group overflow-hidden relative"
-                                :class="{'border-blue-200': service.color === 'blue', 'border-green-200': service.color === 'green', 'border-purple-200': service.color === 'purple', 'border-orange-200': service.color === 'orange', 'border-teal-200': service.color === 'teal', 'border-red-200': service.color === 'red'}">
+                                class="col-span-2 sm:col-span-1 xl:col-span-1 flex flex-col p-3 rounded-[14px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 text-left group overflow-hidden relative justify-center items-center text-center"
+                                :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
                                 
-                                <div class="w-12 h-12 rounded-2xl flex items-center justify-center mb-3 transition-transform duration-300 group-hover:scale-110"
-                                    :class="getColorStyle(service.color).bg + ' ' + getColorStyle(service.color).text">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                </div>
-
-                                <div class="flex flex-col gap-1 mt-auto">
-                                    <span class="text-[14px] font-black text-slate-800 leading-tight tracking-tight" x-text="service.name"></span>
-                                    <div class="flex items-end justify-between mt-1">
-                                        <span class="text-[15px] font-black text-blue-600" x-text="'Rs. ' + parseFloat(service.base_price).toFixed(0)"></span>
-                                        <span class="text-[9.5px] font-extrabold text-slate-400 uppercase tracking-widest" x-text="service.price_type === 'per_kg' ? '/KG' : '/ITEM'"></span>
-                                    </div>
+                                <span class="text-[12px] font-black text-slate-800 leading-tight tracking-tight line-clamp-2 mb-1" x-text="service.name"></span>
+                                <div class="flex items-end justify-center gap-1">
+                                    <span class="text-[13px] font-black text-blue-600" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
+                                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest pb-0.5" x-text="service.price_type === 'per_kg' ? '/KG' : '/ITM'"></span>
                                 </div>
                             </button>
                         </template>
@@ -219,58 +245,121 @@
                             <p class="text-[11px] font-semibold text-slate-400 mt-1">Add items from the left to begin</p>
                         </div>
                     </template>
-
                     <template x-for="(item, index) in cart" :key="index">
-                        <div class="group relative bg-white p-2.5 rounded-[12px] border border-slate-200 flex items-center justify-between gap-3 shadow-sm hover:border-blue-200 transition-all">
-                            <!-- Left: Name & Base Price -->
-                            <div class="flex-1 min-w-0">
-                                <h4 class="text-[13px] font-black text-slate-800 truncate" x-text="item.name"></h4>
-                                <span class="text-[10.5px] font-bold text-slate-400" x-text="'Rs. ' + parseFloat(item.base_price).toFixed(2) + (item.price_type === 'per_kg' ? ' /KG' : '')"></span>
-                            </div>
-                            
-                            <!-- Middle: Qty Editor -->
-                            <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5">
-                                <button @click="updateQty(index,-1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors font-black text-sm">−</button>
-                                <input type="number" x-model="item.qty" class="w-12 text-center text-[12px] font-black text-slate-800 bg-transparent border-none outline-none p-0 focus:ring-0" min="0.01" step="any">
-                                <button @click="updateQty(index,1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors font-black text-sm">+</button>
+                        <div class="group relative bg-white p-2.5 rounded-[12px] border border-slate-200 flex flex-col gap-2 shadow-sm hover:border-blue-200 transition-all">
+                            <div class="flex items-center justify-between gap-3">
+                                <!-- Left: Name & Base Price -->
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-[9px] font-bold text-slate-400 leading-none uppercase tracking-widest mb-0.5 truncate" x-text="getCategoryString(item.id)"></div>
+                                    <h4 class="text-[13px] font-black text-slate-800 truncate" x-text="item.name"></h4>
+                                    <div class="flex items-center gap-1 mt-0.5">
+                                        <span class="text-[10.5px] font-bold text-slate-400">Rs.</span>
+                                        <input type="number" x-model.number="item.base_price" class="w-16 text-[10.5px] font-bold text-slate-600 bg-transparent border-b border-dashed border-slate-300 focus:border-blue-500 outline-none p-0 hide-arrows" min="0" step="0.01">
+                                        <span class="text-[10.5px] font-bold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : ''"></span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Middle: Qty Editor -->
+                                <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+                                    <button @click="updateQty(index,-1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors font-black text-sm">-</button>
+                                    <input type="number" x-model="item.qty" class="w-12 text-center text-[12px] font-black text-slate-800 bg-transparent border-none outline-none p-0 focus:ring-0" min="0.01" step="any">
+                                    <button @click="updateQty(index,1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors font-black text-sm">+</button>
+                                </div>
+
+                                <!-- Right: Total Price & Remove -->
+                                <div class="flex items-center gap-2">
+                                    <span class="text-[13px] font-black text-blue-700 whitespace-nowrap" x-text="'Rs. ' + getItemTotal(item).toFixed(2)"></span>
+                                    <button @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
+                                </div>
                             </div>
 
-                            <!-- Right: Total Price & Remove -->
-                            <div class="flex items-center gap-2">
-                                <span class="text-[13px] font-black text-blue-700 whitespace-nowrap" x-text="'Rs. ' + (item.base_price * (parseFloat(item.qty) || 0)).toFixed(2)"></span>
-                                <button @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                </button>
+                            <!-- Bottom: Extras & Turnaround Type -->
+                            <div class="pt-2 border-t border-slate-100 flex flex-col gap-2" x-data="{ showExtras: false, addMode: false }">
+                                <div class="flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-2">
+                                        <label class="flex items-center gap-1.5 cursor-pointer group">
+                                            <input type="checkbox" x-model="showExtras" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide group-hover:text-blue-600 transition-colors">Extras</span>
+                                        </label>
+                                        
+                                        <button x-show="showExtras" @click="addMode = !addMode" class="text-[9px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 hover:bg-blue-100 transition-colors">
+                                            + Add Extra
+                                        </button>
+                                    </div>
+                                    <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate shrink-0">
+                                        <template x-for="tt in allTurnaroundTypes" :key="tt.id">
+                                            <option :value="tt.id" x-text="tt.name + ' (' + (tt.markup_type == 'percentage' ? tt.markup_value + '%' : 'Rs. ' + tt.markup_value) + ')'"></option>
+                                        </template>
+                                    </select>
+                                </div>
+                                
+                                <div x-show="showExtras" class="flex flex-col gap-1.5">
+                                    <div x-show="addMode" class="bg-slate-50 p-1.5 rounded-lg border border-slate-200 shadow-inner">
+                                        <select @change="
+                                            if($event.target.value) {
+                                                let exId = parseInt($event.target.value);
+                                                let existing = item.selected_extras.find(e => e.id === exId);
+                                                if(existing) {
+                                                    existing.qty++;
+                                                } else {
+                                                    item.selected_extras.push({ id: exId, qty: 1 });
+                                                }
+                                                $event.target.value = '';
+                                                addMode = false;
+                                            }
+                                        " class="text-[11px] font-bold text-slate-700 bg-white border border-slate-200 rounded-md p-1.5 outline-none w-full shadow-sm focus:border-blue-400">
+                                            <option value="">-- Select Extra --</option>
+                                            <template x-for="extra in allExtras" :key="extra.id">
+                                                <option :value="extra.id" x-text="extra.name + ' (+Rs.' + extra.price + ')'"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+
+                                    <div x-show="item.selected_extras.length > 0" class="flex flex-col gap-1.5">
+                                        <template x-for="(selEx, idx) in item.selected_extras" :key="idx">
+                                            <div class="flex items-center justify-between bg-white border border-slate-200 rounded-md p-1.5 shadow-sm">
+                                                <span class="text-[10px] font-bold text-slate-700" x-text="allExtras.find(e => e.id === selEx.id)?.name"></span>
+                                                <div class="flex items-center gap-2">
+                                                    <span class="text-[10px] text-blue-600 font-bold" x-text="'Rs.' + (allExtras.find(e => e.id === selEx.id)?.price * selEx.qty).toFixed(2)"></span>
+                                                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded px-1">
+                                                        <button @click="if(selEx.qty > 1) selEx.qty--; else item.selected_extras.splice(idx, 1);" class="text-slate-500 hover:text-blue-600 font-black px-1.5 py-0.5 text-[10px]">-</button>
+                                                        <span class="text-[10px] font-black w-3 text-center" x-text="selEx.qty"></span>
+                                                        <button @click="selEx.qty++" class="text-slate-500 hover:text-blue-600 font-black px-1.5 py-0.5 text-[10px]">+</button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </template>
                 </div>
 
                 <!-- Fixed Checkout Bar -->
-                <div class="p-5 bg-white border-t border-slate-100 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.04)]">
-                    <div class="flex items-center justify-between mb-4 px-1">
-                        <span class="text-[12px] font-extrabold text-slate-500 uppercase tracking-widest">Total Amount</span>
-                        <span class="text-3xl font-black text-slate-900 tracking-tight" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
+                <div class="p-3 bg-white border-t border-slate-100 z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.04)] flex items-center justify-between gap-3">
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest leading-none mb-1">Total</span>
+                        <span class="text-[18px] font-black text-slate-900 tracking-tight leading-none" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                     </div>
-                    <button @click="if(!selectedCustomer) { alert('Please select a customer first.'); return; } if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }" 
-                        :disabled="cart.length === 0"
-                        :class="cart.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5'"
-                        class="w-full py-4 rounded-2xl text-[15px] font-black flex justify-center items-center gap-3 transition-all duration-300">
-                        Proceed to Checkout
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                        </svg>
-                    </button>
+                    
+                    <div class="flex gap-2 flex-1 justify-end">
+                        <button @click="openDeliveryModal()"
+                            class="px-4 py-2.5 rounded-xl text-[12px] font-black flex justify-center items-center gap-1.5 transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-0.5">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                            Delivery
+                        </button>
 
-                    <!-- Delivery Request Button -->
-                    <button @click="openDeliveryModal()"
-                        class="w-full mt-2 py-3 rounded-2xl text-[13px] font-black flex justify-center items-center gap-2 transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-0.5">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                        </svg>
-                        New Delivery Request
-                    </button>
+                        <button @click="if(!selectedCustomer) { alert('Please select a customer first.'); return; } if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }" 
+                            :disabled="cart.length === 0"
+                            :class="cart.length === 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5'"
+                            class="px-4 py-2.5 rounded-xl text-[12px] font-black flex justify-center items-center gap-1.5 transition-all duration-300">
+                            Checkout
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -492,7 +581,7 @@
 
         <!-- ===================== Order Success Modal ===================== -->
         <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
-            x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderId);"
+            x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate;"
             x-show="show" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 70;">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity></div>
             
@@ -529,7 +618,7 @@
                 </div>
 
                 <div class="flex flex-col gap-3">
-                    <button @click="printReceipt(orderId)"
+                    <button @click="printReceipt(orderNum)"
                         class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[14px] font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                         Print Thermal Bill
@@ -706,7 +795,9 @@
 
     <script>
         window.posSystemData = {
-            timeSlots: @json($timeSlots)
+            timeSlots: @json($timeSlots),
+            extras: @json($extras),
+            turnaroundTypes: @json($turnaroundTypes)
         };
         
         window.posSystem = function() {
@@ -715,7 +806,10 @@
                 allCategories: @json($categories),
                 allCustomers: @json($customers),
                 allCustomerPackages: @json($customerPackages),
-                activeCategory: null,
+                allExtras: window.posSystemData.extras,
+                allTurnaroundTypes: window.posSystemData.turnaroundTypes,
+                activeCategory: @json(count($categories) > 0 ? $categories[0]->id : null),
+                activeSubcategory: null,
                 searchQuery: '',
                 customerSearch: '',
                 filteredCustomers: [],
@@ -741,20 +835,63 @@
                         this.allCustomers.push(customer);
                         this.selectCustomer(customer);
                     };
+                    // Auto-select first parent category and first sub-category on load
+                    this.$nextTick(() => {
+                        const parentCats = this.allCategories.filter(c => !c.parent_id);
+                        if (parentCats.length > 0) {
+                            this.activeCategory = parentCats[0].id;
+                            if (parentCats[0].children && parentCats[0].children.length > 0) {
+                                this.activeSubcategory = parentCats[0].children[0].id;
+                            }
+                        }
+                    });
                 },
 
-                                get filteredServices() {
+                get filteredCategories() {
+                    let filtered = this.allCategories;
+                    // Only show parent categories in the main bar
+                    filtered = filtered.filter(c => !c.parent_id);
+                    return filtered;
+                },
+
+                get activeCategoryData() {
+                    if (this.activeCategory && this.activeCategory !== 'uncategorized') {
+                        return this.allCategories.find(c => c.id === this.activeCategory);
+                    }
+                    return null;
+                },
+
+                get filteredServices() {
                     let filtered = this.allServices;
                     
                     if (this.activeCategory === 'uncategorized') {
                         filtered = filtered.filter(s => s.category_id === null);
                     } else if (this.activeCategory !== null) {
-                        filtered = filtered.filter(s => s.category_id === this.activeCategory);
+                        if (this.activeSubcategory) {
+                            // Show services in the selected sub-category AND services directly under the parent
+                            filtered = filtered.filter(s => 
+                                s.category_id === this.activeSubcategory || 
+                                s.category_id === this.activeCategory
+                            );
+                        } else {
+                            const cat = this.activeCategoryData;
+                            if (cat) {
+                                const validIds = [cat.id];
+                                if (cat.children) {
+                                    cat.children.forEach(child => validIds.push(child.id));
+                                }
+                                filtered = filtered.filter(s => validIds.includes(s.category_id));
+                            } else {
+                                filtered = filtered.filter(s => s.category_id === this.activeCategory);
+                            }
+                        }
                     }
                     
                     if (this.searchQuery) {
-                        filtered = filtered.filter(s => s.name.toLowerCase().includes(this.searchQuery.toLowerCase()));
+                        const q = this.searchQuery.toLowerCase();
+                        filtered = filtered.filter(s => s.name.toLowerCase().includes(q));
                     }
+                    
                     return filtered;
                 },
 
@@ -826,8 +963,36 @@
                 },
 
                 addToCart(service) {
-                    let existing = this.cart.find(i => i.id === service.id);
-                    if (existing) { existing.qty += 1; } else { this.cart.push({ ...service, qty: 1 }); }
+                    let defaultPrice = parseFloat(service.base_price);
+                    let existing = this.cart.find(i => i.id === service.id && !i.is_special && parseFloat(i.base_price) === defaultPrice);
+                    if (existing) { 
+                        existing.qty += 1; 
+                    } else { 
+                        let defaultTt = this.allTurnaroundTypes.find(tt => tt.is_default);
+                        this.cart.push({ 
+                            ...service, 
+                            qty: 1,
+                            base_price: defaultPrice,
+                            turnaround_type_id: defaultTt ? defaultTt.id : null,
+                            turnaround_multiplier: defaultTt ? defaultTt.multiplier : 1,
+                            is_special: false
+                        }); 
+                    }
+                },
+
+                getCategoryString(serviceId) {
+                    let service = this.allServices.find(s => s.id === serviceId) || this.cart.find(i => i.id === serviceId);
+                    if (!service) return '';
+                    let cId = service.category_id;
+                    for (let cat of this.allCategories) {
+                        if (cat.id == cId) return cat.name;
+                        if (cat.children) {
+                            for (let sub of cat.children) {
+                                if (sub.id == cId) return cat.name + ' > ' + sub.name;
+                            }
+                        }
+                    }
+                    return '';
                 },
 
                 removeFromCart(index) { this.cart.splice(index, 1); },
@@ -839,8 +1004,36 @@
                     else this.removeFromCart(index);
                 },
 
+                getItemTotal(item) {
+                    let base = parseFloat(item.base_price || 0) * (parseFloat(item.qty) || 0);
+                    
+                    let turnaroundCharge = 0;
+                    if (item.turnaround_type_id) {
+                        let tt = this.allTurnaroundTypes.find(t => t.id == item.turnaround_type_id);
+                        if (tt) {
+                            if (tt.markup_type === 'percentage') {
+                                turnaroundCharge = base * (parseFloat(tt.markup_value) / 100);
+                            } else {
+                                turnaroundCharge = parseFloat(tt.markup_value) * (parseFloat(item.qty) || 0);
+                            }
+                        }
+                    }
+
+                    let extrasTotal = 0;
+                    if (item.selected_extras && item.selected_extras.length > 0) {
+                        item.selected_extras.forEach(selEx => {
+                            let extra = this.allExtras.find(e => e.id == selEx.id);
+                            if (extra) {
+                                extrasTotal += parseFloat(extra.price) * (parseFloat(selEx.qty) || 1);
+                            }
+                        });
+                    }
+                    
+                    return base + turnaroundCharge + extrasTotal;
+                },
+
                 get subtotal() {
-                    return this.cart.reduce((sum, item) => sum + (item.base_price * (parseFloat(item.qty) || 0)), 0);
+                    return this.cart.reduce((sum, item) => sum + this.getItemTotal(item), 0);
                 },
                 get total() {
                     const discount = this.subtotal * ((parseFloat(this.discountPercentage) || 0) / 100);
@@ -932,7 +1125,7 @@
                                     cart: data.cart
                                 }
                             }));
-                            printOrderChit(data.order_id);
+                            printOrderChit(data.order_number);
                             this.cart = [];
                             this.selectedCustomer = null;
                             this.paymentMode = 'pay_on_pickup';

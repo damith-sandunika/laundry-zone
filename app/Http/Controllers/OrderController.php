@@ -45,6 +45,46 @@ class OrderController extends Controller
         ]));
     }
 
+    public function edit(Order $order)
+    {
+        $order->load('items.serviceType', 'customer');
+        $services = \App\Models\ServiceType::where('is_active', true)->get();
+        
+        $categories = \App\Models\ServiceCategory::with(['children' => function($q) {
+            $q->where('is_active', true)->orderBy('order_index');
+        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        
+        $cartItems = $order->items->map(function($item) {
+            return [
+                'service_type_id' => $item->service_type_id,
+                'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
+                'base_price' => $item->unit_price,
+                'qty' => $item->quantity,
+            ];
+        })->toArray();
+        
+        if (empty($cartItems) && $order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
+            $parsedCart = json_decode($order->deliveryAppointment->cart_json, true);
+            if (is_array($parsedCart)) {
+                $cartItems = array_map(function($i) {
+                    $service = $i['service'] ?? $i;
+                    $sId = $service['id'] ?? $service['service_id'] ?? $service['service_type_id'] ?? null;
+                    return [
+                        'service_type_id' => $sId,
+                        'name' => $service['name'] ?? $service['item_description'] ?? 'Item',
+                        'base_price' => $service['base_price'] ?? $service['unit_price'] ?? 0,
+                        'qty' => $i['quantity'] ?? $i['qty'] ?? 1,
+                    ];
+                }, $parsedCart);
+            }
+        }
+        
+        $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
+        $dispatch = (object)['order' => $order, 'order_id' => $order->id];
+
+        return view('workshop.finalize_bill', compact('dispatch', 'services', 'categories', 'cartItems', 'minimumDeliveryCost'));
+    }
+
     public function index(Request $request)
     {
         $branchId = auth()->user()->branch_id;
@@ -54,6 +94,8 @@ class OrderController extends Controller
         $paymentReady = $request->input('payment_ready');
 
         $filterBranchId = $request->input('branch_id');
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop', 'deliveryAppointment', 'paymentTransactions'])
             ->orderBy('created_at', 'desc');
@@ -69,6 +111,14 @@ class OrderController extends Controller
 
         if ($status) {
             $query->where('status', $status);
+        }
+
+        if ($startDate) {
+            $query->whereDate('created_at', '>=', $startDate);
+        }
+
+        if ($endDate) {
+            $query->whereDate('created_at', '<=', $endDate);
         }
 
         if ($isOnline) {
@@ -293,8 +343,8 @@ class OrderController extends Controller
     public function showByNumber($orderNumber)
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
-        $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment']);
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $order->load(['customer', 'items.serviceType', 'items.turnaroundType', 'items.extras.extra', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment', 'correctionRequests.requestedBy', 'correctionRequests.approvedBy']);
+        $branchId = auth()->user()->branch_id ?? 1;
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 
         $pickmeCost = \App\Models\Expense::where('category', 'PickMe')
@@ -306,7 +356,11 @@ class OrderController extends Controller
                 }
             })->sum('amount');
 
-        return view('orders.show', compact('order', 'cubbies', 'pickmeCost'));
+        $categories = \App\Models\ServiceCategory::with(['services' => function($q) {
+            $q->where('is_active', true);
+        }])->orderBy('name')->get();
+
+        return view('orders.show', compact('order', 'cubbies', 'pickmeCost', 'categories'));
     }
 
     public function printBill(Order $order)
@@ -456,7 +510,7 @@ class OrderController extends Controller
             if ($request->expectsJson() || $request->ajax()) {
                 $payload = ['success' => true, 'message' => 'Status updated successfully!'];
                 if ($request->status === 'delivered') {
-                    $payload['print_bill_id'] = $order->id;
+                    $payload['print_bill_id'] = $order->order_number;
                 }
                 return response()->json($payload);
             }
@@ -464,7 +518,7 @@ class OrderController extends Controller
             if ($request->status === 'delivered') {
                 return redirect()->back()
                     ->with('success', 'Order delivered successfully!')
-                    ->with('print_bill_id', $order->id);
+                    ->with('print_bill_id', $order->order_number);
             }
 
             return redirect()->back()->with('success', 'Status updated successfully!');
@@ -486,7 +540,7 @@ class OrderController extends Controller
             'password' => 'required|string',
         ]);
 
-        $admins = User::whereIn('role', ['admin', 'super_admin'])->get();
+        $admins = User::whereIn('role', ['admin', 'super_admin', 'branch_admin', 'staff'])->get();
         $authorized = false;
         foreach ($admins as $admin) {
             if (\Hash::check($request->password, $admin->password)) {
@@ -639,24 +693,9 @@ public function bulkStatus(Request $request)
         });
 
         // Status-specific notifications - sent ONCE after transaction succeeds
-        $commService = new \App\Services\CommunicationService();
         $orders = Order::whereIn('id', $request->order_ids)->get();
         foreach ($orders as $order) {
-            if ($request->status === 'done') {
-                $commService->sendOrderReady($order);
-            } elseif ($request->status === 'delivered') {
-                $commService->sendOrderDelivered($order);
-            } elseif ($request->status === 'dispatched_to_workshop') {
-                $commService->sendOrderDispatchedToWorkshop($order);
-            } elseif ($request->status === 'processing') {
-                $commService->sendOrderProcessing($order);
-            } elseif ($request->status === 'returned_from_workshop') {
-                $commService->sendOrderReturnedFromWorkshop($order);
-            } elseif ($request->status === 'completed') {
-                $commService->sendOrderCompleted($order);
-            } elseif ($request->status === 'cancelled') {
-                $commService->sendOrderCancelled($order);
-            }
+            $this->triggerNotifications($order, $request->status);
         }
 
         return response()->json([
@@ -781,11 +820,6 @@ public function bulkStatus(Request $request)
             return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
 
         } else {
-            // PickMe
-            if ($order->paid_amount < $order->total) {
-                return response()->json(['success' => false, 'message' => 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.'], 403);
-            }
-
             \App\Models\Expense::create([
                 'branch_id' => $branchId,
                 'amount' => $request->pickme_cost,
@@ -794,6 +828,24 @@ public function bulkStatus(Request $request)
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
             ]);
+
+            $amountToPay = $order->total - $order->paid_amount;
+            if ($amountToPay > 0) {
+                $paymentMethod = $request->input('payment_method', 'cash');
+                \App\Models\PaymentTransaction::create([
+                    'order_id'       => $order->id,
+                    'amount'         => $amountToPay,
+                    'payment_method' => $paymentMethod,
+                    'created_by'     => auth()->id(),
+                    'collected_from_rider_at' => now(), // Auto-collected per user request
+                    'status'         => 'completed',
+                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                ]);
+                $order->update([
+                    'paid_amount' => $order->total,
+                    'payment_status' => 'paid',
+                ]);
+            }
 
             if ($appointment) {
                 $appointment->update(['status' => 'delivered']);
@@ -810,19 +862,26 @@ public function bulkStatus(Request $request)
                 'note' => 'Delivered via PickMe',
             ]);
 
+            // Send delivery completed notification
+            try {
+                $commService = new \App\Services\CommunicationService();
+                $commService->sendDeliveryCompleted($order);
+            } catch (\Exception $e) {
+                \Log::error('Delivery notification failed (Order PickMe): ' . $e->getMessage());
+            }
+
             return response()->json(['success' => true, 'status' => 'completed']);
         }
     }
-
     private function triggerNotifications(Order $order, string $status)
     {
         try {
             $commService = new \App\Services\CommunicationService();
             \Log::info('Triggering notification for status: ' . $status);
-
+            
             $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
             $isCollection = false;
-
+            
             if (! $order->is_delivery_order && $dispatch && $dispatch->branch_id !== $dispatch->workshop_branch_id) {
                 $isCollection = true;
             }

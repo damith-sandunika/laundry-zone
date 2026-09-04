@@ -104,7 +104,7 @@ class CustomerController extends Controller
         if (! in_array(auth()->user()->role, ['admin', 'super_admin', 'branch_admin'])) {
             abort(403, 'Unauthorized action.');
         }
-
+        
         try {
             $customer->delete();
             return redirect()->route('customers.index')->with('success', 'Customer deleted.');

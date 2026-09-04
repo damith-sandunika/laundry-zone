@@ -85,9 +85,9 @@
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;{{ $appt->status === 'cancelled' ? 'opacity:0.7;background:#fff5f5;' : '' }}" onmouseover="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '0.85' }}'" onmouseout="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '1' }}'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id && $appt->order)
-                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">{{ $appt->order->order_number ?? '#' . str_pad($appt->id, 4, '0', STR_PAD_LEFT) }}</a>
+                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ $appt->order->order_number ?? $appt->id }}</a>
                                     @else
-                                        <div style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }}">{{ $appt->order_number ?? '#' . str_pad($appt->id, 4, '0', STR_PAD_LEFT) }}</div>
+                                        <div style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }}">#{{ $appt->id }}</div>
                                     @endif
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
                                         <span style="font-weight:700;color:#0f172a;">{{ $appt->customer->name ?? 'Unknown' }}</span>
@@ -148,12 +148,12 @@
                                                 Reject
                                             </button>
                                         @elseif($appt->status === 'confirmed')
-                                            <div x-data="{ deliveryMethod: 'in_house' }" style="display:flex;gap:10px;align-items:center;">
+                                            <div x-data="{ deliveryMethod: 'pickme_flash' }" style="display:flex;gap:10px;align-items:center;">
                                                 <form method="POST" action="{{ route('delivery.assignRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                     @csrf
                                                     <select x-model="deliveryMethod" name="delivery_method" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
-                                                        <option value="in_house">In-house Rider</option>
                                                         <option value="pickme_flash">PickMe</option>
+                                                        <option value="in_house">In-house Rider</option>
                                                     </select>
 
                                                     <select x-show="deliveryMethod === 'in_house'" name="rider_id" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
@@ -216,16 +216,15 @@
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id && $appt->order)
-                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ str_pad($appt->id, 5, '0', STR_PAD_LEFT) }}</a>
+                                        <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ $appt->order->order_number ?? $appt->id }}</a>
                                     @else
-                                        <div style="font-size:13px;font-weight:800;color:#1d4ed8;">{{ $appt->order_number ?? '#' . str_pad($appt->id, 4, '0', STR_PAD_LEFT) }}</div>
-                                        <div style="font-size:11px;font-weight:600;color:#64748b;margin-top:2px;">{{ $appt->pickup_scheduled_at->format('d M, h:i A') }}</div>
+                                        <div style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }}">#{{ $appt->id }}</div>
                                     @endif
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
                                         <span style="font-weight:700;color:#0f172a;">{{ $appt->customer->name ?? 'Unknown' }}</span>
                                         <span style="font-size:11px;color:#64748b;font-weight:600;">{{ $appt->contact_phone }}</span>
                                     </div>
-                                    @if($appt->order_id)
+                                    @if($appt->order_id && $appt->order)
                                         <div style="margin-top:4px;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;">
                                             Order: ORD-{{ str_pad($appt->order_id, 4, '0', STR_PAD_LEFT) }}
                                         </div>
@@ -288,18 +287,24 @@
                                             <form method="POST" action="{{ route('delivery.assignDeliveryRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                 @csrf
                                                 <input type="hidden" name="order_id" value="{{ $appt->order_id }}">
-                                                <select name="rider_id" required onchange="this.value === 'pickme_flash' ? this.nextElementSibling.style.display = 'block' : this.nextElementSibling.style.display = 'none'" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
+                                                <select name="rider_id" required onchange="this.parentElement.querySelector('.pickme_fields').style.display = this.value === 'pickme_flash' ? 'block' : 'none';" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
+                                                    <option value="pickme_flash">PickMe / Flash</option>
                                                     <option value="">Select Rider</option>
-                                                    @if($order && $order->paid_amount < $order->total)
-                                                        <option value="pickme_flash" disabled title="Requires full payment">PickMe / Flash (Requires Full Payment)</option>
-                                                    @else
-                                                        <option value="pickme_flash">PickMe / Flash</option>
-                                                    @endif
                                                     @foreach($riders as $rider)
                                                         <option value="{{ $rider->id }}">{{ $rider->name }}</option>
                                                     @endforeach
                                                 </select>
-                                                <input type="number" name="pickme_flash_cost" placeholder="Cost (Rs)" style="display:none;padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:70px;">
+                                                <div class="pickme_fields" style="display:block; margin-top:4px;">
+                                                    <input type="number" name="pickme_flash_cost" placeholder="Cost (Rs)" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:70px; margin-right: 4px;">
+                                                    @if($order && $order->paid_amount < $order->total)
+                                                    <div style="margin-top:4px;font-size:10px;font-weight:700;color:#334155;">Balance: Rs. {{ number_format($order->total - $order->paid_amount, 2) }}</div>
+                                                    <select name="payment_method" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:90px;margin-top:4px;">
+                                                        <option value="cash">Cash</option>
+                                                        <option value="card">Card</option>
+                                                        <option value="bank_transfer">Bank</option>
+                                                    </select>
+                                                    @endif
+                                                </div>
                                                 <button type="submit" style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">
                                                     Assign
                                                 </button>

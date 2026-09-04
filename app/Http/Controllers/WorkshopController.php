@@ -43,11 +43,11 @@ class WorkshopController extends Controller
             'dispatched_to_workshop_at' => now(),
         ]);
 
-        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
+        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $request->workshop_branch_id)->get();
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Order Dispatched from Branch: #' . $order->order_number, route('workshop.dashboard'), 'branch_dispatch'));
 
         $commService = new CommunicationService();
-        $commService->sendOrderDispatchedToWorkshop($order);
+        // $commService->sendOrderDispatchedToWorkshop($order);
 
         return redirect()->back()->with('success', 'Order dispatched to workshop successfully.');
     }
@@ -83,12 +83,12 @@ class WorkshopController extends Controller
             ]);
         }
 
-        $workshopAdmins = \App\Models\User::where('role', 'workshop_admin')->where('branch_id', $request->workshop_branch_id)->get();
+        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $request->workshop_branch_id)->get();
         \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification(count($orders) . ' Orders Dispatched from Branch', route('workshop.dashboard'), 'branch_dispatch'));
 
         $commService = new CommunicationService();
         foreach ($orders as $order) {
-            $commService->sendOrderDispatchedToWorkshop($order);
+            // $commService->sendOrderDispatchedToWorkshop($order);
         }
 
         return redirect()->back()->with('success', count($orders).' orders dispatched to workshop.');
@@ -104,6 +104,15 @@ class WorkshopController extends Controller
         $activeSession = \App\Models\RegisterSession::where('branch_id', $branchId)
             ->where('status', 'open')
             ->first();
+
+        $suggestedOpeningCash = 0;
+        if (!$activeSession) {
+            $lastSession = \App\Models\RegisterSession::where('branch_id', $branchId)
+                ->where('status', 'closed')
+                ->orderBy('closed_at', 'desc')
+                ->first();
+            $suggestedOpeningCash = $lastSession ? $lastSession->closing_cash : 0;
+        }
 
         $currentBalance = 0;
         $cashBalance = 0;
@@ -158,7 +167,12 @@ class WorkshopController extends Controller
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
-            $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged;
+            // Bank deposits made during the shift
+            $bankDepositsLogged = \App\Models\BankDeposit::where('branch_id', $branchId)
+                ->where('created_at', '>=', $activeSession->opened_at)
+                ->sum('amount');
+
+            $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged - $bankDepositsLogged;
             $currentBalance = $cashBalance;
             $totalPaymentsCollected = $cashCollected + $cardPaymentsAmount + $bankTransfers;
 
@@ -340,10 +354,13 @@ class WorkshopController extends Controller
 
         // Recent Dispatches (equivalent to active orders)
         $recentOrders = WorkshopDispatch::with(['order.customer', 'branch'])
+            ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
+            ->select('workshop_dispatches.*')
             ->where('workshop_branch_id', $branchId)
-            ->whereIn('status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])
-            ->orderBy('created_at', 'desc')
-            ->take(8)
+            ->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])
+            ->orderByRaw('orders.due_date IS NULL')
+            ->orderBy('orders.due_date', 'asc')
+            ->take(50)
             ->get();
 
         // Low stock items
@@ -355,7 +372,16 @@ class WorkshopController extends Controller
         $allInventory = \App\Models\InventoryItem::where('branch_id', $branchId)->get();
 
         // Fetch Laundry/Branch Name
-        $branchName = \App\Models\Branch::find($branchId)->name ?? 'Workshop';
+        $currentBranch = \App\Models\Branch::find($branchId);
+        $branchName = $currentBranch->name ?? 'Workshop';
+
+        // Fetch Branch Staff for assignment when opening shift
+        $branchStaff = \App\Models\User::where('branch_id', $branchId)->where('role', 'staff')->get();
+        
+        $activeAttendances = collect();
+        if ($activeSession) {
+            $activeAttendances = \App\Models\Attendance::where('register_session_id', $activeSession->id)->get()->keyBy('user_id');
+        }
 
         // ── Chart Data ──
         $todayLabels = [];
@@ -399,7 +425,7 @@ class WorkshopController extends Controller
             'monthly' => ['labels' => $monthlyLabels, 'pending' => $monthlyPending, 'delivered' => $monthlyDelivered],
         ];
 
-        return view('workshop.dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'branchName', 'chartData'));
+        return view('workshop.dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'suggestedOpeningCash', 'branchName', 'chartData', 'currentBranch', 'branchStaff', 'activeAttendances'));
     }
 
     // ─── Workshop Admin: Operations ───
@@ -409,9 +435,12 @@ class WorkshopController extends Controller
         $branchId = $user->branch_id;
 
         $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'order.items.serviceType', 'branch', 'dispatchedBy'])
+            ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
+            ->select('workshop_dispatches.*')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
-            ->whereNotIn('status', ['received_at_branch', 'returned_to_branch'])
-            ->orderByDesc('dispatched_at')
+            ->whereNotIn('workshop_dispatches.status', ['received_at_branch', 'returned_to_branch'])
+            ->orderByRaw('orders.due_date IS NULL')
+            ->orderBy('orders.due_date', 'asc')
             ->get();
 
         $completedToday = WorkshopDispatch::whereIn('status', ['received_at_branch', 'returned_to_branch'])
@@ -445,7 +474,7 @@ class WorkshopController extends Controller
 
             try {
                 $commService = new CommunicationService();
-                $commService->sendOrderProcessing($dispatch->order);
+                // $commService->sendOrderProcessing($dispatch->order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (receive): ' . $e->getMessage());
             }
@@ -465,6 +494,8 @@ class WorkshopController extends Controller
 
             $dispatch->update(['status' => 'processing']);
             $order->update(['status' => 'processing']);
+            
+
 
             try {
                 \App\Models\OrderStatusHistory::create([
@@ -479,12 +510,12 @@ class WorkshopController extends Controller
 
             try {
                 $commService = new CommunicationService();
-                $commService->sendOrderProcessing($order);
+                // $commService->sendOrderProcessing($order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (startProcessing): ' . $e->getMessage());
             }
 
-            return response()->json(['success' => true, 'status' => 'processing', 'order_id' => $order->id]);
+            return response()->json(['success' => true, 'status' => 'processing', 'order_number' => $order->order_number]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::startProcessing error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -539,12 +570,12 @@ class WorkshopController extends Controller
                 ]);
             }
 
-            $order->update(['status' => 'completed_at_workshop']);
+            $order->update(['status' => 'done']);
 
             try {
                 \App\Models\OrderStatusHistory::create([
                     'order_id'   => $order->id,
-                    'status'     => 'completed_at_workshop',
+                    'status'     => 'done',
                     'note'       => 'Completed at Workshop',
                     'changed_by' => auth()->id(),
                 ]);
@@ -552,11 +583,11 @@ class WorkshopController extends Controller
                 \Log::warning('OrderStatusHistory insert failed (complete): ' . $e->getMessage());
             }
 
-            // If this is a workshop walk-in, the order is now ready for customer pickup
-            if ($dispatch->branch_id === $dispatch->workshop_branch_id) {
+            // If this is a workshop walk-in (NOT a delivery order), send ready notification
+            if ($dispatch->branch_id === $dispatch->workshop_branch_id && !$order->is_delivery_order) {
                 try {
                     $commService = new CommunicationService();
-                    $commService->sendOrderReady($order);
+                    $commService->sendPosWalkinReady($order);
                 } catch (\Exception $e) {
                     \Log::error('Email notification failed (complete ready): ' . $e->getMessage());
                 }
@@ -587,7 +618,7 @@ class WorkshopController extends Controller
             $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
             
             $commService = new CommunicationService();
-            $commService->sendFinalizedBill($order);
+            // $commService->sendFinalizedBill($order);
             
             return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
@@ -628,22 +659,50 @@ class WorkshopController extends Controller
         return response()->json(['success' => true, 'message' => 'Payment approved. Order is now processing.']);
     }
 
-    public function finalizeBill(WorkshopDispatch $dispatch)
+    public function finalizeBill(string $order_number)
     {
-        $dispatch->load('order.items.serviceType');
+        $order = \App\Models\Order::where('order_number', $order_number)
+            ->with(['items.serviceType', 'customer', 'deliveryAppointment'])
+            ->firstOrFail();
+
+        $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
+            ->whereNotIn('status', ['received_at_branch'])
+            ->latest()
+            ->firstOrFail();
+
         $services = \App\Models\ServiceType::where('is_active', true)->get();
         
-        $cartItems = $dispatch->order->items->map(function($item) {
+        $categories = \App\Models\ServiceCategory::with(['children' => function($q) {
+            $q->where('is_active', true)->orderBy('order_index');
+        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        
+        $cartItems = $order->items->map(function($item) {
             return [
                 'service_type_id' => $item->service_type_id,
                 'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
                 'base_price' => $item->unit_price,
                 'qty' => $item->quantity,
             ];
-        });
+        })->toArray();
+        
+        if (empty($cartItems) && $order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
+            $parsedCart = json_decode($order->deliveryAppointment->cart_json, true);
+            if (is_array($parsedCart)) {
+                $cartItems = array_map(function($i) {
+                    $service = $i['service'] ?? $i;
+                    $sId = $service['id'] ?? $service['service_id'] ?? $service['service_type_id'] ?? null;
+                    return [
+                        'service_type_id' => $sId,
+                        'name' => $service['name'] ?? $service['item_description'] ?? 'Item',
+                        'base_price' => $service['base_price'] ?? $service['unit_price'] ?? 0,
+                        'qty' => $i['quantity'] ?? $i['qty'] ?? 1,
+                    ];
+                }, $parsedCart);
+            }
+        }
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.finalize_bill', compact('dispatch', 'services', 'cartItems', 'minimumDeliveryCost'));
+        return view('workshop.finalize_bill', compact('dispatch', 'order', 'services', 'categories', 'cartItems', 'minimumDeliveryCost'));
     }
 
     // ─── Workshop Admin: Return to branch (all order types) ───
@@ -671,7 +730,7 @@ class WorkshopController extends Controller
             }
 
             try {
-                $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin'])
+                $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin', 'staff'])
                     ->where('branch_id', $dispatch->branch_id)->get();
                 \Illuminate\Support\Facades\Notification::send(
                     $branchAdmins,
@@ -687,7 +746,7 @@ class WorkshopController extends Controller
 
             try {
                 $commService = new CommunicationService();
-                $commService->sendOrderReturnedFromWorkshop($order);
+                // $commService->sendOrderReturnedFromWorkshop($order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (returnToBranch): ' . $e->getMessage());
             }
@@ -740,11 +799,6 @@ class WorkshopController extends Controller
             return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
 
         } else {
-            // PickMe
-            if ($order->paid_amount < $order->total) {
-                return response()->json(['success' => false, 'message' => 'PickMe cannot be used for unpaid or partially paid orders. Customer must pay in full first.'], 403);
-            }
-
             \App\Models\Expense::create([
                 'branch_id' => $dispatch->workshop_branch_id,
                 'amount' => $request->pickme_cost,
@@ -753,6 +807,24 @@ class WorkshopController extends Controller
                 'expense_date' => now(),
                 'created_by' => auth()->id(),
             ]);
+
+            $amountToPay = $order->total - $order->paid_amount;
+            if ($amountToPay > 0) {
+                $paymentMethod = $request->input('payment_method', 'cash');
+                \App\Models\PaymentTransaction::create([
+                    'order_id'       => $order->id,
+                    'amount'         => $amountToPay,
+                    'payment_method' => $paymentMethod,
+                    'created_by'     => auth()->id(),
+                    'collected_from_rider_at' => now(), // Auto-collected per user request
+                    'status'         => 'completed',
+                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                ]);
+                $order->update([
+                    'paid_amount' => $order->total,
+                    'payment_status' => 'paid',
+                ]);
+            }
 
             if ($appointment) {
                 $appointment->update(['status' => 'delivered']);
@@ -770,10 +842,18 @@ class WorkshopController extends Controller
             ]);
             
             $dispatch->update([
-                'status' => 'returned_to_branch', // Terminate from workshop view
+                'status' => 'returned_to_branch',
                 'returned_by' => auth()->id(),
                 'returned_at' => now(),
             ]);
+
+            // Send delivery completed notification
+            try {
+                $commService = new \App\Services\CommunicationService();
+                $commService->sendDeliveryCompleted($order);
+            } catch (\Exception $e) {
+                \Log::error('Delivery notification failed (Workshop PickMe): ' . $e->getMessage());
+            }
 
             return response()->json(['success' => true, 'status' => 'completed']);
         }
@@ -822,9 +902,9 @@ class WorkshopController extends Controller
             $dispatch = WorkshopDispatch::find($id);
             if ($dispatch && $dispatch->order) {
                 if ($status === 'processing') {
-                    $commService->sendOrderProcessing($dispatch->order);
+                    // $commService->sendOrderProcessing($dispatch->order);
                 } elseif ($status === 'returned_to_branch') {
-                    $commService->sendOrderReturnedFromWorkshop($dispatch->order);
+                    // $commService->sendOrderReturnedFromWorkshop($dispatch->order);
                 }
             }
         }
@@ -850,7 +930,7 @@ class WorkshopController extends Controller
 
         // Send "Ready" notification
         $commService = new CommunicationService();
-        $commService->sendOrderReady($order);
+        $commService->sendCollectionOrderReady($order);
 
         return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
     }
@@ -893,7 +973,7 @@ class WorkshopController extends Controller
                 }
 
                 $order->update([
-                    'status'       => 'completed',
+                    'status'       => 'delivered',
                     'delivered_at' => now(),
                 ]);
 
@@ -901,7 +981,7 @@ class WorkshopController extends Controller
                 try {
                     \App\Models\OrderStatusHistory::create([
                         'order_id'   => $order->id,
-                        'status'     => 'completed',
+                        'status'     => 'delivered',
                         'note'       => 'Handed over to customer at workshop',
                         'changed_by' => auth()->id(),
                     ]);
@@ -932,12 +1012,12 @@ class WorkshopController extends Controller
             try {
                 $order = $order->fresh();
                 $commService = new CommunicationService();
-                $commService->sendOrderCompleted($order);
+                $commService->sendPosWalkinCompleted($order);
             } catch (\Exception $e) {
                 \Log::error('Email notification failed (handover): ' . $e->getMessage());
             }
 
-            return response()->json(['success' => true, 'order_id' => $order->id]);
+            return response()->json(['success' => true, 'order_id' => $order->id, 'order_number' => $order->order_number]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::handover error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

@@ -106,7 +106,7 @@ class PackageController extends Controller
     {
         $request->validate(['admin_password' => 'required']);
 
-        $admins = User::whereIn('role', ['branch_admin', 'super_admin'])
+        $admins = User::whereIn('role', ['branch_admin', 'super_admin', 'staff'])
             ->where('branch_id', $customerPackage->branch_id)
             ->get();
 

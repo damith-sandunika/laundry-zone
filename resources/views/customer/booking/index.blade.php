@@ -38,7 +38,7 @@
         .leaflet-tile-pane { filter: saturate(1.1) brightness(1.02); }
     </style>
 
-    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }}, {{ Js::from($deliveryRanges) }}, {{ Js::from($workshops) }})" x-init="initData()">
+    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }}, {{ Js::from($deliveryRanges) }}, {{ Js::from($workshops) }}, {{ Js::from($turnaroundTypes) }}, {{ Js::from($extras) }}, {{ $shopLat }}, {{ $shopLng }})" x-init="initData()">
         
         <!-- Wizard Progress Bar -->
         <div class="mb-8">
@@ -77,126 +77,233 @@
                 </div>
             @endif
 
-            <!-- STEP 2: Services Selection -->
-            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                    <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
-                        <span class="bg-blue-50 text-blue-600 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-shirt"></i></span>
-                        Select Services
-                    </h3>
-                    <p class="text-sm text-slate-500 mb-6 font-medium">Choose the items you want us to clean.</p>
+            
+            <!-- Step 3: Services (Drill-Down UI) -->
+            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms class="pb-24">
+                <div class="mb-6">
+                    <h3 class="text-xl font-semibold text-slate-800">Select Services</h3>
+                    <p class="text-sm text-slate-500 mt-1">Navigate through categories to add items to your cart.</p>
+                </div>
+
+                <!-- Drill Down Container -->
+                <div class="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col min-h-[500px]">
                     
-                    <!-- Category Slider with 2 rows + arrows -->
-                    <div x-data="{
-                        sliderScrollLeft() { $refs.catSlider.scrollBy({ left: -280, behavior: 'smooth' }); },
-                        sliderScrollRight() { $refs.catSlider.scrollBy({ left: 280, behavior: 'smooth' }); }
-                    }" class="relative mb-4 group">
-
-                        <!-- Left Arrow -->
-                        <button type="button" @click="sliderScrollLeft()"
-                            class="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition-all opacity-0 group-hover:opacity-100 -ml-3">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
+                    <!-- Header / Navigation Bar -->
+                    <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                        <!-- Back Button -->
+                        <button type="button" x-show="currentViewLevel > 0" @click="goBackLevel()" class="text-slate-600 hover:text-slate-900 flex items-center gap-2 text-sm font-medium transition-colors">
+                            <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-
-                        <!-- 2-row slider grid -->
-                        <div x-ref="catSlider"
-                            class="grid grid-rows-2 grid-flow-col gap-2.5 overflow-x-hidden scroll-smooth w-full py-1 px-1">
-                            <template x-for="(category, index) in categories" :key="category.id">
-                                <button type="button"
-                                    @click="expandedCategory = (expandedCategory === category.id ? null : category.id)"
-                                    class="relative rounded-xl overflow-hidden shadow-sm transition-all group/cat w-32 h-16 shrink-0 border-2"
-                                    :class="expandedCategory === category.id
-                                        ? 'border-blue-500 ring-2 ring-blue-400 scale-95 shadow-md'
-                                        : 'border-transparent hover:shadow-md'">
-
-                                    <!-- Image or placeholder -->
-                                    <template x-if="category.image_path">
-                                        <img :src="'/' + category.image_path" class="w-full h-full object-cover transition-transform duration-500 group-hover/cat:scale-110" alt="">
-                                    </template>
-                                    <template x-if="!category.image_path">
-                                        <div class="w-full h-full bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center">
-                                            <i class="fa-solid fa-basket-shopping text-xl text-slate-300"></i>
-                                        </div>
-                                    </template>
-
-                                    <!-- Overlay label -->
-                                    <div class="absolute inset-0 bg-gradient-to-t from-slate-900/80 via-slate-900/10 to-transparent flex items-end p-1.5">
-                                        <span class="text-white text-[10px] font-black leading-tight text-left drop-shadow-sm line-clamp-2" x-text="category.name"></span>
-                                    </div>
-
-                                    <!-- Check badge -->
-                                    <div x-show="expandedCategory === category.id"
-                                        class="absolute top-1.5 right-1.5 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-sm">
-                                        <i class="fa-solid fa-check text-[8px]"></i>
-                                    </div>
-                                </button>
-                            </template>
-                        </div>
-
-                        <!-- Right Arrow -->
-                        <button type="button" @click="sliderScrollRight()"
-                            class="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-8 h-8 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-slate-500 hover:text-blue-600 hover:bg-slate-50 transition-all opacity-0 group-hover:opacity-100 -mr-3">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
-                        </button>
+                        
+                        <!-- Title -->
+                        <div x-show="currentViewLevel === 0" class="text-sm font-semibold text-slate-800">All Categories</div>
+                        <div x-show="currentViewLevel === 1" class="text-sm font-semibold text-slate-800" x-text="selectedMainCategory?.name"></div>
+                        <div x-show="currentViewLevel === 2" class="text-sm font-semibold text-slate-800" x-text="selectedSubcategory?.name || selectedMainCategory?.name"></div>
                     </div>
 
-                    <!-- Services List for Selected Category (inline expansion) -->
-                    <div x-show="expandedCategory" x-collapse class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden mb-4">
-                        <template x-for="category in categories" :key="category.id">
-                            <div x-show="expandedCategory === category.id">
-                                <div class="p-4 sm:p-5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                                    <h4 class="font-black text-slate-800 text-base flex items-center gap-2">
-                                        <i class="fa-solid fa-list-check text-blue-600"></i>
-                                        <span x-text="category.name + ' Services'"></span>
-                                    </h4>
-                                    <button type="button" @click="expandedCategory = null" class="w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 text-slate-500 hover:bg-slate-300 hover:text-slate-700 transition-colors">
-                                        <i class="fa-solid fa-xmark text-sm"></i>
-                                    </button>
-                                </div>
-                                <div class="divide-y divide-slate-100">
-                                    <template x-for="service in category.services" :key="service.id">
-                                        <div class="flex items-center justify-between px-4 sm:px-6 py-2.5 sm:py-3 hover:bg-slate-50 transition-colors gap-2">
-                                            <div class="flex-1 min-w-0 pr-2">
-                                                <p class="font-bold text-slate-800 text-sm truncate" x-text="service.name"></p>
-                                                <p class="text-xs text-blue-600 font-extrabold">LKR <span x-text="service.base_price"></span></p>
-                                            </div>
-                                            <div class="flex items-center gap-2 bg-slate-100 rounded-lg p-1 border border-slate-200 shadow-sm shrink-0">
-                                                <button type="button" @click="removeFromCart(service)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-white text-slate-600 hover:text-red-500 shadow-sm transition-colors border border-slate-200">
-                                                    <i class="fa-solid fa-minus text-[10px]"></i>
-                                                </button>
-                                                <span class="font-black w-4 sm:w-5 text-center text-slate-800 text-xs sm:text-sm" x-text="getQuantity(service.id)"></span>
-                                                <button type="button" @click="addToCart(service)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded bg-blue-600 text-white hover:bg-blue-700 shadow-sm transition-colors border border-blue-700">
-                                                    <i class="fa-solid fa-plus text-[10px]"></i>
-                                                </button>
-                                            </div>
+                    <div class="p-5 flex-1 overflow-y-auto custom-scrollbar">
+                        <!-- Level 0: Main Categories Grid -->
+                        <div x-show="currentViewLevel === 0">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                                <template x-for="cat in categories" :key="cat.id">
+                                    <button type="button" @click="selectLevel1(cat)" class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center gap-3 border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
+                                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
+                                            <template x-if="cat.image_path">
+                                                <img :src="cat.image_path?.startsWith('http') ? cat.image_path : '/' + cat.image_path" class="w-12 h-12 object-contain mix-blend-multiply">
+                                            </template>
+                                            <template x-if="!cat.image_path">
+                                                <i class="fa-solid fa-shirt text-2xl opacity-60"></i>
+                                            </template>
                                         </div>
-                                    </template>
-                                    <div x-show="category.services.length === 0" class="text-sm font-bold text-slate-400 p-8 text-center bg-slate-50">
-                                        <i class="fa-solid fa-box-open text-3xl mb-3 text-slate-300 block"></i>
-                                        No services available in this category.
+                                        <span class="text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center" x-text="cat.name"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Level 1: Subcategories Grid -->
+                        <div x-show="currentViewLevel === 1">
+                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                                <template x-for="sub in currentSubcategories" :key="sub.id">
+                                    <button type="button" @click="selectLevel2(sub)" class="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all w-full group">
+                                        <div class="w-14 h-14 bg-slate-50 rounded-lg flex items-center justify-center p-2 group-hover:scale-105 transition-transform">
+                                            <template x-if="sub.image_path">
+                                                <img :src="sub.image_path?.startsWith('http') ? sub.image_path : '/' + sub.image_path" class="w-full h-full object-contain mix-blend-multiply">
+                                            </template>
+                                            <template x-if="!sub.image_path">
+                                                <i class="fa-solid fa-layer-group text-slate-300 text-xl group-hover:text-blue-400 transition-colors"></i>
+                                            </template>
+                                        </div>
+                                        <span class="text-xs font-bold text-slate-700 text-center leading-tight group-hover:text-blue-700" x-text="sub.name"></span>
+                                    </button>
+                                </template>
+                                <div x-show="currentSubcategories.length === 0" class="col-span-full py-12 text-center text-slate-500 text-sm font-medium">
+                                    No subcategories found.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Level 2: Services List -->
+                        <div x-show="currentViewLevel === 2" class="space-y-4">
+                            <template x-for="service in currentServices" :key="service.id">
+                                <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 flex gap-4 transition-all hover:border-blue-200 hover:shadow-md cursor-pointer group" @click="openQtyModal(service)">
+                                    <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 group-hover:scale-110 transition-transform">
+                                        <i class="fa-solid fa-jug-detergent"></i>
                                     </div>
+                                    <div class="flex-1">
+                                        <div class="font-bold text-slate-800 text-sm group-hover:text-blue-700 transition-colors" x-text="service.name"></div>
+                                        <div class="text-[10px] text-slate-500 font-medium mt-0.5 leading-tight" x-text="service.description || 'Professional cleaning'"></div>
+                                        <div class="flex items-center gap-2 mt-2">
+                                            <div class="text-blue-600 font-black text-sm">LKR <span x-text="service.base_price"></span></div>
+                                            <div class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></div>
+                                        </div>
+                                    </div>
+                                    <div class="shrink-0 flex items-center">
+                                        <button type="button" class="w-8 h-8 rounded-full bg-blue-50 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors flex items-center justify-center shadow-sm">
+                                            <i class="fa-solid fa-plus text-xs"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </template>
+                            <div x-show="currentServices.length === 0" class="py-12 text-center text-slate-500 text-sm font-medium">
+                                No services found in this category.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Notes -->
+                <div class="mt-6">
+                    <label class="block text-sm font-medium text-slate-700 mb-2">Special Instructions (Optional)</label>
+                    <textarea name="notes" id="booking_notes" rows="2" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder-slate-400" placeholder="E.g., Please fold shirts carefully..."></textarea>
+                </div>
+            </div>
+
+            <!-- Fixed Bottom Cart Bar -->
+            <div x-show="step === 3" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+                
+                <!-- Expandable Cart List -->
+                <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
+                    <div class="max-w-4xl mx-auto p-4 space-y-2">
+                        <h4 class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">Your Cart Items</h4>
+                        <template x-for="(item, index) in cart" :key="item.cart_key">
+                            <div class="flex items-center justify-between bg-white p-3 rounded-md border border-slate-200 shadow-sm">
+                                <div class="flex-1 min-w-0 pr-4">
+                                    <div class="font-medium text-sm text-slate-800 truncate" x-text="item.name"></div>
+                                    <div class="text-xs font-medium text-blue-600 mt-1">LKR <span x-text="item.base_price"></span> x <span x-text="item.qty"></span> = LKR <span x-text="(parseFloat(item.base_price) * item.qty).toFixed(2)"></span></div>
+                                </div>
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <div class="flex items-center bg-slate-50 rounded-md p-1 border border-slate-200">
+                                        <button type="button" @click="updateCartQty(index, -1)" class="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-600 shadow-sm hover:text-red-500 border border-slate-200"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                        <span class="w-8 text-center text-xs font-semibold text-slate-800" x-text="item.qty"></span>
+                                        <button type="button" @click="updateCartQty(index, 1)" class="w-7 h-7 flex items-center justify-center rounded bg-white text-slate-600 shadow-sm hover:text-blue-600 border border-slate-200"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                    </div>
+                                    <button type="button" @click="removeFromCartByIndex(index)" class="text-red-400 hover:text-red-600 p-2"><i class="fa-solid fa-trash-can"></i></button>
                                 </div>
                             </div>
                         </template>
-                    </div>
-
-                    <div class="mt-6 pt-6 border-t border-slate-100">
-                        <label class="block text-sm font-bold text-slate-700 mb-2">Special Instructions (Optional)</label>
-                        <textarea name="notes" rows="2" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all font-semibold placeholder-slate-400" placeholder="E.g., Please fold shirts carefully..."></textarea>
+                        <div x-show="cart.length === 0" class="text-center p-4 text-sm font-bold text-slate-400">Cart is empty</div>
                     </div>
                 </div>
-                
-                <div class="flex justify-between items-center mt-6">
-                    <div class="text-lg font-black text-slate-800">
-                        Total: <span class="text-blue-600">LKR <span x-text="totalPrice"></span></span>
-                        <div x-show="totalPrice < minLimit" class="text-[10px] text-red-500 font-bold mt-1">Min. order: LKR <span x-text="minLimit"></span></div>
+
+                <!-- Main Bar -->
+                <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-4 cursor-pointer" @click="isCartExpanded = !isCartExpanded">
+                        <div class="w-10 h-10 rounded-md bg-slate-100 border border-slate-200 text-slate-700 flex items-center justify-center relative shadow-sm">
+                            <i class="fa-solid fa-basket-shopping"></i>
+                            <span x-show="cart.length > 0" class="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 text-white text-[10px] font-semibold rounded-full flex items-center justify-center shadow-sm" x-text="cart.reduce((sum, i) => sum + i.qty, 0)"></span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-medium text-slate-500 flex items-center gap-1">Cart Total <i class="fa-solid text-[10px] ml-1 transition-transform" :class="isCartExpanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i></div>
+                            <div class="text-lg font-semibold text-slate-800">LKR <span x-text="baseCartTotal.toFixed(2)"></span></div>
+                        </div>
                     </div>
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <button type="button" @click="goToStep(1)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
+                    
+                    <div class="flex items-center gap-3">
+                        <button type="button" @click="goToStep(2)" class="hidden sm:flex text-slate-500 hover:text-slate-800 font-medium items-center gap-2 px-4 py-2 border border-transparent hover:border-slate-200 rounded-md transition-all">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <button type="button" @click="goToStep(3)" :disabled="totalPrice < minLimit || cart.length === 0" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
-                            Next Step <i class="fa-solid fa-arrow-right"></i>
+                        <button type="button" @click="openGlobalCheckoutModal()" :disabled="cart.length === 0" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-2.5 rounded-md font-semibold transition-colors shadow-sm flex items-center gap-2">
+                            Checkout <i class="fa-solid fa-arrow-right text-sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantity Selection Modal -->
+            <div x-show="isQtyModalOpen" style="display:none;" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                <div x-show="isQtyModalOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="isQtyModalOpen = false"></div>
+                <div x-show="isQtyModalOpen" x-transition.scale.origin.bottom class="relative bg-white rounded-lg shadow-xl w-full max-w-sm flex flex-col overflow-hidden">
+                    <div class="p-6 text-center">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-1" x-text="selectedService?.name"></h3>
+                        <p class="text-sm font-medium text-slate-500 mb-6">LKR <span x-text="selectedService?.base_price"></span></p>
+                        
+                        <div class="flex items-center justify-center gap-6">
+                            <button type="button" @click="if(serviceQty > 1) serviceQty--" class="w-10 h-10 rounded-md border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 font-medium transition-colors"><i class="fa-solid fa-minus"></i></button>
+                            <div class="text-2xl font-semibold text-slate-800 w-12 text-center" x-text="serviceQty"></div>
+                            <button type="button" @click="serviceQty++" class="w-10 h-10 rounded-md border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 font-medium transition-colors"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-3">
+                        <button type="button" @click="isQtyModalOpen = false" class="flex-1 py-2.5 rounded-md font-medium text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 transition-colors">Cancel</button>
+                        <button type="button" @click="confirmAddToCart()" class="flex-1 py-2.5 rounded-md font-medium text-white bg-blue-600 hover:bg-blue-700 shadow-sm transition-colors">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Checkout Modal -->
+            <div x-show="isGlobalCheckoutModalOpen" style="display:none;" class="fixed inset-0 z-[120] flex items-center justify-center p-4">
+                <div x-show="isGlobalCheckoutModalOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="isGlobalCheckoutModalOpen = false"></div>
+                <div x-show="isGlobalCheckoutModalOpen" x-transition.scale.origin.bottom class="relative bg-white rounded-lg shadow-xl w-full max-w-md flex flex-col max-h-[90vh] overflow-hidden">
+                    <div class="p-5 border-b border-slate-200 flex items-center justify-between bg-white">
+                        <h3 class="text-lg font-semibold text-slate-800">Finalize Order</h3>
+                        <button type="button" @click="isGlobalCheckoutModalOpen = false" class="w-8 h-8 flex items-center justify-center rounded-md bg-slate-100 text-slate-500 hover:bg-slate-200 hover:text-slate-700 transition-colors">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    
+                    <div class="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                        <!-- Turnaround Type -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Do you need quick service? <span class="text-red-500">*</span></label>
+                            <p class="text-xs text-slate-500 font-medium mb-3">Charges apply only to the base services (not applied to extras).</p>
+                            <select x-model="globalTurnaround" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 font-medium">
+                                <template x-for="tt in turnaroundTypes" :key="tt.id">
+                                    <option :value="tt.id" x-text="tt.name + (tt.name !== 'Standard' ? ' (' + (tt.markup_type === 'percentage' ? '+' + tt.markup_value + '%' : '+LKR ' + tt.markup_value) + ' per item)' : '')"></option>
+                                </template>
+                            </select>
+                        </div>
+
+                        <!-- Extras -->
+                        <div x-show="extras.length > 0">
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Do you need any extra services?</label>
+                            <p class="text-xs text-slate-500 font-medium mb-3">Add extra services to your order.</p>
+                            <div class="space-y-2">
+                                <template x-for="extra in extras" :key="extra.id">
+                                    <div class="flex items-center justify-between p-3 rounded-md border border-slate-200 bg-white shadow-sm">
+                                        <div class="flex-1">
+                                            <div class="text-sm font-bold text-slate-800" x-text="extra.name"></div>
+                                            <div class="text-xs font-semibold text-blue-600 mt-0.5" x-text="'+ LKR ' + extra.price + ' / item'"></div>
+                                        </div>
+                                        <div class="flex items-center gap-3 shrink-0">
+                                            <button type="button" @click="globalExtras[extra.id] = Math.max(0, (globalExtras[extra.id] || 0) - 1)" class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                            <span class="w-4 text-center text-sm font-bold text-slate-800" x-text="globalExtras[extra.id] || 0"></span>
+                                            <button type="button" @click="globalExtras[extra.id] = (globalExtras[extra.id] || 0) + 1" class="w-8 h-8 rounded border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+                        <div class="flex-1">
+                            <div class="text-[11px] font-semibold text-slate-500 uppercase tracking-wide">Grand Total</div>
+                            <div class="text-xl font-semibold text-blue-600">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></div>
+                            <div x-show="calculatedGrandTotal < minLimit" class="text-[10px] text-red-500 font-medium mt-1">Min. order: LKR <span x-text="minLimit"></span></div>
+                        </div>
+                        <button type="button" @click="proceedToDelivery()" :disabled="calculatedGrandTotal < minLimit" class="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white py-3 rounded-md font-semibold transition-colors shadow-sm text-center flex items-center justify-center gap-2">
+                            Continue <i class="fa-solid fa-arrow-right text-sm"></i>
                         </button>
                     </div>
                 </div>
@@ -238,7 +345,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
-                                        <input type="password" x-model="loginData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="••••••••">
+                                        <input type="password" x-model="loginData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢">
                                     </div>
                                     <button type="button" @click="submitLogin()" :disabled="authLoading" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-black mt-2 transition-all flex justify-center items-center gap-2">
                                         <span x-show="!authLoading">Login to Continue</span>
@@ -264,7 +371,7 @@
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
-                                        <input type="password" x-model="registerData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="••••••••">
+                                        <input type="password" x-model="registerData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢">
                                     </div>
                                     <button type="button" @click="submitRegister()" :disabled="authLoading" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black mt-2 transition-all flex justify-center items-center gap-2">
                                         <span x-show="!authLoading">Create Account & Continue</span>
@@ -593,19 +700,40 @@
 
     <x-slot name="scripts">
         <script>
-            function bookingWizard(categories, isAuth, customer, minLimit, deliveryRanges, workshopsArray) {
-                const initialStep = isAuth ? 2 : 1;
+            function bookingWizard(categories, isLoggedIn, user, minOrderLimit, deliveryRanges, workshops, turnaroundTypes, extras, shopLat, shopLng) {
                 return {
-                    step: initialStep,
-                    highestStepReached: initialStep,
                     categories: categories,
-                    minLimit: Number(minLimit || 0),
+                    turnaroundTypes: turnaroundTypes,
+                    extras: extras,
+                    shopLat: shopLat,
+                    shopLng: shopLng,
+                    
+                    selectedMainCategory: null,
+                    selectedSubcategory: null,
+                    currentSubcategories: [],
+                    currentServices: [],
+                    currentViewLevel: 0, // 0: Categories, 1: Subcategories, 2: Services
+                    
+                    init() {
+                    },
+                    
+                    // Modal state
+                    
+                    selectedService: null,
+                    serviceQty: 1,
+                    selectedTurnaround: '',
+                    
+                    
+                    routeLayer: null,
+                    step: isLoggedIn ? 2 : 1,
+                    highestStepReached: isLoggedIn ? 2 : 1,
+                    minLimit: Number(minOrderLimit || 0),
                     expandedCategory: null,
                     cart: [],
                     
                     // Auth state
-                    isAuthenticated: isAuth,
-                    authCustomer: customer,
+                    isAuthenticated: isLoggedIn,
+                    authCustomer: user,
                     authTab: 'login',
                     authLoading: false,
                     authError: null,
@@ -632,10 +760,10 @@
                     deliveryRouteLayer: null,// OSRM route polyline on delivery map
                     deliveryRanges: deliveryRanges || [],
                     // Workshops array for multi-workshop support
-                    workshopsArray: workshopsArray || [],
-                    nearestWorkshop: workshopsArray && workshopsArray.length > 0 ? workshopsArray[0] : null,
-                    baseLat: (workshopsArray && workshopsArray.length > 0 && !isNaN(parseFloat(workshopsArray[0].latitude))) ? parseFloat(workshopsArray[0].latitude) : 6.9322889,
-                    baseLng: (workshopsArray && workshopsArray.length > 0 && !isNaN(parseFloat(workshopsArray[0].longitude))) ? parseFloat(workshopsArray[0].longitude) : 79.8567772,
+                    workshopsArray: workshops || [],
+                    nearestWorkshop: workshops && workshops.length > 0 ? workshops[0] : null,
+                    baseLat: (workshops && workshops.length > 0 && !isNaN(parseFloat(workshops[0].latitude))) ? parseFloat(workshops[0].latitude) : 6.9322889,
+                    baseLng: (workshops && workshops.length > 0 && !isNaN(parseFloat(workshops[0].longitude))) ? parseFloat(workshops[0].longitude) : 79.8567772,
                     isOutOfRange: false,
 
                     initData() {
@@ -838,20 +966,16 @@
                                 this.nearestWorkshop = nearest;
                                 this.baseLat = parseFloat(nearest.latitude);
                                 this.baseLng = parseFloat(nearest.longitude);
+                                this.cart = []; // clear cart if branch changes
                                 this.updateWorkshopMarkerStyles();
                             }
                             this.calculateDeliveryFee();
                         };
 
-                        this.pickupMap.on('move', updatePickupCoords);
-                        this.pickupMap.on('moveend', () => {
-                            updatePickupCoords();
-                            // Draw route from workshop to pickup pin
-                            if (this.pickupLat && this.pickupLng) {
-                                this.drawRoute(this.pickupMap, this.baseLat, this.baseLng, this.pickupLat, this.pickupLng, 'pickup');
-                            }
-                        });
-                        updatePickupCoords();
+                        this.pickupMap.on('move', updateCoords);
+                        this.pickupMap.on('moveend', updateCoords);
+                        this.pickupMap.on('moveend', () => { if (this.baseLat && this.baseLng) this.drawRoute(this.pickupMap, this.baseLat, this.baseLng, this.pickupLat, this.pickupLng); });
+                        updateCoords();
                     },
 
                     initDeliveryMap() {
@@ -881,6 +1005,7 @@
                             this.deliveryLat = center.lat;
                             this.deliveryLng = center.lng;
                             this.calculateDeliveryFee();
+                            if (this.baseLat && this.baseLng) { this.drawRoute(this.deliveryMap, this.baseLat, this.baseLng, this.deliveryLat, this.deliveryLng); }
                         };
 
                         this.deliveryMap.on('move', updateDeliveryCoords);
@@ -894,44 +1019,31 @@
                         this.deliveryMapInitialized = true;
                     },
 
-                    // Draw real road route from workshop to pin using OSRM
-                    async drawRoute(map, fromLat, fromLng, toLat, toLng, type) {
-                        try {
-                            const url = `https://router.project-osrm.org/route/v1/driving/${fromLng},${fromLat};${toLng},${toLat}?overview=full&geometries=geojson`;
-                            const res = await fetch(url);
-                            const data = await res.json();
-                            if (data.code !== 'Ok' || !data.routes || !data.routes[0]) return;
-
-                            const coords = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
-                            const routeDistKm = (data.routes[0].distance / 1000).toFixed(1);
-
-                            // Remove old route
-                            if (type === 'pickup' && this.pickupRouteLayer) {
-                                map.removeLayer(this.pickupRouteLayer);
-                            } else if (type === 'delivery' && this.deliveryRouteLayer) {
-                                map.removeLayer(this.deliveryRouteLayer);
-                            }
-
-                            // Draw dashed route line
-                            const routeLine = L.polyline(coords, {
-                                color: '#3b82f6',
-                                weight: 4,
-                                opacity: 0.85,
-                                dashArray: '10, 8',
-                                lineJoin: 'round',
-                            }).addTo(map);
-
-                            if (type === 'pickup') {
-                                this.pickupRouteLayer = routeLine;
-                                this.pickupDistance = parseFloat(routeDistKm);
-                            } else {
-                                this.deliveryRouteLayer = routeLine;
-                                this.deliveryDistance = parseFloat(routeDistKm);
-                            }
-                        } catch (e) {
-                            // Silently fail - network issue
+                    drawRoute(map, startLat, startLng, endLat, endLng) {
+                        if (!map.routeLayer) {
+                            map.routeLayer = L.layerGroup().addTo(map);
                         }
+                        map.routeLayer.clearLayers();
+                        if(!startLat || !startLng || !endLat || !endLng) return;
+                        
+                        axios.get(`http://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`)
+                            .then(res => {
+                                if(res.data && res.data.routes && res.data.routes.length > 0) {
+                                    const route = res.data.routes[0].geometry;
+                                    L.geoJSON(route, {
+                                        style: { color: '#2563eb', weight: 4, opacity: 0.8, dashArray: '5, 10' }
+                                    }).addTo(map.routeLayer);
+                                    
+                                    // Fit bounds (Removed to prevent infinite map dragging loop)
+                                    // const bounds = L.latLngBounds([
+                                    //     [startLat, startLng],
+                                    //     [endLat, endLng]
+                                    // ]);
+                                    // map.fitBounds(bounds, { padding: [50, 50] });
+                                }
+                            }).catch(err => console.log('OSRM Error', err));
                     },
+
 
                     findMe(type) {
                         if ("geolocation" in navigator) {
@@ -1026,34 +1138,155 @@
                     },
 
                     // Cart methods
-                    getQuantity(serviceId) {
-                        const item = this.cart.find(i => i.service.id === serviceId);
-                        return item ? item.quantity : 0;
-                    },
-                    addToCart(service) {
-                        const item = this.cart.find(i => i.service.id === service.id);
-                        if (item) item.quantity++;
-                        else this.cart.push({ service: service, quantity: 1 });
-                    },
-                    removeFromCart(service) {
-                        const index = this.cart.findIndex(i => i.service.id === service.id);
-                        if (index !== -1) {
-                            if (this.cart[index].quantity > 1) this.cart[index].quantity--;
-                            else this.cart.splice(index, 1);
+                    // New step 3 state
+                    isCartExpanded: false,
+                    isQtyModalOpen: false,
+                    isGlobalCheckoutModalOpen: false,
+                    globalTurnaround: '',
+                    globalExtras: {},
+
+                    selectLevel1(cat) {
+                        this.selectedMainCategory = cat;
+                        let childrenArray = cat.children ? Object.values(cat.children) : [];
+                        
+                        if (childrenArray.length > 0) {
+                            this.currentSubcategories = childrenArray;
+                            this.currentViewLevel = 1;
+                        } else {
+                            this.currentSubcategories = [];
+                            this.selectedSubcategory = null;
+                            this.currentServices = cat.services ? Object.values(cat.services) : [];
+                            this.currentViewLevel = 2;
                         }
                     },
+                    
+                    selectLevel2(sub) {
+                        this.selectedSubcategory = sub;
+                        this.currentServices = sub.services ? Object.values(sub.services) : [];
+                        this.currentViewLevel = 2;
+                    },
+                    
+                    goBackLevel() {
+                        if (this.currentViewLevel === 2) {
+                            if (this.currentSubcategories.length > 0) {
+                                this.currentViewLevel = 1;
+                                this.selectedSubcategory = null;
+                            } else {
+                                this.currentViewLevel = 0;
+                                this.selectedMainCategory = null;
+                            }
+                        } else if (this.currentViewLevel === 1) {
+                            this.currentViewLevel = 0;
+                            this.selectedMainCategory = null;
+                        }
+                    },
+                    openQtyModal(service) {
+                        this.selectedService = service;
+                        this.serviceQty = 1;
+                        this.isQtyModalOpen = true;
+                    },
+                    confirmAddToCart() {
+                        if (!this.selectedService) return;
+                        
+                        let cartItem = {
+                            id: this.selectedService.id,
+                            service_type_id: this.selectedService.id,
+                            name: this.selectedService.name,
+                            base_price: parseFloat(this.selectedService.base_price),
+                            price_type: this.selectedService.price_type,
+                            qty: this.serviceQty,
+                            // Will be filled at checkout
+                            turnaround_type_id: null,
+                            selected_extras: [],
+                            cart_key: Date.now() + Math.random()
+                        };
+                        
+                        let existing = this.cart.find(i => i.id === cartItem.id);
+                        if (existing) {
+                            existing.qty += cartItem.qty;
+                        } else {
+                            this.cart.push(cartItem);
+                        }
+                        
+                        this.isQtyModalOpen = false;
+                    },
+                    updateCartQty(index, amount) {
+                        if (this.cart[index].qty + amount > 0) {
+                            this.cart[index].qty += amount;
+                        }
+                    },
+                    removeFromCartByIndex(index) {
+                        this.cart.splice(index, 1);
+                        if (this.cart.length === 0) {
+                            this.isCartExpanded = false;
+                        }
+                    },
+                    get baseCartTotal() {
+                        return this.cart.reduce((total, item) => total + (parseFloat(item.base_price) * item.qty), 0);
+                    },
+                    openGlobalCheckoutModal() {
+                        let defaultTt = this.turnaroundTypes.find(t => t.is_default);
+                        if (!this.globalTurnaround && defaultTt) {
+                            this.globalTurnaround = defaultTt.id;
+                        }
+                        this.isGlobalCheckoutModalOpen = true;
+                    },
+                    get calculatedGrandTotal() {
+                        let totalQty = this.cart.reduce((sum, item) => sum + item.qty, 0);
+                        let baseTotal = this.baseCartTotal;
+                        
+                        let ttMarkupTotal = 0;
+                        if (this.globalTurnaround) {
+                            let tt = this.turnaroundTypes.find(t => t.id == this.globalTurnaround);
+                            if (tt && tt.name !== 'Standard') {
+                                this.cart.forEach(item => {
+                                    let base = parseFloat(item.base_price);
+                                    let itemMarkup = tt.markup_type === 'percentage' ? (base * parseFloat(tt.markup_value) / 100) : parseFloat(tt.markup_value);
+                                    ttMarkupTotal += (itemMarkup * item.qty);
+                                });
+                            }
+                        }
+                        
+                        let extrasMarkupTotal = 0;
+                        for (let eId in this.globalExtras) {
+                            let qty = this.globalExtras[eId];
+                            if (qty > 0) {
+                                let ex = this.extras.find(e => e.id == eId);
+                                if (ex) {
+                                    extrasMarkupTotal += (parseFloat(ex.price) * qty);
+                                }
+                            }
+                        }
+                        
+                        return baseTotal + ttMarkupTotal + extrasMarkupTotal;
+                    },
                     get totalPrice() {
-                        return this.cart.reduce((total, item) => total + (item.service.base_price * item.quantity), 0);
+                        return this.calculatedGrandTotal;
                     },
                     get formattedCart() {
-                        if (this.cart.length === 0) return '';
-                        let result = "--- SELECTED SERVICES ---\n";
+                        let result = '';
                         this.cart.forEach(item => {
-                            result += `${item.service.name} x ${item.quantity} (LKR ${item.service.base_price * item.quantity})\n`;
+                            result += `${item.name} x${item.qty} (LKR ${parseFloat(item.base_price).toFixed(2)}), `;
                         });
-                        result += `\nEstimated Total: LKR ${this.totalPrice}`;
-                        return result;
-                    }
+                        return result.slice(0, -2);
+                    },
+                    proceedToDelivery() {
+                        let selectedExtrasList = [];
+                        for (let eId in this.globalExtras) {
+                            if (this.globalExtras[eId] > 0) {
+                                selectedExtrasList.push({ id: parseInt(eId), qty: this.globalExtras[eId] });
+                            }
+                        }
+
+                        // Apply global turnaround and extras to every cart item
+                        this.cart.forEach(item => {
+                            item.turnaround_type_id = this.globalTurnaround;
+                            item.selected_extras = selectedExtrasList;
+                        });
+                        
+                        this.isGlobalCheckoutModalOpen = false;
+                        this.goToStep(4);
+                    },
                 }
             }
         </script>

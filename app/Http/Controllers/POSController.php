@@ -25,7 +25,8 @@ class POSController extends Controller
         $branchId = $user->branch_id ?? \App\Models\Branch::first()->id;
 
         // Workshop admins bypass shift requirement (they don't have a register/cash till)
-        if ($user->role !== 'workshop_admin') {
+        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+        if (!$isWorkshopAdmin) {
             $activeSession = RegisterSession::where('branch_id', $branchId)
                 ->whereNull('closed_at')
                 ->first();
@@ -35,8 +36,10 @@ class POSController extends Controller
             }
         }
 
-        $services = ServiceType::where('is_active', true)->get();
-        $categories = ServiceCategory::where('is_active', true)->get();
+        $services = ServiceType::where('is_active', true)->where('branch_id', $branchId)->orderBy('order_index')->get();
+        $categories = ServiceCategory::with(['children' => function($q) {
+            $q->where('is_active', true)->orderBy('order_index');
+        }])->where('is_active', true)->where('branch_id', $branchId)->orderBy('order_index')->get();
 
         $customers = Customer::withoutGlobalScopes()->where('is_active', true)->get();
 
@@ -46,7 +49,10 @@ class POSController extends Controller
 
         $timeSlots = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
 
-        return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages', 'timeSlots'));
+        $extras = \App\Models\Extra::where('is_active', true)->where('branch_id', $branchId)->get();
+        $turnaroundTypes = \App\Models\TurnaroundType::where('is_active', true)->where('branch_id', $branchId)->get();
+
+        return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages', 'timeSlots', 'extras', 'turnaroundTypes'));
     }
 
     public function store(Request $request)
@@ -64,7 +70,8 @@ class POSController extends Controller
         $branchId = $user->branch_id ?? \App\Models\Branch::first()->id;
 
         // Workshop admins skip register session check
-        if ($user->role !== 'workshop_admin') {
+        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+        if (!$isWorkshopAdmin) {
             $activeSession = RegisterSession::where('branch_id', $branchId)
                 ->whereNull('closed_at')
                 ->first();
@@ -100,6 +107,11 @@ class POSController extends Controller
             $qty = (float) $item['qty'];
             $basePrice = (float) $item['base_price'];
 
+            $turnaroundTypeId = !empty($item['turnaround_type_id']) ? $item['turnaround_type_id'] : null;
+            $selectedExtras = $item['selected_extras'] ?? [];
+
+            // Extras will be added as separate items below
+
             $coveredQty = 0;
             $chargeableQty = $qty;
 
@@ -128,7 +140,20 @@ class POSController extends Controller
                 }
             }
 
-            $itemSubtotal = $chargeableQty * $basePrice;
+            $itemSubtotalBeforeTurnaround = ($chargeableQty * $basePrice);
+            $turnaroundCharge = 0;
+            if ($turnaroundTypeId) {
+                $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
+                if ($tt) {
+                    if ($tt->markup_type === 'percentage') {
+                        $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($tt->markup_value / 100);
+                    } else {
+                        $turnaroundCharge = $tt->markup_value * $qty;
+                    }
+                }
+            }
+
+            $itemSubtotal = $itemSubtotalBeforeTurnaround + $turnaroundCharge;
             $subtotal += $itemSubtotal;
 
             $processedCart[] = [
@@ -140,7 +165,55 @@ class POSController extends Controller
                 'chargeable_qty' => $chargeableQty,
                 'total_price' => $itemSubtotal,
                 'is_special' => $item['is_special'] ?? false,
+                'turnaround_type_id' => $turnaroundTypeId,
+                'turnaround_extra_charge' => $turnaroundCharge,
+                'selected_extras' => [], // Processed as separate items
             ];
+
+            // Add Extras as separate items
+            if (is_array($selectedExtras) && count($selectedExtras) > 0) {
+                foreach ($selectedExtras as $selEx) {
+                    $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
+                    $extraQty = is_array($selEx) && isset($selEx['qty']) ? $selEx['qty'] : 1;
+                    
+                    $extra = \App\Models\Extra::find($extraId);
+                    if ($extra) {
+                        $extraService = \App\Models\ServiceType::firstOrCreate(
+                            ['name' => 'Extra: ' . $extra->name, 'branch_id' => $branchId],
+                            [
+                                'color' => 'slate', 
+                                'price_type' => 'per_item', 
+                                'base_price' => $extra->price, 
+                                'loyalty_points_earn' => 0, 
+                                'is_active' => 1, 
+                                'description' => 'Extra service'
+                            ]
+                        );
+
+                        $extraSubtotalBeforeTurnaround = $extra->price * $extraQty;
+                        
+                        // Extras do NOT get turnaround markup, as requested by user.
+                        $extraTurnaroundCharge = 0;
+                        
+                        $extraSubtotal = $extraSubtotalBeforeTurnaround + $extraTurnaroundCharge;
+                        $subtotal += $extraSubtotal;
+
+                        $processedCart[] = [
+                            'service_type_id' => $extraService->id,
+                            'name' => 'Extra: ' . $extra->name,
+                            'qty' => $extraQty,
+                            'base_price' => $extra->price,
+                            'covered_qty' => 0,
+                            'chargeable_qty' => $extraQty,
+                            'total_price' => $extraSubtotal,
+                            'is_special' => false,
+                            'turnaround_type_id' => null, // No turnaround applied to extras
+                            'turnaround_extra_charge' => 0,
+                            'selected_extras' => [],
+                        ];
+                    }
+                }
+            }
         }
 
         $discountPercentage = max(0, min(100, (float) ($request->discount_percentage ?? 0)));
@@ -244,32 +317,37 @@ class POSController extends Controller
                         $serviceTypeId = $specialService->id;
                     }
 
-                    OrderItem::create([
+                    $orderItem = OrderItem::create([
                         'order_id' => $order->id,
                         'service_type_id' => $serviceTypeId,
                         'item_description' => $item['name'].($item['covered_qty'] > 0 ? " ({$item['covered_qty']} via Package)" : ''),
                         'quantity' => $item['qty'],
                         'unit_price' => $item['base_price'],
                         'total_price' => $item['total_price'],
+                        'turnaround_type_id' => $item['turnaround_type_id'],
+                        'turnaround_extra_charge' => $item['turnaround_extra_charge'],
                     ]);
+
+                    // Extras are now created as separate OrderItem entries above.
 
                 }
 
                 // 4. Communication notification queue
                 $commService = new CommunicationService();
                 $orderForComm = Order::with('customer')->find($order->id);
-
+                
                 if (! $orderForComm->is_delivery_order) {
                     $branch = \App\Models\Branch::find($branchId);
                     if ($branch && $branch->type === 'branch') {
-                        $commService->sendOrderConfirmation($orderForComm);
+                        $commService->sendCollectionOrderPlaced($orderForComm);
                     } else {
-                        $commService->sendOrderConfirmation($orderForComm);
+                        $commService->sendPosWalkinPlaced($orderForComm);
                     }
                 }
 
                 // 5. If workshop admin: auto-dispatch to operations as 'processing'
-                if ($user->role === 'workshop_admin') {
+                $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $branch && $branch->type === 'workshop');
+                if ($isWorkshopAdmin) {
                     \App\Models\WorkshopDispatch::create([
                         'order_id'           => $order->id,
                         'branch_id'          => $branchId,
@@ -285,6 +363,7 @@ class POSController extends Controller
                 }
 
                 return [
+                    'success' => true,
                     'order_id' => $order->id,
                     'order_number' => $order->order_number,
                     'customer_name' => $orderForComm->customer->name ?? 'Walk-in Customer',
@@ -333,7 +412,7 @@ class POSController extends Controller
         ]);
 
         $user     = auth()->user();
-        $branchId = $user->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $user->branch_id ?? 1;
 
         try {
             $result = DB::transaction(function () use ($request, $user, $branchId) {
@@ -341,9 +420,7 @@ class POSController extends Controller
                 $cart       = $request->cart ?? [];
 
                 // 1. Create the DeliveryAppointment (auto-confirmed since staff created it)
-                $orderNumber = \App\Models\Order::generateOrderNumber($branchId, true);
                 $appointment = \App\Models\DeliveryAppointment::create([
-                    'order_number'         => $orderNumber,
                     'customer_id'          => $request->customer_id,
                     'branch_id'            => $branchId,
                     'pickup_address'       => $request->pickup_address,
@@ -357,6 +434,7 @@ class POSController extends Controller
                 ]);
 
                 $orderId     = null;
+                $orderNumber = null;
 
                 // 2. If cart items were provided, create the Order now
                 if (! empty($cart)) {
@@ -369,7 +447,7 @@ class POSController extends Controller
                     $paidAmount  = $paymentMode === 'pay_now' ? $subtotal : 0;
 
                     $order = Order::create([
-                        'order_number'            => $orderNumber,
+                        'order_number'            => Order::generateOrderNumber($branchId, true),
                         'branch_id'               => $branchId,
                         'customer_id'             => $request->customer_id,
                         'created_by'              => auth()->id(),

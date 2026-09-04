@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Confirmed — {{ $branch->name ?? '365laundry.lk' }}</title>
+    <title>Booking Confirmed — {{ $branch->name ?? 'RAPID Laundromat' }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -27,8 +27,8 @@
         
         <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-8 text-left space-y-4 shadow-inner">
             <div class="flex justify-between items-center pb-4 border-b border-slate-200">
-                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Booking ID</span>
-                <span class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{{ $appointment->order_number ?? '#' . str_pad($appointment->id, 4, '0', STR_PAD_LEFT) }}</span>
+                <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Order Number</span>
+                <span class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">#{{ $appointment->order->order_number ?? $appointment->id }}</span>
             </div>
             <div class="flex justify-between items-center pb-4 border-b border-slate-200">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Date</span>

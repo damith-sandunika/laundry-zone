@@ -83,7 +83,7 @@ class DashboardController extends Controller
             $unifiedOrders->push((object)[
                 'id' => $appointment->id,
                 'type' => 'appointment',
-                'order_number' => 'B-' . str_pad($appointment->id, 4, '0', STR_PAD_LEFT),
+                'order_number' => '#' . $appointment->id,
                 'created_at' => $appointment->created_at,
                 'items_count' => null,
                 'total' => null,
@@ -108,7 +108,7 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $order->load(['branch', 'items.serviceType']);
+        $order->load(['branch', 'items.serviceType', 'items.turnaroundType', 'deliveryAppointment']);
         
         $paymentMethods = collect();
         if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {

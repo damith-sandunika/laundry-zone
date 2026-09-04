@@ -114,12 +114,12 @@
                 openReverse(orderId) { this.reverseOrderId = orderId; this.reversePassword = ''; this.reverseError = ''; this.showReverseModal = true; },
                 openCubbetPopup(order) { this.cubbetOrder = order; this.selectedCubby = ''; this.showCubbetModal = true; },
                 openDeliverPopup(order) { this.deliverOrder = order; this.deliveryPaymentMethod = 'cash'; this.showDeliverModal = true; },
-                openDeliveryDispatchPopup(order) { this.deliverOrder = order; this.deliveryMethod = 'rider'; this.deliveryRiderId = ''; this.deliveryPickmeCost = ''; this.isDispatchingDelivery = false; this.showDispatchDeliveryModal = true; },
+                openDeliveryDispatchPopup(order) { this.deliverOrder = order; this.deliveryMethod = 'rider'; this.deliveryRiderId = ''; this.deliveryPickmeCost = ''; this.deliveryPaymentMethod = 'cash'; this.isDispatchingDelivery = false; this.showDispatchDeliveryModal = true; },
 
                 getReceipts(order) {
                     if (!order || !order.payment_transactions) return [];
                     return order.payment_transactions.filter(p => p.receipt_path).map(p => ({
-                        id: p.id, amount: p.amount, url: '/storage/' + p.receipt_path,
+                        id: p.id, amount: p.amount, url: p.receipt_path.startsWith('http') ? p.receipt_path : '/storage/' + p.receipt_path,
                         status: p.status, reject_reason: p.reject_reason,
                         created_at: p.created_at ? new Date(p.created_at).toLocaleString() : ''
                     }));
@@ -215,7 +215,7 @@
                         const res = await fetch('/orders/' + this.deliverOrder.id + '/dispatch-delivery', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                            body: JSON.stringify({ delivery_method: this.deliveryMethod, rider_id: this.deliveryRiderId, pickme_cost: this.deliveryPickmeCost })
+                            body: JSON.stringify({ delivery_method: this.deliveryMethod, rider_id: this.deliveryRiderId, pickme_cost: this.deliveryPickmeCost, payment_method: this.deliveryPaymentMethod })
                         });
                         const data = await res.json();
                         if (data.success) { window.location.reload(); }
@@ -233,21 +233,13 @@
                         const data = await res.json();
                         if (!data.success) { alert('Error: ' + (data.message || 'Failed to update status')); return; }
                         if (shouldPrint && data.print_bill_id) { window.open('/orders/' + data.print_bill_id + '/print', '_blank'); }
-                        else if (shouldPrint) { window.open('/orders/' + this.deliverOrder.id + '/print', '_blank'); }
+                        else if (shouldPrint) { window.open('/orders/' + this.deliverOrder.order_number + '/print', '_blank'); }
                         window.location.reload();
                     } catch (err) { alert('Error updating status'); }
                 },
 
                 openEdit(order) {
-                    let cart = (order.items || []).map(i => ({
-                        service_type_id: i.service_type_id,
-                        name: i.service_type ? i.service_type.name : i.item_description,
-                        base_price: i.unit_price,
-                        qty: i.quantity
-                    }));
-                    window.dispatchEvent(new CustomEvent('open-finalize-modal', {
-                        detail: { context: 'branch', categories: this.allCategories, order: order, cart: cart, advance: null, minimumDeliveryCost: this.minimumDeliveryCost }
-                    }));
+                    window.location.href = '/orders/' + order.id + '/edit';
                 },
             }));
         });
@@ -309,19 +301,24 @@
                 <!-- Search and Bulk Action button -->
                 <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
                     @if(auth()->user()->role === 'super_admin' && isset($allBranches) && $allBranches->count() > 0)
-                        <form action="{{ route('orders.index') }}" method="GET" style="margin:0;">
+                        <form action="{{ route('orders.index') }}" method="GET" style="margin:0;display:flex;gap:8px;">
                             @if(request('q')) <input type="hidden" name="q" value="{{ request('q') }}"> @endif
+                            <input type="date" name="start_date" value="{{ request('start_date') }}" onchange="this.form.submit()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;background:white;cursor:pointer;" title="Start Date">
+                            <input type="date" name="end_date" value="{{ request('end_date') }}" onchange="this.form.submit()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;background:white;cursor:pointer;" title="End Date">
                             <select name="branch_id" onchange="this.form.submit()" style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;background:white;cursor:pointer;">
                                 <option value="">All Branches</option>
                                 @foreach($allBranches as $branch)
                                     <option value="{{ $branch->id }}" {{ (isset($filterBranchId) && $filterBranchId == $branch->id) ? 'selected' : '' }}>{{ $branch->name }}</option>
                                 @endforeach
                             </select>
+                            <noscript><button type="submit">Filter</button></noscript>
                         </form>
                     @endif
 
                     <form action="{{ route('orders.index') }}" method="GET" style="display:flex;gap:8px;margin:0;">
                         @if(request('branch_id')) <input type="hidden" name="branch_id" value="{{ request('branch_id') }}"> @endif
+                        @if(request('start_date')) <input type="hidden" name="start_date" value="{{ request('start_date') }}"> @endif
+                        @if(request('end_date')) <input type="hidden" name="end_date" value="{{ request('end_date') }}"> @endif
                         <input type="text" name="q" value="{{ request('q') }}" placeholder="Search ID or phone…"
                             style="padding:8px 12px;border:1.5px solid #e2e8f0;border-radius:9px;font-size:13px;font-weight:600;outline:none;"
                             onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
@@ -349,7 +346,7 @@
                             </th>
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">
-                                Order ID & Customer</th>
+                                Order Number & Customer</th>
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">
                                 Order Date</th>
@@ -540,7 +537,7 @@
                                             </template>
 
                                             <button
-                                                @click="window.open('/orders/' + order.id + '/chit', '_blank', 'width=300,height=400')"
+                                                @click="window.open('/orders/' + order.order_number + '/chit', '_blank', 'width=300,height=400')"
                                                 style="padding:5px 10px;background:white;color:#0f172a;border:1.5px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.15s;"
                                                 onmouseover="this.style.background='#f8fafc'"
                                                 onmouseout="this.style.background='white'">
@@ -812,18 +809,12 @@
                             <button @click="deliveryMethod = 'rider'" :class="deliveryMethod === 'rider' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600'" class="p-3 border rounded-xl font-bold text-sm transition-all text-center" style="padding: 12px; border-width: 1px; border-radius: 12px; font-weight: 700; font-size: 14px; text-align: center; cursor:pointer;">
                                 Rider
                             </button>
-                            <button @click="deliverOrder?.paid_amount >= deliverOrder?.total ? deliveryMethod = 'pickme_flash' : null" 
+                            <button @click="deliveryMethod = 'pickme_flash'" 
                                 :class="[
-                                    deliveryMethod === 'pickme_flash' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300',
-                                    deliverOrder?.paid_amount < deliverOrder?.total ? 'opacity-50 cursor-not-allowed bg-slate-50 border-slate-200' : ''
+                                    deliveryMethod === 'pickme_flash' ? 'bg-blue-50 border-blue-500 text-blue-700 ring-2 ring-blue-200' : 'bg-white border-slate-200 text-slate-600 hover:border-blue-300'
                                 ]"
                                 class="p-3 border rounded-xl font-bold text-sm transition-all text-center relative group" style="padding: 12px; border-width: 1px; border-radius: 12px; font-weight: 700; font-size: 14px; text-align: center; cursor:pointer; position:relative;">
                                 PickMe
-                                <template x-if="deliverOrder?.paid_amount < deliverOrder?.total">
-                                    <div class="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] py-1 px-2 rounded opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10" style="position: absolute; top: -30px; left: 50%; transform: translateX(-50%); background: #1e293b; color: white; font-size: 10px; padding: 4px 8px; border-radius: 4px; pointer-events: none; white-space: nowrap; z-index: 10;">
-                                        Requires full payment
-                                    </div>
-                                </template>
                             </button>
                         </div>
                     </div>
@@ -842,6 +833,16 @@
                         <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">PickMe Cost (Rs.)</label>
                         <input type="number" x-model="deliveryPickmeCost" placeholder="e.g. 500" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                         <p style="font-size:11px;color:#64748b;margin-top:6px;font-weight:600;">This will automatically be added as a Branch Expense.</p>
+                        
+                        <div x-show="deliverOrder && (deliverOrder.total - (deliverOrder.paid_amount || 0) > 0)" style="margin-top:12px;">
+                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Balance to Collect: LKR <span x-text="deliverOrder ? (deliverOrder.total - (deliverOrder.paid_amount || 0)).toFixed(2) : '0.00'"></span></label>
+                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Balance Payment Method</label>
+                            <select x-model="deliveryPaymentMethod" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;">
+                                <option value="cash">Cash</option>
+                                <option value="card">Card</option>
+                                <option value="bank_transfer">Bank Transfer</option>
+                            </select>
+                        </div>
                     </div>
 
                     <div style="display:flex;gap:12px;margin-top:8px;">
@@ -856,7 +857,6 @@
 
         <x-modals.request-payment />
         <x-modals.review-slip />
-        <x-modals.finalize-order />
 
     </div>
 </x-app-layout>

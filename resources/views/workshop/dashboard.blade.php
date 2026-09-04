@@ -102,21 +102,102 @@
     @if(!$activeSession)
         {{-- ── Shift Closed Card ── --}}
         <div class="flex justify-center py-10 px-4 animate-slide-up">
-            <div class="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200 p-8 md:p-12 w-full max-w-md text-center shadow-xl shadow-slate-200/50">
-                <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-6 ring-8 ring-blue-50/50">
-                    <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl border border-slate-200 p-8 md:p-10 w-full max-w-4xl shadow-xl shadow-slate-200/50">
+                
+                <div class="text-center mb-8">
+                    <div class="w-16 h-16 rounded-2xl bg-blue-50 flex items-center justify-center mx-auto mb-4 ring-8 ring-blue-50/50">
+                        <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                    </div>
+                    <h3 class="text-2xl font-black text-slate-900 tracking-tight mb-2">Shift is Closed</h3>
+                    <p class="text-[14px] font-medium text-slate-500 max-w-lg mx-auto">Open the branch shift register with your starting cash and assign staff for today's operations.</p>
                 </div>
-                <h3 class="text-xl font-black text-slate-900 mb-2 tracking-tight">Shift is Closed</h3>
-                <p class="text-[13px] font-medium text-slate-500 mb-8 leading-relaxed">Open the branch shift register with your starting cash to begin processing orders today.</p>
+
                 <form action="{{ route('shifts.open') }}" method="POST">
                     @csrf
-                    <div class="text-left mb-5">
-                        <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-widest mb-2">Opening Cash (Rs.)</label>
-                        <input type="number" step="0.01" name="opening_cash" placeholder="e.g. 5000" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-400">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {{-- Left Column: Cash Details --}}
+                        <div class="bg-slate-50/50 rounded-2xl border border-slate-100 p-6 flex flex-col justify-center">
+                            <div class="mb-5 text-center">
+                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-3">Opening Cash (Rs.)</label>
+                                <div class="relative max-w-xs mx-auto">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <span class="text-slate-400 font-bold sm:text-sm">Rs.</span>
+                                    </div>
+                                    <input type="number" step="0.01" name="opening_cash" value="{{ $suggestedOpeningCash ?? 0 }}" placeholder="e.g. 5000" required class="block w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-xl text-xl font-black text-slate-900 text-center shadow-sm focus:ring-4 focus:ring-blue-500/20 focus:border-blue-500 outline-none transition-all placeholder:text-slate-300">
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-3 font-semibold flex items-center justify-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                    Auto-filled from previous shift's closing balance.
+                                </p>
+                            </div>
+                        </div>
+
+                        {{-- Right Column: Staff Assignment --}}
+                        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+                                <label class="block text-[11px] font-extrabold text-slate-800 uppercase tracking-widest">Assign Staff & Attendance</label>
+                                <span class="px-2 py-1 bg-blue-50 text-blue-700 text-[10px] font-bold rounded-md">{{ isset($branchStaff) ? $branchStaff->count() : 0 }} Staff Available</span>
+                            </div>
+
+                            @if(isset($branchStaff) && $branchStaff->count() > 0)
+                                <div class="divide-y divide-slate-100 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
+                                    @foreach($branchStaff as $staff)
+                                        <div class="py-3 border-b border-slate-100 last:border-0">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <span class="text-[13px] font-bold text-slate-800">{{ $staff->name }}</span>
+                                                <select name="assigned_staff[{{ $staff->id }}][status]" 
+                                                        class="text-xs font-bold bg-slate-50 border border-slate-200 text-slate-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1 pl-2 pr-6"
+                                                        onchange="
+                                                            const timesDiv = document.getElementById('staff-times-{{ $staff->id }}');
+                                                            const assignDiv = document.getElementById('staff-assign-{{ $staff->id }}');
+                                                            if(this.value === 'present') {
+                                                                timesDiv.classList.remove('hidden');
+                                                                assignDiv.classList.remove('hidden');
+                                                            } else {
+                                                                timesDiv.classList.add('hidden');
+                                                                assignDiv.classList.add('hidden');
+                                                            }
+                                                        ">
+                                                    <option value="hold">Hold (Absent)</option>
+                                                    <option value="present">Present</option>
+                                                </select>
+                                            </div>
+                                            
+                                            <div id="staff-assign-{{ $staff->id }}" class="hidden mb-2 ml-1">
+                                                <label class="flex items-center gap-2 cursor-pointer">
+                                                    <input type="checkbox" name="assigned_staff[{{ $staff->id }}][is_assigned]" value="1" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 transition-all">
+                                                    <span class="text-[11px] font-extrabold text-blue-700 uppercase tracking-wide">Assign System Access</span>
+                                                </label>
+                                            </div>
+
+                                            <div id="staff-times-{{ $staff->id }}" class="hidden mt-2 p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex gap-3 animate-fade-in">
+                                                <div class="flex-1">
+                                                    <label class="block text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1">Clock In</label>
+                                                    <input type="time" name="assigned_staff[{{ $staff->id }}][clock_in]" value="{{ now()->format('H:i') }}" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                                </div>
+                                                <div class="flex-1">
+                                                    <label class="block text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1">Clock Out <span class="text-slate-400 font-medium">(Opt)</span></label>
+                                                    <input type="time" name="assigned_staff[{{ $staff->id }}][clock_out]" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            @else
+                                <div class="py-8 text-center">
+                                    <p class="text-[13px] font-semibold text-slate-400">No staff members found for this branch.</p>
+                                </div>
+                            @endif
+                        </div>
                     </div>
-                    <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-sm font-extrabold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300">
-                        Open Shift Register
-                    </button>
+
+                    <div class="mt-8 pt-6 border-t border-slate-100 flex justify-center">
+                        <button type="submit" class="w-full md:w-auto px-10 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[14px] font-black tracking-wide rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 flex items-center justify-center gap-2">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            Confirm & Open Shift
+                        </button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -167,9 +248,9 @@
                         Operations
                     </a>
                 </div>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto overflow-y-auto max-h-[400px] custom-scrollbar relative">
                     <table class="w-full text-left border-collapse">
-                        <thead>
+                        <thead class="sticky top-0 z-10">
                             <tr class="bg-slate-50 border-b border-slate-100">
                                 <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Order</th>
                                 <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Customer</th>
@@ -207,7 +288,7 @@
                                         @if($order->order && $order->order->receipt_path)
                                             <a href="{{ \Illuminate\Support\Str::startsWith($order->order->receipt_path, 'http') ? $order->order->receipt_path : asset('storage/' . $order->order->receipt_path) }}" target="_blank" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 rounded-lg text-[11px] font-bold transition-all mr-1">View Invoice</a>
                                         @endif
-                                        <a href="{{ route('orders.show', $order->order->order_number) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
+                                        <a href="{{ route('orders.show', $order->order->order_number) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all">View</a>
                                     </td>
                                 </tr>
                             @empty
@@ -339,16 +420,21 @@
 
             {{-- Shift Register (Dark Card) --}}
             <div class="bg-slate-900 rounded-3xl overflow-hidden shadow-xl shadow-slate-900/20 animate-slide-up" style="animation-delay: 350ms;">
-                <div class="px-6 py-5 border-b border-slate-700/50 flex items-center gap-4 bg-slate-800/50">
-                    <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-                        <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                <div class="px-6 py-5 border-b border-slate-700/50 flex items-center justify-between gap-4 bg-slate-800/50">
+                    <div class="flex items-center gap-4">
+                        <div class="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
+                            <svg class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-black text-white tracking-tight">Shift Register</h3>
+                            <p class="text-[12px] font-medium text-slate-400">Current session metrics</p>
+                        </div>
                     </div>
-                    <div>
-                        <h3 class="text-base font-black text-white tracking-tight">Shift Register</h3>
-                        <p class="text-[12px] font-medium text-slate-400">Current session metrics</p>
-                    </div>
+                    <button onclick="document.getElementById('depositModal').classList.remove('hidden')" class="px-3.5 py-2 bg-emerald-500/20 border border-emerald-500/30 hover:bg-emerald-500/30 text-emerald-400 text-xs font-bold rounded-xl transition-colors whitespace-nowrap">
+                        Deposit to Bank
+                    </button>
                 </div>
                 <div class="p-6 flex flex-col gap-0 divide-y divide-slate-800">
                     <div class="flex justify-between items-center py-3">
@@ -455,7 +541,7 @@
                     </div>
                     <div class="flex justify-between items-center py-3 border-t border-slate-700">
                         <span class="text-[11px] font-semibold text-slate-500">Opened By</span>
-                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession->user->name }}</span>
+                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession->user?->name ?? 'Unknown' }}</span>
                     </div>
                     <div class="flex justify-between items-center py-3 border-b-0">
                         <span class="text-[11px] font-semibold text-slate-500">Time Started</span>
@@ -465,7 +551,154 @@
             </div>
         </div>
 
+        {{-- Active Staff Attendance & Assignment --}}
+        <div class="bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden mb-6 animate-slide-up" style="animation-delay: 400ms;">
+            <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between gap-4 bg-slate-50/50">
+                <div class="flex items-center gap-4">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-black text-slate-900 tracking-tight">Staff Attendance & System Assignment</h3>
+                        <p class="text-[12px] font-semibold text-slate-500">Manage today's shift access and attendance</p>
+                    </div>
+                </div>
+                <button type="submit" form="update-attendance-form" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-xl transition-colors shadow-sm shadow-indigo-600/30 flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    Update Records
+                </button>
+            </div>
+            <div class="p-0 overflow-x-auto">
+                <form id="update-attendance-form" action="{{ route('shifts.attendance.update') }}" method="POST">
+                    @csrf
+                    <!-- Desktop Header -->
+                    <div class="hidden md:flex items-center justify-between px-6 py-3 bg-slate-50 border-b border-slate-100">
+                        <div class="w-1/4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Staff Member</div>
+                        <div class="flex-1 flex justify-end items-center gap-12 pr-4">
+                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-28 text-center">Status</div>
+                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-24 text-center">System Access</div>
+                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-28 text-center">Clock In</div>
+                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-28 text-center">Clock Out</div>
+                        </div>
+                    </div>
+
+                    <div class="divide-y divide-slate-100/60">
+                        @foreach($branchStaff as $staff)
+                            @php
+                                $att = $activeAttendances->get($staff->id);
+                                $status = $att ? $att->status : 'hold';
+                                $isAssigned = $att ? $att->is_assigned : false;
+                                $clockIn = $att ? $att->clock_in : null;
+                                $clockOut = $att ? $att->clock_out : null;
+                            @endphp
+                            <div class="flex flex-col md:flex-row md:items-center justify-between p-4 md:px-6 hover:bg-slate-50/50 transition-colors gap-4">
+                                
+                                <!-- Staff Info -->
+                                <div class="flex items-center gap-3 md:w-1/4">
+                                    <div class="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm uppercase shrink-0">
+                                        {{ substr($staff->name, 0, 2) }}
+                                    </div>
+                                    <div>
+                                        <span class="text-[14px] font-bold text-slate-800 block leading-tight">{{ $staff->name }}</span>
+                                        <span class="text-[11px] font-semibold text-slate-400">ID: #{{ str_pad($staff->id, 4, '0', STR_PAD_LEFT) }}</span>
+                                    </div>
+                                    <input type="hidden" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][staff_id]" value="{{ $staff->id }}">
+                                </div>
+
+                                <!-- Controls Grid -->
+                                <div class="grid grid-cols-2 md:flex md:flex-row md:items-center gap-4 md:gap-12 flex-1 md:justify-end">
+                                    
+                                    <!-- Status -->
+                                    <div class="flex flex-col gap-1.5 md:w-28">
+                                        <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">Status</label>
+                                        <select name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][status]" 
+                                                class="w-full text-xs font-bold bg-white border border-slate-200 text-slate-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-8 shadow-sm"
+                                                onchange="
+                                                    const wrapper = this.closest('.flex-col').parentElement;
+                                                    const access = wrapper.querySelector('.system-access-box');
+                                                    const times = wrapper.querySelectorAll('.time-input');
+                                                    if(this.value === 'present') {
+                                                        access.removeAttribute('disabled');
+                                                        times.forEach(t => t.removeAttribute('disabled'));
+                                                    } else {
+                                                        access.setAttribute('disabled', 'disabled');
+                                                        access.checked = false;
+                                                        times.forEach(t => { t.setAttribute('disabled', 'disabled'); t.value = ''; });
+                                                    }
+                                                ">
+                                            <option value="hold" {{ $status == 'hold' ? 'selected' : '' }}>Hold</option>
+                                            <option value="present" {{ $status == 'present' ? 'selected' : '' }}>Present</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- System Access -->
+                                    <div class="flex flex-col gap-1.5 items-start md:items-center md:w-24">
+                                        <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">System Access</label>
+                                        <div class="flex items-center h-[34px]">
+                                            <label class="inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][is_assigned]" value="1" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-all system-access-box shadow-sm" {{ $isAssigned ? 'checked' : '' }} {{ $status == 'hold' ? 'disabled' : '' }}>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <!-- Clock In -->
+                                    <div class="flex flex-col gap-1.5 md:w-28">
+                                        <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">Clock In</label>
+                                        <input type="time" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][clock_in]" value="{{ $clockIn ? \Carbon\Carbon::parse($clockIn)->format('H:i') : '' }}" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none shadow-sm time-input" {{ $status == 'hold' ? 'disabled' : '' }}>
+                                    </div>
+
+                                    <!-- Clock Out -->
+                                    <div class="flex flex-col gap-1.5 md:w-28">
+                                        <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">Clock Out</label>
+                                        <input type="time" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][clock_out]" value="{{ $clockOut ? \Carbon\Carbon::parse($clockOut)->format('H:i') : '' }}" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none shadow-sm time-input" {{ $status == 'hold' ? 'disabled' : '' }}>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </form>
+            </div>
+        </div>
+
     @endif
+
+    <!-- Bank Deposit Modal -->
+    <div id="depositModal" class="fixed inset-0 z-[200] hidden flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col">
+            <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+                <h3 class="text-lg font-black text-slate-900">Make Bank Deposit</h3>
+                <button onclick="document.getElementById('depositModal').classList.add('hidden')" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors">
+                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form action="{{ route('bank-deposits.store') }}" method="POST" class="p-6">
+                @csrf
+                <div class="mb-4">
+                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1">Available Cash to Deposit</label>
+                    <p class="text-lg font-black text-emerald-600">Rs. {{ number_format($stats['cash_balance'] ?? 0, 2) }}</p>
+                </div>
+                
+                <div class="mb-4">
+                    <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-widest mb-2">Deposit Amount (Rs.) <span class="text-red-500">*</span></label>
+                    <input type="number" step="0.01" name="amount" required max="{{ $stats['cash_balance'] ?? 0 }}" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-400">
+                </div>
+
+                <div class="mb-4">
+                    <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-widest mb-2">Reference Number (Optional)</label>
+                    <input type="text" name="reference_number" placeholder="e.g. SLIP-10294" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-400">
+                </div>
+
+                <div class="mb-6">
+                    <label class="block text-[11px] font-extrabold text-slate-600 uppercase tracking-widest mb-2">Notes</label>
+                    <textarea name="notes" rows="2" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold text-slate-900 focus:ring-4 focus:ring-emerald-500/20 focus:border-emerald-500 outline-none transition-all placeholder:text-slate-400"></textarea>
+                </div>
+
+                <button type="submit" class="w-full py-3.5 bg-emerald-500 text-white text-sm font-extrabold rounded-xl shadow-lg shadow-emerald-500/30 hover:bg-emerald-600 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all duration-300">
+                    Confirm Deposit
+                </button>
+            </form>
+        </div>
+    </div>
 
     <x-slot name="scripts">
         <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>

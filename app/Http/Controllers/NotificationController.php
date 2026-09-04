@@ -18,7 +18,8 @@ class NotificationController extends Controller
         $alerts = [];
         $totalCount = 0;
 
-        if (in_array($user->role, ['workshop_admin', 'super_admin'])) {
+        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+        if ($isWorkshopAdmin || $user->role === 'super_admin') {
             // 1. New Customer Orders (Online bookings waiting for action)
             $newOrders = Order::where('is_online_booking', true)
                 ->where('status', 'received')
@@ -87,7 +88,8 @@ class NotificationController extends Controller
         if (in_array($user->role, ['branch_admin', 'staff', 'admin', 'super_admin', 'workshop_admin'])) {
             // 4. New Pickup Requests
             $pendingPickupsQuery = \App\Models\DeliveryAppointment::with('customer')->where('status', 'pending');
-            if ($user->role !== 'super_admin' && $user->role !== 'workshop_admin') {
+            $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
                 $pendingPickupsQuery->where('branch_id', $user->branch_id);
             }
             $pendingPickups = $pendingPickupsQuery->get()->map(function ($p) {
@@ -101,8 +103,8 @@ class NotificationController extends Controller
                     'label'         => 'New Customer Pickup Requests',
                     'count'         => count($pendingPickups),
                     'order_numbers' => $pendingPickups,
-                    'icon'          => 'M8.25 18.75a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 01-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 00-3.213-9.193 2.056 2.056 0 00-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 00-10.026 0 1.106 1.106 0 00-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12',
-                    'color'         => 'teal',
+                    'icon'          => 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
+                    'color'         => 'red',
                     'url'           => '#',
                 ];
                 $totalCount += count($pendingPickups);
@@ -112,7 +114,8 @@ class NotificationController extends Controller
             $pendingPaymentsQuery = Order::whereHas('paymentTransactions', function ($q) {
                 $q->where('status', 'pending')->whereNotNull('receipt_path');
             })->whereNotIn('status', ['delivered', 'cancelled']);
-            if ($user->role !== 'super_admin' && $user->role !== 'workshop_admin') {
+            $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
                 $pendingPaymentsQuery->where('branch_id', $user->branch_id);
             }
             $pendingPayments = $pendingPaymentsQuery->get()->map(function($o) {
@@ -129,6 +132,55 @@ class NotificationController extends Controller
                     'url'           => '#',
                 ];
                 $totalCount += count($pendingPayments);
+            }
+
+            // 5a. Pending Correction Requests
+            $pendingCorrectionsQuery = \App\Models\OrderCorrectionRequest::with('order')->where('status', 'pending');
+            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
+                $pendingCorrectionsQuery->whereHas('order', function ($q) use ($user) {
+                    $q->where('branch_id', $user->branch_id);
+                });
+            }
+            $pendingCorrections = $pendingCorrectionsQuery->get()->map(function($cr) {
+                return ['number' => $cr->order->order_number . ' (' . str_replace('_', ' ', $cr->type) . ')', 'url' => route('orders.show', $cr->order->order_number)];
+            })->toArray();
+
+            if (count($pendingCorrections) > 0) {
+                $alerts[] = [
+                    'id'            => 'pending_corrections',
+                    'label'         => 'Order Correction Requests',
+                    'count'         => count($pendingCorrections),
+                    'order_numbers' => $pendingCorrections,
+                    'icon'          => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+                    'color'         => 'orange',
+                    'url'           => '#',
+                ];
+                $totalCount += count($pendingCorrections);
+            }
+
+            // 5b. Inventory Low Stock Alerts
+            $lowStockQuery = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'min_stock')->where('is_active', true);
+            $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
+                $lowStockQuery->where('branch_id', $user->branch_id);
+            }
+            
+            $lowStockItems = $lowStockQuery->get()->map(function($item) {
+                return ['number' => $item->name, 'url' => route('inventory.index')];
+            })->toArray();
+
+            if (count($lowStockItems) > 0) {
+                $alerts[] = [
+                    'id'            => 'low_stock_alerts',
+                    'label'         => 'Inventory Alerts - Low Stock',
+                    'count'         => count($lowStockItems),
+                    'subtitle'      => 'Items Low',
+                    'order_numbers' => $lowStockItems,
+                    'icon'          => 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4',
+                    'color'         => 'rose',
+                    'url'           => route('inventory.index'),
+                ];
+                $totalCount += count($lowStockItems);
             }
         }
 

@@ -113,7 +113,7 @@
     </div>
 
     <div class="header">
-        <h1>{{ config('app.name', '365laundry.lk') }}</h1>
+        <h1>{{ config('app.name', 'RAPID Laundromat') }}</h1>
         <p>Payslip for the month of <strong>{{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }}</strong></p>
     </div>
 

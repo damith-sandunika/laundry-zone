@@ -216,53 +216,183 @@
             <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <h3 class="font-black text-slate-800"><i class="fa-solid fa-shirt text-blue-500 mr-2"></i> Order Items</h3>
-                    <span class="text-sm font-bold text-slate-500">{{ $order->items->count() }} Items</span>
+                    @php
+                        $displayItems = collect();
+                        if ($order->items->count() > 0) {
+                            foreach ($order->items as $item) {
+                                $displayItems->push((object)[
+                                    'name' => $item->serviceType->name ?? ($item->item_description ?? 'Service'),
+                                    'quantity' => $item->quantity,
+                                    'unit_price' => $item->unit_price,
+                                    'total_price' => $item->total_price,
+                                    'turnaround_name' => ($item->turnaroundType && !$item->turnaroundType->is_default) ? $item->turnaroundType->name : null,
+                                    'turnaround_charge' => $item->turnaround_extra_charge ?? 0,
+                                ]);
+                            }
+                        } else if ($order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
+                            $cartArr = json_decode($order->deliveryAppointment->cart_json, true) ?? [];
+                            foreach ($cartArr as $cartItem) {
+                                $qty = (float)($cartItem['qty'] ?? 1);
+                                $price = (float)($cartItem['base_price'] ?? 0);
+                                
+                                // Resolve turnaround
+                                $ttName = null;
+                                $ttCharge = 0;
+                                $ttId = $cartItem['turnaround_type_id'] ?? null;
+                                if ($ttId) {
+                                    $tt = \App\Models\TurnaroundType::find($ttId);
+                                    if ($tt && !$tt->is_default) {
+                                        $ttName = $tt->name;
+                                        $lineTotal = $price * $qty;
+                                        if ($tt->markup_type === 'percentage') {
+                                            $ttCharge = $lineTotal * ($tt->markup_value / 100);
+                                        } else {
+                                            $ttCharge = $tt->markup_value * $qty;
+                                        }
+                                    }
+                                }
+                                
+                                // Resolve extras
+                                $extrasText = [];
+                                foreach ($cartItem['selected_extras'] ?? [] as $se) {
+                                    $exId = is_array($se) ? ($se['id'] ?? null) : $se;
+                                    $exQty = is_array($se) ? ($se['qty'] ?? 1) : 1;
+                                    $ex = \App\Models\Extra::find($exId);
+                                    if ($ex) $extrasText[] = $ex->name . ' x' . $exQty;
+                                }
+                                
+                                $displayItems->push((object)[
+                                    'name' => $cartItem['name'] ?? 'Service',
+                                    'quantity' => $qty,
+                                    'unit_price' => $price,
+                                    'total_price' => $price * $qty,
+                                    'turnaround_name' => $ttName,
+                                    'turnaround_charge' => $ttCharge,
+                                    'extras_text' => implode(', ', $extrasText),
+                                ]);
+                            }
+                        }
+                    @endphp
+                    <span class="text-sm font-bold text-slate-500">{{ $displayItems->count() }} Items</span>
                 </div>
                 <div class="divide-y divide-slate-100">
-                    @foreach($order->items as $item)
-                        <div class="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                            <div class="flex items-center gap-4">
-                                <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-lg">
-                                    <i class="fa-solid fa-tshirt"></i>
+                    @if($displayItems->count() > 0)
+                        @foreach($displayItems as $item)
+                            <div class="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+                                        <i class="fa-solid fa-tshirt"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                            {{ $item->name }}
+                                            @if($item->turnaround_name)
+                                                <span class="inline-block text-[10px] font-black px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                                                    ⚡ {{ $item->turnaround_name }}
+                                                </span>
+                                            @endif
+                                        </h4>
+                                        <p class="text-xs font-bold text-slate-500 mt-1">Qty: {{ $item->quantity }} &times; LKR {{ number_format($item->unit_price, 2) }}</p>
+                                        @if(!empty($item->extras_text ?? ''))<p class="text-xs font-semibold text-indigo-500 mt-0.5"><i class="fa-solid fa-plus text-[9px]"></i> {{ $item->extras_text }}</p>@endif
+                                    </div>
                                 </div>
-                                <div>
-                                    <h4 class="font-bold text-slate-800 text-sm">{{ $item->serviceType->name ?? 'Service' }}</h4>
-                                    <p class="text-xs font-bold text-slate-500 mt-1">Qty: {{ $item->quantity }} &times; LKR {{ number_format($item->unit_price, 2) }}</p>
+                                <div class="font-black text-slate-800">
+                                    LKR {{ number_format($item->total_price, 2) }}
                                 </div>
                             </div>
-                            <div class="font-black text-slate-800">
-                                LKR {{ number_format($item->total_price, 2) }}
+                            @if($item->turnaround_charge > 0)
+                            <div class="px-5 py-3 flex items-center justify-between bg-orange-50/60">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-10 h-10 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center">
+                                        <i class="fa-solid fa-bolt"></i>
+                                    </div>
+                                    <div>
+                                        <h4 class="font-bold text-orange-700 text-sm">{{ $item->turnaround_name ?? 'Express' }} Surcharge</h4>
+                                        <p class="text-xs font-bold text-orange-400 mt-0.5">Extra charge for {{ $item->name }}</p>
+                                    </div>
+                                </div>
+                                <div class="font-black text-orange-600">+ LKR {{ number_format($item->turnaround_charge, 2) }}</div>
                             </div>
+                            @endif
+                        @endforeach
+                    @else
+                        <div class="p-6 text-center text-slate-400 font-bold text-sm">
+                            No services found.
                         </div>
-                    @endforeach
+                    @endif
                 </div>
+                @php
+                    // If order has no items yet (not finalized), compute from cart_json
+                    $effSubtotal = $order->subtotal;
+                    $effDiscount = $order->discount;
+                    $effAdditional = $order->additional ?? 0;
+                    $effDeliveryFee = $order->delivery_fee ?? 0;
+                    $effTotal = $order->total;
+
+                    if ($order->items->count() === 0 && $order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
+                        $cartArr = json_decode($order->deliveryAppointment->cart_json, true) ?? [];
+                        $calcSubtotal = 0;
+                        foreach ($cartArr as $ci) {
+                            $lineQty = (float)($ci['qty'] ?? 1);
+                            $linePrice = (float)($ci['base_price'] ?? 0);
+                            $lineTotal = $linePrice * $lineQty;
+                            
+                            // Add turnaround charge
+                            $ttId = $ci['turnaround_type_id'] ?? null;
+                            if ($ttId) {
+                                $tt = \App\Models\TurnaroundType::find($ttId);
+                                if ($tt && !$tt->is_default) {
+                                    if ($tt->markup_type === 'percentage') {
+                                        $lineTotal += $lineTotal * ($tt->markup_value / 100);
+                                    } else {
+                                        $lineTotal += $tt->markup_value * $lineQty;
+                                    }
+                                }
+                            }
+                            
+                            // Add extras
+                            foreach ($ci['selected_extras'] ?? [] as $se) {
+                                $exId = is_array($se) ? ($se['id'] ?? null) : $se;
+                                $exQty = is_array($se) ? ($se['qty'] ?? 1) : 1;
+                                $ex = \App\Models\Extra::find($exId);
+                                if ($ex) $lineTotal += $ex->price * $exQty;
+                            }
+                            
+                            $calcSubtotal += $lineTotal;
+                        }
+                        $effSubtotal = $calcSubtotal;
+                        $effTotal = $calcSubtotal + $effDeliveryFee;
+                    }
+                @endphp
                 <div class="bg-slate-50 p-6 border-t border-slate-100">
                     <div class="space-y-3">
+                        @if($effSubtotal > 0)
                         <div class="flex justify-between text-sm font-bold text-slate-500">
                             <span>Subtotal</span>
-                            <span>LKR {{ number_format($order->subtotal, 2) }}</span>
+                            <span>LKR {{ number_format($effSubtotal, 2) }}</span>
                         </div>
-                        @if($order->discount > 0)
+                        @endif
+                        @if($effDiscount > 0)
                             <div class="flex justify-between text-sm font-bold text-green-600">
                                 <span>Discount</span>
-                                <span>- LKR {{ number_format($order->discount, 2) }}</span>
+                                <span>- LKR {{ number_format($effDiscount, 2) }}</span>
                             </div>
                         @endif
-                        @if($order->additional > 0)
+                        @if($effAdditional > 0)
                             <div class="flex justify-between text-sm font-bold text-red-500">
                                 <span>Additional Charges</span>
-                                <span>+ LKR {{ number_format($order->additional, 2) }}</span>
+                                <span>+ LKR {{ number_format($effAdditional, 2) }}</span>
                             </div>
                         @endif
-                        @if($order->delivery_fee > 0)
+                        @if($effDeliveryFee > 0)
                             <div class="flex justify-between text-sm font-bold text-slate-700">
                                 <span>Delivery Fee</span>
-                                <span>+ LKR {{ number_format($order->delivery_fee, 2) }}</span>
+                                <span>+ LKR {{ number_format($effDeliveryFee, 2) }}</span>
                             </div>
                         @endif
                         <div class="pt-3 border-t border-slate-200 flex justify-between items-center">
                             <span class="font-black text-slate-800">Total Amount</span>
-                            <span class="font-black text-lg text-slate-800">LKR {{ number_format($order->total, 2) }}</span>
+                            <span class="font-black text-lg text-slate-800">LKR {{ number_format($effTotal, 2) }}</span>
                         </div>
                         @if($order->paid_amount > 0)
                             <div class="flex justify-between text-sm font-bold text-green-600 mt-2">
@@ -271,11 +401,11 @@
                             </div>
                         @endif
                         
-                        @if($order->total - $order->paid_amount > 0)
+                        @if($effTotal - $order->paid_amount > 0)
                             <div class="pt-3 border-t border-slate-200 flex flex-col sm:flex-row justify-between sm:items-center mt-2 bg-blue-50 -mx-6 px-6 py-4 border-b border-blue-100 gap-3">
                                 <div>
                                     <span class="block font-black text-blue-900">Balance to Pay</span>
-                                    <span class="font-black text-2xl text-blue-700">LKR {{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
+                                    <span class="font-black text-2xl text-blue-700">LKR {{ number_format(max(0, $effTotal - $order->paid_amount), 2) }}</span>
                                 </div>
                                 @if(!$hasPendingSlipGlobally)
                                 <button type="button" x-data @click="$dispatch('open-payment-modal')" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-md transition-colors text-sm flex items-center justify-center gap-2 w-full sm:w-auto">

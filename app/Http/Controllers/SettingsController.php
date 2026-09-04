@@ -27,8 +27,19 @@ class SettingsController extends Controller
     {
         $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
         $branch = Branch::find($branchId);
-        $serviceCategories = ServiceCategory::with('services')->get();
-        $services = ServiceType::with(['inventoryItems', 'category'])->get();
+        
+        $serviceCategories = ServiceCategory::with(['children.services' => function($q) {
+            $q->orderBy('order_index');
+        }, 'services' => function($q) {
+            $q->orderBy('order_index');
+        }])->where('branch_id', $branchId)->orderBy('order_index')->get();
+
+        $mainCategories = $serviceCategories->whereNull('parent_id');
+
+        $services = ServiceType::with(['inventoryItems', 'category'])->where('branch_id', $branchId)->orderBy('order_index')->get();
+        $turnaroundTypes = \App\Models\TurnaroundType::where('branch_id', $branchId)->get();
+        $extras = \App\Models\Extra::where('branch_id', $branchId)->get();
+
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
         $packages = Package::with('services.serviceType')->get();
@@ -41,9 +52,6 @@ class SettingsController extends Controller
             $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
         }
         $pickupTimePeriods = \App\Models\PickupTimePeriod::orderBy('start_time')->get();
-        if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
-            $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
-        }
         $workshops = Branch::workshops()->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
@@ -60,12 +68,6 @@ class SettingsController extends Controller
                 'type' => 'card_transfer',
                 'is_active' => \App\Models\Setting::get('payment_online_active', '0') == '1',
             ],
-            (object) [
-                'id' => 'cash_on_delivery',
-                'name' => 'Cash on Delivery',
-                'type' => 'cash_on_delivery',
-                'is_active' => \App\Models\Setting::get('payment_cod_active', '1') == '1',
-            ],
         ];
         
         $bankDetails = [
@@ -80,7 +82,7 @@ class SettingsController extends Controller
             'gateway_secret_key' => \App\Models\Setting::get('gateway_secret_key', ''),
         ];
 
-        return view('settings.index', compact('branch', 'serviceCategories', 'services', 'cubbies', 'inventoryItems', 'packages', 'paymentMethods', 'deliveryRanges', 'pickupTimePeriods', 'workshops', 'minimumDeliveryCost', 'paymentMethodsList', 'bankDetails', 'gatewayDetails'));
+        return view('settings.index', compact('branch', 'serviceCategories', 'mainCategories', 'services', 'cubbies', 'inventoryItems', 'packages', 'paymentMethods', 'deliveryRanges', 'pickupTimePeriods', 'workshops', 'minimumDeliveryCost', 'paymentMethodsList', 'bankDetails', 'gatewayDetails', 'turnaroundTypes', 'extras'));
     }
 
     public function updateGeneral(Request $request)
@@ -89,7 +91,7 @@ class SettingsController extends Controller
         $branch = Branch::find($branchId);
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
@@ -102,6 +104,10 @@ class SettingsController extends Controller
         ]);
 
         $data = $request->only(['name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'auto_close_time']);
+
+        if (empty($data['name'])) {
+            unset($data['name']);
+        }
 
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
@@ -158,9 +164,10 @@ class SettingsController extends Controller
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
             'price_type' => $request->price_type,
-            'icon' => $request->icon ?? '👕',
+            'icon' => $request->icon ?? '🧺',
             'color' => $request->color ?? 'blue',
             'is_active' => true,
+            'is_visible_on_website' => $request->has('is_visible_on_website'),
         ]);
 
         return redirect()->back()->with('success', 'Service added.');
@@ -176,7 +183,9 @@ class SettingsController extends Controller
             'is_active' => 'boolean',
             'inventory' => 'nullable|array',
         ]);
-        $service->update($request->only(['name', 'category_id', 'base_price', 'price_type', 'is_active', 'icon', 'color']));
+        $updateData = $request->only(['name', 'category_id', 'base_price', 'price_type', 'is_active', 'icon', 'color']);
+        $updateData['is_visible_on_website'] = $request->has('is_visible_on_website');
+        $service->update($updateData);
 
         return redirect()->back()->with('success', 'Service updated.');
     }
@@ -192,6 +201,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'parent_id' => 'nullable|exists:service_categories,id',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
@@ -221,6 +231,8 @@ class SettingsController extends Controller
         }
 
         ServiceCategory::create([
+            'branch_id' => auth()->user()->branch_id ?? 1,
+            'parent_id' => $request->parent_id,
             'name' => $request->name,
             'is_active' => true,
             'image_path' => $imagePath,
@@ -233,11 +245,12 @@ class SettingsController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
+            'parent_id' => 'nullable|exists:service_categories,id',
             'is_active' => 'boolean',
             'image' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        $data = $request->only(['name', 'is_active']);
+        $data = $request->only(['name', 'parent_id', 'is_active']);
 
         if ($request->hasFile('image')) {
             $file = $request->file('image');
@@ -272,7 +285,36 @@ class SettingsController extends Controller
     {
         $category->delete();
 
-        return redirect()->back()->with('success', 'Service Category deleted.');
+        return redirect()->back()->with('success', 'Category deleted.');
+    }
+
+    public function reorderCategories(Request $request)
+    {
+        $request->validate(['ordered_ids' => 'required|array']);
+        foreach ($request->ordered_ids as $index => $id) {
+            ServiceCategory::where('id', $id)->update(['order_index' => $index]);
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function reorderServices(Request $request)
+    {
+        $request->validate([
+            'ordered_ids' => 'required|array',
+            'category_id' => 'nullable'
+        ]);
+        $categoryId = $request->category_id;
+        if ($categoryId === 'null') {
+            $categoryId = null;
+        }
+        
+        foreach ($request->ordered_ids as $index => $id) {
+            ServiceType::where('id', $id)->update([
+                'order_index' => $index,
+                'category_id' => $categoryId
+            ]);
+        }
+        return response()->json(['success' => true]);
     }
 
     public function storeCubby(Request $request)
@@ -522,5 +564,105 @@ class SettingsController extends Controller
     {
         $pickupTimePeriod->delete();
         return redirect()->back()->with('success', 'Pickup time period deleted successfully.');
+    }
+
+    // Extras CRUD
+    public function storeExtra(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price_type' => 'required|in:per_piece,per_kg',
+            'price' => 'required|numeric|min:0',
+        ]);
+
+        \App\Models\Extra::create([
+            'branch_id' => auth()->user()->branch_id ?? 1,
+            'name' => $request->name,
+            'price_type' => $request->price_type,
+            'price' => $request->price,
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'Extra added successfully.');
+    }
+
+    public function updateExtra(Request $request, \App\Models\Extra $extra)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'price_type' => 'required|in:per_piece,per_kg',
+            'price' => 'required|numeric|min:0',
+            'is_active' => 'boolean',
+        ]);
+
+        $extra->update($request->only(['name', 'price_type', 'price', 'is_active']));
+
+        return redirect()->back()->with('success', 'Extra updated successfully.');
+    }
+
+    public function destroyExtra(\App\Models\Extra $extra)
+    {
+        $extra->delete();
+        return redirect()->back()->with('success', 'Extra deleted successfully.');
+    }
+
+    // Turnaround Types CRUD
+    public function storeTurnaroundType(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'markup_type' => 'required|in:percentage,flat',
+            'markup_value' => 'required|numeric|min:0',
+            'is_default' => 'boolean',
+        ]);
+
+        if ($request->has('is_default')) {
+            \App\Models\TurnaroundType::where('branch_id', auth()->user()->branch_id ?? 1)->update(['is_default' => false]);
+        }
+
+        \App\Models\TurnaroundType::create([
+            'branch_id' => auth()->user()->branch_id ?? 1,
+            'name' => $request->name,
+            'markup_type' => $request->markup_type,
+            'markup_value' => $request->markup_value,
+            'is_default' => $request->has('is_default'),
+            'is_active' => true,
+        ]);
+
+        return redirect()->back()->with('success', 'Turnaround type added successfully.');
+    }
+
+    public function updateTurnaroundType(Request $request, \App\Models\TurnaroundType $turnaroundType)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'markup_type' => 'required|in:percentage,flat',
+            'markup_value' => 'required|numeric|min:0',
+            'is_default' => 'boolean',
+            'is_active' => 'boolean',
+        ]);
+
+        if ($request->has('is_default') && $request->is_default) {
+            \App\Models\TurnaroundType::where('branch_id', auth()->user()->branch_id ?? 1)->where('id', '!=', $turnaroundType->id)->update(['is_default' => false]);
+        }
+
+        $turnaroundType->update([
+            'name' => $request->name,
+            'markup_type' => $request->markup_type,
+            'markup_value' => $request->markup_value,
+            'is_default' => $request->has('is_default'),
+            'is_active' => $request->has('is_active'),
+        ]);
+
+        return redirect()->back()->with('success', 'Turnaround type updated successfully.');
+    }
+
+    public function destroyTurnaroundType(\App\Models\TurnaroundType $turnaroundType)
+    {
+        if (strtolower($turnaroundType->name) === 'standard') {
+            return redirect()->back()->with('error', 'The Standard turnaround type cannot be deleted.');
+        }
+        $turnaroundType->delete();
+        return redirect()->back()->with('success', 'Turnaround type deleted successfully.');
     }
 }

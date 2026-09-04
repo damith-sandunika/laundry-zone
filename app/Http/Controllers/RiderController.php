@@ -189,7 +189,9 @@ class RiderController extends Controller
                 ->with('info', 'This delivery already has an order created by the branch. Proceed to complete the pickup task.');
         }
 
-        $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
+        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($task) {
+            $q->where('branch_id', $task->branch_id);
+        }])->where('is_active', true)->where('branch_id', $task->branch_id)->get();
         $cartData = $task->appointment->cart_json ? json_decode($task->appointment->cart_json, true) : [];
 
         return view('rider.create-order', compact('task', 'categories', 'cartData'));
@@ -219,7 +221,7 @@ class RiderController extends Controller
         $order = null;
         DB::transaction(function () use ($request, $task, $appointment, $branchId, $subtotal, &$order) {
             $order = Order::create([
-                'order_number' => $appointment->order_number ?: Order::generateOrderNumber($branchId, true),
+                'order_number' => Order::generateOrderNumber($branchId, true),
                 'branch_id' => $branchId,
                 'customer_id' => $appointment->customer_id,
                 'created_by' => auth()->id(),
