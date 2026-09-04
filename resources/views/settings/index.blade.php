@@ -68,11 +68,11 @@
         <div class="p-6">
             <!-- GENERAL SETTINGS TAB -->
             <div x-show="activeTab === 'general'" x-data="{ 
-                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', 'RAPID Laundromat')) }}',
-                formName: '{{ addslashes($branch->name ?? 'SMART LAUNDRY') }}',
-                formAddress: '{{ addslashes($branch->address) }}',
-                formPhone: '{{ addslashes($branch->phone) }}',
-                formTagline: '{{ addslashes($branch->tagline ?? 'Fast & Clean Laundry Service') }}',
+                formCompanyName: '{{ addslashes(\App\Models\Setting::get('company_name', '')) }}',
+                formName: '{{ addslashes($branch->name ?? '') }}',
+                formAddress: '{{ addslashes($branch->address ?? '') }}',
+                formPhone: '{{ addslashes($branch->phone ?? '') }}',
+                formTagline: '{{ addslashes($branch->tagline ?? '') }}',
                 formLogoSize: {{ $branch->logo_size ?? 140 }},
                 previewUrl: '{{ $branch->logo_path ? asset($branch->logo_path) : '' }}'
             }">
