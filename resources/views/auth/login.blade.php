@@ -2,7 +2,7 @@
     <!-- Session Status -->
     <x-auth-session-status class="mb-4" :status="session('status')" />
 
-    <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-5 animate-slide-up" style="animation-delay: 150ms;">
+    <form method="POST" action="{{ route('login') }}" class="flex flex-col gap-5 animate-slide-up" style="animation-delay: 150ms;" autocomplete="off">
         @csrf
 
         @if ($errors->any())
@@ -27,7 +27,7 @@
                     value="{{ old('email') }}"
                     required
                     autofocus
-                    autocomplete="username"
+                    autocomplete="off"
                     placeholder="admin@laundry.com"
                     class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-slate-400"
                 />
@@ -52,7 +52,7 @@
                     type="password"
                     name="password"
                     required
-                    autocomplete="current-password"
+                    autocomplete="new-password"
                     placeholder="••••••••"
                     class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-slate-400"
                 />
