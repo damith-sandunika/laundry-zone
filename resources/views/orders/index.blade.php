@@ -239,15 +239,7 @@
                 },
 
                 openEdit(order) {
-                    let cart = (order.items || []).map(i => ({
-                        service_type_id: i.service_type_id,
-                        name: i.service_type ? i.service_type.name : i.item_description,
-                        base_price: i.unit_price,
-                        qty: i.quantity
-                    }));
-                    window.dispatchEvent(new CustomEvent('open-finalize-modal', {
-                        detail: { context: 'branch', categories: this.allCategories, order: order, cart: cart, advance: null, minimumDeliveryCost: this.minimumDeliveryCost }
-                    }));
+                    window.location.href = '/orders/' + order.id + '/edit';
                 },
             }));
         });
@@ -865,7 +857,6 @@
 
         <x-modals.request-payment />
         <x-modals.review-slip />
-        <x-modals.finalize-order />
 
     </div>
 </x-app-layout>

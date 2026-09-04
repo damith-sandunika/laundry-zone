@@ -45,6 +45,46 @@ class OrderController extends Controller
         ]));
     }
 
+    public function edit(Order $order)
+    {
+        $order->load('items.serviceType', 'customer');
+        $services = \App\Models\ServiceType::where('is_active', true)->get();
+        
+        $categories = \App\Models\ServiceCategory::with(['children' => function($q) {
+            $q->where('is_active', true)->orderBy('order_index');
+        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        
+        $cartItems = $order->items->map(function($item) {
+            return [
+                'service_type_id' => $item->service_type_id,
+                'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
+                'base_price' => $item->unit_price,
+                'qty' => $item->quantity,
+            ];
+        })->toArray();
+        
+        if (empty($cartItems) && $order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
+            $parsedCart = json_decode($order->deliveryAppointment->cart_json, true);
+            if (is_array($parsedCart)) {
+                $cartItems = array_map(function($i) {
+                    $service = $i['service'] ?? $i;
+                    $sId = $service['id'] ?? $service['service_id'] ?? $service['service_type_id'] ?? null;
+                    return [
+                        'service_type_id' => $sId,
+                        'name' => $service['name'] ?? $service['item_description'] ?? 'Item',
+                        'base_price' => $service['base_price'] ?? $service['unit_price'] ?? 0,
+                        'qty' => $i['quantity'] ?? $i['qty'] ?? 1,
+                    ];
+                }, $parsedCart);
+            }
+        }
+        
+        $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
+        $dispatch = (object)['order' => $order, 'order_id' => $order->id];
+
+        return view('workshop.finalize_bill', compact('dispatch', 'services', 'categories', 'cartItems', 'minimumDeliveryCost'));
+    }
+
     public function index(Request $request)
     {
         $branchId = auth()->user()->branch_id;
@@ -305,7 +345,7 @@ class OrderController extends Controller
     public function showByNumber($orderNumber)
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
-        $order->load(['customer', 'items.serviceType', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment', 'correctionRequests.requestedBy', 'correctionRequests.approvedBy']);
+        $order->load(['customer', 'items.serviceType', 'items.turnaroundType', 'items.extras.extra', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment', 'correctionRequests.requestedBy', 'correctionRequests.approvedBy']);
         $branchId = auth()->user()->branch_id ?? 1;
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 

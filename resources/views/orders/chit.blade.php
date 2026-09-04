@@ -121,10 +121,18 @@
                 $catName = $item->serviceType && $item->serviceType->category ? $item->serviceType->category->name : 'General';
                 $itemName = $item->serviceType ? $item->serviceType->name : $item->item_description;
             @endphp
-            <div class="item-row">
+            <div class="item-row" style="margin-bottom: 2px;">
                 <span>&bull; {{ $catName }} - {{ $itemName }}</span>
                 <span>x{{ $item->quantity }}</span>
             </div>
+            @if($item->turnaroundType)
+                <div style="font-size:10px; margin-left:10px; margin-bottom: 2px;">[{{ $item->turnaroundType->name }}]</div>
+            @endif
+            @if($item->extras->count() > 0)
+                @foreach($item->extras as $e)
+                <div style="font-size:10px; margin-left:10px; margin-bottom: 2px;">+ {{ $e->extra->name }} (x{{ $e->quantity }})</div>
+                @endforeach
+            @endif
         @endforeach
     </div>
 

@@ -2,69 +2,41 @@
 
 <div x-data="alertSystem()" x-init="init()" class="relative mr-2 sm:mr-4 flex items-center">
     
-    <!-- Notification Bell -->
-    <button @click="notifOpen = !notifOpen; profileOpen = false" @click.away="notifOpen = false" class="relative p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none">
-        <svg class="w-5 h-5 sm:w-6 sm:h-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-        </svg>
-        <!-- Badge -->
-        <div x-show="count > 0" x-cloak class="absolute top-1.5 right-1.5 w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full ring-2 ring-white animate-pulse"></div>
-    </button>
-
-    <!-- Notification Dropdown -->
-    <div x-show="notifOpen" x-cloak
-         x-transition:enter="transition ease-out duration-200"
-         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
-         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-         x-transition:leave="transition ease-in duration-150"
-         x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-         x-transition:leave-end="opacity-0 scale-95 translate-y-2"
-         class="absolute right-0 top-[110%] w-[280px] sm:w-[320px] bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-[60] origin-top-right">
-        
-        <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Notifications</span>
-            <span class="text-[10px] font-bold bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full" x-text="count + ' New'"></span>
-        </div>
-
-        <div class="max-h-[360px] overflow-y-auto custom-scrollbar">
-            <template x-if="alerts.length === 0">
-                <div class="px-4 py-8 text-center text-slate-500">
-                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+    <!-- Individual Alert Icons -->
+    <template x-for="alert in alerts" :key="alert.id">
+        <div class="relative">
+            <button @click="toggleAlert(alert.id)" @click.away="closeAlert(alert.id)" class="relative p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none group">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 transition-colors"
+                     :class="'bg-' + alert.color + '-100 text-' + alert.color + '-600 group-hover:bg-' + alert.color + '-200'">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" :d="alert.icon" />
                     </svg>
-                    <p class="text-[13px] font-medium">All caught up!</p>
                 </div>
-            </template>
-            <template x-for="alert in alerts" :key="alert.id">
-                <div class="border-b border-slate-50 last:border-0 hover:bg-slate-50 transition-colors">
-                    <div class="px-4 py-3 flex gap-3 items-start cursor-pointer" @click="alert.expanded = !alert.expanded">
-                        <div class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-                             :class="'bg-' + alert.color + '-100 text-' + alert.color + '-600'">
-                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" :d="alert.icon"/>
-                            </svg>
-                        </div>
-                        <div class="flex-1 min-w-0">
-                            <h4 class="text-[12px] font-bold text-slate-800 leading-tight mb-1" x-text="alert.label"></h4>
-                            <p class="text-[11px] text-slate-500 font-medium">
-                                <span class="font-bold" :class="'text-' + alert.color + '-600'" x-text="alert.count"></span> 
-                                <span x-text="alert.subtitle || 'Items'"></span>
-                            </p>
-                        </div>
-                        <svg class="w-4 h-4 text-slate-400 transform transition-transform" :class="alert.expanded ? 'rotate-180' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                        </svg>
-                    </div>
-                    
-                    <div x-show="alert.expanded" x-collapse>
-                        <div class="bg-slate-50/50 px-4 py-2 border-t border-slate-50">
-                            <div class="space-y-1" x-html="renderOrderNumbers(alert)"></div>
-                        </div>
-                    </div>
+                <!-- Badge -->
+                <div x-show="alert.count > 0" x-cloak class="absolute top-1.5 right-1.5 w-2.5 h-2.5 rounded-full ring-2 ring-white animate-pulse shadow-sm" :class="'bg-' + alert.color + '-500'"></div>
+            </button>
+
+            <!-- Dropdown for this specific alert -->
+            <div x-show="alert.open" x-cloak
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                 x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100 translate-y-0"
+                 x-transition:leave-end="opacity-0 scale-95 translate-y-2"
+                 class="absolute right-0 top-[110%] w-[280px] sm:w-[320px] bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden z-[60] origin-top-right">
+                
+                <div class="px-4 py-3 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-800 tracking-tight leading-tight" x-text="alert.label"></span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0" :class="'bg-' + alert.color + '-100 text-' + alert.color + '-700'" x-text="alert.count + ' New'"></span>
                 </div>
-            </template>
+
+                <div class="max-h-[360px] overflow-y-auto custom-scrollbar p-2 bg-slate-50/50">
+                    <div class="space-y-1" x-html="renderOrderNumbers(alert)"></div>
+                </div>
+            </div>
         </div>
-    </div>
+    </template>
 
     <!-- Audio Player (Base64 Beep) -->
     <audio id="notification-sound" src="data:audio/mp3;base64,//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq//NExAAAAANIAAAAAExBTUUzLjEwMKqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq" preload="auto" loop></audio>
@@ -105,11 +77,11 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-                    // Retain expanded state
+                    // Map new alerts but keep open state
                     let newAlerts = data.alerts || [];
                     newAlerts = newAlerts.map(na => {
                         let existing = this.alerts.find(a => a.id === na.id);
-                        na.expanded = existing ? existing.expanded : false;
+                        na.open = existing ? existing.open : false;
                         return na;
                     });
                     this.alerts = newAlerts;
@@ -136,6 +108,18 @@
                     audio.pause();
                     audio.currentTime = 0;
                 }
+            },
+            toggleAlert(id) {
+                let alert = this.alerts.find(a => a.id === id);
+                if (alert) {
+                    // Close others
+                    this.alerts.forEach(a => { if(a.id !== id) a.open = false; });
+                    alert.open = !alert.open;
+                }
+            },
+            closeAlert(id) {
+                let alert = this.alerts.find(a => a.id === id);
+                if (alert) alert.open = false;
             }
         }
     }

@@ -44,11 +44,22 @@ class CustomerSiteController extends Controller
         if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
             $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
         }
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) {
-            $q->where('branch_id', 1)->where('is_visible_on_website', true)->orderBy('order_index');
-        }])->where('is_active', true)->where('branch_id', 1)->orderBy('order_index')->get();
+        $categories = \App\Models\ServiceCategory::with([
+            'children.services' => function($q) {
+                $q->where('branch_id', 1)->where('is_visible_on_website', true)->orderBy('order_index');
+            },
+            'services' => function($q) {
+                $q->where('branch_id', 1)->where('is_visible_on_website', true)->orderBy('order_index');
+            }
+        ])->whereNull('parent_id')->where('is_active', true)->where('branch_id', 1)->orderBy('order_index')->get();
+
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
         $minimumOrderLimit = \App\Models\Setting::get('minimum_delivery_cost', 0);
+        
+        $turnaroundTypes = \App\Models\TurnaroundType::all();
+        $extras = \App\Models\Extra::where('is_active', true)->get();
+        $shopLat = \App\Models\Setting::get('shop_latitude', '6.9271');
+        $shopLng = \App\Models\Setting::get('shop_longitude', '79.8612');
         
         // Fetch delivery ranges for distance cost calculation
         $deliveryRanges = \App\Models\DeliveryRange::orderBy('min_distance_km')->get();
@@ -68,14 +79,19 @@ class CustomerSiteController extends Controller
         // For backward compat: single workshop variable pointing to first
         $workshop = $workshops->first();
 
-        return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods', 'minimumOrderLimit', 'deliveryRanges', 'workshop', 'workshops'));
+        return view('customer.booking.index', compact('paymentMethods', 'categories', 'pickupTimePeriods', 'minimumOrderLimit', 'deliveryRanges', 'workshop', 'workshops', 'turnaroundTypes', 'extras', 'shopLat', 'shopLng'));
     }
 
     public function getBranchServices(Branch $branch)
     {
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($branch) {
-            $q->where('branch_id', $branch->id)->where('is_visible_on_website', true)->orderBy('order_index');
-        }])->where('is_active', true)->where('branch_id', $branch->id)->orderBy('order_index')->get();
+        $categories = \App\Models\ServiceCategory::with([
+            'children.services' => function($q) use ($branch) {
+                $q->where('branch_id', $branch->id)->where('is_visible_on_website', true)->orderBy('order_index');
+            },
+            'services' => function($q) use ($branch) {
+                $q->where('branch_id', $branch->id)->where('is_visible_on_website', true)->orderBy('order_index');
+            }
+        ])->whereNull('parent_id')->where('is_active', true)->where('branch_id', $branch->id)->orderBy('order_index')->get();
 
         return response()->json([
             'categories' => $categories

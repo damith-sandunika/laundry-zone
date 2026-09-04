@@ -661,22 +661,50 @@ class WorkshopController extends Controller
         return response()->json(['success' => true, 'message' => 'Payment approved. Order is now processing.']);
     }
 
-    public function finalizeBill(WorkshopDispatch $dispatch)
+    public function finalizeBill(string $order_number)
     {
-        $dispatch->load('order.items.serviceType');
+        $order = \App\Models\Order::where('order_number', $order_number)
+            ->with(['items.serviceType', 'customer', 'deliveryAppointment'])
+            ->firstOrFail();
+
+        $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
+            ->whereNotIn('status', ['received_at_branch'])
+            ->latest()
+            ->firstOrFail();
+
         $services = \App\Models\ServiceType::where('is_active', true)->get();
         
-        $cartItems = $dispatch->order->items->map(function($item) {
+        $categories = \App\Models\ServiceCategory::with(['children' => function($q) {
+            $q->where('is_active', true)->orderBy('order_index');
+        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        
+        $cartItems = $order->items->map(function($item) {
             return [
                 'service_type_id' => $item->service_type_id,
                 'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
                 'base_price' => $item->unit_price,
                 'qty' => $item->quantity,
             ];
-        });
+        })->toArray();
+        
+        if (empty($cartItems) && $order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
+            $parsedCart = json_decode($order->deliveryAppointment->cart_json, true);
+            if (is_array($parsedCart)) {
+                $cartItems = array_map(function($i) {
+                    $service = $i['service'] ?? $i;
+                    $sId = $service['id'] ?? $service['service_id'] ?? $service['service_type_id'] ?? null;
+                    return [
+                        'service_type_id' => $sId,
+                        'name' => $service['name'] ?? $service['item_description'] ?? 'Item',
+                        'base_price' => $service['base_price'] ?? $service['unit_price'] ?? 0,
+                        'qty' => $i['quantity'] ?? $i['qty'] ?? 1,
+                    ];
+                }, $parsedCart);
+            }
+        }
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.finalize_bill', compact('dispatch', 'services', 'cartItems', 'minimumDeliveryCost'));
+        return view('workshop.finalize_bill', compact('dispatch', 'order', 'services', 'categories', 'cartItems', 'minimumDeliveryCost'));
     }
 
     // ─── Workshop Admin: Return to branch (all order types) ───
@@ -991,7 +1019,7 @@ class WorkshopController extends Controller
                 \Log::error('Email notification failed (handover): ' . $e->getMessage());
             }
 
-            return response()->json(['success' => true, 'order_id' => $order->id]);
+            return response()->json(['success' => true, 'order_id' => $order->id, 'order_number' => $order->order_number]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::handover error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

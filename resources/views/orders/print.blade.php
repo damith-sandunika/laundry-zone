@@ -162,7 +162,15 @@
             <span class="bold">Rs.{{ number_format($item->total_price, 2) }}</span>
         </div>
         <div style="font-size: 12px; margin-bottom: 6px;">
-            {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
+            {{ $item->quantity }} x Rs.{{ number_format(($item->total_price - $item->extras->sum('total_price')) / $item->quantity, 2) }}
+            @if($item->turnaroundType && $item->turnaroundType->name !== 'Standard')
+                [{{ $item->turnaroundType->name }}]
+            @endif
+            @if($item->extras->count() > 0)
+                @foreach($item->extras as $e)
+                <br> <small>+ {{ $e->extra->name }} (x{{ $e->quantity }} @ Rs.{{ number_format($e->unit_price, 2) }})</small>
+                @endforeach
+            @endif
         </div>
     @endforeach
 

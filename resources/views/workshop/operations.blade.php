@@ -19,40 +19,8 @@
         allCategories: JSON.parse(atob('{{ base64_encode(json_encode($categories)) }}')),
         minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
         
-        openFinalizeModal(dispatch) {
-            let order = dispatch.order;
-            let cart = (order.items || []).map(i => ({
-                service_type_id: i.service_type_id,
-                name: i.service_type ? i.service_type.name : i.item_description,
-                base_price: i.unit_price,
-                qty: i.quantity
-            }));
-            
-            if (cart.length === 0 && order.delivery_appointment && order.delivery_appointment.cart_json) {
-                try {
-                    let parsedCart = JSON.parse(order.delivery_appointment.cart_json);
-                    cart = parsedCart.map(i => {
-                        let service = i.service || i;
-                        let sId = service.id || service.service_id || service.service_type_id;
-                        return {
-                            service_type_id: sId,
-                            name: service.name || service.item_description,
-                            base_price: service.base_price || service.unit_price || 0,
-                            qty: i.quantity || i.qty || 1
-                        };
-                    });
-                } catch(e) { console.error('Error parsing cart_json', e); }
-            }
-            window.dispatchEvent(new CustomEvent('open-finalize-modal', {
-                detail: {
-                    context: 'workshop',
-                    categories: this.allCategories,
-                    order: order,
-                    cart: cart,
-                    advance: null,
-                    minimumDeliveryCost: this.minimumDeliveryCost
-                }
-            }));
+        openFinalizePage(dispatch) {
+            window.location.href = '/workshop/orders/' + dispatch.order.order_number + '/finalize-bill';
         },
 
         toggleSelectAll(e) {
@@ -522,7 +490,7 @@
 
                                         <template x-if="dispatch.status === 'received_at_workshop'">
                                             <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;">
-                                                <button @click="openFinalizeModal(dispatch)"
+                                                <button @click="openFinalizePage(dispatch)"
                                                     style="padding:5px 10px;background:#3b82f6;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.3);transition:transform 0.1s;"
                                                     onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                                                     Finalize Bill
@@ -801,7 +769,6 @@
     </div>
 
     <x-modals.review-slip />
-    <x-modals.finalize-order />
 
 </div>{{-- /main x-data --}}
 

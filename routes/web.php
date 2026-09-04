@@ -101,7 +101,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::resource('customers', CustomerController::class);
 
-    Route::post('/orders/{order}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
+    Route::post('/orders/{order:order_number}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
     Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store');
     Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve');
     Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject');
@@ -121,7 +121,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/workshop/bulk-dispatch', [WorkshopController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
     Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
     Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
-    Route::resource('orders', OrderController::class)->only(['index']);
+    Route::resource('orders', OrderController::class)->only(['index', 'edit']);
 
     Route::post('/packages/{customerPackage}/mark-paid', [PackageController::class, 'markPaid'])->name('packages.markPaid');
     Route::get('/packages/{customerPackage}/print', [PackageController::class, 'printReceipt'])->name('packages.print');
@@ -163,7 +163,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/dispatches/{dispatch}/complete', [WorkshopController::class, 'complete'])->name('complete');
         Route::post('/dispatches/{dispatch}/handover', [WorkshopController::class, 'handover'])->name('handover');
         Route::post('/dispatches/{dispatch}/return', [WorkshopController::class, 'returnToBranch'])->name('return');
-        Route::get('/dispatches/{dispatch}/finalize-bill', [WorkshopController::class, 'finalizeBill'])->name('finalizeBill');
+        Route::get('/orders/{order_number}/finalize-bill', [WorkshopController::class, 'finalizeBill'])->name('finalizeBill');
         Route::post('/dispatches/{dispatch}/delivery', [WorkshopController::class, 'dispatchDelivery'])->name('dispatchDelivery');
         Route::post('/dispatches/{dispatch}/request-payment', [WorkshopController::class, 'requestPayment'])->name('requestPayment');
         Route::post('/dispatches/{dispatch}/approve-payment', [WorkshopController::class, 'approvePayment'])->name('approvePayment');
@@ -215,6 +215,16 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
         Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
         Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
+
+        // Extras
+        Route::post('/settings/extras', [SettingsController::class, 'storeExtra'])->name('settings.storeExtra');
+        Route::put('/settings/extras/{extra}', [SettingsController::class, 'updateExtra'])->name('settings.updateExtra');
+        Route::delete('/settings/extras/{extra}', [SettingsController::class, 'destroyExtra'])->name('settings.destroyExtra');
+
+        // Turnaround Types
+        Route::post('/settings/turnaround-types', [SettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
+        Route::put('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
+        Route::delete('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
 
         Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
         Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
@@ -282,3 +292,4 @@ require __DIR__.'/auth.php';
 
 // SMS Webhook Route
 Route::post('/sms/callback', [\App\Http\Controllers\SmsWebhookController::class, 'handleCallback']);
+

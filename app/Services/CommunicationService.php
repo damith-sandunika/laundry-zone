@@ -82,6 +82,13 @@ class CommunicationService
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is completed and settled. Thank you for choosing RAPID Laundromat!</p>
                 ",
+            ],
+            'bill_finalized' => [
+                'subject' => "Payment Request for Order #{$orderId}",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>The bill for your order <strong>#{$orderId}</strong> has been finalized. The total amount is <strong>{$total}</strong> and the amount due is <strong>{$due}</strong>. Please arrange the payment. Thank you! - RAPID Laundromat</p>
+                ",
             ]
         ];
 
@@ -95,6 +102,7 @@ class CommunicationService
     public function sendCollectionOrderPlaced(Order $order) { $this->dispatch('collection_order_placed', $order); }
     public function sendCollectionOrderReady(Order $order)  { $this->dispatch('collection_order_ready', $order); }
     public function sendCollectionOrderCompleted(Order $order) { $this->dispatch('collection_order_completed', $order); }
+    public function sendFinalizedBill(Order $order) { $this->dispatch('bill_finalized', $order); }
 
     // ─── Master Dispatch ─────────────────────────────────────────────────────
 
