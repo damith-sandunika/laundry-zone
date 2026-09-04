@@ -82,7 +82,7 @@ class SettingsController extends Controller
         $branch = Branch::find($branchId);
 
         $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => 'nullable|string|max:255',
             'address' => 'nullable|string|max:255',
             'latitude' => 'nullable|numeric',
             'longitude' => 'nullable|numeric',
@@ -95,6 +95,10 @@ class SettingsController extends Controller
         ]);
 
         $data = $request->only(['name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'auto_close_time']);
+
+        if (empty($data['name'])) {
+            unset($data['name']);
+        }
 
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
