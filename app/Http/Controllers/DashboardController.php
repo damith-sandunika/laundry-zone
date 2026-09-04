@@ -329,7 +329,7 @@ class DashboardController extends Controller
             $superAdminStats = [
                 'total_revenue_today' => $todayRevenue,
                 'today_present_staff' => Attendance::whereDate('date', $today)->whereIn('status', ['present', 'late'])->count(),
-                'opening_branches' => RegisterSession::where('status', 'open')->count(),
+                'opening_branches' => RegisterSession::where('status', 'open')->distinct('branch_id')->count('branch_id'),
                 'new_orders_today' => Order::whereDate('created_at', $today)->count(),
             ];
 
