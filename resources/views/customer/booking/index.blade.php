@@ -78,8 +78,8 @@
             @endif
 
             
-            <!-- Step 3: Services (Drill-Down UI) -->
-            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms class="pb-24">
+            <!-- Step 2: Services (Drill-Down UI) -->
+            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms class="pb-24">
                 <div class="mb-6">
                     <h3 class="text-xl font-semibold text-slate-800">Select Services</h3>
                     <p class="text-sm text-slate-500 mt-1">Navigate through categories to add items to your cart.</p>
@@ -180,7 +180,7 @@
             </div>
 
             <!-- Fixed Bottom Cart Bar -->
-            <div x-show="step === 3" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div x-show="step === 2" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 
                 <!-- Expandable Cart List -->
                 <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
@@ -220,7 +220,7 @@
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <button type="button" @click="goToStep(2)" class="hidden sm:flex text-slate-500 hover:text-slate-800 font-medium items-center gap-2 px-4 py-2 border border-transparent hover:border-slate-200 rounded-md transition-all">
+                        <button type="button" @click="goToStep(1)" class="hidden sm:flex text-slate-500 hover:text-slate-800 font-medium items-center gap-2 px-4 py-2 border border-transparent hover:border-slate-200 rounded-md transition-all">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
                         <button type="button" @click="openGlobalCheckoutModal()" :disabled="cart.length === 0" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-2.5 rounded-md font-semibold transition-colors shadow-sm flex items-center gap-2">
@@ -658,41 +658,6 @@
                     <button type="submit" :disabled="isOutOfRange" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-black transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-lg">
                         Confirm Booking <i class="fa-solid fa-check-circle"></i>
                     </button>
-                </div>
-            </div>
-
-            <!-- Floating Total Bar (Glassmorphic) -->
-            <div x-show="totalPrice > 0" x-transition.opacity.duration.300ms
-                 class="fixed bottom-0 left-0 right-0 z-[1000] p-4 pointer-events-none pb-4 sm:pb-6" style="display: none;">
-                <div class="max-w-3xl mx-auto bg-slate-900/95 backdrop-blur-md border border-slate-700/50 rounded-2xl shadow-2xl p-3 sm:p-4 flex flex-col pointer-events-auto transition-transform">
-                    
-                    <!-- Min Limit Alert -->
-                    <div x-show="totalPrice < minLimit" class="bg-red-500/10 border border-red-500/20 rounded-lg p-2 mb-3 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation text-red-400 text-xs"></i>
-                        <span class="text-red-300 text-xs font-bold">Minimum order of LKR <span x-text="minLimit"></span> not reached yet.</span>
-                    </div>
-
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-3 sm:gap-4">
-                            <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-500/20 rounded-xl flex items-center justify-center text-blue-400 shrink-0">
-                                <i class="fa-solid fa-cart-shopping text-lg sm:text-xl"></i>
-                            </div>
-                            <div>
-                                <div class="text-slate-400 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">Your Order Total</div>
-                                <div class="text-white font-black text-base sm:text-lg leading-tight mt-0.5">
-                                    LKR <span x-text="totalPrice + estimatedDeliveryFee"></span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="text-right flex flex-col items-end">
-                            <div class="text-slate-300 text-[10px] sm:text-xs font-bold flex items-center gap-1.5">
-                                <i class="fa-solid fa-shirt text-[9px] text-blue-400"></i> Items: LKR <span x-text="totalPrice"></span>
-                            </div>
-                            <div x-show="estimatedDeliveryFee > 0" class="text-slate-300 text-[10px] sm:text-xs font-bold flex items-center gap-1.5 mt-0.5">
-                                <i class="fa-solid fa-motorcycle text-[9px] text-amber-400"></i> Fee: LKR <span x-text="estimatedDeliveryFee"></span>
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </div>
         </form>
@@ -1285,7 +1250,7 @@
                         });
                         
                         this.isGlobalCheckoutModalOpen = false;
-                        this.goToStep(4);
+                        this.goToStep(3);
                     },
                 }
             }

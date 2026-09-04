@@ -105,10 +105,6 @@ class SettingsController extends Controller
 
         $data = $request->only(['name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'auto_close_time']);
 
-        if (empty($data['name'])) {
-            unset($data['name']);
-        }
-
         if ($request->hasFile('logo')) {
             $file = $request->file('logo');
             if (env('CLOUDINARY_URL')) {
