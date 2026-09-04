@@ -36,10 +36,10 @@ class POSController extends Controller
             }
         }
 
-        $services = ServiceType::where('is_active', true)->where('branch_id', $branchId)->orderBy('order_index')->get();
+        $services = ServiceType::where('is_active', true)->orderBy('order_index')->get();
         $categories = ServiceCategory::with(['children' => function($q) {
             $q->where('is_active', true)->orderBy('order_index');
-        }])->where('is_active', true)->where('branch_id', $branchId)->orderBy('order_index')->get();
+        }])->where('is_active', true)->orderBy('order_index')->get();
 
         $customers = Customer::withoutGlobalScopes()->where('is_active', true)->get();
 

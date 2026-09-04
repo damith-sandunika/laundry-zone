@@ -25,9 +25,9 @@ class CustomerSiteController extends Controller
             })
             ->get();
         $categories = ServiceCategory::with(['services' => function($q) {
-            $q->where('branch_id', 1)->where('is_visible_on_website', true)->orderBy('order_index');
-        }])->where('is_active', true)->where('branch_id', 1)->orderBy('order_index')->get();
-        $packages = Package::with('services.serviceType')->where('is_active', true)->where('branch_id', 1)->get();
+            $q->where('is_visible_on_website', true)->orderBy('order_index');
+        }])->where('is_active', true)->orderBy('order_index')->get();
+        $packages = Package::with('services.serviceType')->where('is_active', true)->get();
 
         return view('site.home', compact('branches', 'categories', 'packages'));
     }
@@ -46,12 +46,12 @@ class CustomerSiteController extends Controller
         }
         $categories = \App\Models\ServiceCategory::with([
             'children.services' => function($q) {
-                $q->where('branch_id', 1)->where('is_visible_on_website', true)->orderBy('order_index');
+                $q->where('is_visible_on_website', true)->orderBy('order_index');
             },
             'services' => function($q) {
-                $q->where('branch_id', 1)->where('is_visible_on_website', true)->orderBy('order_index');
+                $q->where('is_visible_on_website', true)->orderBy('order_index');
             }
-        ])->whereNull('parent_id')->where('is_active', true)->where('branch_id', 1)->orderBy('order_index')->get();
+        ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
 
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
         $minimumOrderLimit = \App\Models\Setting::get('minimum_delivery_cost', 0);
@@ -85,13 +85,13 @@ class CustomerSiteController extends Controller
     public function getBranchServices(Branch $branch)
     {
         $categories = \App\Models\ServiceCategory::with([
-            'children.services' => function($q) use ($branch) {
-                $q->where('branch_id', $branch->id)->where('is_visible_on_website', true)->orderBy('order_index');
+            'children.services' => function($q) {
+                $q->where('is_visible_on_website', true)->orderBy('order_index');
             },
-            'services' => function($q) use ($branch) {
-                $q->where('branch_id', $branch->id)->where('is_visible_on_website', true)->orderBy('order_index');
+            'services' => function($q) {
+                $q->where('is_visible_on_website', true)->orderBy('order_index');
             }
-        ])->whereNull('parent_id')->where('is_active', true)->where('branch_id', $branch->id)->orderBy('order_index')->get();
+        ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
 
         return response()->json([
             'categories' => $categories
