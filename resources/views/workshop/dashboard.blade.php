@@ -541,7 +541,7 @@
                     </div>
                     <div class="flex justify-between items-center py-3 border-t border-slate-700">
                         <span class="text-[11px] font-semibold text-slate-500">Opened By</span>
-                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession->user->name }}</span>
+                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession->user?->name ?? 'Unknown' }}</span>
                     </div>
                     <div class="flex justify-between items-center py-3 border-b-0">
                         <span class="text-[11px] font-semibold text-slate-500">Time Started</span>
