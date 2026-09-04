@@ -32,11 +32,11 @@ class SettingsController extends Controller
             $q->orderBy('order_index');
         }, 'services' => function($q) {
             $q->orderBy('order_index');
-        }])->where('branch_id', $branchId)->orderBy('order_index')->get();
+        }])->orderBy('order_index')->get();
 
         $mainCategories = $serviceCategories->whereNull('parent_id');
 
-        $services = ServiceType::with(['inventoryItems', 'category'])->where('branch_id', $branchId)->orderBy('order_index')->get();
+        $services = ServiceType::with(['inventoryItems', 'category'])->orderBy('order_index')->get();
         $turnaroundTypes = \App\Models\TurnaroundType::where('branch_id', $branchId)->get();
         $extras = \App\Models\Extra::where('branch_id', $branchId)->get();
 
