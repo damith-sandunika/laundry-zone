@@ -248,9 +248,9 @@
                         Operations
                     </a>
                 </div>
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto overflow-y-auto max-h-[400px] custom-scrollbar relative">
                     <table class="w-full text-left border-collapse">
-                        <thead>
+                        <thead class="sticky top-0 z-10">
                             <tr class="bg-slate-50 border-b border-slate-100">
                                 <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Order</th>
                                 <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Customer</th>
@@ -288,7 +288,7 @@
                                         @if($order->order && $order->order->receipt_path)
                                             <a href="{{ \Illuminate\Support\Str::startsWith($order->order->receipt_path, 'http') ? $order->order->receipt_path : asset('storage/' . $order->order->receipt_path) }}" target="_blank" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 rounded-lg text-[11px] font-bold transition-all mr-1">View Invoice</a>
                                         @endif
-                                        <a href="{{ route('orders.show', $order->order->order_number) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all opacity-0 group-hover:opacity-100 focus:opacity-100">View</a>
+                                        <a href="{{ route('orders.show', $order->order->order_number) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all">View</a>
                                     </td>
                                 </tr>
                             @empty

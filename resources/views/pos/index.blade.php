@@ -96,10 +96,10 @@
 
                 <!-- Services Grid -->
                 <div class="flex-1 overflow-y-auto p-4 custom-scrollbar z-10">
-                    <div class="grid grid-cols-4 sm:grid-cols-6 xl:grid-cols-8 gap-2 lg:gap-3">
+                    <div class="grid grid-cols-4 sm:grid-cols-6 xl:grid-cols-6 gap-2 lg:gap-3 auto-rows-max">
                         
                         <!-- Special Service Card -->
-                        <div class="col-span-4 sm:col-span-2 xl:col-span-2 flex flex-col p-4 rounded-[20px] bg-gradient-to-br from-fuchsia-50 to-purple-50 border-2 border-dashed border-purple-300 shadow-sm hover:shadow-md transition-shadow group">
+                        <div class="col-span-4 sm:col-span-2 xl:col-span-2 row-span-2 flex flex-col p-4 rounded-[20px] bg-gradient-to-br from-fuchsia-50 to-purple-50 border-2 border-dashed border-purple-300 shadow-sm hover:shadow-md transition-shadow group">
                             <input type="text" x-model="specialName" placeholder="Custom Service…"
                                 @click.stop @keydown.enter.prevent="$el.nextElementSibling.focus()"
                                 class="w-full px-3 py-2 bg-white/80 border-2 border-purple-200 focus:border-purple-500 rounded-xl text-[13px] font-bold text-purple-900 mb-2 outline-none placeholder:text-purple-300 transition-colors">
@@ -498,7 +498,7 @@
 
         <!-- ===================== Order Success Modal ===================== -->
         <div x-data="{ show: false, orderId: '', orderNum: '', custName: '', total: '', payMode: '', dueDate: '' }"
-            x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate; printReceipt(orderNum);"
+            x-on:order-placed.window="show = true; orderId = $event.detail.orderId; orderNum = $event.detail.orderNumber; custName = $event.detail.customerName; total = $event.detail.total; payMode = $event.detail.paymentMode; dueDate = $event.detail.dueDate;"
             x-show="show" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 70;">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity></div>
             
@@ -721,7 +721,7 @@
                 allCategories: @json($categories),
                 allCustomers: @json($customers),
                 allCustomerPackages: @json($customerPackages),
-                activeCategory: null,
+                activeCategory: @json(count($categories) > 0 ? $categories[0]->id : null),
                 searchQuery: '',
                 customerSearch: '',
                 filteredCustomers: [],

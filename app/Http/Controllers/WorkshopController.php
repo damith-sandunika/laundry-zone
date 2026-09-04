@@ -354,10 +354,13 @@ class WorkshopController extends Controller
 
         // Recent Dispatches (equivalent to active orders)
         $recentOrders = WorkshopDispatch::with(['order.customer', 'branch'])
+            ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
+            ->select('workshop_dispatches.*')
             ->where('workshop_branch_id', $branchId)
-            ->whereIn('status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])
-            ->orderBy('created_at', 'desc')
-            ->take(8)
+            ->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])
+            ->orderByRaw('orders.due_date IS NULL')
+            ->orderBy('orders.due_date', 'asc')
+            ->take(50)
             ->get();
 
         // Low stock items
@@ -432,9 +435,12 @@ class WorkshopController extends Controller
         $branchId = $user->branch_id;
 
         $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'order.items.serviceType', 'branch', 'dispatchedBy'])
+            ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
+            ->select('workshop_dispatches.*')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
-            ->whereNotIn('status', ['received_at_branch', 'returned_to_branch'])
-            ->orderByDesc('dispatched_at')
+            ->whereNotIn('workshop_dispatches.status', ['received_at_branch', 'returned_to_branch'])
+            ->orderByRaw('orders.due_date IS NULL')
+            ->orderBy('orders.due_date', 'asc')
             ->get();
 
         $completedToday = WorkshopDispatch::whereIn('status', ['received_at_branch', 'returned_to_branch'])
