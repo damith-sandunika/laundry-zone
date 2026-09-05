@@ -290,7 +290,8 @@ class CustomerSiteController extends Controller
             \Illuminate\Support\Facades\Notification::send($admins, new \App\Notifications\SystemAlertNotification('New Delivery Booking: #' . $appointment->id, route('delivery.index'), 'new_order'));
         }
 
-        return redirect()->route('customer.booking.success', $appointment->order_number ?? $appointment->id);
+        $appointment->refresh();
+        return redirect()->route('customer.booking.success', $appointment->order_number);
     }
 
     public function success(DeliveryAppointment $appointment)
