@@ -66,7 +66,7 @@ class ExpenseController extends Controller
             'expense_date' => 'required|date',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
 
         Expense::create([
             'branch_id' => $branchId,

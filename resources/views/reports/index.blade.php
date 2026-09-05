@@ -218,6 +218,10 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Expenses Pagination -->
+                <div class="p-4 border-t border-slate-100 bg-slate-50">
+                    {{ $expensesList->appends(request()->query())->links() }}
+                </div>
             </div>
 
             <!-- INVENTORY USAGE LOG -->
@@ -258,6 +262,10 @@
                         </tbody>
                     </table>
                 </div>
+                <!-- Inventory Pagination -->
+                <div class="p-4 border-t border-slate-100 bg-slate-50">
+                    {{ $inventoryLogs->appends(request()->query())->links() }}
+                </div>
             </div>
 
 
@@ -294,6 +302,10 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                <!-- Bank Deposits Pagination -->
+                <div class="p-4 border-t border-slate-100 bg-slate-50">
+                    {{ $bankDeposits->appends(request()->query())->links() }}
                 </div>
             </div>
         </div>
@@ -457,7 +469,7 @@
             return {
                 activeReport: 'expenses',
                 expenseCategoryFilter: '',
-                orders: @json($orders),
+                orders: @json($orders->getCollection()),
                 pendingModalOpen: false,
                 selectedServiceName: '',
                 selectedServiceOrders: [],

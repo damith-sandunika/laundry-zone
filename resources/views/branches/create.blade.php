@@ -109,6 +109,24 @@
                                     class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5">
                             </div>
 
+                            <div class="border-t border-gray-100 pt-4">
+                                <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wide mb-3">Thermal Bill Settings</h4>
+                                <div class="space-y-4">
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 mb-1">Invoice Header</label>
+                                        <textarea name="invoice_header" rows="2" class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 bg-gray-50 p-2" placeholder="e.g. Welcome to 365 Laundry!">{{ old('invoice_header') }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 mb-1">Invoice Footer</label>
+                                        <textarea name="invoice_footer" rows="2" class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 bg-gray-50 p-2" placeholder="e.g. Thank you for choosing us">{{ old('invoice_footer') }}</textarea>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold text-gray-700 mb-1">Terms & Conditions</label>
+                                        <textarea name="invoice_terms" rows="2" class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 bg-gray-50 p-2" placeholder="e.g. Clothes not claimed within 30 days...">{{ old('invoice_terms') }}</textarea>
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="space-y-3 pt-2">
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="hidden" name="is_active" value="0">

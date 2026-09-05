@@ -9,13 +9,7 @@ class OrderItemExtra extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'order_item_id',
-        'extra_id',
-        'quantity',
-        'unit_price',
-        'total_price',
-    ];
+    protected $guarded = ['id'];
 
     public function orderItem()
     {

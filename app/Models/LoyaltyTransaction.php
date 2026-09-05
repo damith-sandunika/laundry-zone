@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class LoyaltyTransaction extends Model
 {
-    protected $fillable = [
-        'customer_id', 'order_id', 'type', 'points', 'description',
-    ];
+    protected $guarded = ['id'];
 
     public function customer()
     {

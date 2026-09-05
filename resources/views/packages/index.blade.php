@@ -133,6 +133,11 @@
         @endforelse
     </div>
 
+    <!-- Pagination Links -->
+    <div class="mt-6">
+        {{ $customerPackages->links() }}
+    </div>
+
     <!-- Issue Package Modal -->
     <div x-data="{ open: false }" x-show="open" @open-issue-package-modal.window="open = true" x-cloak class="fixed inset-0 z-[60] overflow-y-auto">
         <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">

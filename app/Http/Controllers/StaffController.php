@@ -11,7 +11,8 @@ class StaffController extends Controller
 {
     public function index()
     {
-        $branchId = auth()->user()->role === 'super_admin' ? null : auth()->user()->branch_id;
+        $this->authorize('viewAny', User::class);
+        $branchId = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? null : auth()->user()->branch_id;
 
         $query = User::query();
         if ($branchId) {
@@ -27,7 +28,7 @@ class StaffController extends Controller
         $salaries = $salaryExpensesQuery->latest()->get();
 
         $branches = [];
-        if (auth()->user()->role === 'super_admin') {
+        if (\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             $branches = Branch::all();
         }
 
@@ -57,12 +58,13 @@ class StaffController extends Controller
             'standard_working_hours' => 'nullable|numeric|min:0',
             'ot_rate_per_hour' => 'nullable|numeric|min:0',
         ];
-        if (auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin') {
+        $this->authorize('create', User::class);
+        if (\Illuminate\Support\Facades\Gate::allows('manage-users')) {
             $rules['branch_id'] = 'nullable|exists:branches,id';
         }
         $request->validate($rules);
 
-        $branchId = (auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin') ? $request->branch_id : (auth()->user()->branch_id ?? 1);
+        $branchId = \Illuminate\Support\Facades\Gate::allows('manage-users') ? $request->branch_id : (auth()->user()->branch_id ?? 1);
         $currentUserRole = auth()->user()->role;
 
         $role = $request->role;
@@ -71,7 +73,7 @@ class StaffController extends Controller
             $role = 'staff';
         }
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
@@ -79,6 +81,9 @@ class StaffController extends Controller
             'branch_id' => $branchId,
             'password' => bcrypt($request->password),
             'is_active' => true,
+        ]);
+
+        $user->profile()->create([
             'nic' => $request->nic,
             'dob' => $request->dob,
             'address' => $request->address,
@@ -108,7 +113,7 @@ class StaffController extends Controller
             ->get();
             
         $totalOtMinutes = $attendancesThisMonth->sum('ot_minutes');
-        $otAmount = $totalOtMinutes * ($staff->ot_rate_per_hour / 60);
+        $otAmount = $totalOtMinutes * (($staff->profile->ot_rate_per_hour ?? 0) / 60);
         
         // Calculate Advances for the requested month
         $advancesThisMonth = $staff->salaryAdvances()
@@ -117,7 +122,7 @@ class StaffController extends Controller
             ->sum('amount');
             
         // Calculate Net Salary
-        $basicSalary = $staff->basic_salary ?? 0;
+        $basicSalary = $staff->profile->basic_salary ?? 0;
         $netSalary = $basicSalary + $otAmount - $advancesThisMonth;
         
         $payroll = (object)[
@@ -134,6 +139,7 @@ class StaffController extends Controller
 
     public function edit(User $staff)
     {
+        $this->authorize('update', $staff);
         return view('staff.edit', compact('staff'));
     }
 
@@ -157,15 +163,17 @@ class StaffController extends Controller
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
         }
-        if (auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin') {
+        $this->authorize('update', $staff);
+        if (\Illuminate\Support\Facades\Gate::allows('manage-users')) {
             $rules['branch_id'] = 'nullable|exists:branches,id';
         }
         $request->validate($rules);
 
-        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id', 'nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour']);
+        $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id']);
+        $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour']);
 
         // Only super_admin can set role to admin
-        if (isset($data['role']) && $data['role'] === 'admin' && auth()->user()->role !== 'super_admin') {
+        if (isset($data['role']) && $data['role'] === 'admin' && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             unset($data['role']); // Keep existing role
         }
 
@@ -173,12 +181,19 @@ class StaffController extends Controller
             $data['password'] = bcrypt($request->password);
         }
         $staff->update($data);
+        
+        if ($staff->profile) {
+            $staff->profile->update($profileData);
+        } else {
+            $staff->profile()->create($profileData);
+        }
 
         return redirect()->route('staff.index')->with('success', 'Staff updated.');
     }
 
     public function destroy(User $staff)
     {
+        $this->authorize('delete', $staff);
         $staff->delete();
 
         return redirect()->route('staff.index')->with('success', 'Staff member deleted.');
@@ -194,7 +209,7 @@ class StaffController extends Controller
         ]);
 
         $user = User::find($request->user_id);
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
 
         Expense::create([
             'branch_id' => $branchId,
@@ -219,14 +234,14 @@ class StaffController extends Controller
             ->get();
             
         $totalOtMinutes = $attendancesThisMonth->sum('ot_minutes');
-        $otAmount = $totalOtMinutes * ($staff->ot_rate_per_hour / 60);
+        $otAmount = $totalOtMinutes * (($staff->profile->ot_rate_per_hour ?? 0) / 60);
         
         $advancesThisMonth = $staff->salaryAdvances()
             ->whereMonth('date', $month)
             ->whereYear('date', $year)
             ->sum('amount');
             
-        $basicSalary = $staff->basic_salary ?? 0;
+        $basicSalary = $staff->profile->basic_salary ?? 0;
         $netSalary = $basicSalary + $otAmount - $advancesThisMonth;
         
         $payroll = (object)[

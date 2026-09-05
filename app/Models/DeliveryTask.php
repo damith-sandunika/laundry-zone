@@ -7,11 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DeliveryTask extends Model
 {
-    protected $fillable = [
-        'delivery_appointment_id', 'order_id', 'rider_id', 'branch_id',
-        'task_type', 'status', 'pickup_location', 'dropoff_location',
-        'rider_lat', 'rider_lng', 'accepted_at', 'completed_at', 'notes',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'accepted_at' => 'datetime',

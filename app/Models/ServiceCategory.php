@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceCategory extends Model
 {
-    protected $fillable = ['branch_id', 'parent_id', 'name', 'is_active', 'image_path', 'order_index'];
+    protected $guarded = ['id'];
 
     public function branch()
     {

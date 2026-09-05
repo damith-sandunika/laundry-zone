@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderCubby extends Model
 {
-    protected $fillable = [
-        'order_id', 'cubby_id', 'assigned_at', 'released_at',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'assigned_at' => 'datetime',

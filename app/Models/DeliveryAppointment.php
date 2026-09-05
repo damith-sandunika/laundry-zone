@@ -8,14 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DeliveryAppointment extends Model
 {
-    protected $fillable = [
-        'order_number', 'customer_id', 'branch_id', 'pickup_address', 'delivery_address',
-        'latitude', 'longitude', 'map_address', 'item_description',
-        'pickup_scheduled_at', 'delivery_scheduled_at', 'status', 'notes', 'contact_phone',
-        'order_id', 'picked_up_at', 'payment_method', 'payment_timing', 'delivery_preference',
-        'delivery_lat', 'delivery_lng', 'delivery_cost', 'receipt_path', 'cart_json',
-        'cancel_reason', 'cancelled_by'
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'pickup_scheduled_at' => 'datetime',

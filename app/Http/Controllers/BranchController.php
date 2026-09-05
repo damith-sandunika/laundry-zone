@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 
 class BranchController extends Controller
@@ -11,9 +12,7 @@ class BranchController extends Controller
     public function index()
     {
         // Only super_admin can manage branches
-        if (auth()->user()->role !== 'super_admin') {
-            abort(403, 'Unauthorized action.');
-        }
+        Gate::authorize('manage-branches');
 
         $branches = Branch::all();
 
@@ -22,17 +21,13 @@ class BranchController extends Controller
 
     public function create()
     {
-        if (auth()->user()->role !== 'super_admin') {
-            abort(403, 'Unauthorized action.');
-        }
+        Gate::authorize('manage-branches');
         return view('branches.create');
     }
 
     public function store(Request $request)
     {
-        if (auth()->user()->role !== 'super_admin') {
-            abort(403);
-        }
+        Gate::authorize('manage-branches');
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -44,9 +39,12 @@ class BranchController extends Controller
             'logo_size' => 'nullable|integer|min:20|max:500',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
+            'invoice_header' => 'nullable|string',
+            'invoice_footer' => 'nullable|string',
+            'invoice_terms' => 'nullable|string',
         ]);
 
-        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude']);
+        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude', 'invoice_header', 'invoice_footer', 'invoice_terms']);
         $data['is_active'] = $request->has('is_active');
         $data['is_delivery_enabled'] = $request->has('is_delivery_enabled');
         $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
@@ -78,9 +76,7 @@ class BranchController extends Controller
 
     public function update(Request $request, Branch $branch)
     {
-        if (auth()->user()->role !== 'super_admin') {
-            abort(403);
-        }
+        Gate::authorize('manage-branches');
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -92,9 +88,12 @@ class BranchController extends Controller
             'logo_size' => 'nullable|integer|min:20|max:500',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
             'branch_profit_percentage' => 'nullable|numeric|min:0|max:100',
+            'invoice_header' => 'nullable|string',
+            'invoice_footer' => 'nullable|string',
+            'invoice_terms' => 'nullable|string',
         ]);
 
-        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude']);
+        $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude', 'invoice_header', 'invoice_footer', 'invoice_terms']);
 
         // Ensure is_active defaults to false if not present, true if present
         $data['is_active'] = $request->has('is_active');
@@ -132,9 +131,7 @@ class BranchController extends Controller
 
     public function destroy(Branch $branch)
     {
-        if (auth()->user()->role !== 'super_admin') {
-            abort(403);
-        }
+        Gate::authorize('manage-branches');
 
         try {
             $branch->delete();

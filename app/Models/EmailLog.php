@@ -9,7 +9,7 @@ class EmailLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_id', 'email', 'type', 'subject', 'body', 'status', 'response'];
+    protected $guarded = ['id'];
 
     public function order()
     {

@@ -9,11 +9,6 @@ class Promotion extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'title',
-        'image_path',
-        'order_sequence',
-        'is_active',
-    ];
+    protected $guarded = ['id'];
 }
 

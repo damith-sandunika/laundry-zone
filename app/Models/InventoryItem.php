@@ -9,9 +9,7 @@ class InventoryItem extends Model
 {
     use BelongsToBranch;
 
-    protected $fillable = [
-        'branch_id', 'name', 'unit', 'current_stock', 'min_stock', 'cost_per_unit', 'is_active', 'low_stock_threshold', 'location',
-    ];
+    protected $guarded = ['id'];
 
     public function transactions()
     {

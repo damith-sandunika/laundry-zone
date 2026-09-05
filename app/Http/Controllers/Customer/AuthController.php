@@ -45,6 +45,8 @@ class AuthController extends Controller
             'phone' => 'required|string|max:50|unique:customers',
             'email' => 'nullable|string|email|max:255',
             'password' => 'required|string|min:8|confirmed',
+        ], [
+            'phone.unique' => 'You are already in our system, please log in.',
         ]);
 
         $customer = Customer::create([
@@ -98,6 +100,8 @@ class AuthController extends Controller
                 'phone' => 'required|string|max:50|unique:customers',
                 'email' => 'nullable|string|email|max:255',
                 'password' => 'required|string|min:8',
+            ], [
+                'phone.unique' => 'You are already in our system, please log in.',
             ]);
 
             $customer = Customer::create([

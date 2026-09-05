@@ -9,6 +9,6 @@ class SmsTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['type', 'name', 'message', 'is_active'];
+    protected $guarded = ['id'];
 }
 

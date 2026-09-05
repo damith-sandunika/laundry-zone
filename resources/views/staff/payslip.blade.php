@@ -129,8 +129,8 @@
             <td width="50%">
                 <table class="info-table">
                     <tr><td class="info-label">Payslip Date:</td><td>{{ date('d/m/Y') }}</td></tr>
-                    <tr><td class="info-label">Working Hours:</td><td>{{ $staff->standard_working_hours }} Hrs/Day</td></tr>
-                    <tr><td class="info-label">OT Rate:</td><td>Rs. {{ number_format($staff->ot_rate_per_hour, 2) }}/Hr</td></tr>
+                    <tr><td class="info-label">Working Hours:</td><td>{{ $staff->profile->standard_working_hours ?? 0 }} Hrs/Day</td></tr>
+                    <tr><td class="info-label">OT Rate:</td><td>Rs. {{ number_format($staff->profile->ot_rate_per_hour ?? 0, 2) }}/Hr</td></tr>
                 </table>
             </td>
         </tr>
@@ -146,7 +146,7 @@
         <tbody>
             <tr>
                 <td>Basic Salary</td>
-                <td class="amount-col">{{ number_format($staff->basic_salary ?? 0, 2) }}</td>
+                <td class="amount-col">{{ number_format($staff->profile->basic_salary ?? 0, 2) }}</td>
             </tr>
             <tr>
                 <td>Overtime Earnings ({{ floor($payroll->ot_minutes / 60) }}h {{ $payroll->ot_minutes % 60 }}m)</td>

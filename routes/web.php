@@ -50,6 +50,14 @@ Route::get('/customer/register', [\App\Http\Controllers\Customer\AuthController:
 Route::post('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'register'])->name('customer.register.submit');
 Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('customer.logout');
 
+// Forgot Password (OTP via Phone)
+Route::get('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showPhoneForm'])->name('customer.password.request');
+Route::post('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'sendOtp'])->name('customer.password.email');
+Route::get('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showOtpForm'])->name('customer.password.verifyForm');
+Route::post('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'verifyOtp'])->name('customer.password.verifyOtp');
+Route::get('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showResetForm'])->name('customer.password.resetForm');
+Route::post('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'resetPassword'])->name('customer.password.update');
+
 // AJAX Auth for Wizard
 Route::post('/customer/ajax-login', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxLogin'])->name('customer.ajax.login');
 Route::post('/customer/ajax-register', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxRegister'])->name('customer.ajax.register');
@@ -77,7 +85,7 @@ Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group
 
     // Payment Gateway Routes
     Route::get('/orders/{order:order_number}/pay-gateway', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
-    Route::post('/payment/process', [\App\Http\Controllers\PaymentController::class, 'process'])->name('payment.process');
+    Route::post('/payment/webhook', [\App\Http\Controllers\PaymentController::class, 'webhook'])->name('payment.webhook');
     Route::get('/orders/{order:order_number}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
 });
 

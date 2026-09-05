@@ -52,6 +52,7 @@
                     <div>
                         <div class="flex items-center justify-between mb-1.5">
                             <label for="password" class="block text-sm font-bold text-slate-700">Password</label>
+                            <a href="{{ route('customer.password.request') }}" class="text-xs font-semibold text-blue-600 hover:text-blue-500">Forgot Password?</a>
                         </div>
                         <div class="relative" x-data="{ show: false }">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">

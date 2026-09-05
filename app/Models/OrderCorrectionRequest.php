@@ -6,17 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class OrderCorrectionRequest extends Model
 {
-    protected $fillable = [
-        'order_id',
-        'requested_by',
-        'approved_by',
-        'status',
-        'type',
-        'old_data',
-        'new_data',
-        'reason',
-        'resolved_at',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'old_data' => 'array',

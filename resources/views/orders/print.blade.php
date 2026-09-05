@@ -133,6 +133,10 @@
         <div class="center" style="font-size:12px;">{{ $branch->address }}</div>
     @endif
 
+    @if($branch && $branch->invoice_header)
+        <div class="center" style="font-size:12px; margin-top:4px; font-style:italic;">{!! nl2br(e($branch->invoice_header)) !!}</div>
+    @endif
+
     <div class="divider"></div>
 
     <div class="row" style="font-size: 12px;"><span>Bill No:</span><span class="bold">{{ $order->order_number }}</span>
@@ -206,12 +210,24 @@
     </div>
 
     <div class="divider"></div>
-    <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing 365 Laundry.</div>
-    <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
-        leave us a Google Review!</div>
+    
+    @if($branch && $branch->invoice_terms)
+        <div style="font-size:10px; margin-top:8px; color:#333; text-align:justify;">
+            <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
+            {!! nl2br(e($branch->invoice_terms)) !!}
+        </div>
+        <div class="divider"></div>
+    @endif
 
+    @if($branch && $branch->invoice_footer)
+        <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($branch->invoice_footer)) !!}</div>
+    @else
+        <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing 365 Laundry.</div>
+        <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
+            leave us a Google Review!</div>
+    @endif
 
-    <div class="center" style="font-size:12px; margin-top:8px;">
+    <div class="center" style="font-size:10px; margin-top:12px; color:#666;">
         Software by DSRZone
     </div>
 

@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PackagePayment extends Model
 {
-    protected $fillable = ['customer_package_id', 'amount', 'payment_method', 'created_by'];
+    protected $guarded = ['id'];
 
     public function customerPackage()
     {

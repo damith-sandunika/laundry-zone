@@ -9,14 +9,7 @@ class TurnaroundType extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'branch_id',
-        'name',
-        'markup_type',
-        'markup_value',
-        'is_default',
-        'is_active',
-    ];
+    protected $guarded = ['id'];
 
     public function branch()
     {

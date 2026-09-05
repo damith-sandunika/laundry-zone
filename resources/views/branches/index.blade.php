@@ -270,6 +270,23 @@
                                     <label class="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wider">Branch Profit Percentage (%)</label>
                                     <input type="number" step="0.01" min="0" max="100" name="branch_profit_percentage" :value="selectedBranch?.branch_profit_percentage" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                                 </div>
+                                <div class="col-span-1 md:col-span-2 border-t border-gray-100 pt-3 mt-1">
+                                    <h4 class="text-xs font-bold text-gray-800 uppercase tracking-wider mb-2">Thermal Bill Settings</h4>
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Invoice Header</label>
+                                            <textarea name="invoice_header" :value="selectedBranch?.invoice_header" rows="2" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 bg-gray-50"></textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Invoice Footer</label>
+                                            <textarea name="invoice_footer" :value="selectedBranch?.invoice_footer" rows="2" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 bg-gray-50"></textarea>
+                                        </div>
+                                        <div class="md:col-span-2">
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Terms & Conditions</label>
+                                            <textarea name="invoice_terms" :value="selectedBranch?.invoice_terms" rows="2" class="w-full text-sm border-gray-200 rounded-xl shadow-sm focus:ring-blue-500 bg-gray-50"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-gray-50/80 px-6 py-4 flex justify-end gap-3 border-t border-gray-100">

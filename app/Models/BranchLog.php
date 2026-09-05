@@ -6,12 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BranchLog extends Model
 {
-    protected $fillable = [
-        'branch_id',
-        'user_id',
-        'action',
-        'description',
-    ];
+    protected $guarded = ['id'];
 
     public function branch()
     {

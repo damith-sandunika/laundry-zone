@@ -9,7 +9,7 @@ class SmsLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['order_id', 'phone', 'type', 'message', 'status', 'response'];
+    protected $guarded = ['id'];
 
     public function order()
     {

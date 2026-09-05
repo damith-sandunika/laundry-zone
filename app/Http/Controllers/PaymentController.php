@@ -30,36 +30,78 @@ class PaymentController extends Controller
     /**
      * Process the payment from the Mock Gateway.
      */
-    public function process(Request $request)
+    public function webhook(Request $request)
     {
-        $request->validate([
-            'order_id' => 'required|exists:orders,id',
-            'amount' => 'required|numeric|min:0',
-            'card_number' => 'required|string', // mocked validation
-        ]);
+        // 1. Extract PayHere Webhook Payload
+        $merchantId     = $request->input('merchant_id');
+        $orderId        = $request->input('order_id');
+        $payhereAmount  = $request->input('payhere_amount');
+        $payhereCurrency= $request->input('payhere_currency');
+        $statusCode     = $request->input('status_code');
+        $md5sig         = $request->input('md5sig');
 
-        $order = Order::findOrFail($request->order_id);
+        $merchantSecret = \App\Models\Setting::get('gateway_merchant_secret', ''); // Configured via settings
 
-        // In a real gateway (e.g., PayHere), this logic would be in a Webhook
-        // that receives the secure signature from the bank.
-        // For the mock, we just approve it directly.
-        $order->update([
-            'payment_approved' => true,
-            'paid_amount' => $order->paid_amount + $request->amount,
-        ]);
+        // 2. Signature Validation (PayHere Standard Security)
+        $localMd5sig = strtoupper(
+            md5(
+                $merchantId . 
+                $orderId . 
+                $payhereAmount . 
+                $payhereCurrency . 
+                $statusCode . 
+                strtoupper(md5($merchantSecret)) 
+            ) 
+        );
 
-        // You might also want to create a PaymentTransaction record here in a real scenario
-        
-        // Notify Admins
-        $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'staff'])->where('branch_id', $order->branch_id)->get();
-        \Illuminate\Support\Facades\Notification::send($branchAdmins, new \App\Notifications\SystemAlertNotification('Payment Received for Order #' . $order->order_number, route('orders.show', $order->order_number), 'payment'));
-
-        if ($order->workshop_id) {
-            $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $order->workshop_id)->get();
-            \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('Payment Received for Order #' . $order->order_number, route('workshop.history'), 'payment'));
+        if (($localMd5sig !== $md5sig) || empty($merchantSecret)) {
+            \Illuminate\Support\Facades\Log::warning("Payment signature validation failed for order {$orderId}");
+            return response()->json(['error' => 'Invalid signature'], 403);
         }
 
-        return redirect()->route('payment.success', ['order' => $order->id]);
+        // 3. Process Valid Payment
+        if ($statusCode == 2) { // 2 = Success
+            try {
+                \Illuminate\Support\Facades\DB::transaction(function () use ($orderId, $payhereAmount) {
+                    $order = Order::find($orderId);
+                    if ($order && !$order->payment_approved) {
+                        $order->update([
+                            'payment_approved' => true,
+                            'paid_amount'      => $order->paid_amount + $payhereAmount,
+                        ]);
+
+                        // Notify Admins
+                        $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'staff'])
+                            ->where('branch_id', $order->branch_id)
+                            ->get();
+
+                        try {
+                            \Illuminate\Support\Facades\Notification::send(
+                                $branchAdmins,
+                                new \App\Notifications\SystemAlertNotification(
+                                    'Payment Received for Order #' . $order->order_number,
+                                    route('orders.show', $order->order_number),
+                                    'payment'
+                                )
+                            );
+                        } catch (\Exception $notifEx) {
+                            // Notification failure must NOT roll back the payment update
+                            \Illuminate\Support\Facades\Log::warning(
+                                "Payment notification failed for order {$orderId}: " . $notifEx->getMessage()
+                            );
+                        }
+                    }
+                });
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::error(
+                    "Payment webhook DB error for order {$orderId}: " . $e->getMessage()
+                );
+                // Return 500 so PayHere retries the webhook
+                return response()->json(['error' => 'Payment processing failed, will retry'], 500);
+            }
+        }
+
+        return response()->json(['status' => 'success'], 200);
     }
 
     public function success(Order $order)

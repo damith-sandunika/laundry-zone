@@ -19,7 +19,26 @@ class PromotionController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
         ]);
 
-        $path = $request->file('image')->store('promotions', 'public');
+        $path = null;
+        if ($request->hasFile('image')) {
+            $file = $request->file('image');
+            if (env('CLOUDINARY_URL')) {
+                try {
+                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
+                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
+                        'folder' => '365_laundry/promotions',
+                        'format' => 'webp',
+                        'quality' => 'auto'
+                    ]);
+                    $path = $result['secure_url'];
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Promotion: ' . $e->getMessage());
+                    $path = $file->store('promotions', 'public');
+                }
+            } else {
+                $path = $file->store('promotions', 'public');
+            }
+        }
 
         \App\Models\Promotion::create([
             'title' => $request->title,

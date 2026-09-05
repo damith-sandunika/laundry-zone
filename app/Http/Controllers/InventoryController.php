@@ -27,9 +27,7 @@ class InventoryController extends Controller
 
     public function destroy(InventoryItem $item)
     {
-        if (! in_array(auth()->user()->role, ['admin', 'super_admin'])) {
-            abort(403, 'Unauthorized action.');
-        }
+        Gate::authorize('manage-users');
         $item->delete();
 
         return redirect()->route('inventory.index')->with('success', 'Inventory item deleted.');

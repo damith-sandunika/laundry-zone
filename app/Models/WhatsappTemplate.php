@@ -9,13 +9,6 @@ class WhatsappTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'type',
-        'name',
-        'meta_template_name',
-        'language_code',
-        'is_active',
-        'content'
-    ];
+    protected $guarded = ['id'];
 }
 

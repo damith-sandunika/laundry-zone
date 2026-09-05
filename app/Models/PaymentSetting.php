@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class PaymentSetting extends Model
 {
-    protected $fillable = [
-        'branch_id', 'method', 'display_name', 'instructions', 'is_enabled',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'is_enabled' => 'boolean',

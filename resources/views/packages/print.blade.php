@@ -39,6 +39,12 @@
         {{ $branch->phone ?? '' }}
     </div>
 
+    @if($branch && $branch->invoice_header)
+        <div class="text-center" style="font-size: 10px; margin-top:4px; font-style:italic;">
+            {!! nl2br(e($branch->invoice_header)) !!}
+        </div>
+    @endif
+
     <div class="divider mt-2"></div>
 
     <div class="text-center font-bold mt-2 mb-2">PACKAGE RECEIPT</div>
@@ -93,8 +99,23 @@
 
     <div class="divider mt-2 mb-2"></div>
 
-    <div class="text-center mt-2" style="font-size: 10px;">
-        Thank you for choosing us!<br>
+    @if($branch && $branch->invoice_terms)
+        <div style="font-size:10px; margin-top:8px; color:#333; text-align:justify;">
+            <div class="font-bold text-center" style="margin-bottom:2px;">Terms & Conditions</div>
+            {!! nl2br(e($branch->invoice_terms)) !!}
+        </div>
+        <div class="divider mt-2 mb-2"></div>
+    @endif
+
+    @if($branch && $branch->invoice_footer)
+        <div class="text-center font-bold mt-2" style="font-size: 12px;">{!! nl2br(e($branch->invoice_footer)) !!}</div>
+    @else
+        <div class="text-center mt-2" style="font-size: 10px;">
+            Thank you for choosing us!
+        </div>
+    @endif
+
+    <div class="text-center mt-2" style="font-size: 10px; color:#666;">
         Powered by DSRZone
     </div>
 </body>

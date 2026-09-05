@@ -9,9 +9,7 @@ class Cubby extends Model
 {
     use BelongsToBranch;
 
-    protected $fillable = [
-        'branch_id', 'name', 'status', 'is_active',
-    ];
+    protected $guarded = ['id'];
 
     public function orderCubbies()
     {

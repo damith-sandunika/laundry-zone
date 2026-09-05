@@ -12,86 +12,24 @@ use Illuminate\Support\Facades\DB;
 class WorkshopController extends Controller
 {
     // ─── Branch Admin: Dispatch order to workshop ───
-    public function dispatch(Request $request, Order $order)
+    public function dispatch(\App\Http\Requests\Workshop\DispatchToWorkshopRequest $request, Order $order, \App\Actions\Workshop\DispatchToWorkshopAction $action)
     {
-        $request->validate([
-            'dispatch_notes' => 'nullable|string|max:1000',
-            'workshop_branch_id' => 'nullable|exists:branches,id',
-        ]);
-
-        // Check if already dispatched
-        $existing = WorkshopDispatch::where('order_id', $order->id)
-            ->whereNotIn('status', ['received_at_branch'])
-            ->first();
-
-        if ($existing) {
-            return redirect()->back()->with('error', 'Order is already dispatched to workshop.');
+        try {
+            $action->execute($order, $request->validated(), auth()->id());
+            return redirect()->back()->with('success', 'Order dispatched to workshop successfully.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $dispatch = WorkshopDispatch::create([
-            'order_id' => $order->id,
-            'branch_id' => $order->branch_id,
-            'workshop_branch_id' => $request->workshop_branch_id,
-            'dispatched_by' => auth()->id(),
-            'status' => 'dispatched_to_workshop',
-            'dispatched_at' => now(),
-            'dispatch_notes' => $request->dispatch_notes,
-        ]);
-
-        $order->update([
-            'status' => 'dispatched_to_workshop',
-            'dispatched_to_workshop_at' => now(),
-        ]);
-
-        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $request->workshop_branch_id)->get();
-        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification('New Order Dispatched from Branch: #' . $order->order_number, route('workshop.dashboard'), 'branch_dispatch'));
-
-        $commService = new CommunicationService();
-        // $commService->sendOrderDispatchedToWorkshop($order);
-
-        return redirect()->back()->with('success', 'Order dispatched to workshop successfully.');
     }
 
-    public function bulkDispatch(Request $request)
+    public function bulkDispatch(\App\Http\Requests\Workshop\BulkDispatchToWorkshopRequest $request, \App\Actions\Workshop\BulkDispatchToWorkshopAction $action)
     {
-        $request->validate([
-            'order_ids' => 'required|array',
-            'order_ids.*' => 'exists:orders,id',
-            'workshop_branch_id' => 'required|exists:branches,id',
-            'dispatch_notes' => 'nullable|string',
-        ]);
-
-        $orders = Order::whereIn('id', $request->order_ids)
-            ->whereNotIn('status', ['dispatched_to_workshop'])
-            ->get();
-
-        foreach ($orders as $order) {
-            WorkshopDispatch::create([
-                'order_id' => $order->id,
-                'branch_id' => $order->branch_id,
-                'workshop_branch_id' => $request->workshop_branch_id,
-                'dispatched_by' => auth()->id(),
-                'status' => 'dispatched_to_workshop',
-                'dispatched_at' => now(),
-                'dispatch_notes' => $request->dispatch_notes,
-            ]);
-
-            $order->update([
-                'status' => 'dispatched_to_workshop',
-                'dispatched_to_workshop_at' => now(),
-                'workshop_id' => $request->workshop_branch_id,
-            ]);
+        try {
+            $count = $action->execute($request->validated(), auth()->id());
+            return redirect()->back()->with('success', $count . ' orders dispatched to workshop.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-
-        $workshopAdmins = \App\Models\User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $request->workshop_branch_id)->get();
-        \Illuminate\Support\Facades\Notification::send($workshopAdmins, new \App\Notifications\SystemAlertNotification(count($orders) . ' Orders Dispatched from Branch', route('workshop.dashboard'), 'branch_dispatch'));
-
-        $commService = new CommunicationService();
-        foreach ($orders as $order) {
-            // $commService->sendOrderDispatchedToWorkshop($order);
-        }
-
-        return redirect()->back()->with('success', count($orders).' orders dispatched to workshop.');
     }
 
     // ─── Workshop Admin: Dashboard ───
@@ -461,24 +399,10 @@ class WorkshopController extends Controller
     }
 
     // ─── Workshop Admin: Mark received at workshop ───
-    public function receive(WorkshopDispatch $dispatch)
+    public function receive(WorkshopDispatch $dispatch, \App\Actions\Workshop\ReceiveWorkshopDispatchAction $action)
     {
         try {
-            $dispatch->update([
-                'status'                    => 'received_at_workshop',
-                'received_by'               => auth()->id(),
-                'received_at_workshop_at'   => now(),
-            ]);
-
-            $dispatch->order->update(['status' => 'processing']);
-
-            try {
-                $commService = new CommunicationService();
-                // $commService->sendOrderProcessing($dispatch->order);
-            } catch (\Exception $e) {
-                \Log::error('Email notification failed (receive): ' . $e->getMessage());
-            }
-
+            $action->execute($dispatch, auth()->id());
             return response()->json(['success' => true, 'status' => 'received_at_workshop']);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::receive error: ' . $e->getMessage());
@@ -487,35 +411,11 @@ class WorkshopController extends Controller
     }
 
     // ─── Workshop Admin: Mark processing ───
-    public function startProcessing(WorkshopDispatch $dispatch)
+    public function startProcessing(WorkshopDispatch $dispatch, \App\Actions\Workshop\StartProcessingWorkshopAction $action)
     {
         try {
-            $order = $dispatch->order;
-
-            $dispatch->update(['status' => 'processing']);
-            $order->update(['status' => 'processing']);
-            
-
-
-            try {
-                \App\Models\OrderStatusHistory::create([
-                    'order_id'   => $order->id,
-                    'status'     => 'processing',
-                    'changed_by' => auth()->id(),
-                    'note'       => 'Processing started',
-                ]);
-            } catch (\Exception $e) {
-                \Log::warning('OrderStatusHistory insert failed (startProcessing): ' . $e->getMessage());
-            }
-
-            try {
-                $commService = new CommunicationService();
-                // $commService->sendOrderProcessing($order);
-            } catch (\Exception $e) {
-                \Log::error('Email notification failed (startProcessing): ' . $e->getMessage());
-            }
-
-            return response()->json(['success' => true, 'status' => 'processing', 'order_number' => $order->order_number]);
+            $action->execute($dispatch, auth()->id());
+            return response()->json(['success' => true, 'status' => 'processing', 'order_number' => $dispatch->order->order_number]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::startProcessing error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -523,76 +423,10 @@ class WorkshopController extends Controller
     }
 
     // ─── Workshop Admin: Mark completed at workshop ───
-    public function complete(Request $request, WorkshopDispatch $dispatch)
+    public function complete(\App\Http\Requests\Workshop\CompleteWorkshopProcessingRequest $request, WorkshopDispatch $dispatch, \App\Actions\Workshop\CompleteWorkshopProcessingAction $action)
     {
         try {
-            $request->validate([
-                'cubby_id'       => 'nullable|exists:cubbies,id',
-                'payment_method' => 'nullable|string',
-                'amount_paid'    => 'nullable|numeric|min:0',
-            ]);
-
-            $dispatch->update([
-                'status'                   => 'completed_at_workshop',
-                'completed_at_workshop_at' => now(),
-            ]);
-
-            $order = $dispatch->order;
-
-            if ($request->filled('cubby_id')) {
-                \App\Models\OrderCubby::where('order_id', $order->id)->whereNull('released_at')
-                    ->update(['released_at' => now()]);
-                $cubby = \App\Models\Cubby::find($request->cubby_id);
-                if ($cubby) {
-                    \App\Models\OrderCubby::create([
-                        'order_id'    => $order->id,
-                        'cubby_id'    => $cubby->id,
-                        'assigned_at' => now(),
-                    ]);
-                    $cubby->update(['status' => 'occupied']);
-                }
-            }
-
-            if ($request->filled('amount_paid') && $request->amount_paid > 0) {
-                \App\Models\PaymentTransaction::create([
-                    'order_id'       => $order->id,
-                    'amount'         => $request->amount_paid,
-                    'payment_method' => $request->payment_method ?? 'cash',
-                    'created_by'     => auth()->id(),
-                    'status'         => 'completed',
-                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                ]);
-                $newPaid = $order->paid_amount + $request->amount_paid;
-                $order->update([
-                    'paid_amount'    => $newPaid,
-                    'payment_method' => $request->payment_method ?? $order->payment_method,
-                    'payment_status' => $newPaid >= $order->total ? 'paid' : 'partial',
-                ]);
-            }
-
-            $order->update(['status' => 'done']);
-
-            try {
-                \App\Models\OrderStatusHistory::create([
-                    'order_id'   => $order->id,
-                    'status'     => 'done',
-                    'note'       => 'Completed at Workshop',
-                    'changed_by' => auth()->id(),
-                ]);
-            } catch (\Exception $e) {
-                \Log::warning('OrderStatusHistory insert failed (complete): ' . $e->getMessage());
-            }
-
-            // If this is a workshop walk-in (NOT a delivery order), send ready notification
-            if ($dispatch->branch_id === $dispatch->workshop_branch_id && !$order->is_delivery_order) {
-                try {
-                    $commService = new CommunicationService();
-                    $commService->sendPosWalkinReady($order);
-                } catch (\Exception $e) {
-                    \Log::error('Email notification failed (complete ready): ' . $e->getMessage());
-                }
-            }
-
+            $action->execute($dispatch, $request->validated(), auth()->id());
             return response()->json(['success' => true, 'status' => 'completed_at_workshop']);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::complete error: ' . $e->getMessage());
@@ -706,51 +540,10 @@ class WorkshopController extends Controller
     }
 
     // ─── Workshop Admin: Return to branch (all order types) ───
-    public function returnToBranch(WorkshopDispatch $dispatch)
+    public function returnToBranch(WorkshopDispatch $dispatch, \App\Actions\Workshop\ReturnToBranchAction $action)
     {
         try {
-            $dispatch->update([
-                'status'      => 'returned_to_branch',
-                'returned_by' => auth()->id(),
-                'returned_at' => now(),
-            ]);
-
-            $order = $dispatch->order;
-            $order->update(['status' => 'returned_from_workshop']);
-
-            try {
-                \App\Models\OrderStatusHistory::create([
-                    'order_id'   => $order->id,
-                    'status'     => 'returned_from_workshop',
-                    'changed_by' => auth()->id(),
-                    'note'       => 'Washing completed. Dispatched back to branch.',
-                ]);
-            } catch (\Exception $e) {
-                \Log::warning('OrderStatusHistory insert failed (returnToBranch): ' . $e->getMessage());
-            }
-
-            try {
-                $branchAdmins = \App\Models\User::whereIn('role', ['branch_admin', 'admin', 'staff'])
-                    ->where('branch_id', $dispatch->branch_id)->get();
-                \Illuminate\Support\Facades\Notification::send(
-                    $branchAdmins,
-                    new \App\Notifications\SystemAlertNotification(
-                        'Order Ready from Workshop: #' . $order->order_number,
-                        route('orders.show', $order->order_number),
-                        'workshop_return'
-                    )
-                );
-            } catch (\Exception $e) {
-                \Log::error('Notification failed (returnToBranch): ' . $e->getMessage());
-            }
-
-            try {
-                $commService = new CommunicationService();
-                // $commService->sendOrderReturnedFromWorkshop($order);
-            } catch (\Exception $e) {
-                \Log::error('Email notification failed (returnToBranch): ' . $e->getMessage());
-            }
-
+            $action->execute($dispatch, auth()->id());
             return response()->json(['success' => true, 'status' => 'returned_to_branch']);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::returnToBranch error: ' . $e->getMessage());
@@ -759,265 +552,44 @@ class WorkshopController extends Controller
     }
 
     // ─── Workshop Admin: Dispatch Delivery ───
-    public function dispatchDelivery(Request $request, WorkshopDispatch $dispatch)
+    public function dispatchDelivery(\App\Http\Requests\Workshop\WorkshopDispatchDeliveryRequest $request, WorkshopDispatch $dispatch, \App\Actions\Workshop\WorkshopDispatchDeliveryAction $action)
     {
-        $request->validate([
-            'delivery_method' => 'required|in:rider,pickme_flash',
-            'rider_id' => 'required_if:delivery_method,rider|nullable|exists:users,id',
-            'pickme_cost' => 'required_if:delivery_method,pickme_flash|nullable|numeric|min:0',
-        ]);
-
-        $order = $dispatch->order;
-        $appointment = $order->deliveryAppointment;
-
-        if ($request->delivery_method === 'rider') {
-            \App\Models\DeliveryTask::create([
-                'delivery_appointment_id' => $appointment ? $appointment->id : null,
-                'order_id' => $order->id,
-                'rider_id' => $request->rider_id,
-                'branch_id' => $dispatch->workshop_branch_id,
-                'task_type' => 'delivery',
-                'status' => 'assigned',
-            ]);
-
-            if ($appointment) {
-                $appointment->update(['status' => 'out_for_delivery']);
-            }
-            $order->update(['status' => 'out_for_delivery']);
-            
-            $dispatch->update([
-                'status' => 'returned_to_branch', // Terminate from workshop view
-                'returned_by' => auth()->id(),
-                'returned_at' => now(),
-            ]);
-
-            $riderUser = \App\Models\User::find($request->rider_id);
-            if ($riderUser) {
-                \Illuminate\Support\Facades\Notification::send($riderUser, new \App\Notifications\SystemAlertNotification('New Delivery Task (from Workshop): Order #' . $order->order_number, route('rider.tasks')));
-            }
-
-            return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
-
-        } else {
-            \App\Models\Expense::create([
-                'branch_id' => $dispatch->workshop_branch_id,
-                'amount' => $request->pickme_cost,
-                'category' => 'PickMe',
-                'description' => 'PickMe Delivery for Order #' . $order->order_number,
-                'expense_date' => now(),
-                'created_by' => auth()->id(),
-            ]);
-
-            $amountToPay = $order->total - $order->paid_amount;
-            if ($amountToPay > 0) {
-                $paymentMethod = $request->input('payment_method', 'cash');
-                \App\Models\PaymentTransaction::create([
-                    'order_id'       => $order->id,
-                    'amount'         => $amountToPay,
-                    'payment_method' => $paymentMethod,
-                    'created_by'     => auth()->id(),
-                    'collected_from_rider_at' => now(), // Auto-collected per user request
-                    'status'         => 'completed',
-                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                ]);
-                $order->update([
-                    'paid_amount' => $order->total,
-                    'payment_status' => 'paid',
-                ]);
-            }
-
-            if ($appointment) {
-                $appointment->update(['status' => 'delivered']);
-            }
-            $order->update([
-                'status' => 'delivered',
-                'delivered_at' => now(),
-            ]);
-            
-            \App\Models\OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'delivered',
-                'changed_by' => auth()->id(),
-                'note' => 'Delivered via PickMe',
-            ]);
-            
-            $dispatch->update([
-                'status' => 'returned_to_branch',
-                'returned_by' => auth()->id(),
-                'returned_at' => now(),
-            ]);
-
-            // Send delivery completed notification
-            try {
-                $commService = new \App\Services\CommunicationService();
-                $commService->sendDeliveryCompleted($order);
-            } catch (\Exception $e) {
-                \Log::error('Delivery notification failed (Workshop PickMe): ' . $e->getMessage());
-            }
-
-            return response()->json(['success' => true, 'status' => 'completed']);
+        try {
+            $result = $action->execute($dispatch, $request->validated(), auth()->id());
+            return response()->json(array_merge(['success' => true], $result));
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 
     // ─── Workshop Admin: Bulk Status Update ───
-    public function bulkStatus(Request $request)
+    public function bulkStatus(\App\Http\Requests\Workshop\WorkshopBulkStatusUpdateRequest $request, \App\Actions\Workshop\WorkshopBulkStatusUpdateAction $action)
     {
-        $request->validate([
-            'dispatch_ids' => 'required|array',
-            'dispatch_ids.*' => 'exists:workshop_dispatches,id',
-            'status' => 'required|string|in:processing,completed_at_workshop,returned_to_branch',
-        ]);
-
-        $status = $request->status;
-        $dispatchIds = $request->dispatch_ids;
-
-        DB::transaction(function () use ($dispatchIds, $status) {
-            foreach ($dispatchIds as $id) {
-                $dispatch = WorkshopDispatch::find($id);
-                if (! $dispatch) {
-                    continue;
-                }
-
-                if ($status === 'processing') {
-                    $dispatch->update(['status' => 'processing']);
-                    $dispatch->order->update(['status' => 'processing']);
-                } elseif ($status === 'completed_at_workshop') {
-                    $dispatch->update([
-                        'status' => 'completed_at_workshop',
-                        'completed_at_workshop_at' => now(),
-                    ]);
-                } elseif ($status === 'returned_to_branch') {
-                    $dispatch->update([
-                        'status' => 'returned_to_branch',
-                        'returned_by' => auth()->id(),
-                        'returned_at' => now(),
-                    ]);
-                    $dispatch->order->update(['status' => 'returned_from_workshop']);
-                }
-            }
-        });
-
-        $commService = new CommunicationService();
-        foreach ($dispatchIds as $id) {
-            $dispatch = WorkshopDispatch::find($id);
-            if ($dispatch && $dispatch->order) {
-                if ($status === 'processing') {
-                    // $commService->sendOrderProcessing($dispatch->order);
-                } elseif ($status === 'returned_to_branch') {
-                    // $commService->sendOrderReturnedFromWorkshop($dispatch->order);
-                }
-            }
+        try {
+            $action->execute($request->validated(), auth()->id());
+            return response()->json(['success' => true]);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
-
-        return response()->json(['success' => true]);
     }
 
     // ─── Branch Admin: Confirm order received back from workshop ───
-    public function receivedAtBranch(WorkshopDispatch $dispatch)
+    public function receivedAtBranch(WorkshopDispatch $dispatch, \Illuminate\Http\Request $request, \App\Actions\Workshop\MarkReceivedAtBranchAction $action)
     {
-        $dispatch->update([
-            'status' => 'received_at_branch',
-            'received_at_branch_at' => now(),
-            'workshop_notes' => request('workshop_notes'),
-        ]);
-
-        $order = $dispatch->order;
-        $order->update([
-            'status' => 'done', // changed from returned_from_workshop to done
-            'returned_from_workshop_at' => now(),
-            'ready_at' => now(),
-        ]);
-
-        // Send "Ready" notification
-        $commService = new CommunicationService();
-        $commService->sendCollectionOrderReady($order);
-
-        return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
+        try {
+            $action->execute($dispatch, $request->all());
+            return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     // ─── Workshop Admin: Hand Over Walk-in Order to Customer ───
-    public function handover(Request $request, WorkshopDispatch $dispatch)
+    public function handover(\App\Http\Requests\Workshop\WorkshopHandoverRequest $request, WorkshopDispatch $dispatch, \App\Actions\Workshop\WorkshopHandoverAction $action)
     {
         try {
-            $request->validate([
-                'payment_method' => 'nullable|string',
-                'amount_paid'    => 'nullable|numeric|min:0',
-            ]);
-
-            $order = $dispatch->order;
-
-            DB::transaction(function () use ($request, $order, $dispatch) {
-                // Collect payment if provided
-                $amountPaid = (float) ($request->amount_paid ?? 0);
-                if ($amountPaid > 0) {
-                    \App\Models\PaymentTransaction::create([
-                        'order_id'       => $order->id,
-                        'amount'         => $amountPaid,
-                        'payment_method' => $request->payment_method ?? 'cash',
-                        'created_by'     => auth()->id(),
-                        'status'         => 'completed',
-                        'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                    ]);
-                    $newPaid = $order->paid_amount + $amountPaid;
-                    $order->update([
-                        'paid_amount'    => $newPaid,
-                        'payment_method' => $request->payment_method ?? $order->payment_method,
-                        'payment_status' => $newPaid >= $order->total ? 'paid' : 'partial',
-                    ]);
-                    $order = $order->fresh();
-                }
-
-                // Require full payment before handover
-                if ($order->paid_amount < $order->total) {
-                    throw new \Exception('Balance due: Rs. ' . number_format($order->total - $order->paid_amount, 2) . '. Collect full payment before handover.');
-                }
-
-                $order->update([
-                    'status'       => 'delivered',
-                    'delivered_at' => now(),
-                ]);
-
-                // Use direct model create to avoid relationship overwriting status field
-                try {
-                    \App\Models\OrderStatusHistory::create([
-                        'order_id'   => $order->id,
-                        'status'     => 'delivered',
-                        'note'       => 'Handed over to customer at workshop',
-                        'changed_by' => auth()->id(),
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::warning('OrderStatusHistory insert failed (handover): ' . $e->getMessage());
-                }
-
-                // Release cubby
-                $cubbyIds = \App\Models\OrderCubby::where('order_id', $order->id)->pluck('cubby_id');
-                \App\Models\OrderCubby::where('order_id', $order->id)->whereNull('released_at')
-                    ->update(['released_at' => now()]);
-                foreach ($cubbyIds as $cid) {
-                    $cubby = \App\Models\Cubby::find($cid);
-                    if ($cubby && !$cubby->currentOrder()->exists()) {
-                        $cubby->update(['status' => 'available']);
-                    }
-                }
-
-                $dispatch->update([
-                    'status'         => 'returned_to_branch',
-                    'returned_by'    => auth()->id(),
-                    'returned_at'    => now(),
-                    'workshop_notes' => 'Handed over directly to customer at workshop',
-                ]);
-            });
-
-            // Send completion email AFTER transaction
-            try {
-                $order = $order->fresh();
-                $commService = new CommunicationService();
-                $commService->sendPosWalkinCompleted($order);
-            } catch (\Exception $e) {
-                \Log::error('Email notification failed (handover): ' . $e->getMessage());
-            }
-
-            return response()->json(['success' => true, 'order_id' => $order->id, 'order_number' => $order->order_number]);
+            $action->execute($dispatch, $request->validated(), auth()->id());
+            return response()->json(['success' => true, 'order_id' => $dispatch->order_id, 'order_number' => $dispatch->order->order_number]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::handover error: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

@@ -13,11 +13,12 @@ class User extends Authenticatable
     use BelongsToBranch, SoftDeletes;
     use HasFactory, Notifiable;
 
-    protected $fillable = [
-        'name', 'email', 'phone', 'password', 'role', 'branch_id', 'is_active',
-        'nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves',
-        'standard_working_hours', 'ot_rate_per_hour',
-    ];
+    protected $guarded = ['id'];
+
+    public function profile()
+    {
+        return $this->hasOne(EmployeeProfile::class);
+    }
 
     protected $hidden = [
         'password', 'remember_token',

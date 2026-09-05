@@ -7,13 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class WorkshopDispatch extends Model
 {
-    protected $fillable = [
-        'order_id', 'branch_id', 'workshop_branch_id', 'dispatched_by',
-        'received_by', 'returned_by', 'status',
-        'dispatched_at', 'received_at_workshop_at', 'completed_at_workshop_at',
-        'returned_at', 'received_at_branch_at',
-        'dispatch_notes', 'workshop_notes',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'dispatched_at' => 'datetime',

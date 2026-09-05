@@ -35,8 +35,29 @@ class ReportController extends Controller
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
         }
-        $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->get();
-        $totalSales = $orders->sum('total');
+
+        // --- DB-level Aggregates (no data loaded into RAM for totals) ---
+        $totalSales        = (clone $salesQuery)->sum('total');
+        $totalCredit       = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
+        $totalPending      = (clone $salesQuery)->whereNotIn('payment_method', ['credit'])->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
+
+        // Delivery/Walkin revenue via DB
+        $deliveryOrderIds  = DeliveryAppointment::whereNotNull('order_id')
+            ->whereHas('order', function ($q) use ($startDate, $endDate, $branchId) {
+                $q->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+                if ($branchId) $q->where('branch_id', $branchId);
+            })->pluck('order_id')->toArray();
+        $deliveryRevenue   = (clone $salesQuery)->whereIn('id', $deliveryOrderIds)->sum('total');
+        $walkinRevenue     = (clone $salesQuery)->whereNotIn('id', $deliveryOrderIds)->sum('total');
+
+        // Paginated orders list for the report table (15 per page)
+        $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->paginate(15);
+
+        // Collection helpers for view compatibility (from paginated page only)
+        $deliveryOrders = $orders->getCollection()->whereIn('id', $deliveryOrderIds);
+        $walkinOrders   = $orders->getCollection()->whereNotIn('id', $deliveryOrderIds);
+
+        // Payments & package payments - still use get() since they are used per-payment in the profit loop
         $paymentsQuery = PaymentTransaction::with(['order', 'order.branch'])->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $paymentsQuery->whereHas('order', function ($q) use ($branchId) {
@@ -54,9 +75,9 @@ class ReportController extends Controller
         $packagePayments = $packagePaymentsQuery->get();
 
         $totalCollected = $payments->sum('amount') + $packagePayments->sum('amount');
-        $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
-        $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        $collectedBank = $payments->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
+        $collectedCash  = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
+        $collectedCard  = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
+        $collectedBank  = $payments->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
 
         $actualTotalDeliveryFees = 0;
         $actualTotalBranchProfit = 0;
@@ -101,16 +122,9 @@ class ReportController extends Controller
         // Add package payments to branch profit as they don't have delivery fees
         $actualTotalBranchProfit += $packagePayments->sum('amount');
 
-        $totalBranchProfit = $actualTotalBranchProfit;
+        $totalBranchProfit   = $actualTotalBranchProfit;
         $totalWorkshopProfit = $actualTotalWorkshopProfit;
-        $totalDeliveryFees = $actualTotalDeliveryFees;
-
-        $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
-            return max(0, $q->total - $q->paid_amount);
-        });
-        $totalPending = $orders->whereNotIn('payment_method', ['credit'])->sum(function ($q) {
-            return max(0, $q->total - $q->paid_amount);
-        });
+        $totalDeliveryFees   = $actualTotalDeliveryFees;
 
         // Credit Customers
         $creditOrdersQuery = Order::with('customer')
@@ -121,7 +135,7 @@ class ReportController extends Controller
         }
         $creditOrders = $creditOrdersQuery->orderBy('created_at', 'asc')->get();
 
-        // 2. Service-wise breakdown
+        // 2. Service-wise breakdown (already DB-aggregated, no pagination needed)
         $serviceBreakdown = OrderItem::select(
             'service_types.name',
             \DB::raw('SUM(order_items.quantity) as total_qty'),
@@ -138,15 +152,15 @@ class ReportController extends Controller
         }
         $services = $serviceBreakdown->groupBy('service_types.name')->get();
 
-        // 3. Expenses Report
+        // 3. Expenses Report - paginated
         $expenseQuery = Expense::whereBetween('expense_date', [$startDate, $endDate]);
         if ($branchId) {
             $expenseQuery->where('branch_id', $branchId);
         }
-        $expensesList = $expenseQuery->orderBy('expense_date', 'desc')->get();
-        $totalExpensesAmount = $expensesList->sum('amount');
+        $totalExpensesAmount = (clone $expenseQuery)->sum('amount'); // DB aggregate
+        $expensesList = $expenseQuery->orderBy('expense_date', 'desc')->paginate(15);
 
-        // 4. Inventory Transactions Log
+        // 4. Inventory Transactions Log - paginated
         $inventoryQuery = InventoryTransaction::with(['inventoryItem', 'createdBy'])
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
@@ -154,33 +168,15 @@ class ReportController extends Controller
                 $q->where('branch_id', $branchId);
             });
         }
-        $inventoryLogs = $inventoryQuery->latest()->get();
+        $inventoryLogs = $inventoryQuery->latest()->paginate(15);
 
-        // 5. Packages Report
+        // 5. Packages Report - paginated
         $customerPackagesQuery = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $customerPackagesQuery->where('branch_id', $branchId);
         }
-        $customerPackages = $customerPackagesQuery->latest()->get();
-
-        // 6. Advanced Analytics
-        // Walk-in vs Delivery Split
-        $deliveryAppointments = DeliveryAppointment::whereNotNull('order_id')
-            ->whereHas('order', function ($q) use ($startDate, $endDate, $branchId) {
-                $q->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
-                if ($branchId) {
-                    $q->where('branch_id', $branchId);
-                }
-            })->get();
-
-        $deliveryOrderIds = $deliveryAppointments->pluck('order_id')->toArray();
-
-        $deliveryOrders = $orders->whereIn('id', $deliveryOrderIds);
-        $walkinOrders = $orders->whereNotIn('id', $deliveryOrderIds);
-
-        $deliveryRevenue = $deliveryOrders->sum('total');
-        $walkinRevenue = $walkinOrders->sum('total');
+        $customerPackages = $customerPackagesQuery->latest()->paginate(15);
 
         // Daily Revenue Trend
         $dailyRevenue = Order::select(\DB::raw('DATE(created_at) as date'), \DB::raw('SUM(total) as revenue'))
@@ -191,7 +187,9 @@ class ReportController extends Controller
         $dailyRevenue = $dailyRevenue->groupBy('date')->orderBy('date', 'asc')->get();
 
         // Top Customers
-        $topCustomersQuery = clone $salesQuery;
+        $topCustomersQuery = Order::where('status', '!=', 'cancelled')
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        if ($branchId) $topCustomersQuery->where('branch_id', $branchId);
         $topCustomers = $topCustomersQuery->select('customer_id', \DB::raw('SUM(total) as total_spent'), \DB::raw('COUNT(id) as total_orders'))
             ->with('customer')
             ->groupBy('customer_id')
@@ -199,13 +197,13 @@ class ReportController extends Controller
             ->limit(5)
             ->get();
 
-        // 7. Bank Deposits
+        // 7. Bank Deposits - paginated
         $depositsQuery = BankDeposit::with(['branch', 'user'])
             ->whereBetween('deposited_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $depositsQuery->where('branch_id', $branchId);
         }
-        $bankDeposits = $depositsQuery->orderBy('deposited_at', 'desc')->get();
+        $bankDeposits = $depositsQuery->orderBy('deposited_at', 'desc')->paginate(15);
 
         return view('reports.index', compact(
             'orders', 'totalSales', 'totalDeliveryFees', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank', 'totalCredit', 'totalPending',
@@ -523,7 +521,7 @@ class ReportController extends Controller
 
     public function closeShiftReport(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         $branch = Branch::find($branchId);
 
         // Latest active shift
@@ -541,38 +539,41 @@ class ReportController extends Controller
         $startDate = $session ? $session->opened_at->toDateString() : now()->toDateString();
         $endDate = now()->toDateString();
 
-        $orders = Order::where('branch_id', $branchId)
+        $shiftPeriodStart = $session ? $session->opened_at : now()->startOfDay();
+        $shiftPeriodEnd   = now();
+
+        $shiftOrderQuery = Order::where('branch_id', $branchId)
             ->where('status', '!=', 'cancelled')
-            ->whereBetween('created_at', [$session ? $session->opened_at : now()->startOfDay(), now()])
-            ->with('customer')
-            ->get();
-        $totalSales = $orders->sum('total');
-        $totalCashIn = $orders->sum('paid_amount');
-        $totalDiscounts = $orders->sum('discount');
-        
-        $totalBranchProfit = $orders->sum('branch_profit');
-        $totalWorkshopProfit = $orders->sum('workshop_profit');
+            ->whereBetween('created_at', [$shiftPeriodStart, $shiftPeriodEnd]);
 
-        $cashPaymentOnly = $orders->where('payment_method', 'cash')->sum('paid_amount');
-        $cardPaymentOnly = $orders->where('payment_method', 'card')->sum('paid_amount');
-        $bankPaymentOnly = $orders->where('payment_method', 'bank')->sum('paid_amount');
+        // --- DB-level Aggregates for shift totals (no RAM overload) ---
+        $totalSales          = (clone $shiftOrderQuery)->sum('total');
+        $totalCashIn         = (clone $shiftOrderQuery)->sum('paid_amount');
+        $totalDiscounts      = (clone $shiftOrderQuery)->sum('discount');
+        $totalBranchProfit   = (clone $shiftOrderQuery)->sum('branch_profit');
+        $totalWorkshopProfit = (clone $shiftOrderQuery)->sum('workshop_profit');
+        $cashPaymentOnly     = (clone $shiftOrderQuery)->where('payment_method', 'cash')->sum('paid_amount');
+        $cardPaymentOnly     = (clone $shiftOrderQuery)->where('payment_method', 'card')->sum('paid_amount');
+        $bankPaymentOnly     = (clone $shiftOrderQuery)->where('payment_method', 'bank')->sum('paid_amount');
 
+        // Paginated orders list for the shift view
+        $orders = $shiftOrderQuery->with('customer')->orderBy('created_at', 'desc')->paginate(15);
+
+        $totalExpenses = Expense::where('branch_id', $branchId)
+            ->whereBetween('expense_date', [$startDate, $endDate])
+            ->sum('amount');
         $expenses = Expense::where('branch_id', $branchId)
             ->whereBetween('expense_date', [$startDate, $endDate])
             ->get();
-        $totalExpenses = $expenses->sum('amount');
 
-        $packagePayments = PackagePayment::whereHas('customerPackage', function ($q) use ($branchId) {
-            $q->where('branch_id', $branchId);
-        })
-            ->whereBetween('created_at', [$session ? $session->opened_at : now()->startOfDay(), now()])
-            ->get();
-        $totalPackageIncome = $packagePayments->sum('amount');
-        $cashPackageIncome = $packagePayments->where('payment_method', 'cash')->sum('amount');
-        $cardPackageIncome = $packagePayments->where('payment_method', 'card')->sum('amount');
-        $bankPackageIncome = $packagePayments->where('payment_method', 'bank')->sum('amount');
+        $packagePaymentsQ = PackagePayment::whereHas('customerPackage', fn ($q) => $q->where('branch_id', $branchId))
+            ->whereBetween('created_at', [$shiftPeriodStart, $shiftPeriodEnd]);
+        $totalPackageIncome = (clone $packagePaymentsQ)->sum('amount');
+        $cashPackageIncome  = (clone $packagePaymentsQ)->where('payment_method', 'cash')->sum('amount');
+        $cardPackageIncome  = (clone $packagePaymentsQ)->where('payment_method', 'card')->sum('amount');
+        $bankPackageIncome  = (clone $packagePaymentsQ)->where('payment_method', 'bank')->sum('amount');
 
-        $totalCashIn += $totalPackageIncome;
+        $totalCashIn     += $totalPackageIncome;
         $cashPaymentOnly += $cashPackageIncome;
         $cardPaymentOnly += $cardPackageIncome;
         $bankPaymentOnly += $bankPackageIncome;
@@ -580,24 +581,24 @@ class ReportController extends Controller
         $openingBalance = $session ? ($session->opening_cash ?? 0) : 0;
         $closingBalance = $openingBalance + $totalCashIn - $totalExpenses;
 
-        // Stock levels at end of day
+        // Stock levels at end of day (inventory items are limited to branch, typically small set)
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
 
-        // Service Breakdown
+        // Service Breakdown (already DB-aggregated)
         $serviceBreakdown = OrderItem::select('service_types.name', \DB::raw('SUM(order_items.quantity) as total_qty'), \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue'))
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.branch_id', $branchId)
-            ->whereBetween('orders.created_at', [$session ? $session->opened_at : now()->startOfDay(), now()])
+            ->whereBetween('orders.created_at', [$shiftPeriodStart, $shiftPeriodEnd])
             ->groupBy('service_types.name')
             ->get();
 
-        // Inventory Consumed
+        // Inventory Consumed (already DB-aggregated)
         $inventoryConsumed = InventoryTransaction::select('inventory_items.name', 'inventory_items.unit', \DB::raw('SUM(inventory_transactions.quantity) as total_used'))
             ->join('inventory_items', 'inventory_items.id', '=', 'inventory_transactions.inventory_item_id')
             ->where('inventory_items.branch_id', $branchId)
             ->where('inventory_transactions.type', 'out')
-            ->whereBetween('inventory_transactions.created_at', [$session ? $session->opened_at : now()->startOfDay(), now()])
+            ->whereBetween('inventory_transactions.created_at', [$shiftPeriodStart, $shiftPeriodEnd])
             ->groupBy('inventory_items.name', 'inventory_items.unit')
             ->get();
 

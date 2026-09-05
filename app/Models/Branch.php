@@ -6,10 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Branch extends Model
 {
-    protected $fillable = [
-        'name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_path', 'logo_size', 'type', 'is_active', 'auto_close_time',
-        'is_delivery_enabled', 'branch_profit_percentage', 'order_sequence'
-    ];
+    protected $guarded = ['id'];
 
     public function scopeWorkshops($query)
     {

@@ -6,14 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class BankDeposit extends Model
 {
-    protected $fillable = [
-        'branch_id',
-        'user_id',
-        'amount',
-        'reference_number',
-        'notes',
-        'deposited_at'
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'deposited_at' => 'datetime',

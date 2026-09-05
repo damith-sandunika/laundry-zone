@@ -9,15 +9,7 @@ class Order extends Model
 {
     use BelongsToBranch;
 
-    protected $fillable = [
-        'order_number', 'branch_id', 'customer_id', 'created_by', 'workshop_id',
-        'status', 'subtotal', 'discount', 'additional', 'delivery_fee', 'total', 'paid_amount', 'requested_advance',
-        'payment_status', 'payment_method', 'loyalty_points_used',
-        'loyalty_points_earned', 'due_date', 'notes', 'is_online_booking',
-        'ready_at', 'delivered_at', 'picked_up_at', 'dispatched_to_workshop_at', 'returned_from_workshop_at',
-        'is_delivery_order', 'delivery_appointment_id',
-        'delivery_address', 'receipt_path', 'payment_approved',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'due_date' => 'datetime',
@@ -113,26 +105,18 @@ class Order extends Model
         return $this->hasMany(PaymentTransaction::class);
     }
 
-    // Generate unique order number per branch - race-condition safe via DB transaction lock
+    protected static function booted()
+    {
+        static::created(function ($order) {
+            $order->order_number = (string) $order->id;
+            $order->saveQuietly();
+        });
+    }
+
+    // Return a temporary ID. The booted method will immediately replace it with the real numeric ID.
     public static function generateOrderNumber(int $branchId, bool $isDelivery = false): string
     {
-        return \DB::transaction(function () use ($branchId, $isDelivery) {
-            // Lock the branch row to prevent concurrent race conditions
-            $branch = \App\Models\Branch::lockForUpdate()->find($branchId);
-            
-            if ($branch) {
-                $branch->order_sequence += 1;
-                $branch->save();
-                $nextId = $branch->order_sequence;
-            } else {
-                $nextId = 1;
-            }
-
-            $prefix = $isDelivery ? "D{$branchId}" : "{$branchId}";
-            $sequence = $nextId;
-
-            return "{$prefix}-L-{$sequence}";
-        });
+        return 'TEMP-' . uniqid('', true);
     }
 
     public function isPackageOrder()

@@ -9,15 +9,14 @@ use App\Models\SalaryAdvance;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class HRDashboardController extends Controller
 {
     public function index(Request $request)
     {
         // Only super_admin should see this overall dashboard
-        if (auth()->user()->role !== 'super_admin') {
-            abort(403, 'Unauthorized access');
-        }
+        Gate::authorize('is-super-admin');
 
         $branchId = $request->query('branch_id');
         $month = $request->query('month', now()->month);

@@ -141,54 +141,62 @@ class CommunicationService
             'payment_status' => $paymentStatusText,
         ];
 
-        // Process SMS
+        // Process SMS — isolated so failure doesn't block WhatsApp/Email
         if ($isSmsEnabled && !empty($customer->phone)) {
-            $smsTemplate = SmsTemplate::where('type', $type)->where('is_active', true)->first();
-            if ($smsTemplate) {
-                $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
-                $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
-                $this->sendSms($order, $customer->phone, $type, $message);
+            try {
+                $smsTemplate = SmsTemplate::where('type', $type)->where('is_active', true)->first();
+                if ($smsTemplate) {
+                    $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
+                    $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
+                    $this->sendSms($order, $customer->phone, $type, $message);
+                }
+            } catch (\Exception $e) {
+                Log::error("CommunicationService SMS failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
 
-        // Process WhatsApp
+        // Process WhatsApp — isolated so failure doesn't block SMS/Email
         if ($isWhatsappEnabled && !empty($customer->phone)) {
-            $waTemplate = WhatsappTemplate::where('type', $type)->where('is_active', true)->first();
-            if ($waTemplate && !empty($waTemplate->meta_template_name)) {
-                // Meta API uses strict positional parameters inside the template.
-                // Assuming the template matches the parameters in this exact order: 
-                // {{1}}: name, {{2}}: order_id, {{3}}: total, {{4}}: amount_due, {{5}}: payment_status
-                $parameters = [
-                    $data['customer_name'],
-                    $data['order_id'],
-                    $data['total'],
-                    $data['amount_due'],
-                    $data['payment_status']
-                ];
-                $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
+            try {
+                $waTemplate = WhatsappTemplate::where('type', $type)->where('is_active', true)->first();
+                if ($waTemplate && !empty($waTemplate->meta_template_name)) {
+                    $parameters = [
+                        $data['customer_name'],
+                        $data['order_id'],
+                        $data['total'],
+                        $data['amount_due'],
+                        $data['payment_status']
+                    ];
+                    $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
+                }
+            } catch (\Exception $e) {
+                Log::error("CommunicationService WhatsApp failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
 
-        // Process Email
+        // Process Email — isolated so failure doesn't block SMS/WhatsApp
         if ($isEmailEnabled && !empty($customer->email)) {
-            // Use DB template body/subject if it exists, otherwise use hardcoded fallback
-            $dbTemplate = \App\Models\EmailTemplate::where('type', $type)->first();
-            if ($dbTemplate && !empty($dbTemplate->body)) {
-                $replacements = [
-                    '{customer_name}'  => $data['customer_name'],
-                    '{order_id}'       => $data['order_id'],
-                    '{total}'          => $data['total'],
-                    '{amount_due}'     => $data['amount_due'],
-                    '{payment_status}' => $data['payment_status'],
-                ];
-                $subject = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->subject);
-                $body    = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->body);
-            } else {
-                $content = $this->getEmailContent($type, $data);
-                $subject = $content['subject'];
-                $body    = $content['body'];
+            try {
+                $dbTemplate = \App\Models\EmailTemplate::where('type', $type)->first();
+                if ($dbTemplate && !empty($dbTemplate->body)) {
+                    $replacements = [
+                        '{customer_name}'  => $data['customer_name'],
+                        '{order_id}'       => $data['order_id'],
+                        '{total}'          => $data['total'],
+                        '{amount_due}'     => $data['amount_due'],
+                        '{payment_status}' => $data['payment_status'],
+                    ];
+                    $subject = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->subject);
+                    $body    = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->body);
+                } else {
+                    $content = $this->getEmailContent($type, $data);
+                    $subject = $content['subject'];
+                    $body    = $content['body'];
+                }
+                $this->sendEmail($order, $customer->email, $type, $subject, $body);
+            } catch (\Exception $e) {
+                Log::error("CommunicationService Email failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
-            $this->sendEmail($order, $customer->email, $type, $subject, $body);
         }
     }
 

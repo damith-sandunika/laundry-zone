@@ -9,6 +9,6 @@ class EmailTemplate extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['type', 'name', 'subject', 'body', 'is_active'];
+    protected $guarded = ['id'];
 }
 

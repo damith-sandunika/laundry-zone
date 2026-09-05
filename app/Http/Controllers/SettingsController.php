@@ -18,14 +18,14 @@ class SettingsController extends Controller
     public function servicesIndex()
     {
         $services = ServiceType::all();
-        $inventoryItems = InventoryItem::where('branch_id', auth()->user()->branch_id ?? \App\Models\Branch::first()->id)->get();
+        $inventoryItems = InventoryItem::where('branch_id', $this->getActiveBranchId())->get();
 
         return view('services.index', compact('services', 'inventoryItems'));
     }
 
     public function index()
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         $branch = Branch::find($branchId);
         
         $serviceCategories = ServiceCategory::with(['children.services' => function($q) {
@@ -87,7 +87,7 @@ class SettingsController extends Controller
 
     public function updateGeneral(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         $branch = Branch::find($branchId);
 
         $request->validate([
@@ -133,7 +133,7 @@ class SettingsController extends Controller
             $branch->update($data);
         }
 
-        if (auth()->user()->role === 'super_admin') {
+        if (\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             if ($request->has('company_name')) {
                 \App\Models\Setting::set('company_name', $request->company_name);
             }
@@ -315,7 +315,7 @@ class SettingsController extends Controller
     public function storeCubby(Request $request)
     {
         $request->validate(['name' => 'required|string|max:50']);
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         Cubby::create([
             'branch_id' => $branchId,
             'name' => $request->name,
@@ -342,7 +342,7 @@ class SettingsController extends Controller
 
     public function storeInventory(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         $request->validate([
             'name' => 'required|string|max:255',
             'unit' => 'required|string|max:50',
@@ -382,7 +382,7 @@ class SettingsController extends Controller
 
     public function whatsappStatus()
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         try {
             $response = Http::timeout(5)->get("http://127.0.0.1:3005/api/whatsapp/status/{$branchId}");
 
@@ -394,7 +394,7 @@ class SettingsController extends Controller
 
     public function whatsappLogout()
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         try {
             $response = Http::post("http://127.0.0.1:3005/api/whatsapp/logout/{$branchId}");
 
@@ -406,7 +406,7 @@ class SettingsController extends Controller
 
     public function whatsappReset()
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         try {
             $response = Http::post("http://127.0.0.1:3005/api/whatsapp/start/{$branchId}");
 
@@ -418,7 +418,7 @@ class SettingsController extends Controller
 
     public function storePackage(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -487,7 +487,7 @@ class SettingsController extends Controller
 
     public function updateDeliverySettings(Request $request)
     {
-        abort_unless(auth()->user()->role === 'super_admin', 403);
+        \Illuminate\Support\Facades\Gate::authorize('is-super-admin');
 
         $request->validate([
             'minimum_delivery_cost' => 'required|numeric|min:0',
@@ -522,7 +522,7 @@ class SettingsController extends Controller
         ]);
 
         \App\Models\DeliveryRange::create([
-            'branch_id' => auth()->user()->role === 'super_admin' ? null : auth()->user()->branch_id,
+            'branch_id' => \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? null : auth()->user()->branch_id,
             'min_distance_km' => $request->min_distance_km,
             'max_distance_km' => $request->max_distance_km,
             'cost' => $request->cost,
@@ -570,7 +570,7 @@ class SettingsController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
 
         \App\Models\Extra::create([
             'branch_id' => $branchId,
@@ -613,7 +613,7 @@ class SettingsController extends Controller
             'is_default' => 'boolean',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
 
         if ($request->has('is_default')) {
             \App\Models\TurnaroundType::where('branch_id', $branchId)->update(['is_default' => false]);
@@ -641,7 +641,7 @@ class SettingsController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
 
         if ($request->has('is_default') && $request->is_default) {
             \App\Models\TurnaroundType::where('branch_id', $branchId)->where('id', '!=', $turnaroundType->id)->update(['is_default' => false]);

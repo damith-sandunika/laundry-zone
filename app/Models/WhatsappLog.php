@@ -9,14 +9,7 @@ class WhatsappLog extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'order_id',
-        'phone',
-        'type',
-        'meta_template_name',
-        'status',
-        'response'
-    ];
+    protected $guarded = ['id'];
 
     public function order()
     {

@@ -9,13 +9,7 @@ class Extra extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'branch_id',
-        'name',
-        'price_type',
-        'price',
-        'is_active',
-    ];
+    protected $guarded = ['id'];
 
     public function branch()
     {

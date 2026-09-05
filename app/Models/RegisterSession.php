@@ -9,9 +9,7 @@ class RegisterSession extends Model
 {
     use BelongsToBranch;
 
-    protected $fillable = [
-        'branch_id', 'user_id', 'opening_cash', 'closing_cash', 'opened_at', 'closed_at', 'status', 'closed_by',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'opened_at' => 'datetime',

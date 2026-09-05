@@ -81,43 +81,43 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Basic Salary (Rs.)</label>
-                            <input type="number" step="0.01" name="basic_salary" value="{{ old('basic_salary', $staff->basic_salary) }}"
+                            <input type="number" step="0.01" name="basic_salary" value="{{ old('basic_salary', $staff->profile->basic_salary ?? 0) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Casual Leaves (Per Year)</label>
-                            <input type="number" name="casual_leaves" value="{{ old('casual_leaves', $staff->casual_leaves) }}"
+                            <input type="number" name="casual_leaves" value="{{ old('casual_leaves', $staff->profile->casual_leaves ?? 0) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Standard Working Hours</label>
-                            <input type="number" step="0.5" name="standard_working_hours" value="{{ old('standard_working_hours', $staff->standard_working_hours) }}"
+                            <input type="number" step="0.5" name="standard_working_hours" value="{{ old('standard_working_hours', $staff->profile->standard_working_hours ?? 8) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">OT Rate (Rs. Per Hour)</label>
-                            <input type="number" step="0.01" name="ot_rate_per_hour" value="{{ old('ot_rate_per_hour', $staff->ot_rate_per_hour) }}"
+                            <input type="number" step="0.01" name="ot_rate_per_hour" value="{{ old('ot_rate_per_hour', $staff->profile->ot_rate_per_hour ?? 0) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">NIC (Optional)</label>
-                            <input type="text" name="nic" value="{{ old('nic', $staff->nic) }}"
+                            <input type="text" name="nic" value="{{ old('nic', $staff->profile->nic ?? '') }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth</label>
-                            <input type="date" name="dob" value="{{ old('dob', $staff->dob ? \Carbon\Carbon::parse($staff->dob)->format('Y-m-d') : '') }}"
+                            <input type="date" name="dob" value="{{ old('dob', $staff->profile?->dob ? \Carbon\Carbon::parse($staff->profile->dob)->format('Y-m-d') : '') }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Emergency Contact</label>
-                            <input type="text" name="emergency_contact" value="{{ old('emergency_contact', $staff->emergency_contact) }}"
+                            <input type="text" name="emergency_contact" value="{{ old('emergency_contact', $staff->profile->emergency_contact ?? '') }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div class="md:col-span-2">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Address</label>
                             <textarea name="address" rows="2"
-                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ old('address', $staff->address) }}</textarea>
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ old('address', $staff->profile->address ?? '') }}</textarea>
                         </div>
                     </div>
                 </div>

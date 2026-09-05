@@ -19,20 +19,24 @@ class PackageController extends Controller
 {
     public function index()
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         $customerPackages = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
+            ->when(!auth()->user()->hasRole('super_admin'), function ($q) use ($branchId) {
+                return $q->where('branch_id', $branchId);
+            })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(15);
 
         $packages = Package::where('is_active', true)->get();
-        $customers = Customer::all();
+        // Limit customers to the current branch and cap at 1000 to prevent OOM errors until AJAX search is implemented
+        $customers = Customer::where('branch_id', $branchId)->orderBy('created_at', 'desc')->limit(1000)->get();
 
         return view('packages.index', compact('customerPackages', 'packages', 'customers'));
     }
 
     public function store(Request $request)
     {
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = $this->getActiveBranchId();
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
             'package_id' => 'required|exists:packages,id',

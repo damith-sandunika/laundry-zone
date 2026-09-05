@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Leave extends Model
 {
-    protected $fillable = ['user_id', 'start_date', 'end_date', 'reason', 'type', 'status', 'approved_by'];
+    protected $guarded = ['id'];
 
     public function user()
     {

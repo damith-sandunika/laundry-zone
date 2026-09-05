@@ -12,7 +12,10 @@
         <!-- Filters / Actions -->
         <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-white">
             <div class="flex-1 max-w-sm">
-                <input type="text" placeholder="Search customers..." class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                <form method="GET" action="{{ route('customers.index') }}" class="m-0 flex gap-2">
+                    <input type="text" name="search" value="{{ request('search') }}" placeholder="Search customers..." class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-blue-500 shadow-sm">
+                    <button type="submit" class="px-4 py-2 bg-blue-50 text-blue-600 rounded-xl font-bold text-sm hover:bg-blue-100 transition-colors">Search</button>
+                </form>
             </div>
         </div>
 
@@ -61,6 +64,11 @@
                     @endforelse
                 </tbody>
             </table>
+        </div>
+        
+        <!-- Pagination Links -->
+        <div class="p-4 border-t border-gray-100 bg-gray-50">
+            {{ $customers->appends(request()->query())->links() }}
         </div>
     </div>
 </x-app-layout>

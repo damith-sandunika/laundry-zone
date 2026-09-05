@@ -6,9 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ServiceType extends Model
 {
-    protected $fillable = [
-        'branch_id', 'category_id', 'name', 'description', 'price_type', 'base_price', 'loyalty_points_earn', 'is_active', 'icon', 'color', 'order_index', 'is_visible_on_website'
-    ];
+    protected $guarded = ['id'];
 
     public function category()
     {

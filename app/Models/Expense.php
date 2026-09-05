@@ -9,9 +9,7 @@ class Expense extends Model
 {
     use BelongsToBranch;
 
-    protected $fillable = [
-        'branch_id', 'category', 'description', 'amount', 'expense_date', 'receipt_image', 'created_by',
-    ];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'expense_date' => 'date',

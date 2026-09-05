@@ -7,9 +7,20 @@ use Illuminate\Http\Request;
 
 class CustomerController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $customers = Customer::withCount('orders')->orderBy('name', 'asc')->get();
+        $query = Customer::withCount('orders')->orderBy('name', 'asc');
+
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('name', 'like', "%{$searchTerm}%")
+                  ->orWhere('phone', 'like', "%{$searchTerm}%")
+                  ->orWhere('title', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        $customers = $query->paginate(15);
 
         return view('customers.index', compact('customers'));
     }
@@ -101,9 +112,7 @@ class CustomerController extends Controller
 
     public function destroy(Customer $customer)
     {
-        if (! in_array(auth()->user()->role, ['admin', 'super_admin', 'branch_admin'])) {
-            abort(403, 'Unauthorized action.');
-        }
+        $this->authorize('viewAny', \App\Models\Customer::class);
         
         try {
             $customer->delete();

@@ -9,11 +9,7 @@ class ServiceTurnaroundPrice extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'service_id',
-        'turnaround_type_id',
-        'flat_extra_price',
-    ];
+    protected $guarded = ['id'];
 
     public function serviceType()
     {

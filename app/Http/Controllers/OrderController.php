@@ -100,12 +100,12 @@ class OrderController extends Controller
         $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop', 'deliveryAppointment', 'paymentTransactions'])
             ->orderBy('created_at', 'desc');
 
-        if ($branchId && auth()->user()->role !== 'super_admin') {
+        if ($branchId && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             $query->where(function($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
                   ->orWhere('workshop_id', $branchId);
             });
-        } elseif (auth()->user()->role === 'super_admin' && $filterBranchId) {
+        } elseif (\Illuminate\Support\Facades\Gate::allows('is-super-admin') && $filterBranchId) {
             $query->where('branch_id', $filterBranchId);
         }
 
@@ -142,7 +142,9 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->get()->map(function($order) {
+        $orders = $query->paginate(15);
+        
+        $orders->getCollection()->transform(function($order) {
             // Attach the latest workshop dispatch ID so the branch can confirm receipt
             $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
                 ->whereIn('status', ['returned_to_branch', 'received_at_branch'])
@@ -156,7 +158,7 @@ class OrderController extends Controller
         $workshops = Branch::workshops()->get();
         $riders = \App\Models\User::where('role', 'rider')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
-        $allBranches = auth()->user()->role === 'super_admin' ? Branch::all() : collect();
+        $allBranches = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? Branch::all() : collect();
 
         return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'riders', 'minimumDeliveryCost', 'allBranches', 'filterBranchId'));
     }
@@ -188,7 +190,7 @@ class OrderController extends Controller
         return response()->json(['success' => false, 'message' => 'Customer has no phone number.'], 400);
     }
 
-    public function updateOrder(Request $request, Order $order)
+    public function updateOrder(Request $request, Order $order, \App\Actions\Order\UpdateOrderAction $action)
     {
         if (in_array($order->status, ['delivered', 'cancelled'])) {
             return response()->json(['success' => false, 'message' => 'Cannot edit an order that is already delivered or cancelled.']);
@@ -201,141 +203,10 @@ class OrderController extends Controller
         }
 
         try {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($request, $order, $cart) {
-                // Delete old items
-                OrderItem::where('order_id', $order->id)->delete();
-
-                $subtotal = 0;
-                $processedCart = [];
-
-                // Process new items
-                foreach ($cart as $item) {
-                    $qty = (float) ($item['qty'] ?? 1);
-                    if ($qty <= 0) {
-                        continue;
-                    }
-
-                    $basePrice = (float) ($item['base_price'] ?? 0);
-                    $itemTotal = $qty * $basePrice;
-                    $subtotal += $itemTotal;
-
-                    $processedCart[] = [
-                        'service_type_id' => $item['service_type_id'] ?? null,
-                        'item_description' => $item['name'] ?? 'Custom Service',
-                        'quantity' => $qty,
-                        'unit_price' => $basePrice,
-                        'total_price' => $itemTotal,
-                    ];
-                }
-
-                // Calculate discount and total
-                $discountPercentage = max(0, min(100, (float) ($request->discount_percentage ?? 0)));
-                $discountAmount = $subtotal * ($discountPercentage / 100);
-                
-                // Update customer default_discount if discount > 0
-                if ($discountPercentage > 0 && $order->customer_id) {
-                    \App\Models\Customer::where('id', $order->customer_id)
-                        ->update(['default_discount' => $discountPercentage]);
-                }
-
-                $deliveryFee = $request->has('delivery_fee') ? (float)$request->delivery_fee : $order->delivery_fee;
-                $total = $subtotal - $discountAmount + $deliveryFee;
-
-                // Adjust paid_amount if it exceeds the new total (optional, but good practice)
-                $paidAmount = $order->paid_amount;
-                if ($paidAmount > $total) {
-                    $paidAmount = $total; // Cap paid amount to new total to avoid negative balance
-                }
-
-                $order->update([
-                    'subtotal' => $subtotal,
-                    'discount' => $discountAmount,
-                    'delivery_fee' => $deliveryFee,
-                    'total' => $total,
-                    'paid_amount' => $paidAmount,
-                    'requested_advance' => $request->requested_advance,
-                ]);
-
-                // Insert new order items
-                foreach ($processedCart as $item) {
-                    OrderItem::create([
-                        'order_id' => $order->id,
-                        'service_type_id' => $item['service_type_id'],
-                        'item_description' => $item['service_type_id'] ? null : $item['item_description'],
-                        'quantity' => $item['quantity'],
-                        'unit_price' => $item['unit_price'],
-                        'total_price' => $item['total_price'],
-                    ]);
-                }
-
-                // Log activity
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => 'edited',
-                    'changed_by' => auth()->id(),
-                    'note' => 'Order details updated',
-                ]);
-
-                // Handle next action
-                if ($request->next_action === 'start_processing') {
-                    $order->update(['status' => 'processing']);
-                    OrderStatusHistory::create([
-                        'order_id' => $order->id,
-                        'status' => 'processing',
-                        'changed_by' => auth()->id(),
-                        'note' => 'Workshop started processing',
-                    ]);
-                } else if ($request->next_action === 'dispatch_to_workshop') {
-                    $order->update(['status' => 'dispatched_to_workshop']);
-                    
-                    $workshop = \App\Models\Branch::workshops()->first();
-                    if ($workshop) {
-                        \App\Models\WorkshopDispatch::create([
-                            'order_id' => $order->id,
-                            'branch_id' => $order->branch_id,
-                            'workshop_branch_id' => $workshop->id,
-                            'status' => 'dispatched_to_workshop',
-                            'dispatched_by' => auth()->id(),
-                            'dispatch_notes' => 'Dispatched from branch after confirmation',
-                        ]);
-                    }
-
-                    OrderStatusHistory::create([
-                        'order_id' => $order->id,
-                        'status' => 'dispatched_to_workshop',
-                        'changed_by' => auth()->id(),
-                        'note' => 'Branch verified and dispatched order to workshop',
-                    ]);
-                } else if ($request->next_action === 'request_payment') {
-                    // Send payment request / bill finalize
-                    $commService = new \App\Services\CommunicationService();
-                    $commService->sendFinalizedBill($order);
-                }
-
-                // Handle advance cash payment if provided
-                if ($request->filled('advance_cash_amount') && $request->advance_cash_amount > 0) {
-                    $advance = (float) $request->advance_cash_amount;
-                    \App\Models\PaymentTransaction::create([
-                        'order_id' => $order->id,
-                        'amount' => $advance,
-                        'payment_method' => 'cash',
-                        'status' => 'completed',
-                        'collected_by' => auth()->id(),
-                    ]);
-                    $order->increment('paid_amount', $advance);
-                    
-                    if ($order->paid_amount >= $order->total) {
-                        $order->update(['payment_status' => 'paid']);
-                    } else {
-                        $order->update(['payment_status' => 'partial']);
-                    }
-                }
-            });
-
+            $action->execute($order, $request->all(), auth()->id());
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
             Log::error('Order Update Error: '.$e->getMessage());
-
             return response()->json(['success' => false, 'message' => 'Failed to update order.']);
         }
     }
@@ -385,128 +256,11 @@ class OrderController extends Controller
         return view('orders.invoice', compact('order'));
     }
 
-    public function updateStatus(Request $request, Order $order)
+    public function updateStatus(\App\Http\Requests\Order\UpdateOrderStatusRequest $request, Order $order, \App\Actions\Order\UpdateOrderStatusAction $action)
     {
-        \Log::info('updateStatus started for order ' . $order->id . ' to status ' . $request->status);
-        
-        $request->validate([
-            'status'   => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,completed,cancelled',
-            'cubby_id' => 'nullable|exists:cubbies,id',
-        ]);
-
         try {
-            \Illuminate\Support\Facades\DB::transaction(function () use ($request, $order) {
-                $order->status = $request->status;
+            $action->execute($order, $request->validated(), auth()->id());
 
-                if ($request->status === 'done') {
-                    if ($request->cubby_id) {
-                        OrderCubby::create([
-                            'order_id'    => $order->id,
-                            'cubby_id'    => $request->cubby_id,
-                            'assigned_at' => now(),
-                        ]);
-                        Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
-                    }
-                }
-
-                if ($request->status === 'done') {
-                    $dispatch = WorkshopDispatch::where('order_id', $order->id)
-                        ->whereNotIn('status', ['received_at_branch'])
-                        ->first();
-                    if ($dispatch) {
-                        $dispatch->update([
-                            'status'                => 'received_at_branch',
-                            'received_at_branch_at' => now(),
-                        ]);
-                    }
-                }
-
-                if ($request->status === 'done') {
-                    $appt = DeliveryAppointment::where('order_id', $order->id)->first();
-                    if ($appt && $appt->status !== 'ready') {
-                        $appt->update(['status' => 'ready']);
-                    }
-                }
-
-                if ($request->status === 'delivered') {
-                    $order->delivered_at = now();
-                    if ($request->has('payment_method')) {
-                        $order->payment_method = $request->payment_method;
-                    }
-                    if ($order->payment_method === 'credit') {
-                        $order->payment_status = 'pending';
-                    } else {
-                        $amountToPay = $order->total - $order->paid_amount;
-                        if ($amountToPay > 0) {
-                            PaymentTransaction::create([
-                                'order_id'       => $order->id,
-                                'amount'         => $amountToPay,
-                                'payment_method' => $order->payment_method ?? 'cash',
-                                'created_by'     => auth()->id(),
-                            ]);
-                        }
-                        $order->payment_status = 'paid';
-                        $order->paid_amount     = $order->total;
-                    }
-
-                    $orderCubby = $order->cubbies()->whereNull('released_at')->first();
-                    if ($orderCubby) {
-                        $orderCubby->update(['released_at' => now()]);
-                        Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
-                    }
-
-                    $appt = DeliveryAppointment::where('order_id', $order->id)->first();
-                    if ($appt) {
-                        $appt->update(['status' => 'delivered']);
-                    }
-                }
-
-                if ($request->status === 'completed') {
-                    if ($request->has('payment_method')) {
-                        $order->payment_method = $request->payment_method;
-                    }
-                    $amountToPay = $order->total - $order->paid_amount;
-                    if ($amountToPay > 0) {
-                        PaymentTransaction::create([
-                            'order_id'                => $order->id,
-                            'amount'                  => $amountToPay,
-                            'payment_method'          => $order->payment_method ?? 'cash',
-                            'created_by'              => auth()->id(),
-                            'collected_from_rider_at' => now(),
-                            'status'                  => 'completed',
-                            'transaction_id'          => 'TXN-' . strtoupper(uniqid()),
-                        ]);
-                        $order->paid_amount    = $order->total;
-                        $order->payment_status = 'paid';
-                    } else {
-                        PaymentTransaction::where('order_id', $order->id)
-                            ->where('payment_method', 'cash')
-                            ->whereNull('collected_from_rider_at')
-                            ->update(['collected_from_rider_at' => now()]);
-                    }
-                }
-
-                $order->save();
-
-                // Single history record per status change
-                try {
-                    OrderStatusHistory::create([
-                        'order_id'   => $order->id,
-                        'status'     => $request->status,
-                        'changed_by' => auth()->id(),
-                        'note'       => 'Status updated to ' . $request->status,
-                    ]);
-                } catch (\Exception $e) {
-                    \Log::warning('OrderStatusHistory insert failed: ' . $e->getMessage());
-                }
-            });
-
-            \Log::info('Transaction successful for order ' . $order->id . ' status ' . $request->status);
-
-            // Trigger notifications AFTER transaction commits
-            $this->triggerNotifications($order, $request->status);
-
-            // Return JSON for AJAX calls, redirect for form submissions
             if ($request->expectsJson() || $request->ajax()) {
                 $payload = ['success' => true, 'message' => 'Status updated successfully!'];
                 if ($request->status === 'delivered') {
@@ -534,13 +288,9 @@ class OrderController extends Controller
         }
     }
 
-    public function reverseOrder(Request $request, Order $order)
+    public function reverseOrder(\App\Http\Requests\Order\ReverseOrderRequest $request, Order $order, \App\Actions\Order\ReverseOrderAction $action)
     {
-        $request->validate([
-            'password' => 'required|string',
-        ]);
-
-        $admins = User::whereIn('role', ['admin', 'super_admin', 'branch_admin', 'staff'])->get();
+        $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin', 'branch_admin', 'staff'])->get();
         $authorized = false;
         foreach ($admins as $admin) {
             if (\Hash::check($request->password, $admin->password)) {
@@ -556,25 +306,7 @@ class OrderController extends Controller
             ], 403);
         }
 
-        \Illuminate\Support\Facades\DB::transaction(function () use ($order) {
-            $order->status = 'received';
-            $order->payment_status = 'pending';
-            $order->paid_amount = 0;
-
-            $orderCubby = $order->cubbies()->whereNull('released_at')->first();
-            if ($orderCubby) {
-                $orderCubby->update(['released_at' => now()]);
-                Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
-            }
-
-            $order->save();
-
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'received',
-                'changed_by' => auth()->id(),
-            ]);
-        });
+        $action->execute($order, auth()->id());
 
         return response()->json([
             'success' => true,
@@ -582,121 +314,9 @@ class OrderController extends Controller
         ]);
     }
 
-public function bulkStatus(Request $request)
+    public function bulkStatus(\App\Http\Requests\Order\BulkStatusUpdateRequest $request, \App\Actions\Order\BulkUpdateOrderStatusAction $action)
     {
-        $request->validate([
-            'order_ids' => 'required|array',
-            'order_ids.*' => 'exists:orders,id',
-            'status' => 'required|in:received,dispatched_to_workshop,processing,returned_from_workshop,done,delivered,completed,cancelled',
-            'cubby_id' => 'nullable|exists:cubbies,id',
-        ]);
-
-        $stateOrder = [
-            'received' => 1,
-            'dispatched_to_workshop' => 2,
-            'processing' => 3,
-            'returned_from_workshop' => 4,
-            'done' => 5,
-            'delivered' => 6,
-            'cancelled' => 7,
-        ];
-
-        \Illuminate\Support\Facades\DB::transaction(function () use ($request, $stateOrder) {
-            foreach ($request->order_ids as $id) {
-                $order = Order::with('customer')->find($id);
-
-                if ($request->status !== 'cancelled') {
-                    if (($stateOrder[$request->status] ?? 0) <= ($stateOrder[$order->status] ?? 0)) {
-                        continue; // Skip backward or same state updates
-                    }
-                }
-
-                $order->status = $request->status;
-
-                if ($request->status === 'done') {
-                    if ($request->cubby_id) {
-                        // Release old active cubby if any
-                        $oldCubby = $order->cubbies()->whereNull('released_at')->first();
-                        if ($oldCubby && $oldCubby->cubby_id != $request->cubby_id) {
-                            $oldCubby->update(['released_at' => now()]);
-                            Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
-                        }
-
-                        if (! $oldCubby || $oldCubby->cubby_id != $request->cubby_id) {
-                            OrderCubby::create([
-                                'order_id' => $order->id,
-                                'cubby_id' => $request->cubby_id,
-                                'assigned_at' => now(),
-                            ]);
-                        }
-
-                        Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
-                    }
-
-                    // Complete Workshop Dispatch
-                    $dispatch = WorkshopDispatch::where('order_id', $order->id)
-                        ->whereNotIn('status', ['received_at_branch'])
-                        ->first();
-                    if ($dispatch) {
-                        $dispatch->update([
-                            'status' => 'received_at_branch',
-                            'received_at_branch_at' => now(),
-                        ]);
-                    }
-                }
-
-                if ($request->status === 'done') {
-                    $appt = DeliveryAppointment::where('order_id', $order->id)->first();
-                    if ($appt && $appt->status !== 'ready') {
-                        $appt->update(['status' => 'ready']);
-                    }
-                }
-
-                if ($request->status === 'delivered') {
-                    $order->delivered_at = now();
-                    if ($order->payment_method === 'credit') {
-                        $order->payment_status = 'pending';
-                    } else {
-                        $amountToPay = $order->total - $order->paid_amount;
-                        if ($amountToPay > 0) {
-                            PaymentTransaction::create([
-                                'order_id' => $order->id,
-                                'amount' => $amountToPay,
-                                'payment_method' => $order->payment_method ?? 'cash',
-                                'created_by' => auth()->id(),
-                            ]);
-                        }
-                        $order->payment_status = 'paid';
-                        $order->paid_amount = $order->total;
-                    }
-
-                    $orderCubby = $order->cubbies()->whereNull('released_at')->first();
-                    if ($orderCubby) {
-                        $orderCubby->update(['released_at' => now()]);
-                        Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
-                    }
-
-                    $appt = DeliveryAppointment::where('order_id', $order->id)->first();
-                    if ($appt) {
-                        $appt->update(['status' => 'delivered']);
-                    }
-                }
-
-                $order->save();
-
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => $request->status,
-                    'changed_by' => auth()->id(),
-                ]);
-            }
-        });
-
-        // Status-specific notifications - sent ONCE after transaction succeeds
-        $orders = Order::whereIn('id', $request->order_ids)->get();
-        foreach ($orders as $order) {
-            $this->triggerNotifications($order, $request->status);
-        }
+        $action->execute($request->validated(), auth()->id());
 
         return response()->json([
             'success' => true,
@@ -704,201 +324,45 @@ public function bulkStatus(Request $request)
         ]);
     }
 
-    public function collectCreditPayment(Request $request, $id)
+    public function collectCreditPayment(\App\Http\Requests\Order\CollectCreditPaymentRequest $request, $id, \App\Actions\Order\CollectCreditPaymentAction $action)
     {
-        $request->validate([
-            'payment_method' => 'required|in:cash,card',
-            'amount' => 'required|numeric|min:0.01',
-        ]);
-
         $order = Order::findOrFail($id);
 
-        if ($order->payment_status === 'paid' || $order->total <= $order->paid_amount) {
-            return redirect()->back()->with('error', 'Order is already fully paid.');
-        }
-
-        // Amount cannot be more than due
-        $due = $order->total - $order->paid_amount;
-        $payAmount = min($request->amount, $due);
-
-        \DB::transaction(function () use ($order, $payAmount, $request) {
-            PaymentTransaction::create([
-                'order_id' => $order->id,
-                'amount' => $payAmount,
-                'payment_method' => $request->payment_method,
-                'created_by' => auth()->id(),
-            ]);
-
-            $order->paid_amount += $payAmount;
-
-            // If fully paid, change method from credit and mark paid
-            if ($order->paid_amount >= $order->total) {
-                $order->payment_status = 'paid';
-                $order->payment_method = $request->payment_method;
-            }
-
-            $order->save();
-        });
-
-        return redirect()->back()->with('success', 'Credit payment collected successfully!');
-    }
-
-    public function approvePayment(Request $request, Order $order, PaymentTransaction $transaction)
-    {
-        if ($transaction->order_id !== $order->id) {
-            abort(403);
-        }
-
-        \DB::transaction(function () use ($order, $transaction) {
-            $transaction->update([
-                'status' => 'completed',
-            ]);
-
-            $order->paid_amount += $transaction->amount;
-
-            if ($order->paid_amount >= $order->total && $order->total > 0) {
-                $order->payment_status = 'paid';
-            } elseif ($order->paid_amount > 0) {
-                $order->payment_status = 'partial';
-            }
-
-            $order->save();
-        });
-
-        return redirect()->back()->with('success', 'Payment slip approved successfully.');
-    }
-
-    public function rejectPayment(Request $request, Order $order, PaymentTransaction $transaction)
-    {
-        if ($transaction->order_id !== $order->id) {
-            abort(403);
-        }
-
-        $request->validate([
-            'reject_reason' => 'required|string|max:255',
-        ]);
-
-        $transaction->update([
-            'status' => 'rejected',
-            'reject_reason' => $request->reject_reason,
-        ]);
-
-        return redirect()->back()->with('success', 'Payment slip rejected successfully.');
-    }
-
-    public function dispatchDelivery(Request $request, Order $order)
-    {
-        $request->validate([
-            'delivery_method' => 'required|in:rider,pickme_flash',
-            'rider_id' => 'required_if:delivery_method,rider|nullable|exists:users,id',
-            'pickme_cost' => 'required_if:delivery_method,pickme_flash|nullable|numeric|min:0',
-        ]);
-
-        $appointment = $order->deliveryAppointment;
-        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
-
-        if ($request->delivery_method === 'rider') {
-            \App\Models\DeliveryTask::create([
-                'delivery_appointment_id' => $appointment ? $appointment->id : null,
-                'order_id' => $order->id,
-                'rider_id' => $request->rider_id,
-                'branch_id' => $branchId,
-                'task_type' => 'delivery',
-                'status' => 'assigned',
-            ]);
-
-            if ($appointment) {
-                $appointment->update(['status' => 'out_for_delivery']);
-            }
-            $order->update(['status' => 'out_for_delivery']);
-
-            $riderUser = \App\Models\User::find($request->rider_id);
-            if ($riderUser) {
-                \Illuminate\Support\Facades\Notification::send($riderUser, new \App\Notifications\SystemAlertNotification('New Delivery Task: Order #' . $order->order_number, route('rider.tasks')));
-            }
-
-            return response()->json(['success' => true, 'status' => 'dispatched_for_delivery']);
-
-        } else {
-            \App\Models\Expense::create([
-                'branch_id' => $branchId,
-                'amount' => $request->pickme_cost,
-                'category' => 'PickMe',
-                'description' => 'PickMe Delivery for Order #' . $order->order_number,
-                'expense_date' => now(),
-                'created_by' => auth()->id(),
-            ]);
-
-            $amountToPay = $order->total - $order->paid_amount;
-            if ($amountToPay > 0) {
-                $paymentMethod = $request->input('payment_method', 'cash');
-                \App\Models\PaymentTransaction::create([
-                    'order_id'       => $order->id,
-                    'amount'         => $amountToPay,
-                    'payment_method' => $paymentMethod,
-                    'created_by'     => auth()->id(),
-                    'collected_from_rider_at' => now(), // Auto-collected per user request
-                    'status'         => 'completed',
-                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                ]);
-                $order->update([
-                    'paid_amount' => $order->total,
-                    'payment_status' => 'paid',
-                ]);
-            }
-
-            if ($appointment) {
-                $appointment->update(['status' => 'delivered']);
-            }
-            $order->update([
-                'status' => 'delivered',
-                'delivered_at' => now(),
-            ]);
-            
-            \App\Models\OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'delivered',
-                'changed_by' => auth()->id(),
-                'note' => 'Delivered via PickMe',
-            ]);
-
-            // Send delivery completed notification
-            try {
-                $commService = new \App\Services\CommunicationService();
-                $commService->sendDeliveryCompleted($order);
-            } catch (\Exception $e) {
-                \Log::error('Delivery notification failed (Order PickMe): ' . $e->getMessage());
-            }
-
-            return response()->json(['success' => true, 'status' => 'completed']);
+        try {
+            $action->execute($order, $request->validated(), auth()->id());
+            return redirect()->back()->with('success', 'Credit payment collected successfully!');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
     }
-    private function triggerNotifications(Order $order, string $status)
+
+    public function approvePayment(Request $request, Order $order, PaymentTransaction $transaction, \App\Actions\Order\ApprovePaymentSlipAction $action)
     {
         try {
-            $commService = new \App\Services\CommunicationService();
-            \Log::info('Triggering notification for status: ' . $status);
-            
-            $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
-            $isCollection = false;
-            
-            if (! $order->is_delivery_order && $dispatch && $dispatch->branch_id !== $dispatch->workshop_branch_id) {
-                $isCollection = true;
-            }
-
-            if ($status === 'done' && $isCollection) {
-                $commService->sendCollectionOrderReady($order);
-            } elseif ($status === 'delivered' || $status === 'completed') {
-                if ($order->is_delivery_order) {
-                    $commService->sendDeliveryCompleted($order);
-                } elseif ($isCollection) {
-                    $commService->sendCollectionOrderCompleted($order);
-                } else {
-                    $commService->sendPosWalkinCompleted($order);
-                }
-            }
+            $action->execute($order, $transaction);
+            return redirect()->back()->with('success', 'Payment slip approved successfully.');
         } catch (\Exception $e) {
-            \Log::error('Notification failed: ' . $e->getMessage());
+            abort(403, $e->getMessage());
+        }
+    }
+
+    public function rejectPayment(\App\Http\Requests\Order\RejectPaymentRequest $request, Order $order, PaymentTransaction $transaction, \App\Actions\Order\RejectPaymentSlipAction $action)
+    {
+        try {
+            $action->execute($order, $transaction, $request->validated());
+            return redirect()->back()->with('success', 'Payment slip rejected successfully.');
+        } catch (\Exception $e) {
+            abort(403, $e->getMessage());
+        }
+    }
+
+    public function dispatchDelivery(\App\Http\Requests\Order\DispatchDeliveryRequest $request, Order $order, \App\Actions\Order\DispatchOrderDeliveryAction $action)
+    {
+        try {
+            $result = $action->execute($order, $request->validated(), auth()->id());
+            return response()->json(array_merge(['success' => true], $result));
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
     }
 }
