@@ -28,7 +28,7 @@
         <div class="bg-slate-50 border border-slate-100 rounded-2xl p-6 mb-8 text-left space-y-4 shadow-inner">
             <div class="flex justify-between items-center pb-4 border-b border-slate-200">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Order Number</span>
-                <span class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{{ $appointment->order_number }}</span>
+                <span class="text-sm font-black text-blue-600 bg-blue-50 px-3 py-1 rounded-lg">{{ $appointment->order->order_number ?? $appointment->order_number ?? '#' . $appointment->id }}</span>
             </div>
             <div class="flex justify-between items-center pb-4 border-b border-slate-200">
                 <span class="text-xs font-black text-slate-400 uppercase tracking-widest">Date</span>

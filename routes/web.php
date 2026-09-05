@@ -57,7 +57,7 @@ Route::post('/customer/ajax-register', [\App\Http\Controllers\Customer\AuthContr
 // Public Booking Wizard
 Route::get('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('customer.booking');
 Route::post('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'store'])->name('customer.booking.store');
-Route::get('/customer/book/success/{appointment:order_number}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('customer.booking.success');
+Route::get('/customer/book/success/{appointment}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('customer.booking.success');
 Route::get('/customer/branch-services/{branch}', [\App\Http\Controllers\CustomerSiteController::class, 'getBranchServices'])->name('customer.branch_services');
 
 Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
@@ -68,7 +68,12 @@ Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group
     Route::get('/orders/{order:order_number}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
     
     // Appointments
-    Route::get('/appointments/{appointment:order_number}', [\App\Http\Controllers\Customer\DashboardController::class, 'showAppointment'])->name('appointments.show');
+    Route::get('/appointments/{appointment}', function (\App\Models\Appointment $appointment) {
+        if (!$appointment->order_number) {
+            return redirect()->route('customer.booking.success', $appointment->id);
+        }
+        return app(\App\Http\Controllers\Customer\DashboardController::class)->showAppointment($appointment);
+    })->name('appointments.show');
 
     // Payment Gateway Routes
     Route::get('/orders/{order:order_number}/pay-gateway', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
