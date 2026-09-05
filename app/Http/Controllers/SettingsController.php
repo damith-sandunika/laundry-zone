@@ -570,8 +570,10 @@ class SettingsController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+
         \App\Models\Extra::create([
-            'branch_id' => auth()->user()->branch_id ?? 1,
+            'branch_id' => $branchId,
             'name' => $request->name,
             'price_type' => $request->price_type,
             'price' => $request->price,
@@ -611,12 +613,14 @@ class SettingsController extends Controller
             'is_default' => 'boolean',
         ]);
 
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+
         if ($request->has('is_default')) {
-            \App\Models\TurnaroundType::where('branch_id', auth()->user()->branch_id ?? 1)->update(['is_default' => false]);
+            \App\Models\TurnaroundType::where('branch_id', $branchId)->update(['is_default' => false]);
         }
 
         \App\Models\TurnaroundType::create([
-            'branch_id' => auth()->user()->branch_id ?? 1,
+            'branch_id' => $branchId,
             'name' => $request->name,
             'markup_type' => $request->markup_type,
             'markup_value' => $request->markup_value,
@@ -637,8 +641,10 @@ class SettingsController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $branchId = auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+
         if ($request->has('is_default') && $request->is_default) {
-            \App\Models\TurnaroundType::where('branch_id', auth()->user()->branch_id ?? 1)->where('id', '!=', $turnaroundType->id)->update(['is_default' => false]);
+            \App\Models\TurnaroundType::where('branch_id', $branchId)->where('id', '!=', $turnaroundType->id)->update(['is_default' => false]);
         }
 
         $turnaroundType->update([
