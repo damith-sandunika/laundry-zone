@@ -38,7 +38,7 @@
         window.__ordersPageData = {
             riders: @js($riders),
             categories: @js($categories),
-            orders: @js($orders),
+            orders: @js($orders instanceof \Illuminate\Pagination\LengthAwarePaginator ? $orders->items() : $orders),
             minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
             routes: {
                 bulkDispatch: '{{ route('orders.bulkDispatchWorkshop') }}',
@@ -564,6 +564,12 @@
                     </tbody>
                 </table>
             </div>
+
+            @if($orders instanceof \Illuminate\Pagination\LengthAwarePaginator && $orders->hasPages())
+                <div class="mt-4 px-4 bg-white rounded-2xl shadow-sm border border-slate-100 p-4">
+                    {{ $orders->links() }}
+                </div>
+            @endif
 
             <!-- ── Bulk Status Update Modal ── -->
             <div x-cloak x-show="showBulkModal"

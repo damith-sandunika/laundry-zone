@@ -41,7 +41,7 @@
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"></path></svg>
                         </td>
                         <td class="py-3 px-4">
-                            <img src="{{ asset('storage/' . $promo->image_path) }}" class="h-12 w-auto object-cover rounded-lg border border-slate-200">
+                            <img src="{{ Str::startsWith($promo->image_path, 'http') ? $promo->image_path : asset('storage/' . $promo->image_path) }}" class="h-12 w-auto object-cover rounded-lg border border-slate-200">
                         </td>
                         <td class="py-3 px-4 font-semibold text-slate-800 text-sm">
                             {{ $promo->title }}

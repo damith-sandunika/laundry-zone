@@ -15,6 +15,20 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="bg-red-50 text-red-700 px-6 py-4 mb-6 text-sm font-semibold border border-red-200 rounded-xl shadow-sm flex flex-col justify-center">
+            <div class="flex items-center mb-2">
+                <svg class="w-5 h-5 mr-3 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                Please fix the following errors:
+            </div>
+            <ul class="list-disc list-inside ml-8 text-xs font-normal">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div x-data="{ activeTab: localStorage.getItem('settingsActiveTab') || 'general', serviceModalOpen: false, cubbyModalOpen: false }" class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
         
         <!-- Premium Horizontally Scrollable Tab Header -->
@@ -134,7 +148,7 @@
                     <div class="pt-2">
                         <label class="block text-xs font-bold text-gray-800 uppercase mb-1">Global Auto-Close Time</label>
                         <p class="text-[11px] text-gray-500 mb-2">All branches will be automatically closed and their daily shift reports will be generated at this time.</p>
-                        <input type="time" name="auto_close_time" value="{{ optional($branch)->auto_close_time ?? '' }}" class="w-48 text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500 font-mono">
+                        <input type="time" name="auto_close_time" value="{{ optional($branch)->auto_close_time ? \Carbon\Carbon::parse($branch->auto_close_time)->format('H:i') : '' }}" class="w-48 text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500 font-mono">
                     </div>
                     @endif
 

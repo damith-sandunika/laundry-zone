@@ -417,7 +417,7 @@
                     <div class="swiper-slide">
                         <a href="{{ route('customer.login') ?? '/login' }}" class="block outline-none">
                             <div class="promo-card">
-                                <img src="{{ asset('storage/' . $promo->image_path) }}" class="w-full h-auto object-cover rounded-[1.5rem]" alt="Promotion">
+                                <img src="{{ Str::startsWith($promo->image_path, 'http') ? $promo->image_path : asset('storage/' . $promo->image_path) }}" class="w-full h-auto object-cover rounded-[1.5rem]" alt="Promotion">
                             </div>
                         </a>
                     </div>
