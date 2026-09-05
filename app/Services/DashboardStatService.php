@@ -177,7 +177,7 @@ class DashboardStatService
     /**
      * Get chart data for the dashboard.
      */
-    public function getChartData(int $branchId): array
+    public function getChartData(?int $branchId): array
     {
         // Today: hourly breakdown (last 8 hours in 3h blocks)
         $todayLabels = [];
@@ -187,7 +187,8 @@ class DashboardStatService
             $start = now()->startOfDay()->addHours($h * 3);
             $end = $start->copy()->addHours(3);
             $todayLabels[] = $start->format('H:i');
-            $q = Order::where('branch_id', $branchId)->whereBetween('created_at', [$start, $end]);
+            $q = Order::whereBetween('created_at', [$start, $end]);
+            if ($branchId) $q->where('branch_id', $branchId);
             $todayPending[] = (clone $q)->where('status', 'received')->count();
             $todayDelivered[] = (clone $q)->where('status', 'delivered')->count();
         }
@@ -199,7 +200,8 @@ class DashboardStatService
         for ($d = 6; $d >= 0; $d--) {
             $day = now()->subDays($d);
             $weeklyLabels[] = $day->format('D');
-            $q = Order::where('branch_id', $branchId)->whereDate('created_at', $day->toDateString());
+            $q = Order::whereDate('created_at', $day->toDateString());
+            if ($branchId) $q->where('branch_id', $branchId);
             $weeklyPending[] = (clone $q)->whereNotIn('status', ['delivered', 'cancelled'])->count();
             $weeklyDelivered[] = (clone $q)->where('status', 'delivered')->count();
         }
@@ -212,7 +214,8 @@ class DashboardStatService
             $start = now()->startOfWeek()->subWeeks($w);
             $end = $start->copy()->endOfWeek();
             $monthlyLabels[] = 'Wk '.$start->format('d/m');
-            $q = Order::where('branch_id', $branchId)->whereBetween('created_at', [$start, $end]);
+            $q = Order::whereBetween('created_at', [$start, $end]);
+            if ($branchId) $q->where('branch_id', $branchId);
             $monthlyPending[] = (clone $q)->whereNotIn('status', ['delivered', 'cancelled'])->count();
             $monthlyDelivered[] = (clone $q)->where('status', 'delivered')->count();
         }
