@@ -97,6 +97,12 @@ class CommunicationService
         return $templates[$type] ?? ['subject' => "Order #{$orderId} Update", 'body' => "<p>Hi {$name}, there is an update on order #{$orderId}.</p>"];
     }
 
+    public function sendBookingConfirmation(\App\Models\DeliveryAppointment $appointment) {
+        if ($appointment->order) {
+            $this->dispatch('delivery_order_placed', $appointment->order);
+        }
+    }
+
     public function sendPosWalkinPlaced(Order $order) { $this->dispatch('pos_walkin_placed', $order); }
     public function sendPosWalkinReady(Order $order) { $this->dispatch('pos_walkin_ready', $order); }
     public function sendPosWalkinCompleted(Order $order) { $this->dispatch('pos_walkin_completed', $order); }

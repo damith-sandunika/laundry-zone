@@ -179,13 +179,13 @@ Route::middleware(['auth'])->group(function () {
     // ─── DELIVERY (BRANCH ADMIN & STAFF & WORKSHOP ADMIN) ───
     // Authorization is handled inside DeliveryController
     Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery.index');
-    Route::get('/delivery/{appointment}/confirm', [DeliveryController::class, 'confirm'])->name('delivery.confirm');
-    Route::post('/delivery/{appointment}/confirm-action', [DeliveryController::class, 'confirmAction'])->name('delivery.confirmAction');
-    Route::post('/delivery/{appointment}/cancel', [DeliveryController::class, 'cancel'])->name('delivery.cancel');
-    Route::post('/delivery/{appointment}/assign-rider', [DeliveryController::class, 'assignRider'])->name('delivery.assignRider');
-    Route::post('/delivery/{appointment}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
-    Route::post('/delivery/{appointment}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
-    Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
+    Route::get('/delivery/{appointment:order_number}/confirm', [DeliveryController::class, 'confirm'])->name('delivery.confirm');
+    Route::post('/delivery/{appointment:order_number}/confirm-action', [DeliveryController::class, 'confirmAction'])->name('delivery.confirmAction');
+    Route::post('/delivery/{appointment:order_number}/cancel', [DeliveryController::class, 'cancel'])->name('delivery.cancel');
+    Route::post('/delivery/{appointment:order_number}/assign-rider', [DeliveryController::class, 'assignRider'])->name('delivery.assignRider');
+    Route::post('/delivery/{appointment:order_number}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
+    Route::post('/delivery/{appointment:order_number}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
+    Route::post('/delivery/{appointment:order_number}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
 
     // ─── INVENTORY (WORKSHOP ADMIN) ───
     Route::middleware(['workshop'])->group(function () {

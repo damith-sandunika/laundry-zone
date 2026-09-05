@@ -272,7 +272,7 @@ class CustomerSiteController extends Controller
                 'notes' => $request->notes,
             ]);
 
-            $appointment->update(['order_id' => $order->id]);
+            $appointment->update(['order_id' => $order->id, 'order_number' => $order->order_number]);
 
             return $appointment;
         });
