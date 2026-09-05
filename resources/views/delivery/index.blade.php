@@ -138,7 +138,7 @@
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
                                         @if($appt->status === 'pending')
-                                            <form method="POST" action="{{ route('delivery.confirmAction', $appt) }}" style="margin:0;">
+                                            <form method="POST" action="{{ route('delivery.confirmAction', ['appointment' => $appt->id]) }}" style="margin:0;">
                                                 @csrf
                                                 <button type="submit" style="padding:5px 10px;background:#1d4ed8;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(29,78,216,0.3);">
                                                     Confirm
@@ -149,7 +149,7 @@
                                             </button>
                                         @elseif($appt->status === 'confirmed')
                                             <div x-data="{ deliveryMethod: 'pickme_flash' }" style="display:flex;gap:10px;align-items:center;">
-                                                <form method="POST" action="{{ route('delivery.assignRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
+                                                <form method="POST" action="{{ route('delivery.assignRider', ['appointment' => $appt->id]) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                     @csrf
                                                     <select x-model="deliveryMethod" name="delivery_method" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
                                                         <option value="pickme_flash">PickMe</option>
@@ -170,7 +170,7 @@
                                             </div>
                                         @elseif(in_array($appt->status, ['picked_up', 'order_created']) || ($appt->status === 'rider_assigned' && !isset($riderTask)))
                                             <div x-data="{ showCost: false }" style="display:flex;gap:4px;align-items:center;">
-                                                <form method="POST" action="{{ route('delivery.atBranch', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
+                                                <form method="POST" action="{{ route('delivery.atBranch', ['appointment' => $appt->id]) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                     @csrf
                                                     
                                                     <button type="button" @click="showCost = !showCost" title="Add PickMe Cost" style="padding:4px 6px;background:white;color:#ea580c;border:1px solid #ea580c;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;">
@@ -284,7 +284,7 @@
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
                                         @if($appt->status === 'ready')
-                                            <form method="POST" action="{{ route('delivery.assignDeliveryRider', $appt) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
+                                            <form method="POST" action="{{ route('delivery.assignDeliveryRider', ['appointment' => $appt->id]) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                 @csrf
                                                 <input type="hidden" name="order_id" value="{{ $appt->order_id }}">
                                                 <select name="rider_id" required onchange="this.parentElement.querySelector('.pickme_fields').style.display = this.value === 'pickme_flash' ? 'block' : 'none';" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">

@@ -107,7 +107,7 @@
 <footer class="bg-white border-t border-slate-200 mt-auto py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-            <p class="text-sm font-bold text-brand mb-2">365 Laundry</p>
+            <p class="text-sm font-bold text-brand mb-2">365Laundry.lk</p>
             <p class="text-xs text-slate-500 mb-4">&copy; {{ date('Y') }} All Rights Reserved.</p>
             <p class="text-[10px] font-extrabold text-slate-400 tracking-widest uppercase">Powered by <a href="https://dsrzone.com" target="_blank" class="text-blue-500 hover:text-blue-400 font-black transition-colors">DSRZone</a></p>
         </div>
