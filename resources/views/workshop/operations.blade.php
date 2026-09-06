@@ -15,10 +15,10 @@
         selectedDispatches: [],
         showBulkModal: false,
         bulkStatus: '',
-        allCategories: JSON.parse(atob('{{ base64_encode(json_encode($categories)) }}')),
+        allCategories: {{ Js::from($categories) }},
         minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
-        pageDispatches: JSON.parse(atob('{{ base64_encode(json_encode($dispatches->pluck('id'))) }}')),
-        filteredDispatches: JSON.parse(atob('{{ base64_encode(json_encode($dispatches->items())) }}')),
+        pageDispatches: {{ Js::from($dispatches->pluck('id')) }},
+        filteredDispatches: {{ Js::from($dispatches->items()) }},
         
         openFinalizePage(dispatch) {
             window.location.href = '/workshop/orders/' + dispatch.order.order_number + '/finalize-bill';
