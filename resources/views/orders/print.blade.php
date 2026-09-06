@@ -180,9 +180,17 @@
 
     <div class="divider"></div>
 
-    @if($order->discount > 0)
+    @if($order->discount > 0 || $order->delivery_fee > 0 || $order->additional > 0)
         <div class="row"><span>Subtotal</span><span>Rs.{{ number_format($order->subtotal, 2) }}</span></div>
-        <div class="row"><span>Discount</span><span>- Rs.{{ number_format($order->discount, 2) }}</span></div>
+        @if($order->discount > 0)
+            <div class="row"><span>Discount</span><span>- Rs.{{ number_format($order->discount, 2) }}</span></div>
+        @endif
+        @if($order->delivery_fee > 0)
+            <div class="row"><span>Delivery Fee</span><span>Rs.{{ number_format($order->delivery_fee, 2) }}</span></div>
+        @endif
+        @if($order->additional > 0)
+            <div class="row"><span>Additional Charges</span><span>Rs.{{ number_format($order->additional, 2) }}</span></div>
+        @endif
     @endif
 
     <div class="row total-row">

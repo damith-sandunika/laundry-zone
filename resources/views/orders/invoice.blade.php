@@ -173,6 +173,12 @@
                     <span>Rs.{{ number_format($order->delivery_fee, 2) }}</span>
                 </div>
                 @endif
+                @if($order->additional > 0)
+                <div class="total-row">
+                    <span>Additional Charges</span>
+                    <span>Rs.{{ number_format($order->additional, 2) }}</span>
+                </div>
+                @endif
                 @if($order->discount > 0)
                 <div class="total-row" style="color: #ef4444;">
                     <span>Discount</span>
