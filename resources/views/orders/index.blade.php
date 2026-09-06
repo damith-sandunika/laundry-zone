@@ -49,7 +49,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('ordersPage', () => ({
-                currentTab: 'received',
+                currentTab: '{{ $tab ?? 'received' }}',
                 selectedOrders: [],
                 showBulkModal: false,
                 bulkStatus: 'done',
