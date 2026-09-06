@@ -462,10 +462,10 @@
                     <button @click="showPreviewModal = false" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:20px;">✕</button>
                 </div>
                 
-                <div style="padding:24px;display:flex;flex-direction:column;md:flex-row;gap:24px;" class="md:flex-row flex-col">
+                <div class="flex flex-col md:flex-row gap-6 p-6">
                     
                     <!-- Left Column: Customer & Order Details -->
-                    <div style="flex:1;display:flex;flex-direction:column;gap:20px;">
+                    <div class="flex-1 flex flex-col gap-5">
                         
                         <!-- Customer Details -->
                         <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
@@ -605,7 +605,7 @@
                     </div>
 
                     <!-- Right Column: Maps -->
-                    <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:16px;" class="md:min-w-[320px]">
+                    <div class="w-full md:w-[320px] flex flex-col gap-4 shrink-0">
                         <!-- Pickup Location Map -->
                         <div style="border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
                             <div style="padding:12px 16px;background:#fff7ed;display:flex;align-items:center;gap:10px;">
@@ -618,7 +618,15 @@
                                 </div>
                             </div>
                             <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.pickup_address || 'Not specified'"></div>
-                            <div id="pickup-map" style="width:100%;height:180px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                            
+                            <template x-if="parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.pickup_lng)">
+                                <div id="pickup-map" style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                            </template>
+                            <template x-if="!(parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.pickup_lng))">
+                                <div style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;font-weight:600;">
+                                    <i class="fa-solid fa-map-location-dot" style="margin-right:6px;"></i> Map pin not provided
+                                </div>
+                            </template>
                         </div>
                         
                         <!-- Delivery Location Map -->
@@ -629,19 +637,25 @@
                                     <div style="font-size:10px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:0.05em;">Delivery Location</div>
                                 </div>
                             </div>
-                            <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.delivery_address || previewData?.pickup_address || 'Not specified'"></div>
-                            
-                            <template x-if="parseFloat(previewData?.pickup_lat) === parseFloat(previewData?.delivery_lat) && parseFloat(previewData?.pickup_lng) === parseFloat(previewData?.delivery_lng)">
-                                <div style="padding:24px 16px;text-align:center;background:#f8fafc;border-top:1px solid #f1f5f9;">
-                                    <div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#e2e8f0;color:#64748b;margin-bottom:8px;">
-                                        <i class="fa-solid fa-map-pin"></i>
-                                    </div>
-                                    <div style="font-size:13px;font-weight:800;color:#475569;">Same as Pickup Location</div>
-                                    <div style="font-size:11px;font-weight:600;color:#94a3b8;margin-top:2px;">Delivery to the same address</div>
+                            <template x-if="parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng)">
+                                <div style="padding:16px;background:white;text-align:center;font-size:12px;font-weight:700;color:#475569;border-top:1px solid #f1f5f9;">
+                                    <i class="fa-solid fa-location-dot" style="color:#cbd5e1;margin-bottom:6px;font-size:20px;display:block;"></i>
+                                    Same as pickup location
                                 </div>
                             </template>
-                            <template x-if="parseFloat(previewData?.pickup_lat) !== parseFloat(previewData?.delivery_lat) || parseFloat(previewData?.pickup_lng) !== parseFloat(previewData?.delivery_lng)">
-                                <div id="delivery-map" style="width:100%;height:180px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                            
+                            <template x-if="!(parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng))">
+                                <div>
+                                    <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.delivery_address || 'Not specified'"></div>
+                                    <template x-if="parseFloat(previewData?.delivery_lat) && parseFloat(previewData?.delivery_lng)">
+                                        <div id="delivery-map" style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                                    </template>
+                                    <template x-if="!(parseFloat(previewData?.delivery_lat) && parseFloat(previewData?.delivery_lng))">
+                                        <div style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;font-weight:600;">
+                                            <i class="fa-solid fa-map-location-dot" style="margin-right:6px;"></i> Map pin not provided
+                                        </div>
+                                    </template>
+                                </div>
                             </template>
                         </div>
                     </div>
