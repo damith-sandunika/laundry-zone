@@ -33,7 +33,7 @@ class DeliveryController extends Controller
         }
 
         $query = DeliveryAppointment::with(['customer', 'branch', 'deliveryTasks.rider', 'order.paymentTransactions', 'order.items.serviceType.category', 'order.items.extras', 'cancelledBy'])
-            ->orderByDesc('pickup_scheduled_at');
+            ->orderByDesc('id');
 
         if (! $hasFullAccess) {
             $query->where('branch_id', $branchId);

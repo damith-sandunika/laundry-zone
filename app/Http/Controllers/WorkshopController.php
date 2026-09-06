@@ -377,8 +377,7 @@ class WorkshopController extends Controller
             ->select('workshop_dispatches.*')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
             ->whereNotIn('workshop_dispatches.status', ['received_at_branch', 'returned_to_branch'])
-            ->orderByRaw('orders.due_date IS NULL')
-            ->orderBy('orders.due_date', 'asc')
+            ->orderByDesc('orders.id')
             ->get();
 
         $completedToday = WorkshopDispatch::whereIn('status', ['received_at_branch', 'returned_to_branch'])
