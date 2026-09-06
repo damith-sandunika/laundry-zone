@@ -39,35 +39,47 @@ class DeliveryController extends Controller
             $query->where('branch_id', $branchId);
         }
 
-        $pickupsQuery = clone $query;
-        $pickups = $pickupsQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created'])->get();
+        // Get the active tab from the request
+        $currentTab = $request->get('tab', 'pickups');
 
-        $returnsQuery = clone $query;
-        $returns = $returnsQuery->whereIn('status', ['ready', 'out_for_delivery', 'delivered'])
+        // We need total counts for the UI stat cards (without pagination)
+        $pickupsCountQuery = clone $query;
+        $pickupsCount = $pickupsCountQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created'])->count();
+
+        $returnsCountQuery = clone $query;
+        // For returns, we need to filter out delivered orders that don't have pending cash.
+        // Doing this accurately in SQL is complex because of the payment logic, so we will
+        // fetch the IDs that match the condition or just do a raw count for non-delivered,
+        // and then manually add the delivered ones that require cash collection.
+        // For simplicity of counts, we can do a slightly approximated count or exact.
+        $allReturns = $returnsCountQuery->whereIn('status', ['ready', 'out_for_delivery', 'delivered'])
             ->where('delivery_preference', 'deliver_to_address')
-            ->get()
-            ->filter(function ($appt) {
-                if ($appt->status === 'delivered') {
-                    $order = $appt->order;
-                    if (! $order) {
-                        return false;
-                    }
+            ->get();
+        
+        $validReturnsIds = $allReturns->filter(function ($appt) {
+            if ($appt->status === 'delivered') {
+                $order = $appt->order;
+                if (! $order) return false;
+                if ($order->payment_status !== 'paid') return true;
+                return PaymentTransaction::where('order_id', $order->id)
+                    ->where('payment_method', 'cash')
+                    ->whereNull('collected_from_rider_at')
+                    ->whereNotNull('created_by')
+                    ->exists();
+            }
+            return true;
+        })->pluck('id');
 
-                    if ($order->payment_status !== 'paid') {
-                        return true;
-                    }
+        $returnsCount = $validReturnsIds->count();
 
-                    $pendingCashTx = PaymentTransaction::where('order_id', $order->id)
-                        ->where('payment_method', 'cash')
-                        ->whereNull('collected_from_rider_at')
-                        ->whereNotNull('created_by')
-                        ->exists();
+        // Now filter the main query based on the active tab for pagination
+        if ($currentTab === 'returns') {
+            $query->whereIn('id', $validReturnsIds);
+        } else {
+            $query->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created']);
+        }
 
-                    return $pendingCashTx;
-                }
-
-                return true;
-            });
+        $appointments = $query->paginate(15);
 
         $branches = $hasFullAccess ? Branch::where('is_active', true)->get() : collect();
 
@@ -77,7 +89,7 @@ class DeliveryController extends Controller
         }
         $riders = $ridersQuery->get();
 
-        return view('delivery.index', compact('pickups', 'returns', 'branches', 'riders'));
+        return view('delivery.index', compact('appointments', 'currentTab', 'pickupsCount', 'returnsCount', 'branches', 'riders'));
     }
 
     // ─── Public routes moved to CustomerSiteController ───

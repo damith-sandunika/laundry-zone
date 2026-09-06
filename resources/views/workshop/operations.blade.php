@@ -10,14 +10,15 @@
     </x-slot>
 
     <div x-data="{ 
-        currentTab: 'arrival_processing',
-        selectedBranch: '',
+        currentTab: '{{ $currentTab }}',
+        selectedBranch: '{{ $selectedBranch ?? '' }}',
         selectedDispatches: [],
         showBulkModal: false,
         bulkStatus: '',
-        dispatchesList: JSON.parse(atob('{{ base64_encode(json_encode($dispatches)) }}')),
         allCategories: JSON.parse(atob('{{ base64_encode(json_encode($categories)) }}')),
         minimumDeliveryCost: {{ (float)($minimumDeliveryCost ?? 0) }},
+        pageDispatches: JSON.parse(atob('{{ base64_encode(json_encode($dispatches->pluck('id'))) }}')),
+        filteredDispatches: JSON.parse(atob('{{ base64_encode(json_encode($dispatches->items())) }}')),
         
         openFinalizePage(dispatch) {
             window.location.href = '/workshop/orders/' + dispatch.order.order_number + '/finalize-bill';
@@ -25,35 +26,10 @@
 
         toggleSelectAll(e) {
             if (e.target.checked) {
-                this.selectedDispatches = this.filteredDispatches.map(d => d.id);
+                this.selectedDispatches = this.pageDispatches;
             } else {
                 this.selectedDispatches = [];
             }
-        },
-        
-        get filteredDispatches() {
-            let list = this.dispatchesList;
-            if (this.selectedBranch !== '') {
-                list = list.filter(d => d.branch_id == this.selectedBranch);
-            }
-            if (this.currentTab === 'arrival_processing') {
-                return list.filter(d => d.status === 'dispatched_to_workshop' || d.status === 'received_at_workshop' || d.status === 'processing');
-            }
-            if (this.currentTab === 'returned_to_branch') {
-                return list.filter(d => d.status === 'completed_at_workshop' || d.status === 'returned_to_branch');
-            }
-            return list.filter(d => d.status === this.currentTab);
-        },
-
-        get counts() {
-            let list = this.dispatchesList;
-            if (this.selectedBranch !== '') {
-                list = list.filter(d => d.branch_id == this.selectedBranch);
-            }
-            return {
-                arrival_processing: list.filter(d => d.status === 'dispatched_to_workshop' || d.status === 'received_at_workshop' || d.status === 'processing').length,
-                returned: list.filter(d => d.status === 'completed_at_workshop' || d.status === 'returned_to_branch').length
-            };
         },
 
         showPaymentModal: false,
@@ -372,7 +348,7 @@
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Total Active</span>
-                    <span class="text-2xl font-black text-slate-800" x-text="dispatchesList.length"></span>
+                    <span class="text-2xl font-black text-slate-800">{{ $arrivalProcessingCount + $returnedCount }}</span>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Completed Today</span>
@@ -380,11 +356,11 @@
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">In Processing</span>
-                    <span class="text-2xl font-black text-orange-600" x-text="counts.arrival_processing"></span>
+                    <span class="text-2xl font-black text-orange-600">{{ $arrivalProcessingCount }}</span>
                 </div>
                 <div class="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-center">
                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-widest mb-1">Completed & Dispatched</span>
-                    <span class="text-2xl font-black text-green-600" x-text="counts.returned"></span>
+                    <span class="text-2xl font-black text-green-600">{{ $returnedCount }}</span>
                 </div>
             </div>
         </div>
@@ -397,20 +373,20 @@
             </h3>
             <div class="grid grid-cols-2 gap-2 md:gap-4 mb-4">
                 <!-- Arrival & Processing -->
-                <div @click="currentTab = 'arrival_processing'"
+                <a href="?tab=arrival_processing&branch={{ $selectedBranch ?? '' }}"
                     :class="currentTab === 'arrival_processing' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                    class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                    <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'arrival_processing' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.arrival_processing"></span>
+                    class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300" style="text-decoration:none;">
+                    <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'arrival_processing' ? 'text-orange-700' : 'text-gray-900'">{{ $arrivalProcessingCount }}</span>
                     <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Arrival & Processing</span>
-                </div>
+                </a>
 
                 <!-- Dispatched Back & Completed -->
-                <div @click="currentTab = 'returned_to_branch'"
+                <a href="?tab=returned_to_branch&branch={{ $selectedBranch ?? '' }}"
                     :class="currentTab === 'returned_to_branch' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                    class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                    <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'returned_to_branch' ? 'text-purple-700' : 'text-gray-900'" x-text="counts.returned"></span>
+                    class="flex flex-col items-center justify-center p-2 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300" style="text-decoration:none;">
+                    <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'returned_to_branch' ? 'text-purple-700' : 'text-gray-900'">{{ $returnedCount }}</span>
                     <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Completed & Dispatched</span>
-                </div>
+                </a>
             </div>
         </div>
 
@@ -423,7 +399,7 @@
                     Bulk Action (<span x-text="selectedDispatches.length"></span>)
                 </button>
             </div>
-            <select x-model="selectedBranch" class="px-4 py-2 pr-8 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:border-blue-500">
+            <select x-model="selectedBranch" @change="window.location.href = '?tab={{ $currentTab }}&branch=' + $event.target.value" class="px-4 py-2 pr-8 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:border-blue-500">
                 <option value="">All Branches</option>
                 @foreach($branches as $branch)
                     <option value="{{ $branch->id }}">{{ $branch->name }}</option>
@@ -550,13 +526,20 @@
                             </tr>
                         </template>
                         <tr x-show="filteredDispatches.length === 0">
-                            <td colspan="5" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;font-weight:500;">
+                            <td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;font-weight:500;">
                                 No records found in this category.
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination -->
+            @if($dispatches->hasPages())
+                <div style="padding:16px 24px;border-top:1px solid #f1f5f9;">
+                    {{ $dispatches->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
 
         <!-- ── Bulk Status Update Modal ── -->

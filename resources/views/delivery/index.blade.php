@@ -65,43 +65,38 @@
         <!-- STAT CARDS / TABS -->
         <div class="grid grid-cols-2 gap-4 mb-6" style="max-width:400px;">
             <!-- Incoming Pickups -->
-            <div @click="currentTab = 'pickups'"
-                :class="currentTab === 'pickups' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-4 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <div :class="currentTab === 'pickups' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600'"
-                    class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
+            <a href="?tab=pickups"
+                class="{{ $currentTab === 'pickups' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md' }} flex flex-col items-center justify-center p-4 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300" style="text-decoration:none;">
+                <div class="{{ $currentTab === 'pickups' ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-600' }} w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
                     <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
                     </svg>
                 </div>
-                <span class="text-sm font-black mt-2"
-                    :class="currentTab === 'pickups' ? 'text-blue-700' : 'text-gray-900'">{{ count($pickups) }} Pickups</span>
-            </div>
+                <span class="text-sm font-black mt-2 {{ $currentTab === 'pickups' ? 'text-blue-700' : 'text-gray-900' }}">{{ $pickupsCount }} Pickups</span>
+            </a>
 
             <!-- Return Deliveries -->
-            <div @click="currentTab = 'returns'"
-                :class="currentTab === 'returns' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-4 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <div :class="currentTab === 'returns' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600'"
-                    class="w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
+            <a href="?tab=returns"
+                class="{{ $currentTab === 'returns' ? 'border-purple-500 bg-purple-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md' }} flex flex-col items-center justify-center p-4 md:px-6 md:py-5 rounded-xl border-2 cursor-pointer transition-all duration-300" style="text-decoration:none;">
+                <div class="{{ $currentTab === 'returns' ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-600' }} w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-colors">
                     <svg class="w-5 h-5 md:w-6 md:h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
                     </svg>
                 </div>
-                <span class="text-sm font-black mt-2"
-                    :class="currentTab === 'returns' ? 'text-purple-700' : 'text-gray-900'">{{ count($returns) }} Returns</span>
-            </div>
+                <span class="text-sm font-black mt-2 {{ $currentTab === 'returns' ? 'text-purple-700' : 'text-gray-900' }}">{{ $returnsCount }} Returns</span>
+            </a>
         </div>
 
         <!-- TABLE SECTION -->
         <div style="background:white;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 1px 6px rgba(0,0,0,0.04);overflow:hidden;">
             <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;background:#f8fafc;">
-                <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;" x-text="currentTab === 'pickups' ? 'Incoming Pickups List' : 'Return Deliveries List'"></h3>
+                <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;">{{ $currentTab === 'pickups' ? 'Incoming Pickups List' : 'Return Deliveries List' }}</h3>
             </div>
 
             <div style="overflow-x:auto;">
                 <!-- PICKUPS TABLE -->
-                <table x-show="currentTab === 'pickups'" style="width:100%;border-collapse:collapse;text-align:left;font-size:12px;color:#334155;">
+                @if($currentTab === 'pickups')
+                <table style="width:100%;border-collapse:collapse;text-align:left;font-size:12px;color:#334155;">
                     <thead>
                         <tr style="background:#f8fafc;border-bottom:1px solid #f1f5f9;">
                             <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Booking ID & Customer</th>
@@ -112,7 +107,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($pickups as $appt)
+                        @forelse($appointments as $appt)
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;{{ $appt->status === 'cancelled' ? 'opacity:0.7;background:#fff5f5;' : '' }}" onmouseover="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '0.85' }}'" onmouseout="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '1' }}'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id && $appt->order)
@@ -231,9 +226,11 @@
                         @endforelse
                     </tbody>
                 </table>
+                @endif
 
                 <!-- RETURNS TABLE -->
-                <table x-cloak x-show="currentTab === 'returns'" style="width:100%;border-collapse:collapse;text-align:left;font-size:12px;color:#334155;">
+                @if($currentTab === 'returns')
+                <table style="width:100%;border-collapse:collapse;text-align:left;font-size:12px;color:#334155;">
                     <thead>
                         <tr style="background:#f8fafc;border-bottom:1px solid #f1f5f9;">
                             <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">ID & Customer</th>
@@ -244,7 +241,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($returns as $appt)
+                        @forelse($appointments as $appt)
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id && $appt->order)
@@ -370,7 +367,15 @@
                         @endforelse
                     </tbody>
                 </table>
+                @endif
             </div>
+
+            <!-- Pagination -->
+            @if($appointments->hasPages())
+                <div style="padding:16px 24px;border-top:1px solid #f1f5f9;">
+                    {{ $appointments->appends(request()->query())->links() }}
+                </div>
+            @endif
         </div>
 
         <!-- ── Cash Received Modal ── -->

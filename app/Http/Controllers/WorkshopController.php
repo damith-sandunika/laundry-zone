@@ -367,18 +367,35 @@ class WorkshopController extends Controller
     }
 
     // ─── Workshop Admin: Operations ───
-    public function operations()
+    public function operations(\Illuminate\Http\Request $request)
     {
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $dispatches = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'order.items.serviceType', 'branch', 'dispatchedBy'])
+        $query = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'order.items.serviceType', 'branch', 'dispatchedBy'])
             ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
             ->select('workshop_dispatches.*')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
             ->whereNotIn('workshop_dispatches.status', ['received_at_branch', 'returned_to_branch'])
-            ->orderByDesc('orders.id')
-            ->get();
+            ->orderByDesc('orders.id');
+
+        $selectedBranch = $request->get('branch');
+        if ($selectedBranch) {
+            $query->where('workshop_dispatches.branch_id', $selectedBranch);
+        }
+
+        $countsQuery = clone $query;
+        $arrivalProcessingCount = (clone $countsQuery)->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])->count();
+        $returnedCount = (clone $countsQuery)->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch'])->count();
+
+        $currentTab = $request->get('tab', 'arrival_processing');
+        if ($currentTab === 'arrival_processing') {
+            $query->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing']);
+        } elseif ($currentTab === 'returned_to_branch') {
+            $query->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch']);
+        }
+
+        $dispatches = $query->paginate(15);
 
         $completedToday = WorkshopDispatch::whereIn('status', ['received_at_branch', 'returned_to_branch'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
@@ -394,7 +411,7 @@ class WorkshopController extends Controller
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'categories', 'minimumDeliveryCost'));
+        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'categories', 'minimumDeliveryCost', 'currentTab', 'selectedBranch', 'arrivalProcessingCount', 'returnedCount'));
     }
 
     // ─── Workshop Admin: Mark received at workshop ───
@@ -619,13 +636,13 @@ class WorkshopController extends Controller
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $user->branch_id))
             ->whereIn('status', ['received_at_branch', 'returned_to_branch'])
             ->orderByRaw('COALESCE(received_at_branch_at, returned_at) DESC')
-            ->paginate(20);
+            ->paginate(15);
 
         $cancelledBookings = \App\Models\DeliveryAppointment::with(['customer', 'cancelledBy'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('branch_id', $user->branch_id))
             ->where('status', 'cancelled')
             ->orderByDesc('updated_at')
-            ->get();
+            ->paginate(15);
 
         return view('workshop.history', compact('dispatches', 'cancelledBookings'));
     }

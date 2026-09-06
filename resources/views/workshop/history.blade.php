@@ -67,7 +67,7 @@
         </div>
         @if($dispatches->hasPages())
         <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-            {{ $dispatches->links() }}
+            {{ $dispatches->appends(request()->query())->links() }}
         </div>
         @endif
     </div>
@@ -149,6 +149,11 @@
                 </tbody>
             </table>
         </div>
+        @if($cancelledBookings->hasPages())
+        <div class="px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+            {{ $cancelledBookings->appends(request()->query())->links() }}
+        </div>
+        @endif
     </div>
     @endif
 </x-app-layout>
