@@ -81,8 +81,11 @@ class OrderController extends Controller
         
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
         $dispatch = (object)['order' => $order, 'order_id' => $order->id];
+        
+        $turnaroundTypes = \App\Models\TurnaroundType::all();
+        $systemExtras = \App\Models\Extra::where('is_active', true)->get();
 
-        return view('workshop.finalize_bill', compact('dispatch', 'services', 'categories', 'cartItems', 'minimumDeliveryCost'));
+        return view('workshop.finalize_bill', compact('dispatch', 'services', 'categories', 'cartItems', 'minimumDeliveryCost', 'turnaroundTypes', 'systemExtras'));
     }
 
     public function index(Request $request)

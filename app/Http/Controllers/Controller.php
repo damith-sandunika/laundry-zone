@@ -17,7 +17,11 @@ abstract class Controller
      */
     protected function getActiveBranchId()
     {
-        return auth()->user()->branch_id ?? \App\Models\Branch::first()->id;
+        $branchId = auth()->user()->branch_id;
+        if ($branchId && \App\Models\Branch::where('id', $branchId)->exists()) {
+            return $branchId;
+        }
+        return \App\Models\Branch::first()->id ?? null;
     }
 }
 
