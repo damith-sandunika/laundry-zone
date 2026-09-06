@@ -106,7 +106,7 @@ class CustomerSiteController extends Controller
 
         try {
             $appointment = $action->execute($request->validated(), auth('customer')->user());
-            return redirect()->route('customer.booking.success', $appointment->order->order_number);
+            return redirect()->route('customer.booking.success', $appointment->order_number);
         } catch (\Exception $e) {
             \Log::error('Customer Booking Failed: ' . $e->getMessage());
             return redirect()->back()->withErrors(['error' => 'Booking failed: ' . $e->getMessage()])->withInput();
