@@ -444,32 +444,36 @@
                                 <div style="display:flex;flex-direction:column;gap:8px;">
                                     <template x-if="previewData?.cart_json?.length">
                                         <template x-for="item in previewData.cart_json">
-                                            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#334155;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;">
-                                                <div>
-                                                    <!-- Category -->
-                                                    <template x-if="item.service?.category?.name">
-                                                        <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="item.service.category.name"></div>
-                                                    </template>
-                                                    <!-- Item Name -->
+                                            <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">
+                                                <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#334155;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;">
                                                     <div>
-                                                        <span x-text="(item.service?.name || item.name || 'Item') + ' (x' + parseFloat(item.qty || item.quantity || 1) + ')'" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
-                                                        <template x-if="parseFloat(item.turnaround_extra_charge || 0) > 0">
-                                                            <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Express</span>
+                                                        <!-- Category -->
+                                                        <template x-if="item.service?.category?.name">
+                                                            <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="item.service.category.name"></div>
                                                         </template>
-                                                        <template x-if="parseFloat(item.turnaround_extra_charge || 0) == 0">
-                                                            <span style="font-size:10px;background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Normal</span>
-                                                        </template>
-                                                    </div>
-                                                    <!-- Extras -->
-                                                    <template x-if="item.extras && item.extras.length > 0">
-                                                        <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
-                                                            <template x-for="extra in item.extras">
-                                                                <div style="font-size:11.5px;font-weight:700;color:#475569;">+ <span x-text="extra.name + ' (x' + parseFloat(extra.pivot?.quantity || 1) + ')'"></span></div>
+                                                        <!-- Item Name -->
+                                                        <div>
+                                                            <span x-text="(item.service?.name || item.name || 'Item')" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
+                                                            <template x-if="parseFloat(item.turnaround_extra_charge || 0) > 0">
+                                                                <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Express</span>
                                                             </template>
+                                                            <div style="font-size:11px;color:#64748b;margin-top:2px;" x-text="parseFloat(item.qty || item.quantity || 1) + ' x LKR ' + parseFloat((item.base_price || item.service?.base_price || item.unit_price || 0) + (item.turnaround_extra_charge || 0)).toFixed(2)"></div>
+                                                        </div>
+                                                    </div>
+                                                    <span x-text="'LKR ' + parseFloat((item.qty || item.quantity || 1) * ((item.base_price || item.service?.base_price || item.unit_price || 0) + (item.turnaround_extra_charge || 0))).toFixed(2)" style="font-weight:900;color:#0f172a;font-size:14px;"></span>
+                                                </div>
+                                                <!-- Extras -->
+                                                <template x-if="item.extras && item.extras.length > 0">
+                                                    <template x-for="extra in item.extras">
+                                                        <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#475569;padding:6px 12px 6px 24px;background:#f8faff;border-radius:8px;border:1px solid #e0e7ff;">
+                                                            <div>
+                                                                + <span x-text="extra.name || 'Extra'"></span>
+                                                                <span x-text="' (x' + parseFloat(extra.pivot?.quantity || extra.qty || 1) + ')'" style="color:#94a3b8;"></span>
+                                                            </div>
+                                                            <span x-text="'LKR ' + parseFloat((extra.price || extra.unit_price || 0) * (extra.pivot?.quantity || extra.qty || 1)).toFixed(2)" style="font-weight:800;color:#3730a3;"></span>
                                                         </div>
                                                     </template>
-                                                </div>
-                                                <span x-text="'LKR ' + parseFloat((item.qty || item.quantity || 1) * ((item.base_price || item.service?.base_price || item.unit_price || 0) + (item.turnaround_extra_charge || (item.service ? item.service.turnaround_extra_charge : 0) || 0))).toFixed(2)" style="font-weight:900;color:#0f172a;font-size:14px;"></span>
+                                                </template>
                                             </div>
                                         </template>
                                     </template>
@@ -482,34 +486,36 @@
                             <template x-if="previewData?.order?.items?.length">
                                 <div style="display:flex;flex-direction:column;gap:12px;">
                                     <template x-for="item in (previewData?.order?.items || [])">
-                                        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#334155;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;">
-                                            <div>
-                                                <!-- Category -->
-                                                <template x-if="item.serviceType?.category?.name">
-                                                    <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="item.serviceType.category.name"></div>
-                                                </template>
-                                                <!-- Item Name -->
+                                        <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:8px;">
+                                            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#334155;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;">
                                                 <div>
-                                                    <span x-text="(item.serviceType?.name || 'Service') + ' (x' + parseFloat(item.quantity) + ')'" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
-                                                    <template x-if="parseFloat(item.turnaround_extra_charge || 0) > 0">
-                                                        <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Express</span>
+                                                    <!-- Category -->
+                                                    <template x-if="item.serviceType?.category?.name">
+                                                        <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="item.serviceType.category.name"></div>
                                                     </template>
-                                                    <template x-if="parseFloat(item.turnaround_extra_charge || 0) == 0">
-                                                        <span style="font-size:10px;background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Normal</span>
-                                                    </template>
-                                                </div>
-                                                <!-- Extras -->
-                                                <template x-if="item.extras && item.extras.length > 0">
-                                                    <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
-                                                        <template x-for="extra in item.extras">
-                                                            <div style="font-size:11.5px;font-weight:700;color:#475569;">
-                                                                + <span x-text="extra.name + ' (x' + parseFloat(extra.pivot?.quantity || 1) + ')'"></span>
-                                                            </div>
+                                                    <!-- Item Name -->
+                                                    <div>
+                                                        <span x-text="(item.serviceType?.name || item.item_description || 'Service')" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
+                                                        <template x-if="item.turnaroundType && !item.turnaroundType.is_default">
+                                                            <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;" x-text="item.turnaroundType.name"></span>
                                                         </template>
+                                                        <div style="font-size:11px;color:#64748b;margin-top:2px;" x-text="parseFloat(item.quantity) + ' x LKR ' + (parseFloat(item.quantity) > 0 ? (parseFloat(item.total_price) / parseFloat(item.quantity)).toFixed(2) : parseFloat(item.total_price).toFixed(2))"></div>
+                                                    </div>
+                                                </div>
+                                                <span x-text="'LKR ' + parseFloat(item.total_price).toFixed(2)" style="font-weight:900;color:#0f172a;font-size:14px;"></span>
+                                            </div>
+                                            <!-- Extras -->
+                                            <template x-if="item.extras && item.extras.length > 0">
+                                                <template x-for="extra in item.extras">
+                                                    <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:600;color:#475569;padding:6px 12px 6px 24px;background:#f8faff;border-radius:8px;border:1px solid #e0e7ff;">
+                                                        <div>
+                                                            + <span x-text="extra.extra ? extra.extra.name : 'Extra'"></span>
+                                                            <span x-text="' (x' + parseFloat(extra.quantity || 1) + ')'" style="color:#94a3b8;"></span>
+                                                        </div>
+                                                        <span x-text="'LKR ' + parseFloat(extra.unit_price * extra.quantity).toFixed(2)" style="font-weight:800;color:#3730a3;"></span>
                                                     </div>
                                                 </template>
-                                            </div>
-                                            <span x-text="'LKR ' + parseFloat(item.total_price).toFixed(2)" style="font-weight:900;color:#0f172a;font-size:14px;"></span>
+                                            </template>
                                         </div>
                                     </template>
                                     
