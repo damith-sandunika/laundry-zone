@@ -240,7 +240,7 @@ class DashboardController extends Controller
             'assigned_staff' => 'required|array',
         ]);
 
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = $this->getActiveBranchId();
         $activeSession = RegisterSession::where('branch_id', $branchId)->where('status', 'open')->first();
 
         if (!$activeSession) {

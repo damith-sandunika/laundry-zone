@@ -64,7 +64,7 @@ class StaffController extends Controller
         }
         $request->validate($rules);
 
-        $branchId = \Illuminate\Support\Facades\Gate::allows('manage-users') ? $request->branch_id : (auth()->user()->branch_id ?? 1);
+        $branchId = \Illuminate\Support\Facades\Gate::allows('manage-users') ? $request->branch_id : $this->getActiveBranchId();
         $currentUserRole = auth()->user()->role;
 
         $role = $request->role;
@@ -113,7 +113,8 @@ class StaffController extends Controller
             ->get();
             
         // Fetch branch monthly plan for this month
-        $branchPlan = \App\Models\BranchMonthlyPlan::where('branch_id', $staff->branch_id ?? 1)
+        $defaultBranch = \App\Models\Branch::first()->id ?? null;
+        $branchPlan = \App\Models\BranchMonthlyPlan::where('branch_id', $staff->branch_id ?? $defaultBranch)
             ->where('year', $year)
             ->where('month', $month)
             ->first();
