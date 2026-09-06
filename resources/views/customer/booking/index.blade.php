@@ -924,7 +924,6 @@
                                 this.nearestWorkshop = nearest;
                                 this.baseLat = parseFloat(nearest.latitude);
                                 this.baseLng = parseFloat(nearest.longitude);
-                                this.cart = []; // clear cart if branch changes
                                 this.updateWorkshopMarkerStyles();
                             }
                             this.calculateDeliveryFee();
