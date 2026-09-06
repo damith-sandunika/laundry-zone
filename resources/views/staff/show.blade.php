@@ -437,9 +437,9 @@
             const year = {{ $payroll->year }};
             const month = {{ $payroll->month }};
             const standardWorkingHours = {{ $staff->profile->standard_working_hours ?? 8 }};
-            const branchPlan = @json($branchPlan->plan_data ?? []);
-            const defaultInTime = "{{ $branchPlan->default_in_time ? \Carbon\Carbon::parse($branchPlan->default_in_time)->format('H:i') : '08:30' }}";
-            const defaultOutTime = "{{ $branchPlan->default_out_time ? \Carbon\Carbon::parse($branchPlan->default_out_time)->format('H:i') : '16:30' }}";
+            const branchPlan = @json(optional($branchPlan)->plan_data ?? []);
+            const defaultInTime = "{{ optional($branchPlan)->default_in_time ? \Carbon\Carbon::parse($branchPlan->default_in_time)->format('H:i') : '08:30' }}";
+            const defaultOutTime = "{{ optional($branchPlan)->default_out_time ? \Carbon\Carbon::parse($branchPlan->default_out_time)->format('H:i') : '16:30' }}";
             const currentAttendance = @json($attendancesThisMonth->keyBy('date'));
             
             const daysInMonth = new Date(year, month, 0).getDate();
