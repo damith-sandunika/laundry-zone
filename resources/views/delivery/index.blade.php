@@ -163,7 +163,7 @@
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
-                                        <button type="button" data-appt="{{ json_encode(['customer' => $appt->customer, 'order' => $appt->order, 'branch' => $appt->branch, 'pickup_lat' => $appt->latitude, 'pickup_lng' => $appt->longitude, 'delivery_lat' => $appt->delivery_lat, 'delivery_lng' => $appt->delivery_lng, 'pickup_address' => $appt->pickup_address, 'delivery_address' => $appt->delivery_address, 'notes' => $appt->special_notes ?? '', 'item_description' => $appt->item_description ?? '', 'cart_json' => formatCartForPreview($appt->cart_json)]) }}" @click="openPreview($event.currentTarget.dataset.appt)" style="padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#3b82f6;cursor:pointer;" title="Preview Order"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button>
+                                        <button type="button" data-appt="{{ json_encode(['customer' => $appt->customer, 'order' => $appt->order, 'branch' => $appt->branch, 'delivery_preference' => $appt->delivery_preference, 'pickup_lat' => $appt->latitude, 'pickup_lng' => $appt->longitude, 'delivery_lat' => $appt->delivery_lat, 'delivery_lng' => $appt->delivery_lng, 'pickup_address' => $appt->pickup_address, 'delivery_address' => $appt->delivery_address, 'notes' => $appt->special_notes ?? '', 'item_description' => $appt->item_description ?? '', 'cart_json' => formatCartForPreview($appt->cart_json)]) }}" @click="openPreview($event.currentTarget.dataset.appt)" style="padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#3b82f6;cursor:pointer;" title="Preview Order"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button>
                                         @if($appt->status === 'pending')
                                             <form method="POST" action="{{ route('delivery.confirmAction', ['appointment' => $appt->id]) }}" style="margin:0;">
                                                 @csrf
@@ -312,7 +312,7 @@
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
-                                        <button type="button" data-appt="{{ json_encode(['customer' => $appt->customer, 'order' => $appt->order, 'branch' => $appt->branch, 'pickup_lat' => $appt->latitude, 'pickup_lng' => $appt->longitude, 'delivery_lat' => $appt->delivery_lat, 'delivery_lng' => $appt->delivery_lng, 'pickup_address' => $appt->pickup_address, 'delivery_address' => $appt->delivery_address, 'notes' => $appt->special_notes ?? '', 'item_description' => $appt->item_description ?? '', 'cart_json' => formatCartForPreview($appt->cart_json)]) }}" @click="openPreview($event.currentTarget.dataset.appt)" style="padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#3b82f6;cursor:pointer;" title="Preview Order"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button>
+                                        <button type="button" data-appt="{{ json_encode(['customer' => $appt->customer, 'order' => $appt->order, 'branch' => $appt->branch, 'delivery_preference' => $appt->delivery_preference, 'pickup_lat' => $appt->latitude, 'pickup_lng' => $appt->longitude, 'delivery_lat' => $appt->delivery_lat, 'delivery_lng' => $appt->delivery_lng, 'pickup_address' => $appt->pickup_address, 'delivery_address' => $appt->delivery_address, 'notes' => $appt->special_notes ?? '', 'item_description' => $appt->item_description ?? '', 'cart_json' => formatCartForPreview($appt->cart_json)]) }}" @click="openPreview($event.currentTarget.dataset.appt)" style="padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#3b82f6;cursor:pointer;" title="Preview Order"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button>
                                         @if($appt->status === 'ready')
                                             <form method="POST" action="{{ route('delivery.assignDeliveryRider', ['appointment' => $appt->id]) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                 @csrf
@@ -540,14 +540,14 @@
                                             <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#334155;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;">
                                                 <div>
                                                     <!-- Category -->
-                                                    <template x-if="item.serviceType?.category?.name">
-                                                        <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="item.serviceType.category.name"></div>
+                                                    <template x-if="(item.service_type || item.serviceType)?.category?.name">
+                                                        <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="(item.service_type || item.serviceType).category.name"></div>
                                                     </template>
                                                     <!-- Item Name -->
                                                     <div>
-                                                        <span x-text="(item.serviceType?.name || item.item_description || 'Service')" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
-                                                        <template x-if="item.turnaroundType && !item.turnaroundType.is_default">
-                                                            <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;" x-text="item.turnaroundType.name"></span>
+                                                        <span x-text="((item.service_type || item.serviceType)?.name || item.item_description || 'Service')" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
+                                                        <template x-if="(item.turnaround_type || item.turnaroundType) && !(item.turnaround_type || item.turnaroundType).is_default">
+                                                            <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;" x-text="(item.turnaround_type || item.turnaroundType).name"></span>
                                                         </template>
                                                         <div style="font-size:11px;color:#64748b;margin-top:2px;" x-text="parseFloat(item.quantity) + ' x LKR ' + (parseFloat(item.quantity) > 0 ? (parseFloat(item.total_price) / parseFloat(item.quantity)).toFixed(2) : parseFloat(item.total_price).toFixed(2))"></div>
                                                     </div>
@@ -642,14 +642,21 @@
                                     <div style="font-size:10px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:0.05em;">Delivery Location</div>
                                 </div>
                             </div>
-                            <template x-if="parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng)">
+                            <template x-if="previewData?.delivery_preference === 'pickup_from_store' || previewData?.delivery_preference === 'self_pickup'">
+                                <div style="padding:16px;background:white;text-align:center;font-size:12px;font-weight:700;color:#475569;border-top:1px solid #f1f5f9;">
+                                    <i class="fa-solid fa-store" style="color:#ea580c;margin-bottom:6px;font-size:20px;display:block;"></i>
+                                    Customer will pick up from store
+                                </div>
+                            </template>
+
+                            <template x-if="!(previewData?.delivery_preference === 'pickup_from_store' || previewData?.delivery_preference === 'self_pickup') && parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng)">
                                 <div style="padding:16px;background:white;text-align:center;font-size:12px;font-weight:700;color:#475569;border-top:1px solid #f1f5f9;">
                                     <i class="fa-solid fa-location-dot" style="color:#cbd5e1;margin-bottom:6px;font-size:20px;display:block;"></i>
                                     Same as pickup location
                                 </div>
                             </template>
                             
-                            <template x-if="!(parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng))">
+                            <template x-if="!(previewData?.delivery_preference === 'pickup_from_store' || previewData?.delivery_preference === 'self_pickup') && !(parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng))">
                                 <div>
                                     <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.delivery_address || 'Not specified'"></div>
                                     <template x-if="parseFloat(previewData?.delivery_lat) && parseFloat(previewData?.delivery_lng)">
