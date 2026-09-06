@@ -930,10 +930,10 @@
                             this.calculateDeliveryFee();
                         };
 
-                        this.pickupMap.on('move', updateCoords);
-                        this.pickupMap.on('moveend', updateCoords);
+                        this.pickupMap.on('move', updatePickupCoords);
+                        this.pickupMap.on('moveend', updatePickupCoords);
                         this.pickupMap.on('moveend', () => { if (this.baseLat && this.baseLng) this.drawRoute(this.pickupMap, this.baseLat, this.baseLng, this.pickupLat, this.pickupLng); });
-                        updateCoords();
+                        updatePickupCoords();
                     },
 
                     initDeliveryMap() {
