@@ -4,12 +4,26 @@ namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Customer extends Authenticatable
 {
-    use Notifiable;
+    use Notifiable, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'phone', 'address', 'title', 'email'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
 
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'address' => 'encrypted',
+    ];
 
     protected $hidden = [
         'password',

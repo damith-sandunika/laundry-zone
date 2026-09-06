@@ -3,11 +3,22 @@
 namespace App\Models;
 
 use App\Traits\BelongsToBranch;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Order extends Model
 {
-    use BelongsToBranch;
+    use BelongsToBranch, HasFactory, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'payment_status', 'total', 'discount', 'due_date', 'internal_notes'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
 
     protected $guarded = ['id'];
 

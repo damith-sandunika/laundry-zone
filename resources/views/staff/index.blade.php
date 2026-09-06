@@ -5,10 +5,18 @@
                 <h2 class="ph-title">Staff Management</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage employees, permissions and salary payments</p>
             </div>
-            <a href="{{ route('staff.create') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
-                Add Staff
-            </a>
+            <div class="flex gap-2">
+                @if(in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'workshop_admin', 'admin']))
+                <a href="{{ route('branch.month_plan') }}" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-sm">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    Manage Month Plan
+                </a>
+                @endif
+                <a href="{{ route('staff.create') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shadow-sm">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                    Add Staff
+                </a>
+            </div>
         </div>
     </x-slot>
 

@@ -360,6 +360,75 @@ class ReportController extends Controller
         ));
     }
 
+
+    public function salesReport(Request $request)
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $branches = $isSuperAdmin ? Branch::where('is_active', true)->get() : collect();
+
+        $query = Order::with(['customer', 'branch'])
+            ->select('orders.*')
+            ->withSum('items as total_qty', 'quantity')
+            ->where('orders.status', '!=', 'cancelled')
+            ->where('orders.paid_amount', '>', 0)
+            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+        if ($branchId) {
+            $query->where('orders.branch_id', $branchId);
+        }
+
+        $query->orderBy('orders.total', 'desc');
+
+        $totalCash = (clone $query)->where('payment_method', 'cash')->sum('paid_amount');
+        $totalCard = (clone $query)->where('payment_method', 'card')->sum('paid_amount');
+        $totalBank = (clone $query)->where('payment_method', 'bank')->sum('paid_amount');
+        $totalSalesAmount = $totalCash + $totalCard + $totalBank;
+
+        // Efficient pagination keeping only 15 objects in RAM
+        $orders = $query->paginate(15);
+
+        return view('reports.sales', compact('orders', 'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'totalCash', 'totalCard', 'totalBank', 'totalSalesAmount'));
+    }
+
+    public function salesReportPdf(Request $request)
+    {
+        $user = auth()->user();
+        $isSuperAdmin = $user->isSuperAdmin();
+        $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+
+        $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+
+        $query = Order::with(['customer', 'branch'])
+            ->select('orders.*')
+            ->withSum('items as total_qty', 'quantity')
+            ->where('orders.status', '!=', 'cancelled')
+            ->where('orders.paid_amount', '>', 0)
+            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+
+        if ($branchId) {
+            $query->where('orders.branch_id', $branchId);
+        }
+
+        $query->orderBy('orders.total', 'desc');
+
+        $totalCash = (clone $query)->where('payment_method', 'cash')->sum('paid_amount');
+        $totalCard = (clone $query)->where('payment_method', 'card')->sum('paid_amount');
+        $totalBank = (clone $query)->where('payment_method', 'bank')->sum('paid_amount');
+        $totalSalesAmount = $totalCash + $totalCard + $totalBank;
+
+        $orders = $query->get();
+        $branch = Branch::find($branchId ?? 1);
+
+        return view('reports.sales_pdf', compact('orders', 'startDate', 'endDate', 'branch', 'isSuperAdmin', 'branchId', 'totalCash', 'totalCard', 'totalBank', 'totalSalesAmount'));
+    }
+
     public function serviceReport(Request $request)
     {
         $user = auth()->user();

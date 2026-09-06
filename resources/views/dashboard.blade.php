@@ -143,44 +143,11 @@
                             @if(isset($branchStaff) && $branchStaff->count() > 0)
                                 <div class="divide-y divide-slate-100 max-h-56 overflow-y-auto pr-2 custom-scrollbar">
                                     @foreach($branchStaff as $staff)
-                                        <div class="py-3 border-b border-slate-100 last:border-0">
-                                            <div class="flex items-center justify-between mb-2">
-                                                <span class="text-[13px] font-bold text-slate-800">{{ $staff->name }}</span>
-                                                <select name="assigned_staff[{{ $staff->id }}][status]" 
-                                                        class="text-xs font-bold bg-slate-50 border border-slate-200 text-slate-700 rounded-lg focus:ring-blue-500 focus:border-blue-500 py-1 pl-2 pr-6"
-                                                        onchange="
-                                                            const timesDiv = document.getElementById('staff-times-{{ $staff->id }}');
-                                                            const assignDiv = document.getElementById('staff-assign-{{ $staff->id }}');
-                                                            if(this.value === 'present') {
-                                                                timesDiv.classList.remove('hidden');
-                                                                assignDiv.classList.remove('hidden');
-                                                            } else {
-                                                                timesDiv.classList.add('hidden');
-                                                                assignDiv.classList.add('hidden');
-                                                            }
-                                                        ">
-                                                    <option value="hold">Hold (Absent)</option>
-                                                    <option value="present">Present</option>
-                                                </select>
-                                            </div>
-                                            
-                                            <div id="staff-assign-{{ $staff->id }}" class="hidden mb-2 ml-1">
-                                                <label class="flex items-center gap-2 cursor-pointer">
-                                                    <input type="checkbox" name="assigned_staff[{{ $staff->id }}][is_assigned]" value="1" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 transition-all">
-                                                    <span class="text-[11px] font-extrabold text-blue-700 uppercase tracking-wide">Assign System Access</span>
-                                                </label>
-                                            </div>
-
-                                            <div id="staff-times-{{ $staff->id }}" class="hidden mt-2 p-3 bg-slate-50 border border-slate-200/60 rounded-xl flex gap-3 animate-fade-in">
-                                                <div class="flex-1">
-                                                    <label class="block text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1">Clock In</label>
-                                                    <input type="time" name="assigned_staff[{{ $staff->id }}][clock_in]" value="{{ now()->format('H:i') }}" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
-                                                </div>
-                                                <div class="flex-1">
-                                                    <label class="block text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-1">Clock Out <span class="text-slate-400 font-medium">(Opt)</span></label>
-                                                    <input type="time" name="assigned_staff[{{ $staff->id }}][clock_out]" class="w-full px-2 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none">
-                                                </div>
-                                            </div>
+                                        <div class="py-3 border-b border-slate-100 last:border-0 flex items-center justify-between hover:bg-slate-50 transition-colors px-2 rounded-lg">
+                                            <span class="text-[13px] font-bold text-slate-800">{{ $staff->name }}</span>
+                                            <label class="flex items-center cursor-pointer">
+                                                <input type="checkbox" name="assigned_staff[]" value="{{ $staff->id }}" class="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500 transition-all">
+                                            </label>
                                         </div>
                                     @endforeach
                                 </div>
@@ -573,10 +540,7 @@
                     <div class="hidden md:flex items-center justify-between px-6 py-3 bg-slate-50 border-b border-slate-100">
                         <div class="w-1/4 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Staff Member</div>
                         <div class="flex-1 flex justify-end items-center gap-12 pr-4">
-                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-28 text-center">Status</div>
                             <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-24 text-center">System Access</div>
-                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-28 text-center">Clock In</div>
-                            <div class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-28 text-center">Clock Out</div>
                         </div>
                     </div>
 
@@ -604,51 +568,15 @@
                                 </div>
 
                                 <!-- Controls Grid -->
-                                <div class="grid grid-cols-2 md:flex md:flex-row md:items-center gap-4 md:gap-12 flex-1 md:justify-end">
-                                    
-                                    <!-- Status -->
-                                    <div class="flex flex-col gap-1.5 md:w-28">
-                                        <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">Status</label>
-                                        <select name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][status]" 
-                                                class="w-full text-xs font-bold bg-white border border-slate-200 text-slate-700 rounded-lg focus:ring-indigo-500 focus:border-indigo-500 py-2 pl-3 pr-8 shadow-sm"
-                                                onchange="
-                                                    const wrapper = this.closest('.flex-col').parentElement;
-                                                    const access = wrapper.querySelector('.system-access-box');
-                                                    const times = wrapper.querySelectorAll('.time-input');
-                                                    if(this.value === 'present') {
-                                                        access.removeAttribute('disabled');
-                                                        times.forEach(t => t.removeAttribute('disabled'));
-                                                    } else {
-                                                        access.setAttribute('disabled', 'disabled');
-                                                        access.checked = false;
-                                                        times.forEach(t => { t.setAttribute('disabled', 'disabled'); t.value = ''; });
-                                                    }
-                                                ">
-                                            <option value="hold" {{ $status == 'hold' ? 'selected' : '' }}>Hold</option>
-                                            <option value="present" {{ $status == 'present' ? 'selected' : '' }}>Present</option>
-                                        </select>
-                                    </div>
-
+                                <div class="grid grid-cols-1 md:flex md:flex-row md:items-center gap-4 md:gap-12 flex-1 md:justify-end">
                                     <!-- System Access -->
                                     <div class="flex flex-col gap-1.5 items-start md:items-center md:w-24">
                                         <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">System Access</label>
                                         <div class="flex items-center h-[34px]">
                                             <label class="inline-flex items-center cursor-pointer">
-                                                <input type="checkbox" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][is_assigned]" value="1" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-all system-access-box shadow-sm" {{ $isAssigned ? 'checked' : '' }} {{ $status == 'hold' ? 'disabled' : '' }}>
+                                                <input type="checkbox" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][is_assigned]" value="1" class="w-5 h-5 text-indigo-600 rounded border-slate-300 focus:ring-indigo-500 transition-all system-access-box shadow-sm" {{ $isAssigned ? 'checked' : '' }}>
                                             </label>
                                         </div>
-                                    </div>
-
-                                    <!-- Clock In -->
-                                    <div class="flex flex-col gap-1.5 md:w-28">
-                                        <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">Clock In</label>
-                                        <input type="time" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][clock_in]" value="{{ $clockIn ? \Carbon\Carbon::parse($clockIn)->format('H:i') : '' }}" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none shadow-sm time-input" {{ $status == 'hold' ? 'disabled' : '' }}>
-                                    </div>
-
-                                    <!-- Clock Out -->
-                                    <div class="flex flex-col gap-1.5 md:w-28">
-                                        <label class="text-[10px] font-extrabold text-slate-400 uppercase md:hidden">Clock Out</label>
-                                        <input type="time" name="assigned_staff[{{ $att ? $att->id : 'new_'.$staff->id }}][clock_out]" value="{{ $clockOut ? \Carbon\Carbon::parse($clockOut)->format('H:i') : '' }}" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-700 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none shadow-sm time-input" {{ $status == 'hold' ? 'disabled' : '' }}>
                                     </div>
                                 </div>
                             </div>

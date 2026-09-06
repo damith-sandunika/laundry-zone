@@ -391,14 +391,7 @@
         </div>
 
         <!-- Filter Bar -->
-        <div class="mb-6 flex justify-between items-center">
-            <div>
-                <button x-show="selectedDispatches.length > 0" @click="showBulkModal = true"
-                    class="px-4 py-2 bg-blue-600 text-white font-bold rounded-lg text-sm hover:bg-blue-700 transition-colors shadow-sm flex items-center gap-2">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                    Bulk Action (<span x-text="selectedDispatches.length"></span>)
-                </button>
-            </div>
+        <div class="mb-6 flex justify-end items-center">
             <select x-model="selectedBranch" @change="window.location.href = '?tab={{ $currentTab }}&branch=' + $event.target.value" class="px-4 py-2 pr-8 border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 outline-none focus:border-blue-500">
                 <option value="">All Branches</option>
                 @foreach($branches as $branch)
@@ -412,9 +405,6 @@
                 <table class="w-full text-sm text-left" style="border-collapse:collapse;">
                     <thead style="background:#f8fafc;border-bottom:1.5px solid #e2e8f0;">
                         <tr>
-                            <th style="padding:14px 20px;width:40px;">
-                                <input type="checkbox" @change="toggleSelectAll($event)" :checked="selectedDispatches.length === filteredDispatches.length && filteredDispatches.length > 0" style="cursor:pointer;">
-                            </th>
                             <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Order Info</th>
                             <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Dispatch Time</th>
                             <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Branch</th>
@@ -425,9 +415,6 @@
                     <tbody>
                         <template x-for="dispatch in filteredDispatches" :key="dispatch.id">
                             <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
-                                <td style="padding:12px 20px;">
-                                    <input type="checkbox" :value="dispatch.id" x-model="selectedDispatches" style="cursor:pointer;">
-                                </td>
                                 <td style="padding:12px 20px;">
                                     <a :href="dispatch.order ? '/orders/view/' + dispatch.order.order_number : '#'" style="font-size:13px;font-weight:800;color:#1d4ed8;display:block;text-decoration:none;" x-text="(dispatch.order.is_delivery_order ? '[D] ' : '') + '#' + dispatch.order.order_number" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"></a>
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
@@ -542,30 +529,7 @@
             @endif
         </div>
 
-        <!-- ── Bulk Status Update Modal ── -->
-        <div x-cloak x-show="showBulkModal" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-[4px] p-4">
-            <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" @click.away="showBulkModal = false">
-                <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
-                    <h3 style="font-size:16px;font-weight:900;color:#0f172a;margin:0;">Bulk Action</h3>
-                    <button @click="showBulkModal = false" style="background:none;border:none;cursor:pointer;color:#94a3b8;">✕</button>
-                </div>
-                <div style="padding:20px 24px;display:flex;flex-direction:column;gap:16px;">
-                    <div>
-                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Action to Perform</label>
-                        <select x-model="bulkStatus" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;">
-                            <option value="">-- Select Action --</option>
-                            <option value="processing" x-show="currentTab === 'arrival_processing'">👕 Receive & Start Washing</option>
-                            <option value="completed_at_workshop" x-show="currentTab === 'arrival_processing'">✅ Mark Done</option>
-                            <option value="returned_to_branch" x-show="currentTab === 'completed_at_workshop'">🚚 Move to Dispatch</option>
-                        </select>
-                    </div>
-                    <div style="display:flex;gap:10px;">
-                        <button @click="showBulkModal = false" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
-                        <button @click="submitBulkUpdate" style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Apply Changes</button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Modals for workshop (if any) -->
         

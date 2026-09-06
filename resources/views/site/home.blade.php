@@ -347,42 +347,64 @@
             </div>
 
             <!-- Category Cards Slider -->
-            <div class="max-w-5xl mx-auto mb-8 relative px-10" 
+            <div class="max-w-5xl mx-auto mb-8 relative px-2 sm:px-10" 
                  x-data="{ 
-                    scrollNext() { $refs.slider.scrollBy({ left: 300, behavior: 'smooth' }) }, 
-                    scrollPrev() { $refs.slider.scrollBy({ left: -300, behavior: 'smooth' }) } 
-                 }">
+                    timer: null,
+                    scrollNext() { this.$refs.slider.scrollBy({ left: 300, behavior: 'smooth' }) }, 
+                    scrollPrev() { this.$refs.slider.scrollBy({ left: -300, behavior: 'smooth' }) },
+                    startAutoScroll() {
+                        this.timer = setInterval(() => {
+                            let el = this.$refs.slider;
+                            if (!el) return;
+                            if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 5) {
+                                el.scrollTo({ left: 0, behavior: 'smooth' }); // Rewind to start
+                            } else {
+                                el.scrollBy({ left: 160, behavior: 'smooth' });
+                            }
+                        }, 3000);
+                    },
+                    stopAutoScroll() {
+                        clearInterval(this.timer);
+                    }
+                 }"
+                 x-init="startAutoScroll()"
+                 @mouseenter="stopAutoScroll()"
+                 @mouseleave="startAutoScroll()"
+                 @touchstart="stopAutoScroll()"
+                 @touchend="startAutoScroll()">
                 
                 <!-- Prev Button -->
-                <button @click="scrollPrev" class="absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
+                <button @click="scrollPrev" class="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
                     <i class="fa-solid fa-chevron-left"></i>
                 </button>
                 
                 <!-- Slider Container -->
-                <div x-ref="slider" class="flex overflow-x-auto gap-4 snap-x snap-mandatory scrollbar-hide py-2 px-2">
-                    @foreach($categories as $category)
-                        <div class="snap-start shrink-0 w-[110px] sm:w-[140px]">
-                            <a href="{{ route('customer.booking') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center h-full">
-                                <!-- Category Image -->
-                                <div class="w-12 h-12 sm:w-16 sm:h-16 mx-auto rounded-full overflow-hidden bg-slate-50 mb-2 sm:mb-3 group-hover:scale-105 transition-transform shadow-sm">
-                                    @if($category->image_path)
-                                        <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
-                                    @else
-                                        <div class="w-full h-full flex items-center justify-center">
-                                            <i class="fa-solid fa-image text-xl text-slate-400"></i>
-                                        </div>
-                                    @endif
-                                </div>
-                                
-                                <!-- Title -->
-                                <h4 class="text-slate-800 text-[11px] sm:text-xs font-bold leading-tight">{{ $category->name }}</h4>
-                            </a>
-                        </div>
-                    @endforeach
+                <div class="w-full flex justify-center">
+                    <div x-ref="slider" class="grid grid-rows-2 gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 px-2 w-max max-w-full" style="grid-auto-flow: column; grid-auto-columns: max-content;">
+                        @foreach($categories as $category)
+                            <div class="snap-start shrink-0 w-[130px] sm:w-[150px] h-full">
+                                <a href="{{ route('customer.booking') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center h-full flex flex-col justify-center items-center">
+                                    <!-- Category Image -->
+                                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-slate-50 mb-2 sm:mb-3 group-hover:scale-105 transition-transform shadow-sm">
+                                        @if($category->image_path)
+                                            <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
+                                        @else
+                                            <div class="w-full h-full flex items-center justify-center">
+                                                <i class="fa-solid fa-image text-xl text-slate-400"></i>
+                                            </div>
+                                        @endif
+                                    </div>
+                                    
+                                    <!-- Title -->
+                                    <h4 class="text-slate-800 text-[11px] sm:text-xs font-bold leading-tight">{{ $category->name }}</h4>
+                                </a>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
 
                 <!-- Next Button -->
-                <button @click="scrollNext" class="absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
+                <button @click="scrollNext" class="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
                     <i class="fa-solid fa-chevron-right"></i>
                 </button>
             </div>

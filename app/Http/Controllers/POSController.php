@@ -15,6 +15,7 @@ use App\Models\ServiceType;
 use App\Services\CommunicationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Cache;
 
 class POSController extends Controller
 {
@@ -36,18 +37,30 @@ class POSController extends Controller
             }
         }
 
-        $services = ServiceType::where('is_active', true)->orderBy('order_index')->get();
-        $categories = ServiceCategory::with(['children' => function($q) {
-            $q->where('is_active', true)->orderBy('order_index');
-        }])->where('is_active', true)->orderBy('order_index')->get();
+        $services = Cache::rememberForever('pos_services', function () {
+            return ServiceType::where('is_active', true)->orderBy('order_index')->get();
+        });
+
+        $categories = Cache::rememberForever('pos_categories', function () {
+            return ServiceCategory::with(['children' => function($q) {
+                $q->where('is_active', true)->orderBy('order_index');
+            }])->where('is_active', true)->orderBy('order_index')->get();
+        });
 
         $customers = collect();
         $customerPackages = collect();
 
-        $timeSlots = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
+        $timeSlots = Cache::rememberForever('pos_timeslots', function () {
+            return \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
+        });
 
-        $extras = \App\Models\Extra::where('is_active', true)->get();
-        $turnaroundTypes = \App\Models\TurnaroundType::where('is_active', true)->get();
+        $extras = Cache::rememberForever('pos_extras', function () {
+            return \App\Models\Extra::where('is_active', true)->get();
+        });
+
+        $turnaroundTypes = Cache::rememberForever('pos_turnarounds', function () {
+            return \App\Models\TurnaroundType::where('is_active', true)->get();
+        });
 
         return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages', 'timeSlots', 'extras', 'turnaroundTypes'));
     }

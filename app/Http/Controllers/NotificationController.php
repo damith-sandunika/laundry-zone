@@ -87,7 +87,7 @@ class NotificationController extends Controller
 
         if (in_array($user->role, ['branch_admin', 'staff', 'admin', 'super_admin', 'workshop_admin'])) {
             // 4. New Pickup Requests
-            $pendingPickupsQuery = \App\Models\DeliveryAppointment::with('customer')->where('status', 'pending');
+            $pendingPickupsQuery = \App\Models\DeliveryAppointment::with(['customer', 'order'])->where('status', 'pending');
             $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
             if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
                 $pendingPickupsQuery->where('branch_id', $user->branch_id);
@@ -233,7 +233,7 @@ class NotificationController extends Controller
 
         if ($user->role === 'rider') {
             // 7. New Rider Tasks
-            $newTasks = \App\Models\DeliveryTask::where('rider_id', $user->id)
+            $newTasks = \App\Models\DeliveryTask::with('order')->where('rider_id', $user->id)
                 ->where('status', 'assigned')->get()->map(function ($t) {
                     $numberStr = ucfirst($t->task_type) . ' - ' . substr($t->pickup_location ?? 'Unknown', 0, 15) . '...';
                     $url = $t->order_id && $t->order ? route('orders.show', $t->order->order_number) : '#';

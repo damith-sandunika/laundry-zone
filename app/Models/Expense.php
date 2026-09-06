@@ -4,10 +4,20 @@ namespace App\Models;
 
 use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class Expense extends Model
 {
-    use BelongsToBranch;
+    use BelongsToBranch, LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['description', 'amount', 'category_id', 'expense_date'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges();
+    }
 
     protected $guarded = ['id'];
 

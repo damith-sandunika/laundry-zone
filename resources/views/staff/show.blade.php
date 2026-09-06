@@ -92,89 +92,89 @@
             
             <!-- Left Column: Attendance & Leaves -->
             <div class="lg:col-span-2 space-y-6">
-                <!-- Attendance Calendar -->
-                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-visible">
-                    <div class="p-5 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
+                <!-- Bulk Attendance Editor -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden" x-data="attendanceGrid()">
+                    <div class="p-5 border-b border-gray-100 flex flex-wrap justify-between items-center bg-gray-50/50 gap-4">
                         <div>
-                            <h3 class="font-bold text-gray-800">Attendance Calendar</h3>
+                            <h3 class="font-bold text-gray-800">Month Attendance & OT</h3>
                             <p class="text-[10px] text-gray-400 font-semibold uppercase">{{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }}</p>
                         </div>
-                        <div class="flex gap-2">
-                            <!-- Legends -->
-                            <div class="hidden md:flex items-center gap-3 mr-4 text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-green-400"></span> Present</span>
-                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-red-400"></span> Absent</span>
-                                <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-orange-400"></span> Late</span>
-                            </div>
-                            <button @click="attendanceModalOpen = true" class="text-xs font-bold px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg border border-blue-100 hover:bg-blue-100 transition">
-                                Mark Today
-                            </button>
+                        <div class="flex items-center gap-3">
+                            <form action="{{ route('staff.show', $staff->id) }}" method="GET" class="flex gap-2">
+                                <select name="month" class="text-xs border-gray-200 rounded-lg py-1.5 px-3">
+                                    @for($m = 1; $m <= 12; $m++)
+                                        <option value="{{ $m }}" {{ $payroll->month == $m ? 'selected' : '' }}>{{ date('M', mktime(0, 0, 0, $m, 10)) }}</option>
+                                    @endfor
+                                </select>
+                                <select name="year" class="text-xs border-gray-200 rounded-lg py-1.5 px-3">
+                                    @for($y = now()->year - 1; $y <= now()->year + 1; $y++)
+                                        <option value="{{ $y }}" {{ $payroll->year == $y ? 'selected' : '' }}>{{ $y }}</option>
+                                    @endfor
+                                </select>
+                                <button type="submit" class="px-3 py-1.5 bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs font-bold rounded-lg transition">Load</button>
+                            </form>
+                            
+                            <form action="{{ route('hr.attendance.bulkUpdate', $staff->id) }}" method="POST" @submit="prepareSubmit">
+                                @csrf
+                                <input type="hidden" name="attendance_data" x-model="submitData">
+                                <button type="submit" class="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-lg shadow-sm hover:bg-blue-700 transition">Save Month</button>
+                            </form>
                         </div>
                     </div>
-                    <div class="p-5">
-                        @php
-                            $startOfMonth = \Carbon\Carbon::createFromDate($payroll->year, $payroll->month, 1);
-                            $endOfMonth = $startOfMonth->copy()->endOfMonth();
-                            $startDayOfWeek = $startOfMonth->dayOfWeek; // 0 (Sun) to 6 (Sat)
-                            $attendanceMap = $attendancesThisMonth->keyBy('date');
-                        @endphp
-                        
-                        <div class="grid grid-cols-7 gap-1 text-center mb-2">
-                            @foreach(['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as $day)
-                                <div class="text-[10px] font-extrabold text-gray-400 uppercase tracking-wider">{{ $day }}</div>
-                            @endforeach
-                        </div>
-                        <div class="grid grid-cols-7 gap-2 text-center">
-                            @for($i = 0; $i < $startDayOfWeek; $i++)
-                                <div class="p-2 border border-transparent"></div>
-                            @endfor
-                            
-                            @for($day = 1; $day <= $endOfMonth->day; $day++)
-                                @php
-                                    $currentDateStr = $startOfMonth->copy()->addDays($day - 1)->toDateString();
-                                    $isToday = $currentDateStr === now()->toDateString();
-                                    $att = $attendanceMap->get($currentDateStr);
-                                    
-                                    // Default (No Record / Future / Weekend)
-                                    $statusColor = 'bg-gray-50 border-gray-100 text-gray-400 hover:bg-gray-100'; 
-                                    
-                                    if($att) {
-                                        if($att->status === 'present') {
-                                            $statusColor = 'bg-green-50 border-green-200 text-green-700 shadow-sm shadow-green-100 hover:bg-green-100';
-                                        } elseif($att->status === 'hold') {
-                                            $statusColor = 'bg-red-50 border-red-200 text-red-700 shadow-sm shadow-red-100 hover:bg-red-100';
-                                        } elseif($att->status === 'late') {
-                                            $statusColor = 'bg-orange-50 border-orange-200 text-orange-700 shadow-sm shadow-orange-100 hover:bg-orange-100';
-                                        } elseif($att->status === 'half_day') {
-                                            $statusColor = 'bg-yellow-50 border-yellow-200 text-yellow-700 shadow-sm shadow-yellow-100 hover:bg-yellow-100';
-                                        }
-                                    }
-                                @endphp
-                                <div class="aspect-square flex flex-col items-center justify-center rounded-xl border transition-all relative group cursor-pointer {{ $statusColor }} {{ $isToday ? 'ring-2 ring-blue-500 ring-offset-2' : '' }}">
-                                    <span class="text-sm font-black {{ $isToday && !$att ? 'text-blue-600' : '' }}">{{ $day }}</span>
-                                    
-                                    @if($att)
-                                        <span class="text-[9px] font-bold uppercase mt-0.5 tracking-tighter hidden md:block">
-                                            {{ $att->status === 'hold' ? 'Absent' : str_replace('_', ' ', $att->status) }}
-                                        </span>
-                                        
-                                        <!-- Tooltip -->
-                                        <div class="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-gray-800 text-white text-[10px] py-1.5 px-3 rounded-lg opacity-0 group-hover:opacity-100 pointer-events-none whitespace-nowrap transition-opacity z-10 shadow-xl">
-                                            <div class="font-bold border-b border-gray-600 pb-1 mb-1">{{ \Carbon\Carbon::parse($currentDateStr)->format('M d, Y') }}</div>
-                                            <div class="text-gray-300">Status: <span class="text-white font-bold">{{ ucfirst(str_replace('_', ' ', $att->status)) }}</span></div>
-                                            @if($att->clock_in)
-                                                <div class="text-gray-300">In: <span class="text-white">{{ \Carbon\Carbon::parse($att->clock_in)->format('h:i A') }}</span></div>
-                                            @endif
-                                            @if($att->clock_out)
-                                                <div class="text-gray-300">Out: <span class="text-white">{{ \Carbon\Carbon::parse($att->clock_out)->format('h:i A') }}</span></div>
-                                            @endif
-                                            <!-- Tooltip Arrow -->
-                                            <div class="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-r-[4px] border-t-[4px] border-l-transparent border-r-transparent border-t-gray-800"></div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @endfor
-                        </div>
+                    
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse text-xs">
+                            <thead class="bg-gray-100 text-gray-500 uppercase tracking-wider">
+                                <tr>
+                                    <th class="px-4 py-3 font-bold w-24">Date</th>
+                                    <th class="px-4 py-3 font-bold w-32">Rule</th>
+                                    <th class="px-4 py-3 font-bold w-32">Status</th>
+                                    <th class="px-4 py-3 font-bold">In</th>
+                                    <th class="px-4 py-3 font-bold">Out</th>
+                                    <th class="px-4 py-3 font-bold text-center">Work (H)</th>
+                                    <th class="px-4 py-3 font-bold text-center">OT (H)</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <template x-for="(day, dateStr) in days" :key="dateStr">
+                                    <tr class="hover:bg-gray-50/50 transition">
+                                        <td class="px-4 py-3">
+                                            <div class="font-bold text-gray-800" x-text="formatDate(dateStr)"></div>
+                                            <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider" x-text="formatDay(dateStr)"></div>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+                                                  :class="{
+                                                      'bg-green-100 text-green-700': day.rule.type === 'normal',
+                                                      'bg-blue-100 text-blue-700': day.rule.type === 'special',
+                                                      'bg-red-100 text-red-700': day.rule.type === 'holiday'
+                                                  }" x-text="day.rule.type"></span>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <select x-model="day.status" @change="recalculate(dateStr)" class="w-full text-xs border-gray-200 rounded py-1 px-2 font-bold" :class="{'text-gray-400': !day.status, 'text-green-700': day.status === 'present', 'text-orange-600': day.status === 'leave', 'text-red-600': day.status === 'absent'}">
+                                                <option value="">-</option>
+                                                <option value="present">Present</option>
+                                                <option value="leave">Leave</option>
+                                                <option value="absent">Absent</option>
+                                                <option value="holiday">Holiday</option>
+                                            </select>
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <input type="time" x-model="day.clock_in" @change="recalculate(dateStr)" class="w-24 text-xs border-gray-200 rounded py-1 px-2 disabled:bg-gray-100 disabled:text-gray-400" :disabled="day.status !== 'present'">
+                                        </td>
+                                        <td class="px-4 py-3">
+                                            <input type="time" x-model="day.clock_out" @change="recalculate(dateStr)" class="w-24 text-xs border-gray-200 rounded py-1 px-2 disabled:bg-gray-100 disabled:text-gray-400" :disabled="day.status !== 'present'">
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="font-black text-gray-700" x-text="formatHours(day.normal_minutes)"></span>
+                                        </td>
+                                        <td class="px-4 py-3 text-center">
+                                            <span class="font-black text-indigo-600" x-text="formatHours(day.ot_minutes)"></span>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 
@@ -430,6 +430,128 @@
         </div>
 
     </div>
+
+    @push('scripts')
+    <script>
+        function attendanceGrid() {
+            const year = {{ $payroll->year }};
+            const month = {{ $payroll->month }};
+            const standardWorkingHours = {{ $staff->profile->standard_working_hours ?? 8 }};
+            const branchPlan = @json($branchPlan->plan_data ?? []);
+            const defaultInTime = "{{ $branchPlan->default_in_time ? \Carbon\Carbon::parse($branchPlan->default_in_time)->format('H:i') : '08:30' }}";
+            const defaultOutTime = "{{ $branchPlan->default_out_time ? \Carbon\Carbon::parse($branchPlan->default_out_time)->format('H:i') : '16:30' }}";
+            const currentAttendance = @json($attendancesThisMonth->keyBy('date'));
+            
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const days = {};
+            
+            for (let i = 1; i <= daysInMonth; i++) {
+                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
+                
+                let rule = branchPlan[dateStr] || { type: 'normal' };
+                let att = currentAttendance[dateStr] || {};
+                
+                // Format times for input
+                let clockIn = att.clock_in ? att.clock_in.substring(0, 5) : '';
+                let clockOut = att.clock_out ? att.clock_out.substring(0, 5) : '';
+
+                days[dateStr] = {
+                    rule: rule,
+                    status: att.status || (rule.type === 'holiday' ? 'holiday' : ''),
+                    clock_in: clockIn,
+                    clock_out: clockOut,
+                    normal_minutes: att.normal_minutes || 0,
+                    ot_minutes: att.ot_minutes || 0,
+                };
+            }
+
+            return {
+                days: days,
+                submitData: '',
+
+                formatDate(dateStr) {
+                    const d = new Date(dateStr);
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                },
+                formatDay(dateStr) {
+                    const d = new Date(dateStr);
+                    return d.toLocaleDateString('en-US', { weekday: 'short' });
+                },
+                formatHours(mins) {
+                    if(!mins || mins <= 0) return '0.0';
+                    return (mins / 60).toFixed(1);
+                },
+                recalculate(dateStr) {
+                    const day = this.days[dateStr];
+                    
+                    if (day.status !== 'present') {
+                        day.normal_minutes = 0;
+                        day.ot_minutes = 0;
+                        return;
+                    }
+
+                    // Auto-fill default times if empty
+                    if (day.status === 'present') {
+                        if (!day.clock_in) day.clock_in = defaultInTime;
+                        if (!day.clock_out) day.clock_out = defaultOutTime;
+                    }
+
+                    if (!day.clock_in || !day.clock_out) {
+                        day.normal_minutes = 0;
+                        day.ot_minutes = 0;
+                        return;
+                    }
+
+                    const inParts = day.clock_in.split(':');
+                    const outParts = day.clock_out.split(':');
+                    let inMins = parseInt(inParts[0]) * 60 + parseInt(inParts[1]);
+                    let outMins = parseInt(outParts[0]) * 60 + parseInt(outParts[1]);
+                    
+                    // Handle crossing midnight
+                    if (outMins < inMins) outMins += 24 * 60;
+                    
+                    let totalWorkedMins = outMins - inMins;
+                    let normalMins = 0;
+                    let otMins = 0;
+                    
+                    if (day.rule.type === 'normal') {
+                        let stdMins = standardWorkingHours * 60;
+                        if (totalWorkedMins > stdMins) {
+                            normalMins = stdMins;
+                            otMins = totalWorkedMins - stdMins;
+                        } else {
+                            normalMins = totalWorkedMins;
+                            otMins = 0;
+                        }
+                    } else if (day.rule.type === 'holiday') {
+                        normalMins = 0;
+                        otMins = totalWorkedMins; // Fully OT
+                    } else if (day.rule.type === 'special') {
+                        if (day.rule.special_type === 'fully_ot') {
+                            normalMins = 0;
+                            otMins = totalWorkedMins;
+                        } else if (day.rule.special_type === 'custom') {
+                            let stdMins = (day.rule.normal_hours || 0) * 60;
+                            if (totalWorkedMins > stdMins) {
+                                normalMins = stdMins;
+                                otMins = totalWorkedMins - stdMins;
+                            } else {
+                                normalMins = totalWorkedMins;
+                                otMins = 0;
+                            }
+                        }
+                    }
+                    
+                    day.normal_minutes = normalMins;
+                    day.ot_minutes = otMins;
+                },
+                prepareSubmit() {
+                    this.submitData = JSON.stringify(this.days);
+                }
+            }
+        }
+    </script>
+    @endpush
 </x-app-layout>
 
 

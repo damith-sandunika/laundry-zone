@@ -60,6 +60,48 @@ class HRController extends Controller
         return back()->with('success', 'Out time marked successfully.');
     }
 
+    public function bulkUpdateAttendance(Request $request, User $staff)
+    {
+        // Must be admin or HR to bulk update
+        $user = auth()->user();
+        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin', 'admin'])) {
+            abort(403, 'Unauthorized action.');
+        }
+
+        $request->validate([
+            'attendance_data' => 'required|string',
+        ]);
+
+        $data = json_decode($request->attendance_data, true);
+        if (!is_array($data)) {
+            return back()->with('error', 'Invalid attendance data format.');
+        }
+
+        foreach ($data as $dateStr => $dayInfo) {
+            // Only update if there is meaningful data or if we are explicitly marking absent/leave
+            $status = $dayInfo['status'] ?? null;
+            if (!$status) continue;
+
+            $clockIn = !empty($dayInfo['clock_in']) ? $dayInfo['clock_in'] : null;
+            $clockOut = !empty($dayInfo['clock_out']) ? $dayInfo['clock_out'] : null;
+            $normalMinutes = $dayInfo['normal_minutes'] ?? 0;
+            $otMinutes = $dayInfo['ot_minutes'] ?? 0;
+
+            $staff->attendances()->updateOrCreate(
+                ['date' => $dateStr],
+                [
+                    'status' => $status,
+                    'clock_in' => $clockIn,
+                    'clock_out' => $clockOut,
+                    'normal_minutes' => $normalMinutes,
+                    'ot_minutes' => $otMinutes,
+                ]
+            );
+        }
+
+        return back()->with('success', 'Monthly attendance updated successfully.');
+    }
+
     public function storeLeave(Request $request, User $staff)
     {
         $request->validate([

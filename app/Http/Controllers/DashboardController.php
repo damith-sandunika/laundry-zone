@@ -177,8 +177,6 @@ class DashboardController extends Controller
         $request->validate([
             'opening_cash' => 'required|numeric|min:0',
             'assigned_staff' => 'nullable|array',
-            'assigned_staff.*.clock_in' => 'nullable|string',
-            'assigned_staff.*.clock_out' => 'nullable|string',
         ]);
 
         $branchId = $this->getActiveBranchId();
@@ -200,40 +198,22 @@ class DashboardController extends Controller
             'status' => 'open',
         ]);
 
-        // Mark Attendance for assigned staff
+        // Mark assigned staff for system access
         $assignedStaffDesc = [];
         if ($request->has('assigned_staff')) {
-            foreach ($request->assigned_staff as $staffId => $data) {
-                $status = $data['status'] ?? 'hold';
-                $isAssigned = !empty($data['is_assigned']);
-                
-                $clockIn = ($status === 'present' && !empty($data['clock_in'])) ? $data['clock_in'] : null;
-                $clockOut = ($status === 'present' && !empty($data['clock_out'])) ? $data['clock_out'] : null;
-
+            foreach ($request->assigned_staff as $staffId) {
+                // Creates a record primarily so the staff can log in (is_assigned = true)
                 \App\Models\Attendance::create([
                     'user_id' => $staffId,
                     'date' => now()->toDateString(),
-                    'clock_in' => $clockIn,
-                    'clock_out' => $clockOut,
-                    'status' => $status,
                     'register_session_id' => $newSession->id,
-                    'is_assigned' => $isAssigned,
+                    'is_assigned' => true,
+                    'status' => 'present',
                 ]);
 
-                if ($status === 'hold') {
-                    \App\Models\Leave::updateOrCreate(
-                        ['user_id' => $staffId, 'start_date' => now()->toDateString(), 'end_date' => now()->toDateString()],
-                        ['reason' => 'Auto-marked as absent during shift', 'type' => 'casual', 'status' => 'approved', 'approved_by' => auth()->id()]
-                    );
-                } else {
-                    \App\Models\Leave::where('user_id', $staffId)->where('start_date', now()->toDateString())->delete();
-                }
-
-                if ($isAssigned) {
-                    $staff = \App\Models\User::find($staffId);
-                    if ($staff) {
-                        $assignedStaffDesc[] = $staff->name;
-                    }
+                $staff = \App\Models\User::find($staffId);
+                if ($staff) {
+                    $assignedStaffDesc[] = $staff->name;
                 }
             }
         }
@@ -258,9 +238,6 @@ class DashboardController extends Controller
     {
         $request->validate([
             'assigned_staff' => 'required|array',
-            'assigned_staff.*.status' => 'required|in:present,hold',
-            'assigned_staff.*.clock_in' => 'nullable|string',
-            'assigned_staff.*.clock_out' => 'nullable|string',
         ]);
 
         $branchId = auth()->user()->branch_id ?? 1;
@@ -274,46 +251,22 @@ class DashboardController extends Controller
             $staffId = $data['staff_id'] ?? null;
             if (!$staffId) continue;
 
-            $status = $data['status'];
             $isAssigned = !empty($data['is_assigned']);
-            $clockIn = !empty($data['clock_in']) ? $data['clock_in'] : null;
-            $clockOut = !empty($data['clock_out']) ? $data['clock_out'] : null;
-
-            if ($status === 'hold') {
-                $clockIn = null;
-                $clockOut = null;
-            } else if ($status === 'present' && !$clockIn) {
-                $clockIn = now()->format('H:i');
-            }
 
             if (str_starts_with($key, 'new_')) {
                 \App\Models\Attendance::create([
                     'user_id' => $staffId,
                     'date' => now()->toDateString(),
-                    'clock_in' => $clockIn,
-                    'clock_out' => $clockOut,
-                    'status' => $status,
+                    'status' => 'present',
                     'register_session_id' => $activeSession->id,
                     'is_assigned' => $isAssigned,
                 ]);
             } else {
                 $attendance = \App\Models\Attendance::find($key);
                 if ($attendance && $attendance->register_session_id === $activeSession->id) {
-                    $attendance->status = $status;
                     $attendance->is_assigned = $isAssigned;
-                    $attendance->clock_in = $clockIn;
-                    $attendance->clock_out = $clockOut;
                     $attendance->save();
                 }
-            }
-
-            if ($status === 'hold') {
-                \App\Models\Leave::updateOrCreate(
-                    ['user_id' => $staffId, 'start_date' => now()->toDateString(), 'end_date' => now()->toDateString()],
-                    ['reason' => 'Auto-marked as absent during shift', 'type' => 'casual', 'status' => 'approved', 'approved_by' => auth()->id()]
-                );
-            } else {
-                \App\Models\Leave::where('user_id', $staffId)->where('start_date', now()->toDateString())->delete();
             }
         }
 

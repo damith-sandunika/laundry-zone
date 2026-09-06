@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\BranchController;
+use App\Http\Controllers\BranchPlanController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerSiteController;
 use App\Http\Controllers\DashboardController;
@@ -133,6 +134,8 @@ Route::middleware(['auth'])->group(function () {
     // Workshop dispatch from order
     Route::post('/orders/{order}/dispatch-workshop', [WorkshopController::class, 'dispatch'])->name('orders.dispatchWorkshop');
     Route::post('/orders/workshop/bulk-dispatch', [WorkshopController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
+    // Order Management
+    Route::get('/orders/archive', [App\Http\Controllers\OrderArchiveController::class, 'index'])->name('orders.archive');
     Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
     Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
     Route::resource('orders', OrderController::class)->only(['index', 'edit']);
@@ -286,13 +289,17 @@ Route::middleware(['auth'])->group(function () {
         // HR Routes
         Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->name('hr.dashboard');
         Route::post('/hr/{staff}/attendance', [HRController::class, 'storeAttendance'])->name('hr.attendance.store');
+        Route::post('/hr/{staff}/attendance/bulk', [HRController::class, 'bulkUpdateAttendance'])->name('hr.attendance.bulkUpdate');
         Route::put('/hr/attendance/{attendance}', [HRController::class, 'updateAttendance'])->name('hr.attendance.update');
         Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
         Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
         Route::get('/hr/{staff}/payslip', [StaffController::class, 'downloadPayslip'])->name('hr.payslip.download');
 
+        // Branches
         Route::resource('branches', BranchController::class)->except(['show', 'edit']);
+        Route::get('/branch/month-plan', [BranchPlanController::class, 'index'])->name('branch.month_plan');
+        Route::post('/branch/month-plan', [BranchPlanController::class, 'store'])->name('branch.month_plan.store');
         Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);
@@ -300,6 +307,9 @@ Route::middleware(['auth'])->group(function () {
         // Reports Routes (Accessible by admin, branch_admin, workshop_admin, super_admin, staff)
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+        
+        Route::get('/reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
+        Route::get('/reports/sales/pdf', [ReportController::class, 'salesReportPdf'])->name('reports.sales.pdf');
         
         Route::get('/reports/services', [ReportController::class, 'serviceReport'])->name('reports.services');
         Route::get('/reports/services/pdf', [ReportController::class, 'serviceReportPdf'])->name('reports.services.pdf');

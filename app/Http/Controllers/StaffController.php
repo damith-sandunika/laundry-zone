@@ -112,6 +112,12 @@ class StaffController extends Controller
             ->whereYear('date', $year)
             ->get();
             
+        // Fetch branch monthly plan for this month
+        $branchPlan = \App\Models\BranchMonthlyPlan::where('branch_id', $staff->branch_id ?? 1)
+            ->where('year', $year)
+            ->where('month', $month)
+            ->first();
+            
         $totalOtMinutes = $attendancesThisMonth->sum('ot_minutes');
         $otAmount = $totalOtMinutes * (($staff->profile->ot_rate_per_hour ?? 0) / 60);
         
@@ -134,7 +140,7 @@ class StaffController extends Controller
             'net_salary' => $netSalary,
         ];
 
-        return view('staff.show', compact('staff', 'salaries', 'payroll', 'attendancesThisMonth'));
+        return view('staff.show', compact('staff', 'salaries', 'payroll', 'attendancesThisMonth', 'branchPlan'));
     }
 
     public function edit(User $staff)
