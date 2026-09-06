@@ -97,6 +97,27 @@ class OrderController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
 
+        $tab = $request->input('tab', 'received');
+
+        // Calculate counts for tabs
+        $baseQuery = Order::query();
+        if ($branchId && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
+            $baseQuery->where(function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                  ->orWhere('workshop_id', $branchId);
+            });
+        } elseif (\Illuminate\Support\Facades\Gate::allows('is-super-admin') && $filterBranchId) {
+            $baseQuery->where('branch_id', $filterBranchId);
+        }
+
+        $counts = [
+            'received' => (clone $baseQuery)->whereIn('status', ['received', 'dispatched_to_workshop'])->count(),
+            'processing' => (clone $baseQuery)->whereIn('status', ['processing', 'completed_at_workshop'])->count(),
+            'arriving' => (clone $baseQuery)->where('status', 'returned_from_workshop')->count(),
+            'done' => (clone $baseQuery)->where('status', 'done')->count(),
+            'delivered' => (clone $baseQuery)->whereIn('status', ['delivered', 'completed'])->count(),
+        ];
+
         $query = Order::with(['customer', 'items.serviceType', 'cubby.cubby', 'workshop', 'deliveryAppointment', 'paymentTransactions'])
             ->orderBy('created_at', 'desc');
 
@@ -111,6 +132,18 @@ class OrderController extends Controller
 
         if ($status) {
             $query->where('status', $status);
+        } elseif (!$q) { // Only apply tab filter if not searching for a specific order
+            if ($tab === 'received') {
+                $query->whereIn('status', ['received', 'dispatched_to_workshop']);
+            } elseif ($tab === 'processing') {
+                $query->whereIn('status', ['processing', 'completed_at_workshop']);
+            } elseif ($tab === 'arriving') {
+                $query->where('status', 'returned_from_workshop');
+            } elseif ($tab === 'done') {
+                $query->where('status', 'done');
+            } elseif ($tab === 'delivered') {
+                $query->whereIn('status', ['delivered', 'completed']);
+            }
         }
 
         if ($startDate) {
@@ -142,7 +175,7 @@ class OrderController extends Controller
             });
         }
 
-        $orders = $query->paginate(15);
+        $orders = $query->paginate(15)->withQueryString();
         
         $orders->getCollection()->transform(function($order) {
             // Attach the latest workshop dispatch ID so the branch can confirm receipt
@@ -160,7 +193,7 @@ class OrderController extends Controller
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
         $allBranches = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? Branch::all() : collect();
 
-        return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'riders', 'minimumDeliveryCost', 'allBranches', 'filterBranchId'));
+        return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'riders', 'minimumDeliveryCost', 'allBranches', 'filterBranchId', 'tab', 'counts'));
     }
     public function requestPayment(Order $order, Request $request)
     {

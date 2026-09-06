@@ -90,23 +90,11 @@
                 selectedOrder: null,
 
                 get filteredOrders() {
-                    if (this.currentTab === 'all') return this.ordersList;
-                    if (this.currentTab === 'received') return this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop');
-                    if (this.currentTab === 'arriving') return this.ordersList.filter(o => o.status === 'returned_from_workshop');
-                    if (this.currentTab === 'done') return this.ordersList.filter(o => o.status === 'done');
-                    if (this.currentTab === 'delivered') return this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed');
-                    return this.ordersList.filter(o => o.status === this.currentTab);
+                    return this.ordersList;
                 },
 
                 get counts() {
-                    return {
-                        all: this.ordersList.length,
-                        received: this.ordersList.filter(o => o.status === 'received' || o.status === 'dispatched_to_workshop').length,
-                        processing: this.ordersList.filter(o => o.status === 'processing' || o.status === 'completed_at_workshop').length,
-                        arriving: this.ordersList.filter(o => o.status === 'returned_from_workshop').length,
-                        done: this.ordersList.filter(o => o.status === 'done').length,
-                        delivered: this.ordersList.filter(o => o.status === 'delivered' || o.status === 'completed').length
-                    };
+                    return @js($counts);
                 },
 
                 openPaymentModal(order) { this.paymentOrder = order; this.paymentAmountType = 'full'; this.customPaymentAmount = ''; this.showPaymentModal = true; },
@@ -235,42 +223,37 @@
         <div class="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 mb-6">
 
             <!-- Pending Dispatch -->
-            <div @click="currentTab = 'received'"
-                :class="currentTab === 'received' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'received' ? 'text-orange-700' : 'text-gray-900'" x-text="counts.received"></span>
+            <div onclick="window.location.href='?tab=received{{ request('q') ? '&q='.request('q') : '' }}{{ request('branch_id') ? '&branch_id='.request('branch_id') : '' }}'"
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300 {{ $tab === 'received' ? 'border-orange-500 bg-orange-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md' }}">
+                <span class="text-xs md:text-sm font-black mt-1 {{ $tab === 'received' ? 'text-orange-700' : 'text-gray-900' }}">{{ $counts['received'] ?? 0 }}</span>
                 <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">New</span>
             </div>
 
             <!-- At Workshop -->
-            <div @click="currentTab = 'processing'"
-                :class="currentTab === 'processing' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'processing' ? 'text-yellow-700' : 'text-gray-900'" x-text="counts.processing"></span>
+            <div onclick="window.location.href='?tab=processing{{ request('q') ? '&q='.request('q') : '' }}{{ request('branch_id') ? '&branch_id='.request('branch_id') : '' }}'"
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300 {{ $tab === 'processing' ? 'border-yellow-500 bg-yellow-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md' }}">
+                <span class="text-xs md:text-sm font-black mt-1 {{ $tab === 'processing' ? 'text-yellow-700' : 'text-gray-900' }}">{{ $counts['processing'] ?? 0 }}</span>
                 <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">At Workshop</span>
             </div>
 
             <!-- Arriving -->
-            <div @click="currentTab = 'arriving'"
-                :class="currentTab === 'arriving' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'arriving' ? 'text-blue-700' : 'text-gray-900'" x-text="counts.arriving"></span>
+            <div onclick="window.location.href='?tab=arriving{{ request('q') ? '&q='.request('q') : '' }}{{ request('branch_id') ? '&branch_id='.request('branch_id') : '' }}'"
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300 {{ $tab === 'arriving' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md' }}">
+                <span class="text-xs md:text-sm font-black mt-1 {{ $tab === 'arriving' ? 'text-blue-700' : 'text-gray-900' }}">{{ $counts['arriving'] ?? 0 }}</span>
                 <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Arriving</span>
             </div>
 
             <!-- Ready for Pickup -->
-            <div @click="currentTab = 'done'"
-                :class="currentTab === 'done' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'done' ? 'text-green-700' : 'text-gray-900'" x-text="counts.done"></span>
+            <div onclick="window.location.href='?tab=done{{ request('q') ? '&q='.request('q') : '' }}{{ request('branch_id') ? '&branch_id='.request('branch_id') : '' }}'"
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300 {{ $tab === 'done' ? 'border-green-500 bg-green-50' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md' }}">
+                <span class="text-xs md:text-sm font-black mt-1 {{ $tab === 'done' ? 'text-green-700' : 'text-gray-900' }}">{{ $counts['done'] ?? 0 }}</span>
                 <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Ready</span>
             </div>
 
             <!-- Delivered -->
-            <div @click="currentTab = 'delivered'"
-                :class="currentTab === 'delivered' ? 'border-gray-500 bg-gray-100' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md'"
-                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300">
-                <span class="text-xs md:text-sm font-black mt-1" :class="currentTab === 'delivered' ? 'text-gray-700' : 'text-gray-900'" x-text="counts.delivered"></span>
+            <div onclick="window.location.href='?tab=delivered{{ request('q') ? '&q='.request('q') : '' }}{{ request('branch_id') ? '&branch_id='.request('branch_id') : '' }}'"
+                class="flex flex-col items-center justify-center p-2 rounded-xl border-2 cursor-pointer transition-all duration-300 {{ $tab === 'delivered' ? 'border-gray-500 bg-gray-100' : 'border-gray-200 bg-white hover:bg-gray-50 hover:shadow-md' }}">
+                <span class="text-xs md:text-sm font-black mt-1 {{ $tab === 'delivered' ? 'text-gray-700' : 'text-gray-900' }}">{{ $counts['delivered'] ?? 0 }}</span>
                 <span class="text-[10px] md:text-xs font-semibold text-gray-400 uppercase tracking-wider text-center">Delivered</span>
             </div>
         </div>
@@ -336,13 +319,15 @@
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;text-align:right;">
                                 Price</th>
+                            @if(auth()->user()->role !== 'super_admin')
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;text-align:center;">
                                 Actions</th>
+                            @endif
                         </tr>
                     </thead>
                     <tbody>
-                        <template x-for="order in filteredOrders" :key="order.id">
+                        <template x-for="order in ordersList" :key="order.id">
                             <tr :style="
                             order.status === 'received' ? 'background:#fffbeb;border-bottom:1px solid #fde68a;' :
                             order.status === 'dispatched_to_workshop' ? 'background:#eff6ff;border-bottom:1px solid #bfdbfe;' :
@@ -414,6 +399,7 @@
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;font-weight:800;color:#0f172a;font-size:13px;"
                                     x-text="parseFloat(order.total) === 0 ? 'Package' : 'Rs.' + parseFloat(order.total).toFixed(2)"></td>
+                                @if(auth()->user()->role !== 'super_admin')
                                 <td style="padding:12px 20px;text-align:center;">
                                     <div style="display:flex;flex-direction:column;gap:6px;align-items:center;">
                                         <template x-if="order.status === 'received' || getReceipts(order).length > 0">
@@ -523,9 +509,11 @@
                                         </div>
                                     </template>
                                     </div>
+                                </td>
+                                @endif
                             </tr>
                         </template>
-                        <tr x-show="filteredOrders.length === 0">
+                        <tr x-show="ordersList.length === 0">
                             <td colspan="7"
                                 style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;font-weight:500;">
                                 No orders found matching this status or query.

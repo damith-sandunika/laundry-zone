@@ -49,25 +49,6 @@
         </form>
     </div>
 
-    <!-- Totals Summary -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-4 md:mb-6">
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-            <span class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Cash Total</span>
-            <span class="text-lg md:text-2xl font-black text-emerald-600">Rs.{{ number_format($totalCash, 2) }}</span>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-            <span class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Card Total</span>
-            <span class="text-lg md:text-2xl font-black text-blue-600">Rs.{{ number_format($totalCard, 2) }}</span>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center">
-            <span class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Bank Transfer</span>
-            <span class="text-lg md:text-2xl font-black text-purple-600">Rs.{{ number_format($totalBank, 2) }}</span>
-        </div>
-        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col justify-center border-b-4 border-b-slate-800">
-            <span class="text-[10px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">Total Sales</span>
-            <span class="text-lg md:text-2xl font-black text-slate-900">Rs.{{ number_format($totalSalesAmount, 2) }}</span>
-        </div>
-    </div>
 
     <!-- Data Table -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-6">
