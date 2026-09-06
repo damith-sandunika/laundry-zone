@@ -36,7 +36,7 @@ class WorkshopController extends Controller
     public function dashboard()
     {
         $user = auth()->user();
-        $branchId = $user->branch_id;
+        $branchId = $this->getActiveBranchId();
 
         // Active register session details
         $activeSession = \App\Models\RegisterSession::where('branch_id', $branchId)
@@ -370,7 +370,7 @@ class WorkshopController extends Controller
     public function operations(\Illuminate\Http\Request $request)
     {
         $user = auth()->user();
-        $branchId = $user->branch_id;
+        $branchId = $this->getActiveBranchId();
 
         $query = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'order.items.serviceType', 'branch', 'dispatchedBy'])
             ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
@@ -633,13 +633,13 @@ class WorkshopController extends Controller
         $user = auth()->user();
 
         $dispatches = WorkshopDispatch::with(['order.customer', 'branch'])
-            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $user->branch_id))
+            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $this->getActiveBranchId()))
             ->whereIn('status', ['received_at_branch', 'returned_to_branch'])
             ->orderByRaw('COALESCE(received_at_branch_at, returned_at) DESC')
             ->paginate(15);
 
         $cancelledBookings = \App\Models\DeliveryAppointment::with(['customer', 'cancelledBy'])
-            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('branch_id', $user->branch_id))
+            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('branch_id', $this->getActiveBranchId()))
             ->where('status', 'cancelled')
             ->orderByDesc('updated_at')
             ->paginate(15);

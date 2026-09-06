@@ -12,7 +12,7 @@ class StaffController extends Controller
     public function index()
     {
         $this->authorize('viewAny', User::class);
-        $branchId = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? null : auth()->user()->branch_id;
+        $branchId = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? null : $this->getActiveBranchId();
 
         $query = User::query();
         if ($branchId) {

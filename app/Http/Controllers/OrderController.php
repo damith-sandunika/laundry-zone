@@ -189,7 +189,7 @@ class OrderController extends Controller
             $order->workshop_dispatch_id = $dispatch ? $dispatch->id : null;
             return $order;
         });
-        $cubbies = Cubby::where('branch_id', $branchId ?? \App\Models\Branch::first()->id)->orderBy('name')->get();
+        $cubbies = Cubby::where('branch_id', $this->getActiveBranchId())->orderBy('name')->get();
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $workshops = Branch::workshops()->get();
         $riders = \App\Models\User::where('role', 'rider')->where('is_active', true)->get();
@@ -251,7 +251,7 @@ class OrderController extends Controller
     {
         $order = Order::where('order_number', $orderNumber)->firstOrFail();
         $order->load(['customer', 'items.serviceType.category', 'items.turnaroundType', 'items.extras.extra', 'statusHistory.changedBy', 'cubbies.cubby', 'createdBy', 'deliveryAppointment', 'correctionRequests.requestedBy', 'correctionRequests.approvedBy']);
-        $branchId = auth()->user()->branch_id ?? 1;
+        $branchId = $this->getActiveBranchId();
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 
         $pickmeCost = \App\Models\Expense::where('category', 'PickMe')
