@@ -88,7 +88,7 @@ class StaffController extends Controller
             'dob' => $request->dob,
             'address' => $request->address,
             'emergency_contact' => $request->emergency_contact,
-            'basic_salary' => $request->basic_salary,
+            'basic_salary' => $request->basic_salary ?? 0,
             'casual_leaves' => $request->casual_leaves ?? 0,
             'standard_working_hours' => $request->standard_working_hours ?? 8.0,
             'ot_rate_per_hour' => $request->ot_rate_per_hour ?? 0,
@@ -177,6 +177,11 @@ class StaffController extends Controller
 
         $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id']);
         $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour']);
+        
+        $profileData['basic_salary'] = $profileData['basic_salary'] ?? 0;
+        $profileData['casual_leaves'] = $profileData['casual_leaves'] ?? 0;
+        $profileData['standard_working_hours'] = $profileData['standard_working_hours'] ?? 8.0;
+        $profileData['ot_rate_per_hour'] = $profileData['ot_rate_per_hour'] ?? 0;
 
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
