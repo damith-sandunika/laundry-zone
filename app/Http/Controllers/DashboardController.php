@@ -41,7 +41,7 @@ class DashboardController extends Controller
         }
 
 
-        $branchId = $user->branch_id;
+        $branchId = $this->getActiveBranchId();
         $isSuperAdmin = $user->role === 'super_admin';
 
         $activeOrders = Order::whereNotIn('status', ['delivered', 'cancelled']);
