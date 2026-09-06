@@ -130,6 +130,12 @@
             </div>
         </div>
 
+        @if($expenses->hasPages())
+        <div style="padding:16px 24px;background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+            {{ $expenses->appends(request()->query())->links() }}
+        </div>
+        @endif
+
         <!-- Add Expense Modal -->
         <div x-show="addModalOpen" x-transition.opacity class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display:none;">
             <div class="bg-white rounded-[20px] border border-slate-200 w-full max-w-[480px] shadow-2xl overflow-hidden relative" @click.away="addModalOpen = false">

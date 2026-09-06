@@ -909,11 +909,25 @@
                 },
 
                 filterCustomers() {
-                    const q = this.customerSearch.toLowerCase();
-                    this.filteredCustomers = q.length > 0
-                        ? this.allCustomers.filter(c => c.name.toLowerCase().includes(q) || c.phone.includes(q))
-                        : this.allCustomers.slice(0, 8);
-                    this.showCustDropdown = true;
+                    const q = this.customerSearch.trim();
+                    if (q.length === 0) {
+                        this.filteredCustomers = [];
+                        this.showCustDropdown = false;
+                        return;
+                    }
+
+                    fetch('/customers/search?q=' + encodeURIComponent(q) + '&with_packages=1', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        this.filteredCustomers = data;
+                        this.showCustDropdown = true;
+                    })
+                    .catch(err => console.error(err));
                 },
 
                 selectCustomer(cust) {
@@ -927,7 +941,7 @@
                         this.discountPercentage = 0;
                     }
 
-                    let pkgs = this.allCustomerPackages.filter(p => p.customer_id === cust.id && p.status !== 'exhausted');
+                    let pkgs = cust.customer_packages || [];
                     if(pkgs.length > 0) {
                         this.activePackage = pkgs[0];
                         this.packageCart = this.activePackage.services.map(s => {

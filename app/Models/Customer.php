@@ -40,5 +40,10 @@ class Customer extends Authenticatable
     {
         return $this->hasMany(DeliveryAppointment::class);
     }
+
+    public function customerPackages()
+    {
+        return $this->hasMany(CustomerPackage::class);
+    }
 }
 

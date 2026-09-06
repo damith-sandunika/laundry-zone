@@ -52,7 +52,7 @@ class ExpenseController extends Controller
             }
         } // 'all_time' doesn't add any date restrictions
 
-        $expenses = $query->orderBy('expense_date', 'desc')->get();
+        $expenses = $query->orderBy('expense_date', 'desc')->paginate(15);
 
         return view('expenses.index', compact('expenses', 'activeSession', 'period', 'category', 'startDate', 'endDate'));
     }

@@ -71,7 +71,16 @@ class CustomerController extends Controller
             });
         }
 
-        return response()->json($query->limit(10)->get(['id', 'name', 'phone']));
+        $withPackages = $request->input('with_packages', false);
+
+        if ($withPackages) {
+            $query->with(['customerPackages' => function ($q) {
+                $q->where('status', '!=', 'exhausted')
+                  ->with(['package', 'services.serviceType']);
+            }]);
+        }
+
+        return response()->json($query->limit(20)->get(['id', 'name', 'phone', 'default_discount']));
     }
 
     public function show(Customer $customer)

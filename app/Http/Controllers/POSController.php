@@ -41,11 +41,8 @@ class POSController extends Controller
             $q->where('is_active', true)->orderBy('order_index');
         }])->where('is_active', true)->orderBy('order_index')->get();
 
-        $customers = Customer::withoutGlobalScopes()->where('is_active', true)->get();
-
-        $customerPackages = CustomerPackage::where('status', 'active')
-            ->with(['package', 'services.serviceType'])
-            ->get();
+        $customers = collect();
+        $customerPackages = collect();
 
         $timeSlots = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
 

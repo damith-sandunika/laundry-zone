@@ -78,6 +78,12 @@
             </div>
         </div>
 
+        @if($bookings->hasPages())
+        <div style="padding:16px 24px;background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+            {{ $bookings->appends(request()->query())->links() }}
+        </div>
+        @endif
+
         <!-- Status Update Modal -->
         <div x-show="statusModalOpen" style="display:none;position:fixed;inset:0;z-index:999;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(3px);padding:20px;">
             <div style="background:white;border-radius:20px;border:1px solid #e2e8f0;width:100%;max-width:480px;box-shadow:0 10px 30px rgba(0,0,0,0.1);overflow:hidden;" @click.away="statusModalOpen = false">

@@ -16,7 +16,7 @@ class OnlineBookingController extends Controller
             $query->where('branch_id', $branchId);
         }
 
-        $bookings = $query->get();
+        $bookings = $query->paginate(15);
 
         return view('online_bookings.index', compact('bookings'));
     }
