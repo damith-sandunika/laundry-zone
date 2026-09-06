@@ -13,15 +13,6 @@
                 </p>
             </div>
             <div style="display:flex;align-items:center;gap:10px;">
-                <div x-data>
-                    <button @click="
-                        window.location.href = '{{ route('orders.edit', $order->id) }}'
-                    " 
-                    style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#ea580c;border:1.5px solid #fdba74;font-size:13px;font-weight:700;border-radius:10px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
-                    onmouseover="this.style.background='#fff7ed';this.style.borderColor='#fb923c'" onmouseout="this.style.background='white';this.style.borderColor='#fdba74'">
-                        ✏️ Edit Order
-                    </button>
-                </div>
                 <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank"
                     style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#dc2626;border:1.5px solid #fecaca;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
                     onmouseover="this.style.background='#fef2f2';this.style.borderColor='#fca5a5'" onmouseout="this.style.background='white';this.style.borderColor='#fecaca'">
