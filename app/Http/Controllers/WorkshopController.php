@@ -376,7 +376,7 @@ class WorkshopController extends Controller
             ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
             ->select('workshop_dispatches.*')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
-            ->whereNotIn('workshop_dispatches.status', ['received_at_branch', 'returned_to_branch'])
+            ->whereNotIn('workshop_dispatches.status', ['returned_to_branch'])
             ->orderByDesc('orders.id');
 
         $selectedBranch = $request->get('branch');
@@ -386,13 +386,13 @@ class WorkshopController extends Controller
 
         $countsQuery = clone $query;
         $arrivalProcessingCount = (clone $countsQuery)->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])->count();
-        $returnedCount = (clone $countsQuery)->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch'])->count();
+        $returnedCount = (clone $countsQuery)->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch', 'received_at_branch'])->count();
 
         $currentTab = $request->get('tab', 'arrival_processing');
         if ($currentTab === 'arrival_processing') {
             $query->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing']);
         } elseif ($currentTab === 'returned_to_branch') {
-            $query->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch']);
+            $query->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch', 'received_at_branch']);
         }
 
         $dispatches = $query->paginate(15);
