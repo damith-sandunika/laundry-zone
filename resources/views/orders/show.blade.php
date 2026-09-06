@@ -501,15 +501,16 @@
 
                             if ($order->items->count() > 0) {
                                 foreach ($order->items as $item) {
+                                    $unitWithTurnaround = $item->quantity > 0 ? ($item->total_price / $item->quantity) : $item->total_price;
                                     $adminDisplayRows->push([
                                         'type' => 'item',
                                         'name' => $item->serviceType ? ($item->serviceType->category ? $item->serviceType->category->name . ' - ' : '') . $item->serviceType->name : $item->item_description,
                                         'turnaround_name' => ($item->turnaroundType && !$item->turnaroundType->is_default) ? $item->turnaroundType->name : null,
                                         'extras' => $item->extras->map(fn($e) => ['name' => optional($e->extra)->name, 'qty' => $e->quantity, 'price' => $e->unit_price]),
                                         'qty' => $item->quantity,
-                                        'unit_price' => $item->unit_price,
+                                        'unit_price' => $unitWithTurnaround,
                                         'total_price' => $item->total_price,
-                                        'turnaround_charge' => $item->turnaround_extra_charge ?? 0,
+                                        'turnaround_charge' => 0,
                                     ]);
                                 }
                             } elseif ($order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
@@ -557,9 +558,9 @@
                                         'turnaround_name' => $ttName,
                                         'extras' => collect($extras),
                                         'qty' => $qty,
-                                        'unit_price' => $price,
-                                        'total_price' => $lineTotal,
-                                        'turnaround_charge' => $ttCharge,
+                                        'unit_price' => $qty > 0 ? (($lineTotal + $ttCharge) / $qty) : ($lineTotal + $ttCharge),
+                                        'total_price' => $lineTotal + $ttCharge,
+                                        'turnaround_charge' => 0,
                                     ]);
                                 }
                                 $cartSubtotal = $calcSub;
