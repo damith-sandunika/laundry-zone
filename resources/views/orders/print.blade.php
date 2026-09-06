@@ -156,8 +156,7 @@
     <div class="divider"></div>
     @foreach($order->items as $item)
         @php
-            $base_total = $item->unit_price * $item->quantity;
-            $turnaround_charge = $item->total_price - $base_total;
+            $unit_with_turnaround = $item->quantity > 0 ? ($item->total_price / $item->quantity) : $item->total_price;
         @endphp
         <div class="row" style="margin-bottom: 2px;">
             <span class="item-name">
@@ -167,17 +166,14 @@
                     {{ $item->item_description }}
                 @endif
             </span>
-            <span class="bold">Rs.{{ number_format($base_total, 2) }}</span>
+            <span class="bold">Rs.{{ number_format($item->total_price, 2) }}</span>
         </div>
         <div style="font-size: 11px; margin-bottom: 2px; color:#475569;">
-            {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
+            {{ $item->quantity }} x Rs.{{ number_format($unit_with_turnaround, 2) }}
+            @if($item->turnaroundType && !$item->turnaroundType->is_default)
+                ({{ $item->turnaroundType->name }})
+            @endif
         </div>
-        @if($item->turnaroundType && !$item->turnaroundType->is_default && $turnaround_charge > 0)
-        <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px;">
-            <span>⚡ {{ $item->turnaroundType->name }} Surcharge</span>
-            <span class="bold">Rs.{{ number_format($turnaround_charge, 2) }}</span>
-        </div>
-        @endif
         @if($item->extras->count() > 0)
             @foreach($item->extras as $e)
             <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px;">

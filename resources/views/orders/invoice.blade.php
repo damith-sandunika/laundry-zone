@@ -142,27 +142,19 @@
             <tbody>
                 @foreach($order->items as $item)
                 @php
-                    $base_total = $item->unit_price * $item->quantity;
-                    $turnaround_charge = $item->total_price - $base_total;
+                    $unit_with_turnaround = $item->quantity > 0 ? ($item->total_price / $item->quantity) : $item->total_price;
                 @endphp
                 <tr>
                     <td>
                         {{ $item->serviceType->name ?? $item->item_description }}
+                        @if($item->turnaroundType && !$item->turnaroundType->is_default)
+                            <small style="color:#64748b; margin-left: 5px;">[{{ $item->turnaroundType->name }}]</small>
+                        @endif
                     </td>
                     <td class="center">{{ $item->quantity }}</td>
-                    <td class="right">Rs.{{ number_format($item->unit_price, 2) }}</td>
-                    <td class="right" style="color: #0f172a; font-weight: 800;">Rs.{{ number_format($base_total, 2) }}</td>
+                    <td class="right">Rs.{{ number_format($unit_with_turnaround, 2) }}</td>
+                    <td class="right" style="color: #0f172a; font-weight: 800;">Rs.{{ number_format($item->total_price, 2) }}</td>
                 </tr>
-                @if($item->turnaroundType && !$item->turnaroundType->is_default && $turnaround_charge > 0)
-                <tr style="background:#f8fafc;">
-                    <td style="padding-left: 30px; font-size:13px; color:#475569;">
-                        ⚡ {{ $item->turnaroundType->name }} Surcharge
-                    </td>
-                    <td class="center">-</td>
-                    <td class="right">-</td>
-                    <td class="right" style="color: #0f172a; font-weight: 800;">Rs.{{ number_format($turnaround_charge, 2) }}</td>
-                </tr>
-                @endif
                 @if($item->extras->count() > 0)
                     @foreach($item->extras as $e)
                     <tr style="background:#f8fafc;">
