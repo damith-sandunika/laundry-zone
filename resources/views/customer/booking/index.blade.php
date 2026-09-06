@@ -269,7 +269,7 @@
                             <p class="text-xs text-slate-500 font-medium mb-3">Charges apply only to the base services (not applied to extras).</p>
                             <select x-model="globalTurnaround" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 font-medium">
                                 <template x-for="tt in turnaroundTypes" :key="tt.id">
-                                    <option :value="tt.id" x-text="tt.name + (tt.name !== 'Standard' ? ' (' + (tt.markup_type === 'percentage' ? '+' + tt.markup_value + '%' : '+LKR ' + tt.markup_value) + ' per item)' : '')"></option>
+                                    <option :value="tt.id" x-text="tt.name"></option>
                                 </template>
                             </select>
                         </div>
@@ -437,7 +437,6 @@
                                     class="text-white text-[11px] font-black px-2.5 py-1.5 rounded-lg mb-1 shadow-xl whitespace-nowrap border flex flex-col items-center gap-0.5 transition-colors">
                                     <template x-if="!isOutOfRange">
                                         <div class="flex flex-col items-center gap-0.5">
-                                            <span><i class="fa-solid fa-motorcycle text-amber-400"></i> Fee: LKR <span x-text="estimatedDeliveryFee"></span></span>
                                             <span x-show="pickupDistance > 0" class="text-[9px] font-bold opacity-80 flex items-center gap-1">
                                                 <i class="fa-solid fa-route text-blue-300"></i>
                                                 <span x-text="pickupDistance"></span> km road distance
@@ -560,7 +559,6 @@
                                                 class="text-white text-[11px] font-black px-2.5 py-1.5 rounded-lg mb-1 shadow-xl whitespace-nowrap border flex flex-col items-center gap-0.5 transition-colors">
                                                 <template x-if="!isOutOfRange">
                                                     <div class="flex flex-col items-center gap-0.5">
-                                                        <span><i class="fa-solid fa-motorcycle text-amber-400"></i> Fee: LKR <span x-text="estimatedDeliveryFee"></span></span>
                                                         <span x-show="deliveryDistance > 0" class="text-[9px] font-bold opacity-80 flex items-center gap-1">
                                                             <i class="fa-solid fa-route text-blue-300"></i>
                                                             <span x-text="deliveryDistance"></span> km road distance
@@ -627,12 +625,7 @@
                                 </span>
                                 <span class="text-white text-sm font-black">LKR <span x-text="totalPrice"></span></span>
                             </div>
-                            <div class="flex justify-between items-center py-2.5 border-b border-slate-700">
-                                <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
-                                    <i class="fa-solid fa-motorcycle text-amber-400 text-xs"></i> Pickup & Delivery Fee
-                                </span>
-                                <span class="text-white text-sm font-black">LKR <span x-text="estimatedDeliveryFee"></span></span>
-                            </div>
+
                             <div x-show="pickupDistance > 0" class="flex justify-between items-center py-1.5 text-slate-400 text-xs">
                                 <span class="flex items-center gap-1.5"><i class="fa-solid fa-route"></i> Pickup distance</span>
                                 <span class="font-bold"><span x-text="pickupDistance"></span> km from branch</span>
@@ -641,7 +634,7 @@
 
                         <div class="bg-blue-600 rounded-xl p-4 flex justify-between items-center">
                             <span class="text-blue-100 font-black text-sm">Total Estimated Amount</span>
-                            <span class="text-white font-black text-xl">LKR <span x-text="totalPrice + estimatedDeliveryFee"></span></span>
+                            <span class="text-white font-black text-xl">LKR <span x-text="totalPrice"></span></span>
                         </div>
 
                         <p class="text-[11px] text-slate-500 text-center mt-4">
@@ -740,7 +733,7 @@
                                 } else {
                                     this.initPickupMap();
                                 }
-                            }, 400);
+                            }, 500);
                         }
 
                         this.$watch('step', value => {
@@ -754,18 +747,18 @@
                                     } else {
                                         this.initPickupMap();
                                     }
-                                }, 400);
+                                }, 500);
                             }
                             
                             // Initialize delivery map on step 4 if not same as pickup
                             if (value === 4 && !this.sameAsPickup && this.deliveryPref === 'deliver_to_address') {
-                                setTimeout(() => this.initDeliveryMap(), 100);
+                                setTimeout(() => { if (this.deliveryMap) this.deliveryMap.invalidateSize(); this.initDeliveryMap(); }, 500);
                             }
                         });
 
                         this.$watch('sameAsPickup', value => {
                             if (!value && this.step === 4) {
-                                setTimeout(() => this.initDeliveryMap(), 100);
+                                setTimeout(() => { if (this.deliveryMap) this.deliveryMap.invalidateSize(); this.initDeliveryMap(); }, 500);
                             }
                             this.calculateDeliveryFee();
                         });
@@ -991,7 +984,7 @@
                         map.routeLayer.clearLayers();
                         if(!startLat || !startLng || !endLat || !endLng) return;
                         
-                        axios.get(`http://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`)
+                        axios.get(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`)
                             .then(res => {
                                 if(res.data && res.data.routes && res.data.routes.length > 0) {
                                     const route = res.data.routes[0].geometry;
@@ -1236,6 +1229,24 @@
                         return result.slice(0, -2);
                     },
                     proceedToDelivery() {
+                        // Intercept any ServiceType added to cart that is actually an Extra
+                        let cleanCart = [];
+                        this.cart.forEach(item => {
+                            if (item.name.toLowerCase().startsWith('extra:')) {
+                                let extraName = item.name.substring(6).trim();
+                                let extraModel = this.extras.find(e => e.name.toLowerCase() === extraName.toLowerCase());
+                                if (extraModel) {
+                                    if (!this.globalExtras[extraModel.id]) this.globalExtras[extraModel.id] = 0;
+                                    this.globalExtras[extraModel.id] += parseInt(item.qty);
+                                } else {
+                                    cleanCart.push(item);
+                                }
+                            } else {
+                                cleanCart.push(item);
+                            }
+                        });
+                        this.cart = cleanCart;
+
                         let selectedExtrasList = [];
                         for (let eId in this.globalExtras) {
                             if (this.globalExtras[eId] > 0) {
@@ -1243,10 +1254,14 @@
                             }
                         }
 
-                        // Apply global turnaround and extras to every cart item
-                        this.cart.forEach(item => {
+                        // Apply global turnaround to every cart item, but extras only to the first item
+                        this.cart.forEach((item, index) => {
                             item.turnaround_type_id = this.globalTurnaround;
-                            item.selected_extras = selectedExtrasList;
+                            if (index === 0) {
+                                item.selected_extras = selectedExtrasList;
+                            } else {
+                                item.selected_extras = [];
+                            }
                         });
                         
                         this.isGlobalCheckoutModalOpen = false;

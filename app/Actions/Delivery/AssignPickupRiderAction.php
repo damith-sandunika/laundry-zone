@@ -4,6 +4,8 @@ namespace App\Actions\Delivery;
 
 use App\Models\DeliveryAppointment;
 use App\Models\DeliveryTask;
+use App\Models\Order;
+use App\Models\OrderStatusHistory;
 use App\Models\User;
 use App\Models\Branch;
 use Illuminate\Support\Facades\Notification;
@@ -33,6 +35,21 @@ class AssignPickupRiderAction
         ]);
 
         $appointment->update(['status' => 'rider_assigned']);
+
+        $order = Order::find($appointment->order_id);
+        if ($order) {
+            $order->update(['status' => 'rider_assigned']);
+            try {
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => 'rider_assigned',
+                    'changed_by' => auth()->id(),
+                    'note' => 'Pickup rider assigned: ' . $rider->name,
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('OrderStatusHistory insert failed (assignPickup): ' . $e->getMessage());
+            }
+        }
 
         Notification::send($rider, new SystemAlertNotification('New Pickup Task Assigned: #' . $appointment->id, route('rider.tasks')));
 

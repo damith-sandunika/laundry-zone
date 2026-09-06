@@ -1,5 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
                 <h2 class="ph-title">Delivery & Logistics</h2>
@@ -14,23 +16,7 @@
         </div>
     @endif
 
-    <div x-data="{ 
-        currentTab: 'pickups',
-        showCashModal: false,
-        cashData: null,
-        openCashModal(apptId, orderNumber, total, paid, pending) {
-            this.cashData = { id: apptId, orderNumber, total, paid, pending };
-            this.showCashModal = true;
-        },
-        showRejectModal: false,
-        rejectApptId: null,
-        rejectReason: '',
-        openRejectModal(apptId) {
-            this.rejectApptId = apptId;
-            this.rejectReason = '';
-            this.showRejectModal = true;
-        }
-    }">
+    <div x-data="deliveryManager()">
         <!-- STAT CARDS / TABS -->
         <div class="grid grid-cols-2 gap-4 mb-6" style="max-width:400px;">
             <!-- Incoming Pickups -->
@@ -137,6 +123,7 @@
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
+                                        <button type="button" data-appt="{{ json_encode(['customer' => $appt->customer, 'order' => $appt->order, 'branch' => $appt->branch, 'pickup_lat' => $appt->latitude, 'pickup_lng' => $appt->longitude, 'delivery_lat' => $appt->delivery_lat, 'delivery_lng' => $appt->delivery_lng, 'pickup_address' => $appt->pickup_address, 'delivery_address' => $appt->delivery_address, 'notes' => $appt->special_notes ?? '', 'item_description' => $appt->item_description ?? '', 'cart_json' => $appt->cart_json ? json_decode($appt->cart_json, true) : null]) }}" @click="openPreview($event.currentTarget.dataset.appt)" style="padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#3b82f6;cursor:pointer;" title="Preview Order"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button>
                                         @if($appt->status === 'pending')
                                             <form method="POST" action="{{ route('delivery.confirmAction', ['appointment' => $appt->id]) }}" style="margin:0;">
                                                 @csrf
@@ -283,6 +270,7 @@
                                 </td>
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
+                                        <button type="button" data-appt="{{ json_encode(['customer' => $appt->customer, 'order' => $appt->order, 'branch' => $appt->branch, 'pickup_lat' => $appt->latitude, 'pickup_lng' => $appt->longitude, 'delivery_lat' => $appt->delivery_lat, 'delivery_lng' => $appt->delivery_lng, 'pickup_address' => $appt->pickup_address, 'delivery_address' => $appt->delivery_address, 'notes' => $appt->special_notes ?? '', 'item_description' => $appt->item_description ?? '', 'cart_json' => $appt->cart_json ? json_decode($appt->cart_json, true) : null]) }}" @click="openPreview($event.currentTarget.dataset.appt)" style="padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#3b82f6;cursor:pointer;" title="Preview Order"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button>
                                         @if($appt->status === 'ready')
                                             <form method="POST" action="{{ route('delivery.assignDeliveryRider', ['appointment' => $appt->id]) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
                                                 @csrf
@@ -417,7 +405,270 @@
             </div>
         </div>
 
+        <!-- ── Preview Modal ── -->
+        <template x-teleport="body">
+            <div x-cloak x-show="showPreviewModal" class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 2147483647; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px);">
+                <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:850px;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;" @click.away="showPreviewModal = false">
+                <div style="padding:20px 24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#f8fafc;position:sticky;top:0;z-index:10;">
+                    <div>
+                        <h3 style="font-size:18px;font-weight:900;color:#0f172a;margin:0;">Order Preview</h3>
+                        <p style="font-size:12px;color:#64748b;margin:2px 0 0;font-weight:600;" x-text="previewData?.order?.order_number ? 'Order #' + previewData.order.order_number : 'Pending Order'"></p>
+                    </div>
+                    <button @click="showPreviewModal = false" style="background:none;border:none;cursor:pointer;color:#64748b;font-size:20px;">✕</button>
+                </div>
+                
+                <div style="padding:24px;display:flex;flex-direction:column;md:flex-row;gap:24px;" class="md:flex-row flex-col">
+                    
+                    <!-- Left Column: Customer & Order Details -->
+                    <div style="flex:1;display:flex;flex-direction:column;gap:20px;">
+                        
+                        <!-- Customer Details -->
+                        <div style="background:#f8fafc;padding:16px;border-radius:12px;border:1px solid #e2e8f0;display:flex;align-items:center;gap:12px;">
+                            <div style="width:40px;height:40px;border-radius:50%;background:#e0e7ff;color:#4f46e5;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:bold;">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div>
+                                <div style="font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;">Customer Details</div>
+                                <div style="font-size:15px;font-weight:800;color:#0f172a;" x-text="previewData?.customer?.name || 'Unknown'"></div>
+                                <div style="font-size:13px;font-weight:600;color:#475569;margin-top:2px;" x-text="previewData?.customer?.contact_phone || previewData?.customer?.phone || ''"></div>
+                            </div>
+                        </div>
+                        
+                        <!-- Order Summary -->
+                        <div style="background:white;padding:16px;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(0,0,0,0.02);">
+                            <h4 style="font-size:13px;font-weight:800;color:#334155;text-transform:uppercase;margin:0 0 16px 0;letter-spacing:0.05em;display:flex;align-items:center;gap:8px;">
+                                <i class="fa-solid fa-clipboard-list" style="color:#3b82f6;"></i> Order Summary
+                            </h4>
+                            
+                            <template x-if="!previewData?.order?.items?.length">
+                                <div style="display:flex;flex-direction:column;gap:8px;">
+                                    <template x-if="previewData?.cart_json?.length">
+                                        <template x-for="item in previewData.cart_json">
+                                            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#334155;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;">
+                                                <div>
+                                                    <!-- Category -->
+                                                    <template x-if="item.service?.category?.name">
+                                                        <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="item.service.category.name"></div>
+                                                    </template>
+                                                    <!-- Item Name -->
+                                                    <div>
+                                                        <span x-text="(item.service?.name || item.name || 'Item') + ' (x' + parseFloat(item.qty || item.quantity || 1) + ')'" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
+                                                        <template x-if="parseFloat(item.turnaround_extra_charge || 0) > 0">
+                                                            <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Express</span>
+                                                        </template>
+                                                        <template x-if="parseFloat(item.turnaround_extra_charge || 0) == 0">
+                                                            <span style="font-size:10px;background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Normal</span>
+                                                        </template>
+                                                    </div>
+                                                    <!-- Extras -->
+                                                    <template x-if="item.extras && item.extras.length > 0">
+                                                        <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
+                                                            <template x-for="extra in item.extras">
+                                                                <div style="font-size:11.5px;font-weight:700;color:#475569;">+ <span x-text="extra.name + ' (x' + parseFloat(extra.pivot?.quantity || 1) + ')'"></span></div>
+                                                            </template>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                                <span x-text="'LKR ' + parseFloat((item.qty || item.quantity || 1) * ((item.base_price || item.service?.base_price || item.unit_price || 0) + (item.turnaround_extra_charge || (item.service ? item.service.turnaround_extra_charge : 0) || 0))).toFixed(2)" style="font-weight:900;color:#0f172a;font-size:14px;"></span>
+                                            </div>
+                                        </template>
+                                    </template>
+                                    <template x-if="!previewData?.cart_json?.length && previewData?.item_description">
+                                        <div style="font-size:13px;font-weight:600;color:#334155;white-space:pre-line;padding:12px;background:#f8fafc;border-radius:8px;border:1px dashed #cbd5e1;" x-text="previewData.item_description"></div>
+                                    </template>
+                                </div>
+                            </template>
+    
+                            <template x-if="previewData?.order?.items?.length">
+                                <div style="display:flex;flex-direction:column;gap:12px;">
+                                    <template x-for="item in (previewData?.order?.items || [])">
+                                        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#334155;padding:10px 12px;background:#f8fafc;border-radius:8px;border:1px solid #f1f5f9;">
+                                            <div>
+                                                <!-- Category -->
+                                                <template x-if="item.serviceType?.category?.name">
+                                                    <div style="font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;" x-text="item.serviceType.category.name"></div>
+                                                </template>
+                                                <!-- Item Name -->
+                                                <div>
+                                                    <span x-text="(item.serviceType?.name || 'Service') + ' (x' + parseFloat(item.quantity) + ')'" style="font-size:14px;color:#0f172a;font-weight:700;"></span>
+                                                    <template x-if="parseFloat(item.turnaround_extra_charge || 0) > 0">
+                                                        <span style="font-size:10px;background:#fef3c7;color:#d97706;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Express</span>
+                                                    </template>
+                                                    <template x-if="parseFloat(item.turnaround_extra_charge || 0) == 0">
+                                                        <span style="font-size:10px;background:#e0e7ff;color:#4338ca;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:800;text-transform:uppercase;">Normal</span>
+                                                    </template>
+                                                </div>
+                                                <!-- Extras -->
+                                                <template x-if="item.extras && item.extras.length > 0">
+                                                    <div style="margin-top:4px;display:flex;flex-direction:column;gap:2px;">
+                                                        <template x-for="extra in item.extras">
+                                                            <div style="font-size:11.5px;font-weight:700;color:#475569;">
+                                                                + <span x-text="extra.name + ' (x' + parseFloat(extra.pivot?.quantity || 1) + ')'"></span>
+                                                            </div>
+                                                        </template>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                            <span x-text="'LKR ' + parseFloat(item.total_price).toFixed(2)" style="font-weight:900;color:#0f172a;font-size:14px;"></span>
+                                        </div>
+                                    </template>
+                                    
+                                    <div style="margin-top:8px;padding-top:12px;border-top:1px dashed #cbd5e1;display:flex;flex-direction:column;gap:6px;">
+                                        <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#64748b;">
+                                            <span>Subtotal</span>
+                                            <span x-text="'LKR ' + parseFloat(previewData.order.subtotal || 0).toFixed(2)"></span>
+                                        </div>
+                                        <template x-if="parseFloat(previewData.order.discount || 0) > 0">
+                                            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#16a34a;">
+                                                <span>Discount</span>
+                                                <span x-text="'- LKR ' + parseFloat(previewData.order.discount).toFixed(2)"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="parseFloat(previewData.order.additional || 0) > 0">
+                                            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#dc2626;">
+                                                <span>Additional Charges</span>
+                                                <span x-text="'+ LKR ' + parseFloat(previewData.order.additional).toFixed(2)"></span>
+                                            </div>
+                                        </template>
+                                        <template x-if="parseFloat(previewData.order.delivery_fee || 0) > 0">
+                                            <div style="display:flex;justify-content:space-between;font-size:13px;font-weight:600;color:#475569;">
+                                                <span>Delivery Fee</span>
+                                                <span x-text="'+ LKR ' + parseFloat(previewData.order.delivery_fee).toFixed(2)"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div style="display:flex;justify-content:space-between;font-size:15px;font-weight:900;color:#0f172a;margin-top:4px;padding-top:12px;border-top:1px solid #cbd5e1;">
+                                        <span>Total Amount</span>
+                                        <span x-text="'LKR ' + parseFloat(previewData.order.total || previewData.order.total_amount).toFixed(2)"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+
+                        <template x-if="previewData?.notes">
+                            <div style="background:#fef2f2;padding:16px;border-radius:12px;border:1px solid #fca5a5;">
+                                <div style="font-size:11px;font-weight:900;color:#dc2626;text-transform:uppercase;margin-bottom:6px;letter-spacing:0.05em;"><i class="fa-solid fa-circle-exclamation" style="margin-right:6px;"></i>Special Notes</div>
+                                <div style="font-size:13px;font-weight:600;color:#991b1b;line-height:1.5;" x-text="previewData.notes"></div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Right Column: Maps -->
+                    <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:16px;" class="md:min-w-[320px]">
+                        <!-- Pickup Location Map -->
+                        <div style="border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <div style="padding:12px 16px;background:#fff7ed;display:flex;align-items:center;gap:10px;">
+                                <div style="width:28px;height:28px;background:#ffedd5;color:#ea580c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fa-solid fa-arrow-up"></i></div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:900;color:#ea580c;text-transform:uppercase;letter-spacing:0.05em;">Pickup Location</div>
+                                    <div style="font-size:12px;font-weight:800;color:#431407;line-height:1.2;margin-top:2px;">
+                                        Branch: <span x-text="previewData?.branch?.name || 'Main Branch'"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.pickup_address || 'Not specified'"></div>
+                            <div id="pickup-map" style="width:100%;height:180px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                        </div>
+                        
+                        <!-- Delivery Location Map -->
+                        <div style="border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+                            <div style="padding:12px 16px;background:#f0fdf4;display:flex;align-items:center;gap:10px;">
+                                <div style="width:28px;height:28px;background:#dcfce7;color:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fa-solid fa-arrow-down"></i></div>
+                                <div>
+                                    <div style="font-size:10px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:0.05em;">Delivery Location</div>
+                                </div>
+                            </div>
+                            <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.delivery_address || previewData?.pickup_address || 'Not specified'"></div>
+                            
+                            <template x-if="parseFloat(previewData?.pickup_lat) === parseFloat(previewData?.delivery_lat) && parseFloat(previewData?.pickup_lng) === parseFloat(previewData?.delivery_lng)">
+                                <div style="padding:24px 16px;text-align:center;background:#f8fafc;border-top:1px solid #f1f5f9;">
+                                    <div style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#e2e8f0;color:#64748b;margin-bottom:8px;">
+                                        <i class="fa-solid fa-map-pin"></i>
+                                    </div>
+                                    <div style="font-size:13px;font-weight:800;color:#475569;">Same as Pickup Location</div>
+                                    <div style="font-size:11px;font-weight:600;color:#94a3b8;margin-top:2px;">Delivery to the same address</div>
+                                </div>
+                            </template>
+                            <template x-if="parseFloat(previewData?.pickup_lat) !== parseFloat(previewData?.delivery_lat) || parseFloat(previewData?.pickup_lng) !== parseFloat(previewData?.delivery_lng)">
+                                <div id="delivery-map" style="width:100%;height:180px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </template>
     </div>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('deliveryManager', () => ({
+                currentTab: 'pickups',
+                showCashModal: false,
+                cashData: null,
+                previewData: null,
+                showPreviewModal: false,
+                openPreview(data) {
+                    this.previewData = typeof data === 'string' ? JSON.parse(data) : data;
+                    this.showPreviewModal = true;
+                    setTimeout(() => this.initPreviewMap(), 300);
+                },
+                initPreviewMap() {
+                    let pLat = parseFloat(this.previewData.pickup_lat);
+                    let pLng = parseFloat(this.previewData.pickup_lng);
+                    let dLat = parseFloat(this.previewData.delivery_lat);
+                    let dLng = parseFloat(this.previewData.delivery_lng);
+                    let isSameLocation = (pLat === dLat && pLng === dLng);
+                    
+                    // Initialize Pickup Map
+                    if (pLat && pLng) {
+                        setTimeout(() => {
+                            let pEl = document.getElementById('pickup-map');
+                            if (pEl) {
+                                if (!this.pickupMap) {
+                                    this.pickupMap = L.map('pickup-map', {zoomControl:true});
+                                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom:19}).addTo(this.pickupMap);
+                                } else {
+                                    this.pickupMap.eachLayer((layer) => { if (layer instanceof L.Marker) this.pickupMap.removeLayer(layer); });
+                                }
+                                this.pickupMap.setView([pLat, pLng], 15);
+                                L.marker([pLat, pLng], { icon: L.divIcon({ html: '<div style="background:#f97316;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(249,115,22,0.6);"></div>', className: '' }) }).bindPopup("Pickup Location").addTo(this.pickupMap);
+                                this.pickupMap.invalidateSize();
+                            }
+                        }, 200);
+                    }
+
+                    // Initialize Delivery Map if not same
+                    if (!isSameLocation && dLat && dLng) {
+                        setTimeout(() => {
+                            let dEl = document.getElementById('delivery-map');
+                            if (dEl) {
+                                if (!this.deliveryMap) {
+                                    this.deliveryMap = L.map('delivery-map', {zoomControl:true});
+                                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom:19}).addTo(this.deliveryMap);
+                                } else {
+                                    this.deliveryMap.eachLayer((layer) => { if (layer instanceof L.Marker) this.deliveryMap.removeLayer(layer); });
+                                }
+                                this.deliveryMap.setView([dLat, dLng], 15);
+                                L.marker([dLat, dLng], { icon: L.divIcon({ html: '<div style="background:#22c55e;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(34,197,94,0.6);"></div>', className: '' }) }).bindPopup("Delivery Location").addTo(this.deliveryMap);
+                                this.deliveryMap.invalidateSize();
+                            }
+                        }, 200);
+                    }
+                },
+                openCashModal(apptId, orderNumber, total, paid, pending) {
+                    this.cashData = { id: apptId, orderNumber, total, paid, pending };
+                    this.showCashModal = true;
+                },
+                showRejectModal: false,
+                rejectApptId: null,
+                rejectReason: '',
+                openRejectModal(apptId) {
+                    this.rejectApptId = apptId;
+                    this.rejectReason = '';
+                    this.showRejectModal = true;
+                }
+            }));
+        });
+    </script>
 </x-app-layout>
 
 

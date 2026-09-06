@@ -575,9 +575,6 @@
                                         ⚡ {{ $row['turnaround_name'] }}
                                     </span>
                                 @endif
-                                @foreach($row['extras'] as $e)
-                                    <br><small style="color:#64748b;">+ {{ $e['name'] }} (x{{ $e['qty'] }} @ Rs.{{ number_format($e['price'], 2) }})</small>
-                                @endforeach
                             </td>
                             <td style="padding:10px 16px;text-align:center;font-weight:700;color:#334155;">{{ $row['qty'] }}</td>
                             <td style="padding:10px 16px;text-align:right;font-weight:600;color:#475569;">Rs.{{ number_format($row['unit_price'], 2) }}</td>

@@ -96,6 +96,8 @@ class CreatePosOrderAction
                 'selected_extras' => [],
             ];
 
+            $lastIndex = count($processedCart) - 1;
+
             if (is_array($selectedExtras) && count($selectedExtras) > 0) {
                 foreach ($selectedExtras as $selEx) {
                     $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
@@ -103,35 +105,14 @@ class CreatePosOrderAction
                     
                     $extra = \App\Models\Extra::find($extraId);
                     if ($extra) {
-                        $extraService = ServiceType::firstOrCreate(
-                            ['name' => 'Extra: ' . $extra->name, 'branch_id' => $branchId],
-                            [
-                                'color' => 'slate', 
-                                'price_type' => 'per_item', 
-                                'base_price' => $extra->price, 
-                                'loyalty_points_earn' => 0, 
-                                'is_active' => 1, 
-                                'description' => 'Extra service'
-                            ]
-                        );
-
-                        $extraSubtotalBeforeTurnaround = $extra->price * $extraQty;
-                        $extraTurnaroundCharge = 0;
-                        $extraSubtotal = $extraSubtotalBeforeTurnaround + $extraTurnaroundCharge;
+                        $extraSubtotal = $extra->price * $extraQty;
                         $subtotal += $extraSubtotal;
 
-                        $processedCart[] = [
-                            'service_type_id' => $extraService->id,
-                            'name' => 'Extra: ' . $extra->name,
+                        $processedCart[$lastIndex]['selected_extras'][] = [
+                            'id' => $extra->id,
                             'qty' => $extraQty,
-                            'base_price' => $extra->price,
-                            'covered_qty' => 0,
-                            'chargeable_qty' => $extraQty,
-                            'total_price' => $extraSubtotal,
-                            'is_special' => false,
-                            'turnaround_type_id' => null,
-                            'turnaround_extra_charge' => 0,
-                            'selected_extras' => [],
+                            'price' => $extra->price,
+                            'total' => $extraSubtotal
                         ];
                     }
                 }
@@ -229,7 +210,7 @@ class CreatePosOrderAction
                     $serviceTypeId = $specialService->id;
                 }
 
-                OrderItem::create([
+                $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'service_type_id' => $serviceTypeId,
                     'item_description' => $item['name'].($item['covered_qty'] > 0 ? " ({$item['covered_qty']} via Package)" : ''),
@@ -239,6 +220,18 @@ class CreatePosOrderAction
                     'turnaround_type_id' => $item['turnaround_type_id'],
                     'turnaround_extra_charge' => $item['turnaround_extra_charge'],
                 ]);
+                
+                if (isset($item['selected_extras']) && count($item['selected_extras']) > 0) {
+                    foreach ($item['selected_extras'] as $ex) {
+                        \App\Models\OrderItemExtra::create([
+                            'order_item_id' => $orderItem->id,
+                            'extra_id' => $ex['id'],
+                            'quantity' => $ex['qty'],
+                            'unit_price' => $ex['price'],
+                            'total_price' => $ex['total']
+                        ]);
+                    }
+                }
             }
 
             $commService = new CommunicationService();

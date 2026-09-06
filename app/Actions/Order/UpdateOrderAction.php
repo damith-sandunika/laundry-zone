@@ -28,16 +28,49 @@ class UpdateOrderAction
                 }
 
                 $basePrice = (float) ($item['base_price'] ?? 0);
-                $itemTotal = $qty * $basePrice;
-                $subtotal += $itemTotal;
+                $itemSubtotalBeforeTurnaround = $qty * $basePrice;
+
+                // Turnaround Charge
+                $turnaroundTypeId = $item['turnaround_type_id'] ?? null;
+                $turnaroundCharge = 0;
+                
+                if ($turnaroundTypeId) {
+                    $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
+                    if ($tt) {
+                        if ($tt->markup_type === 'percentage') {
+                            $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($tt->markup_value / 100);
+                        } else {
+                            $turnaroundCharge = $tt->markup_value * $qty;
+                        }
+                    }
+                }
+
+                $itemSubtotal = $itemSubtotalBeforeTurnaround + $turnaroundCharge;
+                $subtotal += $itemSubtotal;
+                
+                $selectedExtras = $item['selected_extras'] ?? [];
 
                 $processedCart[] = [
                     'service_type_id' => $item['service_type_id'] ?? null,
                     'item_description' => $item['name'] ?? 'Custom Service',
                     'quantity' => $qty,
                     'unit_price' => $basePrice,
-                    'total_price' => $itemTotal,
+                    'total_price' => $itemSubtotal,
+                    'turnaround_type_id' => $turnaroundTypeId,
+                    'selected_extras' => $selectedExtras,
                 ];
+                
+                if (is_array($selectedExtras) && count($selectedExtras) > 0) {
+                    foreach ($selectedExtras as $selEx) {
+                        $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
+                        $extraQty = is_array($selEx) && isset($selEx['qty']) ? $selEx['qty'] : $qty;
+                        
+                        $extra = \App\Models\Extra::find($extraId);
+                        if ($extra) {
+                            $subtotal += ($extra->price * $extraQty);
+                        }
+                    }
+                }
             }
 
             $discountPercentage = max(0, min(100, (float) ($data['discount_percentage'] ?? 0)));
@@ -65,15 +98,42 @@ class UpdateOrderAction
                 'requested_advance' => $data['requested_advance'] ?? $order->requested_advance,
             ]);
 
+            if ($order->delivery_appointment_id) {
+                \App\Models\DeliveryAppointment::where('id', $order->delivery_appointment_id)->update([
+                    'delivery_cost' => $deliveryFee,
+                    'cart_json' => json_encode($processedCart)
+                ]);
+            }
+
             foreach ($processedCart as $item) {
-                OrderItem::create([
+                $orderItem = OrderItem::create([
                     'order_id' => $order->id,
                     'service_type_id' => $item['service_type_id'],
                     'item_description' => $item['service_type_id'] ? null : $item['item_description'],
                     'quantity' => $item['quantity'],
                     'unit_price' => $item['unit_price'],
                     'total_price' => $item['total_price'],
+                    'turnaround_type_id' => $item['turnaround_type_id'],
                 ]);
+                
+                $selectedExtras = $item['selected_extras'];
+                if (is_array($selectedExtras) && count($selectedExtras) > 0) {
+                    foreach ($selectedExtras as $selEx) {
+                        $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
+                        $extraQty = is_array($selEx) && isset($selEx['qty']) ? $selEx['qty'] : $item['quantity'];
+                        
+                        $extra = \App\Models\Extra::find($extraId);
+                        if ($extra) {
+                            \App\Models\OrderItemExtra::create([
+                                'order_item_id' => $orderItem->id,
+                                'extra_id' => $extraId,
+                                'quantity' => $extraQty,
+                                'unit_price' => $extra->price,
+                                'total_price' => $extra->price * $extraQty,
+                            ]);
+                        }
+                    }
+                }
             }
 
             OrderStatusHistory::create([

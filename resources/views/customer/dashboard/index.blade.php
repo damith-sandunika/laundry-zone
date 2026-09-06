@@ -99,10 +99,12 @@
                                 @endphp
                                 <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $appProgress }}"></div>
                                 
-                                <!-- Step 1: Confirmed -->
+                                <!-- Step 1: Requested / Confirmed -->
                                 <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
-                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-blue-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
-                                    <span class="text-[10px] font-bold text-slate-800 text-center leading-tight">Confirmed</span>
+                                    <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $appointment->status !== 'pending' ? 'bg-blue-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
+                                        @if($appointment->status !== 'pending') <i class="fa-solid fa-check"></i> @else 1 @endif
+                                    </div>
+                                    <span class="text-[10px] font-bold text-center leading-tight {{ $appointment->status !== 'pending' ? 'text-slate-800' : 'text-slate-400' }}">{{ $appointment->status === 'pending' ? 'Requested' : 'Confirmed' }}</span>
                                 </div>
                                 
                                 <!-- Step 2: Rider Arriving -->
@@ -217,17 +219,27 @@
                             
                             if ($isDelivery) {
                                 // 5-step timeline for delivery: Confirmed -> Rider Pick Up -> Working -> Delivering -> Completed
-                                if(in_array($logicalStatus, ['received', 'dispatched_to_workshop'])) { 
-                                    $orderProgress = '25%'; $orderStatusLevel = 2; // Rider Pick Up / Awaiting Payment
+                                $apptStatus = $deliveryAppointment ? $deliveryAppointment->status : null;
+                                
+                                if(in_array($logicalStatus, ['delivered', 'completed'])) { 
+                                    $orderProgress = '100%'; $orderStatusLevel = 5; 
+                                }
+                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'completed_at_workshop', 'returned_to_branch', 'ready', 'done']) || $apptStatus === 'out_for_delivery') { 
+                                    $orderProgress = '75%'; $orderStatusLevel = 4; 
                                 }
                                 elseif(in_array($logicalStatus, ['processing', 'washing', 'drying', 'ironing', 'folding', 'edited'])) { 
                                     $orderProgress = '50%'; $orderStatusLevel = 3; 
                                 }
-                                elseif(in_array($logicalStatus, ['returned_from_workshop', 'completed_at_workshop', 'returned_to_branch', 'ready', 'done', 'out_for_delivery'])) { 
-                                    $orderProgress = '75%'; $orderStatusLevel = 4; 
+                                elseif(in_array($logicalStatus, ['received', 'dispatched_to_workshop', 'received_at_workshop']) || in_array($apptStatus, ['picked_up', 'at_branch'])) { 
+                                    $orderProgress = '25%'; $orderStatusLevel = 2.5; // Working has started / Rider dropped off
                                 }
-                                elseif(in_array($logicalStatus, ['delivered', 'completed'])) { 
-                                    $orderProgress = '100%'; $orderStatusLevel = 5; 
+                                elseif (in_array($logicalStatus, ['pending', 'rider_assigned']) || in_array($apptStatus, ['confirmed', 'rider_assigned', 'on_way', 'arrived'])) {
+                                    $orderProgress = '12.5%'; $orderStatusLevel = 2; // Rider arriving for pickup
+                                }
+                                elseif (in_array($logicalStatus, ['pending']) && $apptStatus === 'pending') {
+                                    $orderProgress = '0%'; $orderStatusLevel = 1; // Just requested
+                                } else {
+                                    $orderProgress = '0%'; $orderStatusLevel = 1;
                                 }
                             } else {
                                 // 4-step timeline for non-delivery: Confirmed -> Working -> Ready to Pickup -> Completed
@@ -264,19 +276,21 @@
                                     <div class="absolute left-0 top-3 w-full h-1 bg-slate-100 rounded-full"></div>
                                     <div class="absolute left-0 top-3 h-1 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-1000 ease-out" style="width: {{ $orderProgress }}"></div>
                                     
-                                    <!-- Step 1: Confirmed -->
+                                    <!-- Step 1: Requested / Confirmed -->
                                     <div class="relative z-10 flex flex-col items-center gap-1.5 {{ $isDelivery ? 'w-1/5' : 'w-1/4' }}">
-                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-md bg-emerald-500 transition-transform duration-500 hover:scale-110"><i class="fa-solid fa-check"></i></div>
-                                        <span class="text-[10px] font-bold text-slate-800 leading-tight">Confirmed</span>
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-transform duration-500 hover:scale-110 {{ $orderStatusLevel >= 2 ? 'bg-emerald-500 text-white' : ($orderStatusLevel == 1 ? 'bg-blue-600 text-white' : 'bg-white border-2 border-slate-200 text-slate-400') }}">
+                                            @if($orderStatusLevel >= 2) <i class="fa-solid fa-check"></i> @else 1 @endif
+                                        </div>
+                                        <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 1 ? 'text-slate-800' : 'text-slate-400' }}">{{ $orderStatusLevel >= 2 ? 'Confirmed' : 'Requested' }}</span>
                                     </div>
                                     
                                     @if($isDelivery)
                                     <!-- Step 2: Pick Up (Delivery Only) -->
                                     <div class="relative z-10 flex flex-col items-center gap-1.5 w-1/5">
-                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel >= 2 ? 'bg-emerald-500 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400' }}">
-                                            @if($orderStatusLevel >= 2) <i class="fa-solid fa-motorcycle"></i> @else 2 @endif
+                                        <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold shadow-md transition-all duration-500 {{ $orderStatusLevel > 2 ? 'bg-emerald-500 text-white' : ($orderStatusLevel == 2 ? 'bg-blue-600 text-white hover:scale-110' : 'bg-white border-2 border-slate-200 text-slate-400') }}">
+                                            @if($orderStatusLevel > 2) <i class="fa-solid fa-check"></i> @else <i class="fa-solid fa-motorcycle"></i> @endif
                                         </div>
-                                        <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">Rider Arriving</span>
+                                        <span class="text-[10px] font-bold text-center leading-tight {{ $orderStatusLevel >= 2 ? 'text-slate-800' : 'text-slate-400' }}">{{ $orderStatusLevel > 2 ? 'Picked Up' : 'Rider Arriving' }}</span>
                                     </div>
                                     @endif
                                     

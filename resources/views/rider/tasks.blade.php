@@ -73,6 +73,8 @@
                             $mapQ = urlencode($task->task_type === 'pickup' ? $task->pickup_location : $task->dropoff_location);
                             if ($task->task_type === 'pickup' && $task->appointment->latitude && $task->appointment->longitude) {
                                 $mapQ = $task->appointment->latitude . ',' . $task->appointment->longitude;
+                            } elseif ($task->task_type === 'delivery' && $task->appointment->delivery_lat && $task->appointment->delivery_lng) {
+                                $mapQ = $task->appointment->delivery_lat . ',' . $task->appointment->delivery_lng;
                             }
                         @endphp
                         

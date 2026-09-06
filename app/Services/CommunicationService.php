@@ -150,7 +150,7 @@ class CommunicationService
                     $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                     $this->sendSms($order, $customer->phone, $type, $message);
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error("CommunicationService SMS failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
@@ -169,7 +169,7 @@ class CommunicationService
                     ];
                     $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
                 }
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error("CommunicationService WhatsApp failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
@@ -194,7 +194,7 @@ class CommunicationService
                     $body    = $content['body'];
                 }
                 $this->sendEmail($order, $customer->email, $type, $subject, $body);
-            } catch (\Exception $e) {
+            } catch (\Throwable $e) {
                 Log::error("CommunicationService Email failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
@@ -229,6 +229,21 @@ class CommunicationService
         ]);
 
         \App\Jobs\ProcessEmail::dispatch($log);
+    }
+
+    // ─── WhatsApp Sender ──────────────────────────────────────────────────────
+
+    protected function sendWhatsApp(Order $order, string $phone, WhatsappTemplate $template, array $parameters)
+    {
+        $log = WhatsappLog::create([
+            'order_id' => $order->id,
+            'phone'    => $phone,
+            'type'     => $template->type,
+            'template_name' => $template->meta_template_name,
+            'status'   => 'pending',
+        ]);
+
+        \App\Jobs\ProcessWhatsApp::dispatch($log, $parameters);
     }
 }
 

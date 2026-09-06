@@ -144,7 +144,7 @@
                 <tr>
                     <td>
                         {{ $item->serviceType->name ?? $item->item_description }}
-                        @if($item->turnaroundType && $item->turnaroundType->name !== 'Standard')
+                        @if($item->turnaroundType && !$item->turnaroundType->is_default)
                             <small style="color:#64748b; margin-left: 5px;">[{{ $item->turnaroundType->name }}]</small>
                         @endif
                         @if($item->extras->count() > 0)

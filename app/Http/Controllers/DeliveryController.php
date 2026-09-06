@@ -32,7 +32,7 @@ class DeliveryController extends Controller
             abort(403, 'Delivery operations are not enabled for your branch.');
         }
 
-        $query = DeliveryAppointment::with(['customer', 'branch', 'deliveryTasks.rider', 'order.paymentTransactions', 'cancelledBy'])
+        $query = DeliveryAppointment::with(['customer', 'branch', 'deliveryTasks.rider', 'order.paymentTransactions', 'order.items.serviceType.category', 'order.items.extras', 'cancelledBy'])
             ->orderByDesc('pickup_scheduled_at');
 
         if (! $hasFullAccess) {

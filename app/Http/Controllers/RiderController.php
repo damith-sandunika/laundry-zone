@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\DeliveryTask;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStatusHistory;
 use App\Models\PaymentTransaction;
 use App\Models\ServiceType;
 use App\Services\CommunicationService;
@@ -97,7 +98,24 @@ class RiderController extends Controller
 
         if ($task->task_type === 'pickup') {
             // Rider picked up from customer, heading to branch
-            $appointment->update(['status' => 'picked_up']);
+            $appointment->update(['status' => 'picked_up', 'picked_up_at' => now()]);
+            // Sync Order status if linked
+            if ($appointment->order_id) {
+                $order = Order::find($appointment->order_id);
+                if ($order) {
+                    $order->update(['status' => 'picked_up']);
+                    try {
+                        OrderStatusHistory::create([
+                            'order_id' => $order->id,
+                            'status' => 'picked_up',
+                            'changed_by' => auth()->id(),
+                            'note' => 'Rider picked up garments from customer.',
+                        ]);
+                    } catch (\Exception $e) {
+                        \Log::warning('OrderStatusHistory failed (riderPickedUp): ' . $e->getMessage());
+                    }
+                }
+            }
         } elseif ($task->task_type === 'delivery') {
             // Rider delivered to customer
             $appointment?->update(['status' => 'delivered']);
@@ -189,9 +207,9 @@ class RiderController extends Controller
                 ->with('info', 'This delivery already has an order created by the branch. Proceed to complete the pickup task.');
         }
 
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) use ($task) {
-            $q->where('branch_id', $task->branch_id);
-        }])->where('is_active', true)->where('branch_id', $task->branch_id)->get();
+        $categories = \App\Models\ServiceCategory::with(['services' => function($q) {
+            $q->where('is_active', true);
+        }])->where('is_active', true)->get();
         $cartData = $task->appointment->cart_json ? json_decode($task->appointment->cart_json, true) : [];
 
         return view('rider.create-order', compact('task', 'categories', 'cartData'));

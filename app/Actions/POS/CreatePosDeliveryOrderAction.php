@@ -36,9 +36,79 @@ class CreatePosDeliveryOrderAction
             $orderNumber = null;
 
             if (! empty($cart)) {
+                $processedCart = [];
                 $subtotal = 0;
+
                 foreach ($cart as $item) {
-                    $subtotal += (float) $item['base_price'] * (float) $item['qty'];
+                    $serviceTypeId = $item['service_type_id'] ?? $item['id'];
+                    $qty = (float) ($item['qty'] ?? 1);
+                    $basePrice = (float) ($item['base_price'] ?? 0);
+
+                    $turnaroundTypeId = !empty($item['turnaround_type_id']) ? $item['turnaround_type_id'] : null;
+                    $selectedExtras = $item['selected_extras'] ?? [];
+
+                    $itemSubtotalBeforeTurnaround = ($qty * $basePrice);
+                    $turnaroundCharge = 0;
+                    if ($turnaroundTypeId) {
+                        $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
+                        if ($tt) {
+                            if ($tt->markup_type === 'percentage') {
+                                $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($tt->markup_value / 100);
+                            } else {
+                                $turnaroundCharge = $tt->markup_value * $qty;
+                            }
+                        }
+                    }
+
+                    $itemSubtotal = $itemSubtotalBeforeTurnaround + $turnaroundCharge;
+                    $subtotal += $itemSubtotal;
+
+                    $processedCart[] = [
+                        'service_type_id' => $serviceTypeId,
+                        'name' => $item['name'],
+                        'qty' => $qty,
+                        'base_price' => $basePrice,
+                        'total_price' => $itemSubtotal,
+                        'turnaround_type_id' => $turnaroundTypeId,
+                        'turnaround_extra_charge' => $turnaroundCharge,
+                        'selected_extras' => $selectedExtras,
+                    ];
+
+                    if (is_array($selectedExtras) && count($selectedExtras) > 0) {
+                        foreach ($selectedExtras as $selEx) {
+                            $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
+                            $extraQty = is_array($selEx) && isset($selEx['qty']) ? $selEx['qty'] : 1;
+                            
+                            $extra = \App\Models\Extra::find($extraId);
+                            if ($extra) {
+                                $extraService = \App\Models\ServiceType::firstOrCreate(
+                                    ['name' => 'Extra: ' . $extra->name],
+                                    [
+                                        'color' => 'slate', 
+                                        'price_type' => 'per_item', 
+                                        'base_price' => $extra->price, 
+                                        'loyalty_points_earn' => 0, 
+                                        'is_active' => 1, 
+                                        'description' => 'Extra service'
+                                    ]
+                                );
+
+                                $extraSubtotal = $extra->price * $extraQty;
+                                $subtotal += $extraSubtotal;
+
+                                $processedCart[] = [
+                                    'service_type_id' => $extraService->id,
+                                    'name' => 'Extra: ' . $extra->name,
+                                    'qty' => $extraQty,
+                                    'base_price' => $extra->price,
+                                    'total_price' => $extraSubtotal,
+                                    'turnaround_type_id' => null,
+                                    'turnaround_extra_charge' => 0,
+                                    'selected_extras' => [],
+                                ];
+                            }
+                        }
+                    }
                 }
 
                 $paymentMode = $data['payment_mode'] ?? 'pay_on_pickup';
@@ -63,24 +133,28 @@ class CreatePosDeliveryOrderAction
                     'notes'                   => $data['notes'] ?? null,
                 ]);
 
-                foreach ($cart as $item) {
+                foreach ($processedCart as $item) {
                     OrderItem::create([
                         'order_id'        => $order->id,
-                        'service_type_id' => $item['service_type_id'] ?? $item['id'],
+                        'service_type_id' => $item['service_type_id'],
                         'item_description' => $item['name'],
                         'quantity'        => $item['qty'],
                         'unit_price'      => $item['base_price'],
-                        'total_price'     => (float) $item['base_price'] * (float) $item['qty'],
+                        'total_price'     => $item['total_price'],
+                        'turnaround_type_id' => $item['turnaround_type_id'],
+                        'turnaround_extra_charge' => $item['turnaround_extra_charge'],
                     ]);
                 }
 
+                // Save cart_json matching the frontend structure for consistency
                 $cartJson = array_map(fn($i) => [
-                    'service' => [
-                        'id'         => $i['service_type_id'] ?? $i['id'],
-                        'name'       => $i['name'],
-                        'base_price' => $i['base_price'],
-                    ],
-                    'quantity' => $i['qty'],
+                    'id'              => $i['service_type_id'],
+                    'service_type_id' => $i['service_type_id'],
+                    'name'            => $i['name'],
+                    'base_price'      => $i['base_price'],
+                    'qty'             => $i['qty'],
+                    'turnaround_type_id' => $i['turnaround_type_id'],
+                    'selected_extras' => $i['selected_extras'],
                 ], $cart);
 
                 $appointment->update([

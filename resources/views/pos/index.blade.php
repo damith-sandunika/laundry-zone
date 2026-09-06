@@ -289,9 +289,10 @@
                                         </button>
                                     </div>
                                     <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate shrink-0">
-                                        <template x-for="tt in allTurnaroundTypes" :key="tt.id">
-                                            <option :value="tt.id" x-text="tt.name + ' (' + (tt.markup_type == 'percentage' ? tt.markup_value + '%' : 'Rs. ' + tt.markup_value) + ')'"></option>
-                                        </template>
+                                        <option value="">Standard</option>
+                                        @foreach($turnaroundTypes as $tt)
+                                            <option value="{{ $tt->id }}">{{ $tt->name }} ({{ $tt->markup_type == 'percentage' ? $tt->markup_value.'%' : 'Rs. '.$tt->markup_value }})</option>
+                                        @endforeach
                                     </select>
                                 </div>
                                 
@@ -317,7 +318,7 @@
                                         </select>
                                     </div>
 
-                                    <div x-show="item.selected_extras.length > 0" class="flex flex-col gap-1.5">
+                                    <div x-show="item.selected_extras && item.selected_extras.length > 0" class="flex flex-col gap-1.5">
                                         <template x-for="(selEx, idx) in item.selected_extras" :key="idx">
                                             <div class="flex items-center justify-between bg-white border border-slate-200 rounded-md p-1.5 shadow-sm">
                                                 <span class="text-[10px] font-bold text-slate-700" x-text="allExtras.find(e => e.id === selEx.id)?.name"></span>
@@ -963,6 +964,24 @@
                 },
 
                 addToCart(service) {
+                    // Intercept ServiceTypes that are actually Extras
+                    if (service.name.toLowerCase().startsWith('extra:')) {
+                        let extraName = service.name.substring(6).trim();
+                        let extraModel = this.allExtras.find(e => e.name.toLowerCase() === extraName.toLowerCase());
+                        
+                        if (extraModel && this.cart.length > 0) {
+                            let firstItem = this.cart[0];
+                            if (!firstItem.selected_extras) firstItem.selected_extras = [];
+                            let existingEx = firstItem.selected_extras.find(e => e.id === extraModel.id);
+                            if (existingEx) {
+                                existingEx.qty++;
+                            } else {
+                                firstItem.selected_extras.push({ id: extraModel.id, qty: 1 });
+                            }
+                            return;
+                        }
+                    }
+
                     let defaultPrice = parseFloat(service.base_price);
                     let existing = this.cart.find(i => i.id === service.id && !i.is_special && parseFloat(i.base_price) === defaultPrice);
                     if (existing) { 
@@ -975,7 +994,8 @@
                             base_price: defaultPrice,
                             turnaround_type_id: defaultTt ? defaultTt.id : null,
                             turnaround_multiplier: defaultTt ? defaultTt.multiplier : 1,
-                            is_special: false
+                            is_special: false,
+                            selected_extras: []
                         }); 
                     }
                 },

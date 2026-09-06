@@ -412,7 +412,7 @@
                                                 </div>
                                             </div>
                                             <div class="flex gap-2">
-                                                <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? 'dY` ' }}', '{{ $service->color ?? 'blue' }}', {{ $service->category_id ?? 'null' }}, {{ $service->is_visible_on_website ? 1 : 0 }})" class="text-[10px] font-semibold text-blue-600 hover:text-blue-800 px-1.5 py-0.5 bg-blue-50 rounded">Edit</button>
+                                                <button onclick="openEditModal({{ $service->id }}, '{{ addslashes($service->name) }}', {{ $service->base_price }}, '{{ $service->price_type }}', {{ $service->is_active ? 1 : 0 }}, '{{ $service->icon ?? '??' }}', '{{ $service->color ?? 'blue' }}', {{ $service->category_id ?? 'null' }}, {{ $service->is_visible_on_website ? 1 : 0 }}, '{{ addslashes($service->item_code ?? '') }}')" class="text-[10px] font-semibold text-blue-600 hover:text-blue-800 px-1.5 py-0.5 bg-blue-50 rounded">Edit</button>
                                                 <form method="POST" action="{{ route('settings.destroyService', $service) }}" onsubmit="return confirm('Delete this service?')" class="m-0">
                                                     @csrf @method('DELETE')
                                                     <button type="submit" class="text-[10px] font-semibold text-red-600 hover:text-red-800 px-1.5 py-0.5 bg-red-50 rounded">Delete</button>
@@ -1270,6 +1270,13 @@
                 </div>
 
                 <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Item Code (Optional)</label>
+                    <input type="text" name="item_code" placeholder="e.g. WI-01"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Select Color</label>
                     <div style="display:flex;flex-wrap:wrap;gap:10px;">
                         @foreach($availableColors ?? ['blue', 'green', 'purple', 'orange', 'teal', 'red'] as $i => $color)
@@ -1346,6 +1353,13 @@
 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Service Name</label>
                     <input type="text" id="edit-name" name="name" required
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Item Code (Optional)</label>
+                    <input type="text" id="edit-item-code" name="item_code" placeholder="e.g. WI-01"
                         style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
                         onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                 </div>
@@ -1593,8 +1607,9 @@
     </div>
 
 <script>
-                function openEditModal(id, name, price, priceType, isActive, icon, color, categoryId, isVisibleOnWebsite) {
+                function openEditModal(id, name, price, priceType, isActive, icon, color, categoryId, isVisibleOnWebsite, itemCode) {
             document.getElementById('edit-name').value = name;
+            document.getElementById('edit-item-code').value = itemCode || '';
             document.getElementById('edit-price').value = price;
             document.getElementById('edit-price-type').value = priceType;
             document.getElementById('edit-active').value = isActive;

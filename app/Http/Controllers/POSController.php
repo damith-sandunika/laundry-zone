@@ -49,8 +49,8 @@ class POSController extends Controller
 
         $timeSlots = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
 
-        $extras = \App\Models\Extra::where('is_active', true)->where('branch_id', $branchId)->get();
-        $turnaroundTypes = \App\Models\TurnaroundType::where('is_active', true)->where('branch_id', $branchId)->get();
+        $extras = \App\Models\Extra::where('is_active', true)->get();
+        $turnaroundTypes = \App\Models\TurnaroundType::where('is_active', true)->get();
 
         return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages', 'timeSlots', 'extras', 'turnaroundTypes'));
     }

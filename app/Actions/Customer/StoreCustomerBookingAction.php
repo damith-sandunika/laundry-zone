@@ -136,7 +136,7 @@ class StoreCustomerBookingAction
                 'order_number' => Order::generateOrderNumber($closestWorkshop->id, true),
                 'customer_id' => $customer->id,
                 'branch_id' => $closestWorkshop->id,
-                'status' => 'received',
+                'status' => 'pending',
                 'subtotal' => 0,
                 'total' => $deliveryCost,
                 'delivery_fee' => $deliveryCost,

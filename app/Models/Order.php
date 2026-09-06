@@ -20,6 +20,7 @@ class Order extends Model
 
     // Status labels for display
     public static $statusLabels = [
+        'pending' => 'Pending Pickup',
         'received' => 'Received',
         'dispatched_to_workshop' => 'Sent to Workshop',
         'processing' => 'At Workshop',
@@ -31,6 +32,7 @@ class Order extends Model
 
     // Status colors for UI badges
     public static $statusColors = [
+        'pending' => 'warning',
         'received' => 'info',
         'dispatched_to_workshop' => 'warning',
         'processing' => 'primary',

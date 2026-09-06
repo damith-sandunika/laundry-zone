@@ -108,7 +108,7 @@ class DashboardController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $order->load(['branch', 'items.serviceType', 'items.turnaroundType', 'deliveryAppointment']);
+        $order->load(['branch', 'items.serviceType', 'items.turnaroundType', 'items.extras.extra', 'deliveryAppointment']);
         
         $paymentMethods = collect();
         if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {

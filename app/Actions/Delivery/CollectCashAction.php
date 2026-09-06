@@ -4,6 +4,7 @@ namespace App\Actions\Delivery;
 
 use App\Models\DeliveryAppointment;
 use App\Models\Order;
+use App\Models\OrderStatusHistory;
 use App\Models\PaymentTransaction;
 use App\Models\DeliveryTask;
 use App\Models\User;
@@ -50,7 +51,18 @@ class CollectCashAction
         }
 
         $appointment->update(['status' => 'delivered']);
-        $order->update(['status' => 'delivered']);
+        $order->update(['status' => 'delivered', 'delivered_at' => now()]);
+
+        try {
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => 'delivered',
+                'changed_by' => auth()->id(),
+                'note' => 'Cash collected from rider. Order marked delivered.',
+            ]);
+        } catch (\Exception $e) {
+            \Log::warning('OrderStatusHistory insert failed (collectCash): ' . $e->getMessage());
+        }
 
         try {
             $commService = new CommunicationService();

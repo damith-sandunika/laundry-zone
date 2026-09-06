@@ -496,7 +496,7 @@ class WorkshopController extends Controller
     public function finalizeBill(string $order_number)
     {
         $order = \App\Models\Order::where('order_number', $order_number)
-            ->with(['items.serviceType', 'customer', 'deliveryAppointment'])
+            ->with(['items.serviceType', 'items.extras', 'customer', 'deliveryAppointment'])
             ->firstOrFail();
 
         $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
@@ -510,12 +510,22 @@ class WorkshopController extends Controller
             $q->where('is_active', true)->orderBy('order_index');
         }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
         
+        $turnaroundTypes = \App\Models\TurnaroundType::all();
+        $systemExtras = \App\Models\Extra::where('is_active', true)->get();
+        
         $cartItems = $order->items->map(function($item) {
+            $selectedExtras = $item->extras->map(function($ext) {
+                return ['id' => $ext->extra_id, 'qty' => $ext->quantity];
+            })->toArray();
             return [
                 'service_type_id' => $item->service_type_id,
                 'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
                 'base_price' => $item->unit_price,
                 'qty' => $item->quantity,
+                'is_special' => $item->turnaround_type_id ? true : false,
+                'turnaround_type_id' => $item->turnaround_type_id ? (int)$item->turnaround_type_id : null,
+                'turnaround_extra_charge' => 0,
+                'selected_extras' => $selectedExtras,
             ];
         })->toArray();
         
@@ -530,13 +540,17 @@ class WorkshopController extends Controller
                         'name' => $service['name'] ?? $service['item_description'] ?? 'Item',
                         'base_price' => $service['base_price'] ?? $service['unit_price'] ?? 0,
                         'qty' => $i['quantity'] ?? $i['qty'] ?? 1,
+                        'is_special' => $i['is_special'] ?? false,
+                        'turnaround_type_id' => !empty($i['turnaround_type_id']) ? (int)$i['turnaround_type_id'] : null,
+                        'turnaround_extra_charge' => $i['turnaround_extra_charge'] ?? 0,
+                        'selected_extras' => $i['selected_extras'] ?? [],
                     ];
                 }, $parsedCart);
             }
         }
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.finalize_bill', compact('dispatch', 'order', 'services', 'categories', 'cartItems', 'minimumDeliveryCost'));
+        return view('workshop.finalize_bill', compact('dispatch', 'order', 'services', 'categories', 'turnaroundTypes', 'systemExtras', 'cartItems', 'minimumDeliveryCost'));
     }
 
     // ─── Workshop Admin: Return to branch (all order types) ───

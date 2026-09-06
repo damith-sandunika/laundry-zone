@@ -125,7 +125,7 @@
                 <span>&bull; {{ $catName }} - {{ $itemName }}</span>
                 <span>x{{ $item->quantity }}</span>
             </div>
-            @if($item->turnaroundType)
+            @if($item->turnaroundType && !$item->turnaroundType->is_default)
                 <div style="font-size:10px; margin-left:10px; margin-bottom: 2px;">[{{ $item->turnaroundType->name }}]</div>
             @endif
             @if($item->extras->count() > 0)

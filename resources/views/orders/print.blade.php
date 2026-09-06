@@ -167,7 +167,7 @@
         </div>
         <div style="font-size: 12px; margin-bottom: 6px;">
             {{ $item->quantity }} x Rs.{{ number_format(($item->total_price - $item->extras->sum('total_price')) / $item->quantity, 2) }}
-            @if($item->turnaroundType && $item->turnaroundType->name !== 'Standard')
+            @if($item->turnaroundType && !$item->turnaroundType->is_default)
                 [{{ $item->turnaroundType->name }}]
             @endif
             @if($item->extras->count() > 0)

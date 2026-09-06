@@ -113,6 +113,16 @@ class AssignDropoffRiderAction
         
         if ($order) {
             $order->update(['status' => 'out_for_delivery']);
+            try {
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => 'out_for_delivery',
+                    'changed_by' => auth()->id(),
+                    'note' => 'Dropoff rider assigned: ' . $rider->name,
+                ]);
+            } catch (\Exception $e) {
+                \Log::warning('OrderStatusHistory insert failed (assignDropoff): ' . $e->getMessage());
+            }
             $commService = new CommunicationService();
             $commService->sendDeliveryConfirmation($order);
         }
