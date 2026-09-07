@@ -26,7 +26,7 @@ class CustomerSiteController extends Controller
             ->get();
         $categories = ServiceCategory::with(['services' => function($q) {
             $q->where('is_visible_on_website', true)->orderBy('order_index');
-        }])->where('is_active', true)->orderBy('order_index')->get();
+        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
         $packages = Package::with('services.serviceType')->where('is_active', true)->get();
 
         return view('site.home', compact('branches', 'categories', 'packages'));
