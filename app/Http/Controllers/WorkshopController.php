@@ -385,14 +385,25 @@ class WorkshopController extends Controller
         }
 
         $countsQuery = clone $query;
-        $arrivalProcessingCount = (clone $countsQuery)->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])->count();
-        $returnedCount = (clone $countsQuery)->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch', 'received_at_branch'])->count();
+        $counts = [
+            'incoming' => (clone $countsQuery)->where('workshop_dispatches.status', 'dispatched_to_workshop')->count(),
+            'to_wash' => (clone $countsQuery)->where('workshop_dispatches.status', 'received_at_workshop')->count(),
+            'washing' => (clone $countsQuery)->where('workshop_dispatches.status', 'processing')->count(),
+            'completed' => (clone $countsQuery)->where('workshop_dispatches.status', 'completed_at_workshop')->count(),
+            'returned' => (clone $countsQuery)->whereIn('workshop_dispatches.status', ['returned_to_branch', 'received_at_branch'])->count(),
+        ];
 
-        $currentTab = $request->get('tab', 'arrival_processing');
-        if ($currentTab === 'arrival_processing') {
-            $query->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing']);
-        } elseif ($currentTab === 'returned_to_branch') {
-            $query->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch', 'received_at_branch']);
+        $currentTab = $request->get('tab', 'incoming');
+        if ($currentTab === 'incoming') {
+            $query->where('workshop_dispatches.status', 'dispatched_to_workshop');
+        } elseif ($currentTab === 'to_wash') {
+            $query->where('workshop_dispatches.status', 'received_at_workshop');
+        } elseif ($currentTab === 'washing') {
+            $query->where('workshop_dispatches.status', 'processing');
+        } elseif ($currentTab === 'completed') {
+            $query->where('workshop_dispatches.status', 'completed_at_workshop');
+        } elseif ($currentTab === 'returned') {
+            $query->whereIn('workshop_dispatches.status', ['returned_to_branch', 'received_at_branch']);
         }
 
         $dispatches = $query->paginate(15);
@@ -411,7 +422,7 @@ class WorkshopController extends Controller
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'categories', 'minimumDeliveryCost', 'currentTab', 'selectedBranch', 'arrivalProcessingCount', 'returnedCount'));
+        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'categories', 'minimumDeliveryCost', 'currentTab', 'selectedBranch', 'counts'));
     }
 
     // ─── Workshop Admin: Mark received at workshop ───

@@ -131,8 +131,8 @@
                                     <th class="px-4 py-3 font-bold w-32">Status</th>
                                     <th class="px-4 py-3 font-bold">In</th>
                                     <th class="px-4 py-3 font-bold">Out</th>
-                                    <th class="px-4 py-3 font-bold text-center">Work (H)</th>
-                                    <th class="px-4 py-3 font-bold text-center">OT (H)</th>
+                                    <th class="px-4 py-3 font-bold text-center">Work</th>
+                                    <th class="px-4 py-3 font-bold text-center">OT</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100">
@@ -478,8 +478,12 @@
                     return d.toLocaleDateString('en-US', { weekday: 'short' });
                 },
                 formatHours(mins) {
-                    if(!mins || mins <= 0) return '0.0';
-                    return (mins / 60).toFixed(1);
+                    if(!mins || mins <= 0) return '-';
+                    const h = Math.floor(mins / 60);
+                    const m = mins % 60;
+                    if (h > 0 && m > 0) return `${h}h ${m}m`;
+                    if (h > 0) return `${h}h`;
+                    return `${m}m`;
                 },
                 recalculate(dateStr) {
                     const day = this.days[dateStr];

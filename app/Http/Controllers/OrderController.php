@@ -272,7 +272,7 @@ class OrderController extends Controller
 
     public function printBill(Order $order)
     {
-        $order->load(['customer', 'items.serviceType']);
+        $order->load(['customer', 'items.serviceType.category']);
         $branch = Branch::find($order->branch_id);
 
         return view('orders.print', compact('order', 'branch'));
@@ -280,14 +280,14 @@ class OrderController extends Controller
 
     public function printChit(Order $order)
     {
-        $order->load(['customer', 'items.serviceType']);
+        $order->load(['customer', 'items.serviceType.category']);
 
         return view('orders.chit', compact('order'));
     }
 
     public function invoice(Order $order)
     {
-        $order->load(['customer', 'items.serviceType', 'branch']);
+        $order->load(['customer', 'items.serviceType.category', 'branch']);
 
         return view('orders.invoice', compact('order'));
     }

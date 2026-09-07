@@ -141,6 +141,14 @@
             </tr>
             @endforelse
         </tbody>
+        <tfoot>
+            <tr style="background: #f8fafc; font-weight: bold; border-top: 2px solid #cbd5e1;">
+                <td colspan="{{ ($isSuperAdmin && !$branchId) ? 5 : 4 }}" class="text-right" style="padding-top:12px; padding-bottom:12px; font-size:12px;">GRAND TOTAL:</td>
+                <td class="text-center" style="padding-top:12px; padding-bottom:12px; font-size:12px; color: #0f172a;">{{ number_format($orders->sum('total_qty'), 1) }}</td>
+                <td></td>
+                <td class="text-right" style="padding-top:12px; padding-bottom:12px; font-size:12px; color: #059669;">Rs.{{ number_format($totalSalesAmount, 2) }}</td>
+            </tr>
+        </tfoot>
     </table>
 
     <div class="footer">
