@@ -53,12 +53,12 @@ class CompleteWorkshopProcessingAction
             ]);
         }
 
-        $order->update(['status' => 'done']);
+        $order->update(['status' => 'completed_at_workshop']);
 
         try {
             OrderStatusHistory::create([
                 'order_id'   => $order->id,
-                'status'     => 'done',
+                'status'     => 'completed_at_workshop',
                 'note'       => 'Completed at Workshop',
                 'changed_by' => $userId,
             ]);

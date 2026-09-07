@@ -389,7 +389,7 @@ class WorkshopController extends Controller
             'incoming' => (clone $countsQuery)->where('workshop_dispatches.status', 'dispatched_to_workshop')->count(),
             'to_wash' => (clone $countsQuery)->where('workshop_dispatches.status', 'received_at_workshop')->count(),
             'washing' => (clone $countsQuery)->where('workshop_dispatches.status', 'processing')->count(),
-            'completed' => (clone $countsQuery)->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch'])->count(),
+            'completed' => (clone $countsQuery)->where('workshop_dispatches.status', 'completed_at_workshop')->count(),
             'returned' => (clone $countsQuery)->whereIn('workshop_dispatches.status', ['returned_to_branch', 'received_at_branch'])->count(),
         ];
 
@@ -401,7 +401,7 @@ class WorkshopController extends Controller
         } elseif ($currentTab === 'washing') {
             $query->where('workshop_dispatches.status', 'processing');
         } elseif ($currentTab === 'completed') {
-            $query->whereIn('workshop_dispatches.status', ['completed_at_workshop', 'returned_to_branch']);
+            $query->where('workshop_dispatches.status', 'completed_at_workshop');
         } elseif ($currentTab === 'returned') {
             $query->whereIn('workshop_dispatches.status', ['returned_to_branch', 'received_at_branch']);
         }
