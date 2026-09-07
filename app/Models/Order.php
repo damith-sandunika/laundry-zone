@@ -32,6 +32,8 @@ class Order extends Model
     // Status labels for display
     public static $statusLabels = [
         'pending' => 'Pending Pickup',
+        'confirmed' => 'Confirmed',
+        'picked_up' => 'Picked Up',
         'received' => 'Received',
         'dispatched_to_workshop' => 'Sent to Workshop',
         'processing' => 'At Workshop',
@@ -44,6 +46,8 @@ class Order extends Model
     // Status colors for UI badges
     public static $statusColors = [
         'pending' => 'warning',
+        'confirmed' => 'primary',
+        'picked_up' => 'info',
         'received' => 'info',
         'dispatched_to_workshop' => 'warning',
         'processing' => 'primary',

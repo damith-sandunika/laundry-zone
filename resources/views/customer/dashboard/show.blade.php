@@ -33,7 +33,8 @@
         @php
             if ($order->is_delivery_order) {
                 $statuses = [
-                    'received'         => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'yellow'],
+                    'pending'          => ['label' => 'Pending Approval', 'icon' => 'fa-clock', 'color' => 'yellow'],
+                    'confirmed'        => ['label' => 'Confirmed', 'icon' => 'fa-clipboard-check', 'color' => 'blue'],
                     'picked_up'        => ['label' => 'Picked Up', 'icon' => 'fa-truck-pickup', 'color' => 'blue'],
                     'processing'       => ['label' => 'Processing', 'icon' => 'fa-spinner', 'color' => 'blue'],
                     'ready'            => ['label' => 'Ready to Deliver', 'icon' => 'fa-box-open', 'color' => 'blue'],
@@ -43,7 +44,9 @@
                 ];
             } else {
                 $statuses = [
-                    'received'   => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'yellow'],
+                    'pending'    => ['label' => 'Pending Approval', 'icon' => 'fa-clock', 'color' => 'yellow'],
+                    'confirmed'  => ['label' => 'Confirmed', 'icon' => 'fa-clipboard-check', 'color' => 'blue'],
+                    'received'   => ['label' => 'Order Placed', 'icon' => 'fa-clipboard-list', 'color' => 'blue'],
                     'processing' => ['label' => 'Processing', 'icon' => 'fa-spinner', 'color' => 'blue'],
                     'ready'      => ['label' => 'Job Done', 'icon' => 'fa-box-open', 'color' => 'blue'],
                     'completed'  => ['label' => 'Completed', 'icon' => 'fa-check-double', 'color' => 'green']
@@ -53,23 +56,27 @@
             $actualStatus = $order->status;
             
             if ($order->is_delivery_order) {
-                if (in_array($actualStatus, ['pending', 'received', 'dispatched_to_workshop', 'received_at_workshop'])) {
+                if ($actualStatus === 'pending') {
+                    $actualStatus = 'pending';
+                } elseif ($actualStatus === 'confirmed') {
+                    $actualStatus = 'confirmed';
+                } elseif (in_array($actualStatus, ['picked_up', 'received', 'dispatched_to_workshop', 'received_at_workshop'])) {
                     $actualStatus = 'picked_up';
-                }
-                if (in_array($actualStatus, ['washing', 'drying', 'ironing', 'folding', 'edited', 'processing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
+                } elseif (in_array($actualStatus, ['washing', 'drying', 'ironing', 'folding', 'edited', 'processing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
                     $actualStatus = 'processing';
-                }
-                if (in_array($actualStatus, ['returned_from_workshop', 'done', 'completed_at_workshop', 'returned_to_branch'])) {
+                } elseif (in_array($actualStatus, ['returned_from_workshop', 'done', 'completed_at_workshop', 'returned_to_branch'])) {
                     $actualStatus = 'ready';
                 }
             } else {
-                if (in_array($actualStatus, ['pending', 'dispatched_to_workshop', 'received_at_workshop'])) {
+                if ($actualStatus === 'pending') {
+                    $actualStatus = 'pending';
+                } elseif ($actualStatus === 'confirmed') {
+                    $actualStatus = 'confirmed';
+                } elseif (in_array($actualStatus, ['received', 'dispatched_to_workshop', 'received_at_workshop'])) {
                     $actualStatus = 'received';
-                }
-                if (in_array($actualStatus, ['washing', 'drying', 'ironing', 'folding', 'edited', 'processing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
+                } elseif (in_array($actualStatus, ['washing', 'drying', 'ironing', 'folding', 'edited', 'processing']) || ($order->payment_approved && in_array($order->status, ['dispatched_to_workshop', 'received_at_workshop']))) {
                     $actualStatus = 'processing';
-                }
-                if (in_array($actualStatus, ['returned_from_workshop', 'done', 'completed_at_workshop', 'returned_to_branch'])) {
+                } elseif (in_array($actualStatus, ['returned_from_workshop', 'done', 'completed_at_workshop', 'returned_to_branch'])) {
                     $actualStatus = 'ready';
                 }
             }
@@ -122,7 +129,7 @@
                         <div class="w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-sm shrink-0 relative z-10 transition-colors duration-300
                             {{ $isCompleted ? $color['bg'] . ' text-white' : 'bg-slate-100 text-slate-400' }}
                             {{ $isCurrent ? 'ring-4 ring-blue-50/50 scale-110' : '' }}">
-                            <i class="fa-solid {{ $details['icon'] }} text-lg"></i>
+                            <i class="fa-solid {{ $details['icon'] }} text-lg {{ $isCurrent ? 'fa-bounce' : '' }}"></i>
                         </div>
                         <div>
                             <h4 class="text-sm font-black {{ $isCompleted ? 'text-slate-800' : 'text-slate-400' }}">{{ $details['label'] }}</h4>

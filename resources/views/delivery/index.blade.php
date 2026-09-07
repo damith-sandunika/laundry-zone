@@ -623,9 +623,17 @@
                                 </div>
                             </div>
                             <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.pickup_address || 'Not specified'"></div>
-                            
+
                             <template x-if="parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.pickup_lng)">
-                                <div id="pickup-map" style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                                <div>
+                                    <!-- Pickup Route Distance Badge -->
+                                    <div id="pickup-route-badge" style="display:none;padding:8px 14px;background:linear-gradient(135deg,#ea580c,#f97316);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
+                                        <i class="fa-solid fa-route" style="margin-right:6px;"></i>
+                                        <span id="pickup-route-text">Calculating route...</span>
+                                    </div>
+                                    <!-- Pickup Route Map -->
+                                    <div id="pickup-route-map" style="width:100%;height:200px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                                </div>
                             </template>
                             <template x-if="!(parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.pickup_lng))">
                                 <div style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;font-weight:600;">
@@ -642,25 +650,37 @@
                                     <div style="font-size:10px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:0.05em;">Delivery Location</div>
                                 </div>
                             </div>
-                            <template x-if="previewData?.delivery_preference === 'pickup_from_store' || previewData?.delivery_preference === 'self_pickup'">
-                                <div style="padding:16px;background:white;text-align:center;font-size:12px;font-weight:700;color:#475569;border-top:1px solid #f1f5f9;">
-                                    <i class="fa-solid fa-store" style="color:#ea580c;margin-bottom:6px;font-size:20px;display:block;"></i>
-                                    Customer will pick up from store
+
+                            <!-- Case 1: Customer will pick up from branch -->
+                            <template x-if="previewData?.delivery_preference === 'pickup_from_branch' || previewData?.delivery_preference === 'pickup_from_store' || previewData?.delivery_preference === 'self_pickup'">
+                                <div style="padding:20px 16px;background:white;text-align:center;font-size:13px;font-weight:700;color:#475569;border-top:1px solid #f1f5f9;">
+                                    <i class="fa-solid fa-store" style="color:#ea580c;margin-bottom:8px;font-size:22px;display:block;"></i>
+                                    Customer will pick up from branch
                                 </div>
                             </template>
 
-                            <template x-if="!(previewData?.delivery_preference === 'pickup_from_store' || previewData?.delivery_preference === 'self_pickup') && parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng)">
-                                <div style="padding:16px;background:white;text-align:center;font-size:12px;font-weight:700;color:#475569;border-top:1px solid #f1f5f9;">
-                                    <i class="fa-solid fa-location-dot" style="color:#cbd5e1;margin-bottom:6px;font-size:20px;display:block;"></i>
+                            <!-- Case 2: Deliver to same address as pickup -->
+                            <template x-if="previewData?.delivery_preference !== 'pickup_from_branch' && previewData?.delivery_preference !== 'pickup_from_store' && previewData?.delivery_preference !== 'self_pickup' && (!previewData?.delivery_address || previewData?.delivery_address === previewData?.pickup_address || (parseFloat(previewData?.delivery_lat) > 0 && parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng)))">
+                                <div style="padding:20px 16px;background:white;text-align:center;font-size:13px;font-weight:700;color:#475569;border-top:1px solid #f1f5f9;">
+                                    <i class="fa-solid fa-arrows-left-right" style="color:#6366f1;margin-bottom:8px;font-size:22px;display:block;"></i>
                                     Same as pickup location
                                 </div>
                             </template>
-                            
-                            <template x-if="!(previewData?.delivery_preference === 'pickup_from_store' || previewData?.delivery_preference === 'self_pickup') && !(parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng))">
+
+                            <!-- Case 3: Different delivery address with map + route from branch -->
+                            <template x-if="previewData?.delivery_preference !== 'pickup_from_branch' && previewData?.delivery_preference !== 'pickup_from_store' && previewData?.delivery_preference !== 'self_pickup' && previewData?.delivery_address && previewData?.delivery_address !== previewData?.pickup_address && !(parseFloat(previewData?.delivery_lat) > 0 && parseFloat(previewData?.delivery_lat) === parseFloat(previewData?.pickup_lat) && parseFloat(previewData?.delivery_lng) === parseFloat(previewData?.pickup_lng))">
                                 <div>
-                                    <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;" x-text="previewData?.delivery_address || 'Not specified'"></div>
+                                    <div style="padding:10px 16px;font-size:13px;font-weight:600;color:#334155;background:white;border-top:1px solid #f1f5f9;" x-text="previewData?.delivery_address || 'Not specified'"></div>
                                     <template x-if="parseFloat(previewData?.delivery_lat) && parseFloat(previewData?.delivery_lng)">
-                                        <div id="delivery-map" style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                                        <div>
+                                            <!-- Route Distance Badge -->
+                                            <div id="route-distance-badge" style="display:none;padding:8px 14px;background:linear-gradient(135deg,#1d4ed8,#4f46e5);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
+                                                <i class="fa-solid fa-route" style="margin-right:6px;"></i>
+                                                <span id="route-distance-text">Calculating route...</span>
+                                            </div>
+                                            <!-- Route Map -->
+                                            <div id="delivery-route-map" style="width:100%;height:200px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;"></div>
+                                        </div>
                                     </template>
                                     <template x-if="!(parseFloat(previewData?.delivery_lat) && parseFloat(previewData?.delivery_lng))">
                                         <div style="width:100%;height:140px;background:#f8fafc;z-index:1;border-top:1px solid #f1f5f9;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:12px;font-weight:600;">
@@ -693,39 +713,162 @@
                     let pLng = parseFloat(this.previewData.pickup_lng);
                     let dLat = parseFloat(this.previewData.delivery_lat);
                     let dLng = parseFloat(this.previewData.delivery_lng);
+                    let bLat = parseFloat(this.previewData.branch?.latitude);
+                    let bLng = parseFloat(this.previewData.branch?.longitude);
+                    let bName = this.previewData.branch?.name || 'Branch';
                     let isSameLocation = (pLat === dLat && pLng === dLng);
-                    
-                    // Initialize Pickup Map
+                    let isDifferentDelivery = this.previewData.delivery_preference !== 'pickup_from_branch' &&
+                        this.previewData.delivery_preference !== 'pickup_from_store' &&
+                        this.previewData.delivery_preference !== 'self_pickup' &&
+                        this.previewData.delivery_address &&
+                        this.previewData.delivery_address !== this.previewData.pickup_address &&
+                        !isSameLocation;
+
+                    // Initialize Pickup Route Map (Branch → Customer Pickup Location)
                     if (pLat && pLng) {
                         setTimeout(() => {
-                            let pEl = document.getElementById('pickup-map');
+                            let pEl = document.getElementById('pickup-route-map');
                             if (pEl) {
-                                if (!this.pickupMap) {
-                                    this.pickupMap = L.map('pickup-map', {zoomControl:true});
-                                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom:19}).addTo(this.pickupMap);
-                                } else {
-                                    this.pickupMap.eachLayer((layer) => { if (layer instanceof L.Marker) this.pickupMap.removeLayer(layer); });
+                                // Destroy old map if exists
+                                if (this.pickupMap) {
+                                    this.pickupMap.remove();
+                                    this.pickupMap = null;
                                 }
-                                this.pickupMap.setView([pLat, pLng], 15);
-                                L.marker([pLat, pLng], { icon: L.divIcon({ html: '<div style="background:#f97316;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(249,115,22,0.6);"></div>', className: '' }) }).bindPopup("Pickup Location").addTo(this.pickupMap);
+                                this.pickupMap = L.map('pickup-route-map', {zoomControl: true});
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(this.pickupMap);
+
+                                // Customer pickup marker (orange)
+                                let pickupIcon = L.divIcon({
+                                    html: '<div style="width:32px;height:32px;background:#ea580c;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(234,88,12,0.5);"><div style="width:10px;height:10px;background:white;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div></div>',
+                                    className: '', iconSize: [32, 32], iconAnchor: [16, 32]
+                                });
+                                L.marker([pLat, pLng], {icon: pickupIcon}).bindPopup('<b>📍 Customer Pickup</b><br>' + (this.previewData.pickup_address || '')).addTo(this.pickupMap);
+
+                                if (bLat && bLng) {
+                                    // Branch marker (blue)
+                                    let branchIcon = L.divIcon({
+                                        html: '<div style="width:32px;height:32px;background:#1d4ed8;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(29,78,216,0.5);"><div style="width:10px;height:10px;background:white;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div></div>',
+                                        className: '', iconSize: [32, 32], iconAnchor: [16, 32]
+                                    });
+                                    L.marker([bLat, bLng], {icon: branchIcon}).bindPopup('<b>🏪 ' + bName + '</b>').addTo(this.pickupMap);
+
+                                    // Fit to show both points
+                                    let pBounds = L.latLngBounds([[bLat, bLng], [pLat, pLng]]);
+                                    this.pickupMap.fitBounds(pBounds, {padding: [30, 30]});
+
+                                    // Show badge
+                                    let pBadge = document.getElementById('pickup-route-badge');
+                                    if (pBadge) { pBadge.style.display = 'block'; }
+
+                                    // Fetch OSRM route branch → pickup
+                                    let osrmPickupUrl = `https://router.project-osrm.org/route/v1/driving/${bLng},${bLat};${pLng},${pLat}?overview=full&geometries=geojson`;
+                                    fetch(osrmPickupUrl)
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            if (data.routes && data.routes.length > 0) {
+                                                let route = data.routes[0];
+                                                let distKm = (route.distance / 1000).toFixed(1);
+                                                let durationMin = Math.ceil(route.duration / 60);
+
+                                                // Draw route polyline (orange for pickup)
+                                                let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                                                L.polyline(routeCoords, {
+                                                    color: '#ea580c', weight: 4, opacity: 0.8
+                                                }).addTo(this.pickupMap);
+
+                                                // Update badge
+                                                let pText = document.getElementById('pickup-route-text');
+                                                if (pText) {
+                                                    pText.innerHTML = `${bName} → Pickup &nbsp;|&nbsp; 🛣️ ${distKm} km &nbsp;|&nbsp; ⏱️ ~${durationMin} min`;
+                                                }
+
+                                                // Re-fit to route
+                                                this.pickupMap.fitBounds(L.latLngBounds(routeCoords), {padding: [25, 25]});
+                                            }
+                                        })
+                                        .catch(() => {
+                                            let pText = document.getElementById('pickup-route-text');
+                                            if (pText) { pText.textContent = 'Route unavailable (offline)'; }
+                                        });
+                                } else {
+                                    // No branch coords — just show pickup point
+                                    this.pickupMap.setView([pLat, pLng], 15);
+                                }
                                 this.pickupMap.invalidateSize();
                             }
                         }, 200);
                     }
 
-                    // Initialize Delivery Map if not same
-                    if (!isSameLocation && dLat && dLng) {
+                    // Initialize Delivery Route Map (Branch → Customer) if different location
+                    if (isDifferentDelivery && dLat && dLng) {
                         setTimeout(() => {
-                            let dEl = document.getElementById('delivery-map');
+                            let dEl = document.getElementById('delivery-route-map');
                             if (dEl) {
-                                if (!this.deliveryMap) {
-                                    this.deliveryMap = L.map('delivery-map', {zoomControl:true});
-                                    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom:19}).addTo(this.deliveryMap);
-                                } else {
-                                    this.deliveryMap.eachLayer((layer) => { if (layer instanceof L.Marker) this.deliveryMap.removeLayer(layer); });
+                                // Destroy old map if exists
+                                if (this.deliveryMap) {
+                                    this.deliveryMap.remove();
+                                    this.deliveryMap = null;
                                 }
-                                this.deliveryMap.setView([dLat, dLng], 15);
-                                L.marker([dLat, dLng], { icon: L.divIcon({ html: '<div style="background:#22c55e;width:14px;height:14px;border-radius:50%;border:2px solid white;box-shadow:0 0 6px rgba(34,197,94,0.6);"></div>', className: '' }) }).bindPopup("Delivery Location").addTo(this.deliveryMap);
+                                this.deliveryMap = L.map('delivery-route-map', {zoomControl: true});
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {maxZoom: 19}).addTo(this.deliveryMap);
+
+                                // Customer delivery marker (green)
+                                let customerIcon = L.divIcon({
+                                    html: '<div style="width:32px;height:32px;background:#16a34a;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(22,163,74,0.5);"><div style="width:10px;height:10px;background:white;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div></div>',
+                                    className: '', iconSize: [32, 32], iconAnchor: [16, 32]
+                                });
+                                L.marker([dLat, dLng], {icon: customerIcon}).bindPopup('<b>📍 Customer Location</b><br>' + (this.previewData.delivery_address || '')).addTo(this.deliveryMap);
+
+                                // Branch marker (blue/orange) — if branch coordinates available
+                                if (bLat && bLng) {
+                                    let branchIcon = L.divIcon({
+                                        html: '<div style="width:32px;height:32px;background:#1d4ed8;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(29,78,216,0.5);"><div style="width:10px;height:10px;background:white;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div></div>',
+                                        className: '', iconSize: [32, 32], iconAnchor: [16, 32]
+                                    });
+                                    L.marker([bLat, bLng], {icon: branchIcon}).bindPopup('<b>🏪 ' + bName + '</b>').addTo(this.deliveryMap);
+
+                                    // Fit map to show both points
+                                    let bounds = L.latLngBounds([[bLat, bLng], [dLat, dLng]]);
+                                    this.deliveryMap.fitBounds(bounds, {padding: [30, 30]});
+
+                                    // Show distance badge
+                                    let badge = document.getElementById('route-distance-badge');
+                                    if (badge) { badge.style.display = 'block'; }
+
+                                    // Fetch route from OSRM
+                                    let osrmUrl = `https://router.project-osrm.org/route/v1/driving/${bLng},${bLat};${dLng},${dLat}?overview=full&geometries=geojson`;
+                                    fetch(osrmUrl)
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            if (data.routes && data.routes.length > 0) {
+                                                let route = data.routes[0];
+                                                let distKm = (route.distance / 1000).toFixed(1);
+                                                let durationMin = Math.ceil(route.duration / 60);
+
+                                                // Draw route polyline
+                                                let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                                                L.polyline(routeCoords, {
+                                                    color: '#4f46e5', weight: 4, opacity: 0.8, dashArray: null
+                                                }).addTo(this.deliveryMap);
+
+                                                // Update distance badge
+                                                let distText = document.getElementById('route-distance-text');
+                                                if (distText) {
+                                                    distText.innerHTML = `${bName} → Customer &nbsp;|&nbsp; 🛣️ ${distKm} km &nbsp;|&nbsp; ⏱️ ~${durationMin} min`;
+                                                }
+
+                                                // Re-fit to route
+                                                this.deliveryMap.fitBounds(L.latLngBounds(routeCoords), {padding: [25, 25]});
+                                            }
+                                        })
+                                        .catch(() => {
+                                            let distText = document.getElementById('route-distance-text');
+                                            if (distText) { distText.textContent = 'Route unavailable (offline)'; }
+                                        });
+                                } else {
+                                    // No branch coords — just show delivery point
+                                    this.deliveryMap.setView([dLat, dLng], 15);
+                                }
                                 this.deliveryMap.invalidateSize();
                             }
                         }, 200);
