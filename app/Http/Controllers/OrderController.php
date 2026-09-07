@@ -280,7 +280,7 @@ class OrderController extends Controller
 
     public function printChit(Order $order)
     {
-        $order->load(['customer', 'items']);
+        $order->load(['customer', 'items.serviceType']);
 
         return view('orders.chit', compact('order'));
     }
