@@ -195,7 +195,12 @@
                             body: JSON.stringify({ delivery_method: this.deliveryMethod, rider_id: this.deliveryRiderId, pickme_cost: this.deliveryPickmeCost, payment_method: this.deliveryPaymentMethod })
                         });
                         const data = await res.json();
-                        if (data.success) { window.location.reload(); }
+                        if (data.success) { 
+                            if (this.deliverOrder && this.deliverOrder.id) {
+                                window.open('/orders/' + this.deliverOrder.id + '/print', '_blank');
+                            }
+                            setTimeout(() => { window.location.reload(); }, 500);
+                        }
                         else { alert(data.message || 'Error dispatching delivery'); this.isDispatchingDelivery = false; }
                     } catch (err) { alert('Connection error'); this.isDispatchingDelivery = false; }
                 },
@@ -210,7 +215,7 @@
                         const data = await res.json();
                         if (!data.success) { alert('Error: ' + (data.message || 'Failed to update status')); return; }
                         if (shouldPrint && data.print_bill_id) { window.open('/orders/' + data.print_bill_id + '/print', '_blank'); }
-                        else if (shouldPrint) { window.open('/orders/' + this.deliverOrder.order_number + '/print', '_blank'); }
+                        else if (shouldPrint) { window.open('/orders/' + this.deliverOrder.id + '/print', '_blank'); }
                         window.location.reload();
                     } catch (err) { alert('Error updating status'); }
                 },
@@ -554,7 +559,7 @@
                                                 </template>
 
                                                 <button
-                                                    @click="window.open('/orders/' + order.order_number + '/chit', '_blank', 'width=300,height=400')"
+                                                    @click="window.open('/orders/' + order.id + '/chit', '_blank', 'width=300,height=400')"
                                                     style="padding:5px 10px;background:white;color:#0f172a;border:1.5px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.15s;"
                                                     onmouseover="this.style.background='#f8fafc'"
                                                     onmouseout="this.style.background='white'">

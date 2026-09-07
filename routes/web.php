@@ -116,19 +116,19 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::resource('customers', CustomerController::class);
 
-    Route::post('/orders/{order:order_number}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
+    Route::post('/orders/{order:id}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
     Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store');
     Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve');
     Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject');
     Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
-    Route::get('/orders/{order:order_number}/print', [OrderController::class, 'printBill'])->name('orders.print');
-    Route::get('/orders/{order:order_number}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
-    Route::get('/orders/{order:order_number}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
-    Route::post('/orders/{order:order_number}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::post('/orders/{order:order_number}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
-    Route::post('/orders/{order:order_number}/dispatch-delivery', [OrderController::class, 'dispatchDelivery'])->name('orders.dispatchDelivery');
-    Route::post('/orders/{order:order_number}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
-    Route::post('/orders/{order:order_number}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
+    Route::get('/orders/{order:id}/print', [OrderController::class, 'printBill'])->name('orders.print');
+    Route::get('/orders/{order:id}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
+    Route::get('/orders/{order:id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+    Route::post('/orders/{order:id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+    Route::post('/orders/{order:id}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
+    Route::post('/orders/{order:id}/dispatch-delivery', [OrderController::class, 'dispatchDelivery'])->name('orders.dispatchDelivery');
+    Route::post('/orders/{order:id}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
+    Route::post('/orders/{order:id}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
     Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve');
     Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject');
     // Workshop dispatch from order

@@ -466,7 +466,7 @@
                                     <div style="display:inline-flex;gap:6px;align-items:center;justify-content:center;width:100%;">
                                         <!-- Actions based on status -->
                                         <template x-if="dispatch.status === 'dispatched_to_workshop'">
-                                            <button @click="workshopAction(dispatch.id, 'start-processing')"
+                                            <button @click="workshopAction(dispatch.id, 'receive')"
                                                 style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;"
                                                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                                                 Receive at Workshop
