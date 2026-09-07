@@ -380,7 +380,7 @@
                 
                 <!-- Slider Container -->
                 <div class="w-full flex justify-center">
-                    <div x-ref="slider" class="grid grid-rows-2 gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 px-2 w-max max-w-full" style="grid-auto-flow: column; grid-auto-columns: max-content;">
+                    <div x-ref="slider" class="flex flex-row gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 px-2 max-w-full">
                         @foreach($categories as $category)
                             <div class="snap-start shrink-0 w-[130px] sm:w-[150px] h-full">
                                 <a href="{{ route('customer.booking') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center h-full flex flex-col justify-center items-center">
