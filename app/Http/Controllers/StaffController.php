@@ -14,7 +14,7 @@ class StaffController extends Controller
         $this->authorize('viewAny', User::class);
         $branchId = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? null : $this->getActiveBranchId();
 
-        $query = User::query();
+        $query = User::with('branch');
         if ($branchId) {
             $query->where('branch_id', $branchId);
         }
