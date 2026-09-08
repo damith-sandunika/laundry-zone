@@ -170,7 +170,7 @@ class CommunicationService
 
         $title = $customer->title ? trim($customer->title) . ' ' : '';
         
-        $requestedAmountRaw = $extraData['requested_amount'] ?? max(0, $order->total - $order->paid_amount);
+        $requestedAmountRaw = $extraData['requested_amount'] ?? ($order->requested_advance > 0 ? $order->requested_advance : max(0, $order->total - $order->paid_amount));
         
         $data = [
             'customer_name'  => trim($title . $customer->name),
