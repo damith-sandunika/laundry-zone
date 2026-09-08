@@ -77,7 +77,7 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'delivery_order_confirmed',
                 'name' => 'Delivery Order Confirmed',
-                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been approved and confirmed. We will process it shortly.',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been approved and confirmed. We will process it shortly. Track your order here: {tracking_link}',
             ],
             [
                 'type' => 'delivery_order_cancelled',
@@ -87,17 +87,17 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'delivery_order_ready',
                 'name' => 'Delivery Order Ready for Dispatch',
-                'message' => 'Hi {customer_name}, your delivery order #{order_id} is washed and ready to be dispatched to you!',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} is washed and ready to be dispatched to you! Track your order here: {tracking_link}',
             ],
             [
                 'type' => 'delivery_completed',
                 'name' => 'Delivery Order Completed',
-                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been successfully delivered. Thank you for using 365 Laundry!',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been successfully delivered. Thank you for using 365 Laundry! Track your order here: {tracking_link}',
             ],
             [
                 'type' => 'bill_finalized',
                 'name' => 'Payment Request',
-                'message' => 'Hi {customer_name}, the bill for order #{order_id} is finalized. Total: {total}. Due: {amount_due}. Please arrange the payment.',
+                'message' => 'Hi {customer_name}, the bill for order #{order_id} is finalized. Total: {total}. Requested Amount: {requested_amount}. Please arrange the payment.',
             ],
             [
                 'type' => 'payment_received',

@@ -86,7 +86,7 @@ class EmailTemplateController extends Controller
                 'type' => 'delivery_order_confirmed',
                 'name' => 'Delivery Order Confirmed',
                 'subject' => 'Delivery Order Confirmed',
-                'body' => '<p>Hi {customer_name}, your delivery order #{order_id} has been approved and confirmed. We will process it shortly.</p>'
+                'body' => '<p>Hi {customer_name}, your delivery order #{order_id} has been approved and confirmed. We will process it shortly. <br><br> <a href="{tracking_link}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">Track Your Order</a></p>'
             ],
             [
                 'type' => 'delivery_order_cancelled',
@@ -98,19 +98,19 @@ class EmailTemplateController extends Controller
                 'type' => 'delivery_order_ready',
                 'name' => 'Delivery Order Ready for Dispatch',
                 'subject' => 'Delivery Order Ready for Dispatch',
-                'body' => '<p>Hi {customer_name}, your delivery order #{order_id} is washed and ready to be dispatched to you!</p>'
+                'body' => '<p>Hi {customer_name}, your delivery order #{order_id} is washed and ready to be dispatched to you! <br><br> <a href="{tracking_link}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">Track Your Order</a></p>'
             ],
             [
                 'type' => 'delivery_completed',
                 'name' => 'Delivery Order Completed',
                 'subject' => 'Delivery Order Completed',
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #3b82f6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Delivery Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your delivery order <strong>#{order_id}</strong> is completed. Thank you for using 365 Laundry!</p></div></div>'
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #3b82f6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Delivery Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your delivery order <strong>#{order_id}</strong> is completed. Thank you for using 365 Laundry!</p><p style="margin-top: 24px;"><a href="{tracking_link}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">View Order Details</a></p></div></div>'
             ],
             [
                 'type' => 'bill_finalized',
                 'name' => 'Payment Request',
                 'subject' => 'Payment Request for Order #{order_id}',
-                'body' => '<p>Hi {customer_name}, the bill for order #{order_id} is finalized. Total: {total}. Due: {amount_due}. Please arrange the payment.</p>'
+                'body' => '<p>Hi {customer_name}, the bill for order #{order_id} is finalized. Total: {total}. Requested Amount: {requested_amount}. Please arrange the payment.</p>'
             ],
             [
                 'type' => 'payment_received',

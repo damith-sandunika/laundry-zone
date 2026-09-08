@@ -145,12 +145,12 @@ class CommunicationService
     public function sendDeliveryOrderReady(Order $order) { $this->dispatch('delivery_order_ready', $order); }
     public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
 
-    public function sendFinalizedBill(Order $order) { $this->dispatch('bill_finalized', $order); }
+    public function sendFinalizedBill(Order $order, $requestedAmount = null) { $this->dispatch('bill_finalized', $order, ['requested_amount' => $requestedAmount]); }
     public function sendPaymentReceived(Order $order) { $this->dispatch('payment_received', $order); }
 
     // ─── Master Dispatch ─────────────────────────────────────────────────────
 
-    protected function dispatch(string $type, Order $order)
+    protected function dispatch(string $type, Order $order, array $extraData = [])
     {
         $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
         $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
@@ -169,12 +169,17 @@ class CommunicationService
         }
 
         $title = $customer->title ? trim($customer->title) . ' ' : '';
+        
+        $requestedAmountRaw = $extraData['requested_amount'] ?? max(0, $order->total - $order->paid_amount);
+        
         $data = [
             'customer_name'  => trim($title . $customer->name),
             'order_id'       => $order->order_number,
             'total'          => 'Rs.' . number_format($order->total, 2),
             'amount_due'     => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
             'payment_status' => $paymentStatusText,
+            'tracking_link'  => route('orders.track', $order->id),
+            'requested_amount' => 'Rs.' . number_format($requestedAmountRaw, 2)
         ];
 
         // Process SMS — isolated so failure doesn't block WhatsApp/Email
@@ -182,7 +187,15 @@ class CommunicationService
             try {
                 $smsTemplate = SmsTemplate::where('type', $type)->where('is_active', true)->first();
                 if ($smsTemplate) {
-                    $replacements = ['{customer_name}' => $data['customer_name'], '{order_id}' => $data['order_id'], '{total}' => $data['total'], '{amount_due}' => $data['amount_due'], '{payment_status}' => $data['payment_status']];
+                    $replacements = [
+                        '{customer_name}' => $data['customer_name'], 
+                        '{order_id}' => $data['order_id'], 
+                        '{total}' => $data['total'], 
+                        '{amount_due}' => $data['amount_due'], 
+                        '{payment_status}' => $data['payment_status'],
+                        '{tracking_link}' => $data['tracking_link'],
+                        '{requested_amount}' => $data['requested_amount']
+                    ];
                     $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                     $this->sendSms($order, $customer->phone, $type, $message);
                 }
@@ -201,7 +214,9 @@ class CommunicationService
                         $data['order_id'],
                         $data['total'],
                         $data['amount_due'],
-                        $data['payment_status']
+                        $data['payment_status'],
+                        $data['tracking_link'],
+                        $data['requested_amount']
                     ];
                     $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
                 }
@@ -221,6 +236,8 @@ class CommunicationService
                         '{total}'          => $data['total'],
                         '{amount_due}'     => $data['amount_due'],
                         '{payment_status}' => $data['payment_status'],
+                        '{tracking_link}'  => $data['tracking_link'],
+                        '{requested_amount}'=> $data['requested_amount'],
                     ];
                     $subject = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->subject);
                     $body    = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->body);

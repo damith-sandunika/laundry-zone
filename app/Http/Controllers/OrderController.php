@@ -222,7 +222,7 @@ class OrderController extends Controller
             // Sending manual payment request using generic method or standard approach?
             // Actually they wanted a "bill finalize" message!
             $commService = new \App\Services\CommunicationService();
-            $commService->sendFinalizedBill($order);
+            $commService->sendFinalizedBill($order, $amount);
             
             return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
