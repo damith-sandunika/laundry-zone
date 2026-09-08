@@ -60,18 +60,22 @@ class WhatsappTemplateController extends Controller
     public function seedDefault()
     {
         $defaults = [
-            ['type' => 'order_confirmation', 'name' => 'Order Confirmation', 'content' => 'Hello {customer_name}, your order #{order_id} has been confirmed. Total: {total}'],
-            ['type' => 'order_ready', 'name' => 'Order Ready', 'content' => 'Your order #{order_id} is ready for pickup/delivery.'],
-            ['type' => 'order_delivered', 'name' => 'Order Delivered', 'content' => 'Your order #{order_id} has been delivered. Thank you!'],
-            ['type' => 'bill_finalize', 'name' => 'Bill Finalized', 'content' => 'Your bill for order #{order_id} is finalized. Please pay {amount_due}.'],
-            ['type' => 'delivery_confirmation', 'name' => 'Delivery Confirmation', 'content' => 'Our rider is on the way with your order #{order_id}.'],
-            ['type' => 'delivery_thank_you', 'name' => 'Delivery Thank You', 'content' => 'Thank you for choosing our delivery service for order #{order_id}.'],
-            ['type' => 'order_dispatched_to_workshop', 'name' => 'Sent to Workshop', 'content' => 'Your order #{order_id} has been dispatched to our workshop.'],
-            ['type' => 'order_processing', 'name' => 'Processing at Workshop', 'content' => 'We are now processing your order #{order_id} at our workshop.'],
-            ['type' => 'order_returned_from_workshop', 'name' => 'Back from Workshop', 'content' => 'Your order #{order_id} has returned from the workshop and will be ready soon.'],
-            ['type' => 'order_completed', 'name' => 'Order Completed', 'content' => 'Your order #{order_id} is fully completed. Thank you for choosing us!'],
-            ['type' => 'order_cancelled', 'name' => 'Order Cancelled', 'content' => 'Your order #{order_id} has been cancelled. Contact us for details.'],
+            ['type' => 'pos_walkin_placed', 'name' => 'Walk-in Order Placed', 'content' => 'Hi {customer_name}, your order #{order_id} has been placed successfully. We will let you know once it is completed.'],
+            ['type' => 'pos_walkin_ready', 'name' => 'Walk-in Order Ready', 'content' => 'Hi {customer_name}, great news! Your order #{order_id} is washed and ready to be picked up. Thank you! - 365 Laundry'],
+            ['type' => 'pos_walkin_completed', 'name' => 'Walk-in Order Completed', 'content' => 'Hi {customer_name}, your order #{order_id} is fully completed. Total: {total}. Payment: {payment_status}. Thank you! - 365 Laundry'],
+            ['type' => 'collection_order_placed', 'name' => 'Collection Order Placed', 'content' => 'Hi {customer_name}, your order #{order_id} has been placed at our collection branch and will be sent for processing.'],
+            ['type' => 'collection_order_ready', 'name' => 'Collection Order Ready for Pickup', 'content' => 'Hi {customer_name}, great news! Your order #{order_id} is completed and ready for pickup.'],
+            ['type' => 'collection_order_completed', 'name' => 'Collection Order Completed', 'content' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing 365 Laundry!'],
+            ['type' => 'delivery_order_confirmed', 'name' => 'Delivery Order Confirmed', 'content' => 'Hi {customer_name}, your delivery order #{order_id} has been approved and confirmed. We will process it shortly.'],
+            ['type' => 'delivery_order_cancelled', 'name' => 'Delivery Order Cancelled', 'content' => 'Hi {customer_name}, unfortunately, your delivery order #{order_id} has been cancelled. Please contact us for details.'],
+            ['type' => 'delivery_order_ready', 'name' => 'Delivery Order Ready for Dispatch', 'content' => 'Hi {customer_name}, your delivery order #{order_id} is washed and ready to be dispatched to you!'],
+            ['type' => 'delivery_completed', 'name' => 'Delivery Order Completed', 'content' => 'Hi {customer_name}, your delivery order #{order_id} has been successfully delivered. Thank you for using 365 Laundry!'],
+            ['type' => 'bill_finalized', 'name' => 'Payment Request', 'content' => 'Hi {customer_name}, the bill for order #{order_id} is finalized. Total: {total}. Due: {amount_due}. Please arrange the payment.'],
+            ['type' => 'payment_received', 'name' => 'Payment Received', 'content' => 'Hi {customer_name}, we have received and approved a payment for your order #{order_id}. Total: {total}. Status: {payment_status}.'],
         ];
+
+        $defaultTypes = array_column($defaults, 'type');
+        WhatsappTemplate::whereNotIn('type', $defaultTypes)->delete();
 
         foreach ($defaults as $default) {
             $default['is_active'] = true;

@@ -50,18 +50,20 @@
             @foreach($templates as $template)
             @php
                 $colors = [
-                    'order_confirmation'           => ['bg'=>'#eff6ff','border'=>'#bfdbfe','dot'=>'#3b82f6','label'=>'Order Confirmation'],
-                    'bill_finalize'                => ['bg'=>'#fffbeb','border'=>'#fde68a','dot'=>'#f59e0b','label'=>'Bill Finalized'],
-                    'order_ready'                  => ['bg'=>'#f0fdf4','border'=>'#86efac','dot'=>'#22c55e','label'=>'Order Ready'],
-                    'order_delivered'              => ['bg'=>'#faf5ff','border'=>'#d8b4fe','dot'=>'#8b5cf6','label'=>'Order Delivered'],
-                    'delivery_confirmation'        => ['bg'=>'#ecfeff','border'=>'#a5f3fc','dot'=>'#06b6d4','label'=>'Delivery On Way'],
-                    'delivery_thank_you'           => ['bg'=>'#fdf4ff','border'=>'#f0abfc','dot'=>'#ec4899','label'=>'Delivery Thank You'],
-                    'order_dispatched_to_workshop' => ['bg'=>'#fff7ed','border'=>'#fed7aa','dot'=>'#f97316','label'=>'Sent to Workshop'],
-                    'order_processing'             => ['bg'=>'#eff6ff','border'=>'#bfdbfe','dot'=>'#3b82f6','label'=>'Processing at Workshop'],
-                    'order_returned_from_workshop' => ['bg'=>'#fffbeb','border'=>'#fde68a','dot'=>'#f59e0b','label'=>'Back from Workshop'],
-                    'order_cancelled'              => ['bg'=>'#fef2f2','border'=>'#fca5a5','dot'=>'#ef4444','label'=>'Order Cancelled'],
+                    'pos_walkin_placed'          => ['bg'=>'#eff6ff','border'=>'#bfdbfe','dot'=>'#3b82f6','label'=>'Walk-in Placed'],
+                    'pos_walkin_ready'           => ['bg'=>'#f0fdf4','border'=>'#86efac','dot'=>'#22c55e','label'=>'Walk-in Ready'],
+                    'pos_walkin_completed'       => ['bg'=>'#faf5ff','border'=>'#d8b4fe','dot'=>'#8b5cf6','label'=>'Walk-in Completed'],
+                    'collection_order_placed'    => ['bg'=>'#fffbeb','border'=>'#fde68a','dot'=>'#f59e0b','label'=>'Collection Placed'],
+                    'collection_order_ready'     => ['bg'=>'#f0fdf4','border'=>'#86efac','dot'=>'#22c55e','label'=>'Collection Ready'],
+                    'collection_order_completed' => ['bg'=>'#faf5ff','border'=>'#d8b4fe','dot'=>'#8b5cf6','label'=>'Collection Completed'],
+                    'delivery_order_confirmed'   => ['bg'=>'#eff6ff','border'=>'#bfdbfe','dot'=>'#3b82f6','label'=>'Delivery Confirmed'],
+                    'delivery_order_cancelled'   => ['bg'=>'#fef2f2','border'=>'#fca5a5','dot'=>'#ef4444','label'=>'Delivery Cancelled'],
+                    'delivery_order_ready'       => ['bg'=>'#f0fdf4','border'=>'#86efac','dot'=>'#22c55e','label'=>'Delivery Ready'],
+                    'delivery_completed'         => ['bg'=>'#faf5ff','border'=>'#d8b4fe','dot'=>'#8b5cf6','label'=>'Delivery Completed'],
+                    'bill_finalized'             => ['bg'=>'#fffbeb','border'=>'#fde68a','dot'=>'#f59e0b','label'=>'Payment Request'],
+                    'payment_received'           => ['bg'=>'#ecfeff','border'=>'#a5f3fc','dot'=>'#06b6d4','label'=>'Payment Received'],
                 ];
-                $c = $colors[$template->type] ?? ['bg'=>'#f8fafc','border'=>'#e2e8f0','dot'=>'#64748b','label'=>$template->name];
+                $c = $colors[$template->type] ?? ['bg'=>'#f8fafc','border'=>'#e2e8f0','dot'=>'#64748b','label'=>$template->name ?? $template->type];
             @endphp
             <div style="background:#fff;border:1.5px solid {{ $c['border'] }};border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;box-shadow:0 2px 8px rgba(0,0,0,0.04);">
                 <div style="display:flex;justify-content:space-between;align-items:center;">

@@ -52,17 +52,12 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'pos_walkin_ready',
                 'name' => 'Walk-in Order Ready',
-                'message' => 'Hi {customer_name}, your order #{order_id} is washed and ready to be picked up. Thank you! - 365 Laundry',
+                'message' => 'Hi {customer_name}, great news! Your order #{order_id} is washed and ready to be picked up. Thank you! - 365 Laundry',
             ],
             [
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
-                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - 365 Laundry',
-            ],
-            [
-                'type' => 'delivery_completed',
-                'name' => 'Delivery Order Completed',
-                'message' => 'Hi {customer_name}, your delivery order #{order_id} is completed. Thank you for using 365 Laundry!',
+                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed. Total: {total}. Payment: {payment_status}. Thank you! - 365 Laundry',
             ],
             [
                 'type' => 'collection_order_placed',
@@ -71,13 +66,43 @@ class SmsTemplateController extends Controller
             ],
             [
                 'type' => 'collection_order_ready',
-                'name' => 'Collection Order Ready for Pickup/Delivery',
-                'message' => 'Hi {customer_name}, great news! Your order #{order_id} is completed and ready for pickup or delivery.',
+                'name' => 'Collection Order Ready for Pickup',
+                'message' => 'Hi {customer_name}, great news! Your order #{order_id} is completed and ready for pickup.',
             ],
             [
                 'type' => 'collection_order_completed',
                 'name' => 'Collection Order Completed',
                 'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing 365 Laundry!',
+            ],
+            [
+                'type' => 'delivery_order_confirmed',
+                'name' => 'Delivery Order Confirmed',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been approved and confirmed. We will process it shortly.',
+            ],
+            [
+                'type' => 'delivery_order_cancelled',
+                'name' => 'Delivery Order Cancelled',
+                'message' => 'Hi {customer_name}, unfortunately, your delivery order #{order_id} has been cancelled. Please contact us for details.',
+            ],
+            [
+                'type' => 'delivery_order_ready',
+                'name' => 'Delivery Order Ready for Dispatch',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} is washed and ready to be dispatched to you!',
+            ],
+            [
+                'type' => 'delivery_completed',
+                'name' => 'Delivery Order Completed',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been successfully delivered. Thank you for using 365 Laundry!',
+            ],
+            [
+                'type' => 'bill_finalized',
+                'name' => 'Payment Request',
+                'message' => 'Hi {customer_name}, the bill for order #{order_id} is finalized. Total: {total}. Due: {amount_due}. Please arrange the payment.',
+            ],
+            [
+                'type' => 'payment_received',
+                'name' => 'Payment Received',
+                'message' => 'Hi {customer_name}, we have received and approved a payment for your order #{order_id}. Total: {total}. Status: {payment_status}.',
             ]
         ];
 

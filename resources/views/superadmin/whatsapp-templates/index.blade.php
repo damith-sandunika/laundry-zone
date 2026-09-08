@@ -77,19 +77,20 @@
             @foreach($templates as $template)
             @php
                 $labels = [
-                    'order_confirmation'           => ['label'=>'Order Confirmation',      'emoji'=>'🧾'],
-                    'order_ready'                  => ['label'=>'Order Ready',             'emoji'=>'✅'],
-                    'order_delivered'              => ['label'=>'Order Delivered',          'emoji'=>'🎉'],
-                    'bill_finalize'                => ['label'=>'Bill Finalized',           'emoji'=>'💰'],
-                    'delivery_confirmation'        => ['label'=>'Rider On the Way',        'emoji'=>'🚴'],
-                    'delivery_thank_you'           => ['label'=>'Delivery Thank You',      'emoji'=>'💌'],
-                    'order_dispatched_to_workshop' => ['label'=>'Sent to Workshop',        'emoji'=>'🏭'],
-                    'order_processing'             => ['label'=>'Processing at Workshop',  'emoji'=>'⚙️'],
-                    'order_returned_from_workshop' => ['label'=>'Back from Workshop',      'emoji'=>'📦'],
-                    'order_cancelled'              => ['label'=>'Order Cancelled',         'emoji'=>'❌'],
-                    'order_completed'              => ['label'=>'Order Completed',         'emoji'=>'✅'],
+                    'pos_walkin_placed'          => ['label'=>'Walk-in Placed',          'emoji'=>'🏬'],
+                    'pos_walkin_ready'           => ['label'=>'Walk-in Ready',           'emoji'=>'✅'],
+                    'pos_walkin_completed'       => ['label'=>'Walk-in Completed',       'emoji'=>'🎉'],
+                    'collection_order_placed'    => ['label'=>'Collection Placed',       'emoji'=>'📦'],
+                    'collection_order_ready'     => ['label'=>'Collection Ready',        'emoji'=>'✅'],
+                    'collection_order_completed' => ['label'=>'Collection Completed',    'emoji'=>'🎉'],
+                    'delivery_order_confirmed'   => ['label'=>'Delivery Confirmed',      'emoji'=>'👍'],
+                    'delivery_order_cancelled'   => ['label'=>'Delivery Cancelled',      'emoji'=>'❌'],
+                    'delivery_order_ready'       => ['label'=>'Delivery Ready',          'emoji'=>'✅'],
+                    'delivery_completed'         => ['label'=>'Delivery Completed',      'emoji'=>'🎉'],
+                    'bill_finalized'             => ['label'=>'Payment Request',         'emoji'=>'💰'],
+                    'payment_received'           => ['label'=>'Payment Received',        'emoji'=>'💳'],
                 ];
-                $info = $labels[$template->type] ?? ['label'=>ucwords(str_replace('_',' ',$template->type)),'emoji'=>'📱'];
+                $info = $labels[$template->type] ?? ['label'=>$template->name ?? ucwords(str_replace('_',' ',$template->type)),'emoji'=>'📱'];
             @endphp
 
             <div style="background:#fff;border:1.5px solid {{ $template->is_active ? '#86efac' : '#e5e7eb' }};border-radius:14px;overflow:hidden;box-shadow:0 2px 6px rgba(0,0,0,0.04);">

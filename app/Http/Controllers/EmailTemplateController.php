@@ -62,13 +62,7 @@ class EmailTemplateController extends Controller
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
                 'subject' => 'Walk-in Order Completed',
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your order <strong>#{order_id}</strong> is fully completed and settled.</p><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">Thank you for your business! - 365 Laundry</p></div></div>'
-            ],
-            [
-                'type' => 'delivery_completed',
-                'name' => 'Delivery Order Completed',
-                'subject' => 'Delivery Order Completed',
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #3b82f6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Delivery Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your delivery order <strong>#{order_id}</strong> is completed. Thank you for using 365 Laundry!</p></div></div>'
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your order <strong>#{order_id}</strong> is fully completed. Total: {total}. Payment: {payment_status}.</p><p style="font-size: 14px; color: #6b7280; line-height: 1.5;">Thank you for your business! - 365 Laundry</p></div></div>'
             ],
             [
                 'type' => 'collection_order_placed',
@@ -78,15 +72,51 @@ class EmailTemplateController extends Controller
             ],
             [
                 'type' => 'collection_order_ready',
-                'name' => 'Collection Order Ready for Pickup/Delivery',
+                'name' => 'Collection Order Ready for Pickup',
                 'subject' => 'Collection Order Ready',
-                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Ready</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Great news! Your order <strong>#{order_id}</strong> is completed and ready for pickup or delivery.</p></div></div>'
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #10b981; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Ready</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Great news! Your order <strong>#{order_id}</strong> is completed and ready for pickup.</p></div></div>'
             ],
             [
                 'type' => 'collection_order_completed',
                 'name' => 'Collection Order Completed',
                 'subject' => 'Collection Order Completed',
                 'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #8b5cf6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Order Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your order <strong>#{order_id}</strong> is completed and settled. Thank you for choosing 365 Laundry!</p></div></div>'
+            ],
+            [
+                'type' => 'delivery_order_confirmed',
+                'name' => 'Delivery Order Confirmed',
+                'subject' => 'Delivery Order Confirmed',
+                'body' => '<p>Hi {customer_name}, your delivery order #{order_id} has been approved and confirmed. We will process it shortly.</p>'
+            ],
+            [
+                'type' => 'delivery_order_cancelled',
+                'name' => 'Delivery Order Cancelled',
+                'subject' => 'Delivery Order Cancelled',
+                'body' => '<p>Hi {customer_name}, unfortunately, your delivery order #{order_id} has been cancelled. Please contact us for details.</p>'
+            ],
+            [
+                'type' => 'delivery_order_ready',
+                'name' => 'Delivery Order Ready for Dispatch',
+                'subject' => 'Delivery Order Ready for Dispatch',
+                'body' => '<p>Hi {customer_name}, your delivery order #{order_id} is washed and ready to be dispatched to you!</p>'
+            ],
+            [
+                'type' => 'delivery_completed',
+                'name' => 'Delivery Order Completed',
+                'subject' => 'Delivery Order Completed',
+                'body' => '<div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;"><div style="background-color: #3b82f6; padding: 24px; text-align: center;"><h1 style="color: #ffffff; margin: 0; font-size: 24px;">Delivery Completed</h1></div><div style="padding: 32px; background-color: #ffffff;"><p style="font-size: 16px; color: #374151; margin-bottom: 24px;">Hi {customer_name},</p><p style="font-size: 16px; color: #374151; line-height: 1.5;">Your delivery order <strong>#{order_id}</strong> is completed. Thank you for using 365 Laundry!</p></div></div>'
+            ],
+            [
+                'type' => 'bill_finalized',
+                'name' => 'Payment Request',
+                'subject' => 'Payment Request for Order #{order_id}',
+                'body' => '<p>Hi {customer_name}, the bill for order #{order_id} is finalized. Total: {total}. Due: {amount_due}. Please arrange the payment.</p>'
+            ],
+            [
+                'type' => 'payment_received',
+                'name' => 'Payment Received',
+                'subject' => 'Payment Received for Order #{order_id}',
+                'body' => '<p>Hi {customer_name}, we have received and approved a payment for your order #{order_id}. Total: {total}. Status: {payment_status}.</p>'
             ]
         ];
 
