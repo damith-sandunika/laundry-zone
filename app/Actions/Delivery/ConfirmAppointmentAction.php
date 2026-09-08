@@ -29,6 +29,8 @@ class ConfirmAppointmentAction
         }
 
         $commService = new CommunicationService();
-        $commService->sendBookingConfirmation($appointment);
+        if ($appointment->order) {
+            $commService->sendDeliveryOrderConfirmed($appointment->order);
+        }
     }
 }

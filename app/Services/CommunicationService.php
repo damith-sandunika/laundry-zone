@@ -52,18 +52,6 @@ class CommunicationService
                     </table>
                 ",
             ],
-            'delivery_completed' => [
-                'subject' => "Delivery Order Completed",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> is completed. Thank you for using 365 Laundry!</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
-                    </table>
-                ",
-            ],
             'collection_order_placed' => [
                 'subject' => "Collection Order Placed",
                 'body'    => "
@@ -85,32 +73,44 @@ class CommunicationService
                     <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is completed and settled. Thank you for choosing 365 Laundry!</p>
                 ",
             ],
+            'delivery_order_confirmed' => [
+                'subject' => "Delivery Order Confirmed",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> has been approved and confirmed. We will process it shortly.</p>
+                ",
+            ],
+            'delivery_order_cancelled' => [
+                'subject' => "Delivery Order Cancelled",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Unfortunately, your delivery order <strong>#{$orderId}</strong> has been cancelled. Please contact us for more information.</p>
+                ",
+            ],
+            'delivery_order_ready' => [
+                'subject' => "Delivery Order Ready for Dispatch",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> is washed and ready to be dispatched to you!</p>
+                ",
+            ],
+            'delivery_completed' => [
+                'subject' => "Delivery Order Completed",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> has been successfully delivered. Thank you for using 365 Laundry!</p>
+                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
+                    </table>
+                ",
+            ],
             'bill_finalized' => [
                 'subject' => "Payment Request for Order #{$orderId}",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>The bill for your order <strong>#{$orderId}</strong> has been finalized. The total amount is <strong>{$total}</strong> and the amount due is <strong>{$due}</strong>. Please arrange the payment. Thank you! - 365 Laundry</p>
-                ",
-            ],
-            'order_picked_up' => [
-                'subject' => "Order #{$orderId} Picked Up",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been picked up by our rider.</p>
-                ",
-            ],
-            'order_processing' => [
-                'subject' => "Order #{$orderId} is Processing",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is currently being processed at our workshop.</p>
-                ",
-            ],
-            'order_dispatched' => [
-                'subject' => "Order #{$orderId} Dispatched from Workshop",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been cleaned and dispatched back to the branch/delivery hub.</p>
                 ",
             ],
             'payment_received' => [
@@ -132,25 +132,20 @@ class CommunicationService
         return $templates[$type] ?? ['subject' => "Order #{$orderId} Update", 'body' => "<p>Hi {$name}, there is an update on order #{$orderId}.</p>"];
     }
 
-    public function sendBookingConfirmation(\App\Models\DeliveryAppointment $appointment) {
-        if ($appointment->order) {
-            $this->dispatch('delivery_order_placed', $appointment->order);
-        }
-    }
-
     public function sendPosWalkinPlaced(Order $order) { $this->dispatch('pos_walkin_placed', $order); }
     public function sendPosWalkinReady(Order $order) { $this->dispatch('pos_walkin_ready', $order); }
     public function sendPosWalkinCompleted(Order $order) { $this->dispatch('pos_walkin_completed', $order); }
-    public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
+    
     public function sendCollectionOrderPlaced(Order $order) { $this->dispatch('collection_order_placed', $order); }
     public function sendCollectionOrderReady(Order $order)  { $this->dispatch('collection_order_ready', $order); }
     public function sendCollectionOrderCompleted(Order $order) { $this->dispatch('collection_order_completed', $order); }
-    public function sendFinalizedBill(Order $order) { $this->dispatch('bill_finalized', $order); }
     
-    // New triggers
-    public function sendOrderPickedUp(Order $order) { $this->dispatch('order_picked_up', $order); }
-    public function sendOrderProcessing(Order $order) { $this->dispatch('order_processing', $order); }
-    public function sendOrderDispatched(Order $order) { $this->dispatch('order_dispatched', $order); }
+    public function sendDeliveryOrderConfirmed(Order $order) { $this->dispatch('delivery_order_confirmed', $order); }
+    public function sendDeliveryOrderCancelled(Order $order) { $this->dispatch('delivery_order_cancelled', $order); }
+    public function sendDeliveryOrderReady(Order $order) { $this->dispatch('delivery_order_ready', $order); }
+    public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
+
+    public function sendFinalizedBill(Order $order) { $this->dispatch('bill_finalized', $order); }
     public function sendPaymentReceived(Order $order) { $this->dispatch('payment_received', $order); }
 
     // ─── Master Dispatch ─────────────────────────────────────────────────────

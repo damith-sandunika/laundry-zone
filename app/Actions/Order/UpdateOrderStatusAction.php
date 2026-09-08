@@ -139,8 +139,14 @@ class UpdateOrderStatusAction
                 $isCollection = true;
             }
 
-            if ($status === 'done' && $isCollection) {
-                $commService->sendCollectionOrderReady($order);
+            if ($status === 'done') {
+                if ($order->is_delivery_order) {
+                    $commService->sendDeliveryOrderReady($order);
+                } elseif ($isCollection) {
+                    $commService->sendCollectionOrderReady($order);
+                } else {
+                    $commService->sendPosWalkinReady($order);
+                }
             } elseif ($status === 'delivered' || $status === 'completed') {
                 if ($order->is_delivery_order) {
                     $commService->sendDeliveryCompleted($order);
@@ -149,12 +155,6 @@ class UpdateOrderStatusAction
                 } else {
                     $commService->sendPosWalkinCompleted($order);
                 }
-            } elseif ($status === 'picked_up') {
-                $commService->sendOrderPickedUp($order);
-            } elseif ($status === 'processing') {
-                $commService->sendOrderProcessing($order);
-            } elseif ($status === 'returned_from_workshop') {
-                $commService->sendOrderDispatched($order);
             }
         } catch (\Exception $e) {
             Log::error('Notification failed: ' . $e->getMessage());

@@ -13,5 +13,11 @@ class CancelAppointmentAction
             'cancel_reason' => $data['reason'] ?? null,
             'cancelled_by' => auth()->id(),
         ]);
+
+        $commService = new \App\Services\CommunicationService();
+        if ($appointment->order) {
+            $appointment->order->update(['status' => 'cancelled']);
+            $commService->sendDeliveryOrderCancelled($appointment->order);
+        }
     }
 }
