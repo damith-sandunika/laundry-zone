@@ -82,7 +82,7 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'delivery_order_cancelled',
                 'name' => 'Delivery Order Cancelled',
-                'message' => 'Hi {customer_name}, unfortunately, your delivery order #{order_id} has been cancelled. Please contact us for details.',
+                'message' => 'Hi {customer_name}, unfortunately, your delivery order #{order_id} has been cancelled. Please contact us for details. Track your order here: {tracking_link}',
             ],
             [
                 'type' => 'delivery_order_ready',

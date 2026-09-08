@@ -178,7 +178,7 @@ class CommunicationService
             'total'          => 'Rs.' . number_format($order->total, 2),
             'amount_due'     => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
             'payment_status' => $paymentStatusText,
-            'tracking_link'  => route('orders.track', $order->id),
+            'tracking_link'  => url("/customer/orders/{$order->id}"),
             'requested_amount' => 'Rs.' . number_format($requestedAmountRaw, 2)
         ];
 

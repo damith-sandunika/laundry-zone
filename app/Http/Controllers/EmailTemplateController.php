@@ -92,7 +92,7 @@ class EmailTemplateController extends Controller
                 'type' => 'delivery_order_cancelled',
                 'name' => 'Delivery Order Cancelled',
                 'subject' => 'Delivery Order Cancelled',
-                'body' => '<p>Hi {customer_name}, unfortunately, your delivery order #{order_id} has been cancelled. Please contact us for details.</p>'
+                'body' => '<p>Hi {customer_name}, unfortunately, your delivery order #{order_id} has been cancelled. Please contact us for details. <br><br> <a href="{tracking_link}" style="display: inline-block; padding: 10px 20px; background-color: #3b82f6; color: #ffffff; text-decoration: none; border-radius: 6px; font-weight: bold;">View Order Details</a></p>'
             ],
             [
                 'type' => 'delivery_order_ready',
