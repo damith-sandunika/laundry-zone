@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center flex-wrap gap-3">
             <div>
-                <h2 class="font-black text-2xl text-slate-800 tracking-tight">Welcome, {{ $customer->name }}!</h2>
+                <h2 class="font-black text-xl md:text-2xl text-slate-800 tracking-tight">Welcome, {{ $customer->name }}!</h2>
                 <p class="text-sm text-slate-500 font-medium mt-1">Manage your laundry orders and track deliveries.</p>
             </div>
             <a href="{{ route('customer.booking') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-200 transition-all flex items-center gap-2">
@@ -13,31 +13,31 @@
 
     <!-- Stats -->
     <div class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+        <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
                 <i class="fa-solid fa-box-open"></i>
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Orders</p>
-                <h3 class="text-2xl font-black text-slate-800">{{ $activeCount }}</h3>
+                <h3 class="text-xl md:text-2xl font-black text-slate-800">{{ $activeCount }}</h3>
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
+        <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
             <div class="w-12 h-12 rounded-xl bg-green-50 text-green-600 flex items-center justify-center text-xl">
                 <i class="fa-solid fa-check-double"></i>
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Orders</p>
-                <h3 class="text-2xl font-black text-slate-800">{{ $totalOrders }}</h3>
+                <h3 class="text-xl md:text-2xl font-black text-slate-800">{{ $totalOrders }}</h3>
             </div>
         </div>
-        <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 col-span-2 md:col-span-1">
+        <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 col-span-2 md:col-span-1">
             <div class="w-12 h-12 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center text-xl">
                 <i class="fa-solid fa-wallet"></i>
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Spent</p>
-                <h3 class="text-2xl font-black text-slate-800">LKR {{ number_format($totalSpent, 2) }}</h3>
+                <h3 class="text-xl md:text-2xl font-black text-slate-800">LKR {{ number_format($totalSpent, 2) }}</h3>
             </div>
         </div>
     </div>
@@ -55,7 +55,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Appointments (Pending Pickups) -->
                 @foreach($appointments as $appointment)
-                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-3xl -z-0"></div>
                         <div class="relative z-10 flex justify-between items-start mb-4">
                             <div>
@@ -146,7 +146,7 @@
                                 $deliveryAppointment = \App\Models\DeliveryAppointment::where('order_id', $order->id)->first();
                                 $isDelivery = $deliveryAppointment ? true : false;
                             @endphp
-                            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+                            <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
                                 @if($isDelivery)
                                     <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-3xl -z-0"></div>
                                 @endif
@@ -339,7 +339,7 @@
                 @endforeach
             </div>
         @else
-            <div class="bg-slate-50 rounded-2xl border border-slate-200 border-dashed p-8 text-center">
+            <div class="bg-slate-50 rounded-xl border border-slate-200 border-dashed p-8 text-center">
                 <div class="w-16 h-16 bg-white rounded-full flex items-center justify-center text-slate-300 mx-auto mb-3 shadow-sm">
                     <i class="fa-solid fa-shirt text-2xl"></i>
                 </div>

@@ -25,7 +25,7 @@
         </div>
 
         <!-- Form Card -->
-        <div class="glass-card rounded-2xl shadow-xl overflow-hidden">
+        <div class="glass-card rounded-xl shadow-xl overflow-hidden">
             <div class="p-8">
                 <form method="POST" action="{{ route('customer.password.email') }}" class="space-y-5">
                     @csrf

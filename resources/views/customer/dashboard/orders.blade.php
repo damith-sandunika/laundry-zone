@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center flex-wrap gap-3">
             <div>
-                <h2 class="font-black text-2xl text-slate-800 tracking-tight">Order History</h2>
+                <h2 class="font-black text-xl md:text-2xl text-slate-800 tracking-tight">Order History</h2>
                 <p class="text-sm text-slate-500 font-medium mt-1">View all your past and current laundry orders.</p>
             </div>
             <a href="{{ route('customer.dashboard') }}" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center gap-2">
@@ -16,7 +16,7 @@
             @foreach($unifiedOrders as $orderObj)
                 @if($orderObj->type === 'appointment')
                     <!-- Pickup Request Card -->
-                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
                         <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-purple-100 to-transparent rounded-bl-3xl -z-0"></div>
                         <div class="relative z-10 flex justify-between items-start mb-4">
                             <div>
@@ -54,7 +54,7 @@
                     </div>
                 @else
                     <!-- Regular/Delivery Order Card -->
-                    <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
+                    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-5 hover:shadow-md transition-shadow relative overflow-hidden">
                         @if($orderObj->is_delivery)
                             <div class="absolute top-0 right-0 w-16 h-16 bg-gradient-to-bl from-blue-100 to-transparent rounded-bl-3xl -z-0"></div>
                         @else
@@ -119,7 +119,7 @@
             @endforeach
         </div>
     @else
-        <div class="bg-slate-50 rounded-2xl border border-slate-200 border-dashed p-12 text-center max-w-2xl mx-auto">
+        <div class="bg-slate-50 rounded-xl border border-slate-200 border-dashed p-12 text-center max-w-2xl mx-auto">
             <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-slate-300 mx-auto mb-4 shadow-sm border border-slate-100">
                 <i class="fa-solid fa-box-open text-3xl text-slate-400"></i>
             </div>

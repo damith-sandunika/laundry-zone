@@ -106,7 +106,7 @@
                         <div x-show="currentViewLevel === 0">
                             <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
                                 <template x-for="cat in categories" :key="cat.id">
-                                    <button type="button" @click="selectLevel1(cat)" class="bg-white rounded-2xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
+                                    <button type="button" @click="selectLevel1(cat)" class="bg-white rounded-xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
                                         <div class="w-full aspect-[4/3] bg-blue-50 text-blue-600 flex items-center justify-center relative overflow-hidden">
                                             <div class="absolute inset-0 transition-transform duration-300 group-hover:scale-110 flex items-center justify-center">
                                                 <template x-if="cat.image_path">
@@ -154,7 +154,7 @@
                         <!-- Level 2: Services List -->
                         <div x-show="currentViewLevel === 2" class="space-y-4">
                             <template x-for="service in currentServices" :key="service.id">
-                                <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 flex gap-4 transition-all hover:border-blue-200 hover:shadow-md cursor-pointer group" @click="openQtyModal(service)">
+                                <div class="bg-white border-2 border-slate-100 rounded-xl p-4 flex gap-4 transition-all hover:border-blue-200 hover:shadow-md cursor-pointer group" @click="openQtyModal(service)">
                                     <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center shrink-0 text-blue-600 group-hover:scale-110 transition-transform">
                                         <i class="fa-solid fa-jug-detergent"></i>
                                     </div>
@@ -338,7 +338,7 @@
 
             <!-- STEP 1: Authentication -->
             <div x-show="step === 1" x-transition.opacity.duration.300ms>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     
                     <!-- If already logged in, show account info instead of form -->
                     <template x-if="isAuthenticated">
@@ -420,7 +420,7 @@
 
             <!-- STEP 3: Pickup Details -->
             <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
-                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
                         <span class="bg-amber-50 text-amber-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
                         Pickup Details
@@ -456,7 +456,7 @@
                         </div>
                         
                         <!-- Map Wrapper -->
-                        <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+                        <div class="relative rounded-xl overflow-hidden border border-slate-200 shadow-lg">
                             
                             <!-- Centered Pin -->
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full z-[400] pointer-events-none flex flex-col items-center">
@@ -530,7 +530,7 @@
             <div x-show="step === 4" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="space-y-6">
                     <!-- Delivery Section -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                         <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
                             <span class="bg-emerald-50 text-emerald-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-box-open"></i></span>
                             Return Delivery
@@ -579,7 +579,7 @@
                                         </label>
                                     </div>
                                     <!-- Delivery Map Wrapper -->
-                                    <div class="relative rounded-2xl overflow-hidden border border-slate-200 shadow-lg">
+                                    <div class="relative rounded-xl overflow-hidden border border-slate-200 shadow-lg">
                                         <!-- Centered Pin -->
                                         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full z-[400] pointer-events-none flex flex-col items-center">
                                             <div :class="isOutOfRange ? 'bg-red-600 border-red-700' : 'bg-slate-900 border-slate-700'"
@@ -634,7 +634,7 @@
                     </div>
 
                     <!-- Payment Summary Card -->
-                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-2xl shadow-lg border border-slate-700 p-6 sm:p-8">
+                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 sm:p-8">
                         <div class="flex items-center gap-3 mb-5">
                             <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg">
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -650,7 +650,14 @@
                                 <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
                                     <i class="fa-solid fa-shirt text-blue-400 text-xs"></i> Services (Estimate)
                                 </span>
-                                <span class="text-white text-sm font-black">LKR <span x-text="totalPrice"></span></span>
+                                <span class="text-white text-sm font-black">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></span>
+                            </div>
+
+                            <div x-show="estimatedDeliveryFee > 0" class="flex justify-between items-center py-2.5 border-b border-slate-700">
+                                <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
+                                    <i class="fa-solid fa-truck text-emerald-400 text-xs"></i> Delivery Fee
+                                </span>
+                                <span class="text-white text-sm font-black">LKR <span x-text="estimatedDeliveryFee.toFixed(2)"></span></span>
                             </div>
 
                             <div x-show="pickupDistance > 0" class="flex justify-between items-center py-1.5 text-slate-400 text-xs">
@@ -661,7 +668,7 @@
 
                         <div class="bg-blue-600 rounded-xl p-4 flex justify-between items-center">
                             <span class="text-blue-100 font-black text-sm">Total Estimated Amount</span>
-                            <span class="text-white font-black text-xl">LKR <span x-text="totalPrice"></span></span>
+                            <span class="text-white font-black text-xl">LKR <span x-text="totalPrice.toFixed(2)"></span></span>
                         </div>
 
                         <p class="text-[11px] text-slate-500 text-center mt-4">
@@ -1258,7 +1265,7 @@
                         return baseTotal + ttMarkupTotal + extrasMarkupTotal;
                     },
                     get totalPrice() {
-                        return this.calculatedGrandTotal;
+                        return this.calculatedGrandTotal + (this.estimatedDeliveryFee > 0 ? this.estimatedDeliveryFee : 0);
                     },
                     get formattedCart() {
                         let result = '';

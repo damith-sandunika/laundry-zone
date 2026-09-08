@@ -7,7 +7,7 @@
             <div class="flex items-center gap-3">
                 <a href="{{ route('customer.orders') }}" class="text-slate-400 hover:text-blue-600 transition p-2 bg-white rounded-lg shadow-sm border border-slate-100"><i class="fa-solid fa-arrow-left"></i></a>
                 <div>
-                    <h2 class="font-black text-2xl text-slate-800 leading-tight">Order #{{ $order->order_number }}</h2>
+                    <h2 class="font-black text-xl md:text-2xl text-slate-800 leading-tight">Order #{{ $order->order_number }}</h2>
                     <p class="text-sm font-bold text-slate-500">Placed on {{ $order->created_at->format('M d, Y h:i A') }}</p>
                 </div>
             </div>
@@ -27,7 +27,7 @@
 
     <!-- Horizontal Status Timeline -->
     @if($order->payment_approved || $order->requested_advance == 0)
-    <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8 mb-6 overflow-hidden">
+    <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 lg:p-8 mb-6 overflow-hidden">
         <h3 class="font-black text-slate-800 mb-8 flex items-center gap-2"><i class="fa-solid fa-bars-progress text-blue-500"></i> Order Progress</h3>
         
         @php
@@ -157,7 +157,7 @@
 
     @if(!$hasStartedWashing)
         @if($isLatestSlipRejected)
-        <div class="bg-red-50 rounded-3xl border border-red-200 p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="bg-red-50 rounded-xl border border-red-200 p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-red-800 text-center sm:text-left">
                 <div class="w-16 h-16 rounded-full bg-red-100 flex items-center justify-center text-3xl shrink-0">
                     <i class="fa-solid fa-circle-xmark text-red-500"></i>
@@ -181,7 +181,7 @@
             </div>
         </div>
         @elseif(!$order->payment_approved && ($order->requested_advance - $order->paid_amount) > 0 && !$hasPendingSlipGlobally)
-        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-3xl shadow-lg p-8 mb-6 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
+        <div class="bg-gradient-to-br from-blue-600 to-indigo-700 rounded-xl shadow-lg p-8 mb-6 text-white relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-6">
             <div class="absolute top-0 right-0 w-64 h-64 bg-white opacity-5 rounded-full -mt-20 -mr-20 pointer-events-none"></div>
             <div class="absolute bottom-0 left-0 w-32 h-32 bg-white opacity-5 rounded-full -mb-10 -ml-10 pointer-events-none"></div>
             
@@ -195,13 +195,13 @@
             </div>
             
             <div class="relative z-10 shrink-0 w-full md:w-auto">
-                <button type="button" x-data @click="$dispatch('open-payment-modal')" class="w-full md:w-auto bg-yellow-400 text-yellow-900 hover:bg-yellow-300 px-8 py-4 rounded-2xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-lg flex items-center justify-center gap-3">
+                <button type="button" x-data @click="$dispatch('open-payment-modal')" class="w-full md:w-auto bg-yellow-400 text-yellow-900 hover:bg-yellow-300 px-8 py-4 rounded-xl font-black shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all text-lg flex items-center justify-center gap-3">
                     <i class="fa-solid fa-bolt"></i> PAY NOW
                 </button>
             </div>
         </div>
         @elseif($hasPendingSlipGlobally)
-        <div class="bg-yellow-50 rounded-3xl border border-yellow-200 p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="bg-yellow-50 rounded-xl border border-yellow-200 p-6 mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div class="flex items-center gap-4 text-yellow-800">
                 <div class="w-12 h-12 rounded-full bg-yellow-200 flex items-center justify-center text-xl shrink-0">
                     <i class="fa-solid fa-hourglass-half fa-spin"></i>
@@ -220,7 +220,7 @@
         <div class="lg:col-span-2 space-y-6">
             
             <!-- Order Items -->
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden">
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
                 <div class="px-6 py-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
                     <h3 class="font-black text-slate-800"><i class="fa-solid fa-shirt text-blue-500 mr-2"></i> Order Items</h3>
                     @php
@@ -523,7 +523,7 @@
 
             <!-- Notes -->
             @if($order->notes)
-                <div class="bg-yellow-50 rounded-3xl border border-yellow-100 p-6">
+                <div class="bg-yellow-50 rounded-xl border border-yellow-100 p-6">
                     <h3 class="font-black text-yellow-800 text-sm mb-2"><i class="fa-solid fa-note-sticky mr-1"></i> Order Notes</h3>
                     <p class="text-sm text-yellow-700 font-medium">{{ $order->notes }}</p>
                 </div>
@@ -533,7 +533,7 @@
         <!-- Right Column: Timeline & Branch -->
         <div class="space-y-6">
             <!-- Branch Info -->
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 relative overflow-hidden">
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-blue-100 to-transparent rounded-bl-[40px] -z-0"></div>
                 <h3 class="font-black text-slate-800 mb-4 relative z-10"><i class="fa-solid fa-shop text-blue-500 mr-2"></i> Branch Details</h3>
                 <div class="relative z-10">
@@ -572,7 +572,7 @@
              x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
              class="fixed inset-0 z-10 w-screen overflow-y-auto" style="display: none;">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-                <div class="relative transform overflow-hidden rounded-3xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
+                <div class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-md">
                     <form action="{{ route('customer.orders.submitPayment', $order->order_number) }}" method="POST" enctype="multipart/form-data" @submit="isSubmitting = true">
                         @csrf
                         <div class="bg-white px-6 pb-6 pt-8 sm:p-8">

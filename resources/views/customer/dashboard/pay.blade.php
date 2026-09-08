@@ -12,7 +12,7 @@
     <div class="max-w-4xl mx-auto" x-data="paymentForm()">
         
         @if ($errors->any())
-            <div class="mb-6 bg-red-50 border border-red-100 text-red-600 p-4 rounded-2xl">
+            <div class="mb-6 bg-red-50 border border-red-100 text-red-600 p-4 rounded-xl">
                 <ul class="list-disc list-inside text-sm font-bold">
                     @foreach ($errors->all() as $error)
                         <li>{{ $error }}</li>
@@ -25,7 +25,7 @@
             @csrf
             
             <!-- Step 1: Select Payment Method -->
-            <div class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8">
+            <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 lg:p-8">
                 <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
                     <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</span>
                     Select Payment Method
@@ -35,7 +35,7 @@
                     @foreach($paymentMethods as $method)
                         <label class="relative cursor-pointer">
                             <input type="radio" name="payment_method" value="{{ $method->name }}" x-model="selectedMethod" class="peer sr-only" required>
-                            <div class="p-5 rounded-2xl border-2 transition-all duration-200 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-hover:border-blue-300 bg-white">
+                            <div class="p-5 rounded-xl border-2 transition-all duration-200 peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-hover:border-blue-300 bg-white">
                                 <div class="flex items-center justify-between mb-3">
                                     <div class="text-2xl text-blue-600">
                                         @if($method->type === 'card_transfer')
@@ -65,13 +65,13 @@
             </div>
 
             <!-- Step 2: Bank Transfer Details (Dynamic) -->
-            <div x-show="isBankTransfer()" x-transition.opacity style="display: none;" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8">
+            <div x-show="isBankTransfer()" x-transition.opacity style="display: none;" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 lg:p-8">
                 <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
                     <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">2</span>
                     Bank Transfer Details
                 </h3>
                 
-                <div class="bg-slate-50 rounded-2xl p-5 mb-6">
+                <div class="bg-slate-50 rounded-xl p-5 mb-6">
                     <p class="text-sm font-bold text-slate-600 mb-2">Please transfer <strong class="text-blue-600">LKR {{ number_format($order->total, 2) }}</strong> to the following account:</p>
                     <div class="grid grid-cols-2 gap-y-2 text-sm">
                         <div class="text-slate-500">Bank Name:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_name', 'Commercial Bank') }}</div>
@@ -83,7 +83,7 @@
 
                 <div>
                     <label class="block text-sm font-bold text-slate-700 mb-2">Upload Payment Receipt</label>
-                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-2xl hover:border-blue-400 transition-colors bg-slate-50/50 cursor-pointer" @click="$refs.receipt_input.click()">
+                    <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-xl hover:border-blue-400 transition-colors bg-slate-50/50 cursor-pointer" @click="$refs.receipt_input.click()">
                         <div class="space-y-1 text-center">
                             <i class="fa-solid fa-cloud-arrow-up text-3xl text-slate-400 mb-3"></i>
                             <div class="flex text-sm text-slate-600 justify-center">
@@ -101,7 +101,7 @@
             </div>
 
             <!-- Step 2: Simulated Card Payment (Dynamic) -->
-            <div x-show="isCardPayment()" x-transition.opacity style="display: none;" class="bg-white rounded-3xl border border-slate-100 shadow-sm p-6 lg:p-8">
+            <div x-show="isCardPayment()" x-transition.opacity style="display: none;" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 lg:p-8">
                 <div class="flex justify-between items-center mb-6">
                     <h3 class="font-black text-slate-800 flex items-center gap-2">
                         <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">2</span>
