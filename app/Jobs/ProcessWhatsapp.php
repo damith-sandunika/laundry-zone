@@ -7,7 +7,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\NotificationLog;
+use App\Models\WhatsappLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -16,13 +16,15 @@ class ProcessWhatsapp implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     protected $whatsappLog;
+    protected $parameters;
 
     /**
      * Create a new job instance.
      */
-    public function __construct(NotificationLog $whatsappLog)
+    public function __construct(WhatsappLog $whatsappLog, array $parameters = [])
     {
         $this->whatsappLog = $whatsappLog;
+        $this->parameters = $parameters;
     }
 
     /**
@@ -31,21 +33,21 @@ class ProcessWhatsapp implements ShouldQueue
     public function handle(): void
     {
         try {
-            $apiUrl   = env('WHATSAPP_API_URL');
-            $apiToken = env('WHATSAPP_API_TOKEN');
+            $phoneId  = \App\Models\Setting::where('key', 'whatsapp_phone_id')->value('value');
+            $apiToken = \App\Models\Setting::where('key', 'whatsapp_access_token')->value('value');
 
-            if (!$apiUrl || !$apiToken) {
-                throw new \Exception('WhatsApp API credentials not configured.');
+            if (!$phoneId || !$apiToken) {
+                throw new \Exception('WhatsApp API credentials not configured in settings.');
             }
             
-            $payload = json_decode($this->whatsappLog->payload, true);
-            $templateName = $payload['template_name'] ?? 'default';
-            $parameters = $payload['parameters'] ?? [];
+            $apiUrl = "https://graph.facebook.com/v17.0/{$phoneId}/messages";
+            
+            $templateName = $this->whatsappLog->template_name ?? 'default';
             
             $components = [];
-            if (!empty($parameters)) {
+            if (!empty($this->parameters)) {
                 $componentParams = [];
-                foreach ($parameters as $param) {
+                foreach ($this->parameters as $param) {
                     $componentParams[] = [
                         'type' => 'text',
                         'text' => (string) $param
@@ -58,16 +60,19 @@ class ProcessWhatsapp implements ShouldQueue
                 ];
             }
 
+            $template = \App\Models\WhatsappTemplate::where('meta_template_name', $templateName)->first();
+            $languageCode = $template ? $template->language_code : 'en_US';
+
             $response = Http::timeout(10)
                 ->withToken($apiToken)
                 ->post($apiUrl, [
                     'messaging_product' => 'whatsapp',
-                    'to'                => $this->whatsappLog->recipient,
+                    'to'                => $this->whatsappLog->phone,
                     'type'              => 'template',
                     'template'          => [
                         'name'       => $templateName,
                         'language'   => [
-                            'code' => 'en_US'
+                            'code' => $languageCode
                         ],
                         'components' => $components
                     ]
