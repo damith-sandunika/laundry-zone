@@ -23,6 +23,20 @@ class SettingsController extends Controller
         return view('services.index', compact('services', 'inventoryItems'));
     }
 
+    public function servicesManager()
+    {
+        $serviceCategories = ServiceCategory::with(['children.services' => function($q) {
+            $q->orderBy('order_index');
+        }, 'services' => function($q) {
+            $q->orderBy('order_index');
+        }])->orderBy('order_index')->get();
+
+        $mainCategories = $serviceCategories->whereNull('parent_id');
+        $services = ServiceType::with(['inventoryItems', 'category'])->orderBy('order_index')->get();
+
+        return view('settings.services', compact('serviceCategories', 'mainCategories', 'services'));
+    }
+
     public function index()
     {
         $branchId = $this->getActiveBranchId();

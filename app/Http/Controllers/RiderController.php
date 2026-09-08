@@ -19,7 +19,7 @@ class RiderController extends Controller
     {
         $rider = auth()->user();
 
-        $activeTasks = DeliveryTask::with(['appointment.customer', 'order'])
+        $activeTasks = DeliveryTask::with(['appointment.customer', 'appointment.order', 'order'])
             ->where('rider_id', $rider->id)
             ->whereIn('status', ['assigned', 'accepted', 'on_way', 'arrived', 'waiting_for_payment'])
             ->orderBy('created_at', 'asc')
@@ -42,7 +42,7 @@ class RiderController extends Controller
     {
         $rider = auth()->user();
 
-        $tasks = DeliveryTask::with(['appointment.customer', 'order', 'branch'])
+        $tasks = DeliveryTask::with(['appointment.customer', 'appointment.order', 'order', 'branch'])
             ->where('rider_id', $rider->id)
             ->orderByDesc('created_at')
             ->paginate(20);

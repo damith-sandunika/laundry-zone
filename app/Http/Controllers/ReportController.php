@@ -57,14 +57,13 @@ class ReportController extends Controller
         $deliveryOrders = $orders->getCollection()->whereIn('id', $deliveryOrderIds);
         $walkinOrders   = $orders->getCollection()->whereNotIn('id', $deliveryOrderIds);
 
-        // Payments & package payments - still use get() since they are used per-payment in the profit loop
+        // Payments & package payments - using DB aggregates instead of RAM
         $paymentsQuery = PaymentTransaction::with(['order', 'order.branch'])->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
             $paymentsQuery->whereHas('order', function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)->orWhere('workshop_id', $branchId);
             });
         }
-        $payments = $paymentsQuery->get();
 
         $packagePaymentsQuery = PackagePayment::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
@@ -74,50 +73,59 @@ class ReportController extends Controller
         }
         $packagePayments = $packagePaymentsQuery->get();
 
-        $totalCollected = $payments->sum('amount') + $packagePayments->sum('amount');
-        $collectedCash  = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
-        $collectedCard  = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        $collectedBank  = $payments->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
+        $totalCollected = (clone $paymentsQuery)->sum('amount') + $packagePayments->sum('amount');
+        $collectedCash  = (clone $paymentsQuery)->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
+        $collectedCard  = (clone $paymentsQuery)->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
+        $collectedBank  = (clone $paymentsQuery)->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
 
         $actualTotalDeliveryFees = 0;
         $actualTotalBranchProfit = 0;
         $actualTotalWorkshopProfit = 0;
         
-        foreach ($payments as $payment) {
-            if ($payment->order) {
-                $order = $payment->order;
-                $deliveryFee = $order->delivery_fee ?? 0;
-                
-                $paidBefore = PaymentTransaction::where('order_id', $order->id)
-                    ->where('id', '<', $payment->id)
-                    ->sum('amount');
+        $paymentsQuery->chunkById(500, function($paymentsChunk) use (&$actualTotalDeliveryFees, &$actualTotalBranchProfit, &$actualTotalWorkshopProfit) {
+            $orderIds = $paymentsChunk->pluck('order_id')->filter()->unique()->toArray();
+            if (empty($orderIds)) return;
+            
+            $allTransactions = PaymentTransaction::whereIn('order_id', $orderIds)
+                ->select('id', 'order_id', 'amount')
+                ->get()
+                ->groupBy('order_id');
 
-                if ($paidBefore >= $deliveryFee) {
-                    $paidToDelivery = 0;
-                    $commissionable = $payment->amount;
-                } else {
-                    $remainingDeliveryFee = $deliveryFee - $paidBefore;
-                    $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
-                    $commissionable = $payment->amount - $paidToDelivery;
-                }
-                
-                $actualTotalDeliveryFees += $paidToDelivery;
-                
-                if ($commissionable > 0) {
-                    $branchProfitPercent = $order->branch->branch_profit_percentage ?? 0;
+            foreach ($paymentsChunk as $payment) {
+                if ($payment->order) {
+                    $order = $payment->order;
+                    $deliveryFee = $order->delivery_fee ?? 0;
                     
-                    if ($order->branch_id == $order->workshop_id || !$order->workshop_id) {
-                        $actualTotalWorkshopProfit += $commissionable;
+                    $transactionsForOrder = $allTransactions->get($order->id, collect());
+                    $paidBefore = $transactionsForOrder->where('id', '<', $payment->id)->sum('amount');
+
+                    if ($paidBefore >= $deliveryFee) {
+                        $paidToDelivery = 0;
+                        $commissionable = $payment->amount;
                     } else {
-                        $branchComm = $commissionable * ($branchProfitPercent / 100);
-                        $workshopComm = $commissionable - $branchComm;
+                        $remainingDeliveryFee = $deliveryFee - $paidBefore;
+                        $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
+                        $commissionable = $payment->amount - $paidToDelivery;
+                    }
+                    
+                    $actualTotalDeliveryFees += $paidToDelivery;
+                    
+                    if ($commissionable > 0) {
+                        $branchProfitPercent = $order->branch->branch_profit_percentage ?? 0;
                         
-                        $actualTotalBranchProfit += $branchComm;
-                        $actualTotalWorkshopProfit += $workshopComm;
+                        if ($order->branch_id == $order->workshop_id || !$order->workshop_id) {
+                            $actualTotalWorkshopProfit += $commissionable;
+                        } else {
+                            $branchComm = $commissionable * ($branchProfitPercent / 100);
+                            $workshopComm = $commissionable - $branchComm;
+                            
+                            $actualTotalBranchProfit += $branchComm;
+                            $actualTotalWorkshopProfit += $workshopComm;
+                        }
                     }
                 }
             }
-        }
+        });
         
         // Add package payments to branch profit as they don't have delivery fees
         $actualTotalBranchProfit += $packagePayments->sum('amount');
@@ -228,8 +236,7 @@ class ReportController extends Controller
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
         }
-        $orders = $salesQuery->with('customer')->orderBy('created_at', 'desc')->get();
-        $totalSales = $orders->sum('total');
+        $totalSales = (clone $salesQuery)->sum('total');
 
         $paymentsQuery = PaymentTransaction::with(['order', 'order.branch'])->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
@@ -237,7 +244,6 @@ class ReportController extends Controller
                 $q->where('branch_id', $branchId)->orWhere('workshop_id', $branchId);
             });
         }
-        $payments = $paymentsQuery->get();
 
         $packagePaymentsQuery = PackagePayment::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         if ($branchId) {
@@ -248,50 +254,59 @@ class ReportController extends Controller
         $packagePayments = $packagePaymentsQuery->get();
         $totalPackagePayments = $packagePayments->sum('amount');
         
-        $totalCollected = $payments->sum('amount') + $totalPackagePayments;
-        $collectedCash = $payments->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
-        $collectedCard = $payments->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        $collectedBank = $payments->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
+        $totalCollected = (clone $paymentsQuery)->sum('amount') + $totalPackagePayments;
+        $collectedCash = (clone $paymentsQuery)->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
+        $collectedCard = (clone $paymentsQuery)->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
+        $collectedBank = (clone $paymentsQuery)->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
 
         $actualTotalDeliveryFees = 0;
         $actualTotalBranchProfit = 0;
         $actualTotalWorkshopProfit = 0;
         
-        foreach ($payments as $payment) {
-            if ($payment->order) {
-                $order = $payment->order;
-                $deliveryFee = $order->delivery_fee ?? 0;
-                
-                $paidBefore = PaymentTransaction::where('order_id', $order->id)
-                    ->where('id', '<', $payment->id)
-                    ->sum('amount');
+        $paymentsQuery->chunkById(500, function($paymentsChunk) use (&$actualTotalDeliveryFees, &$actualTotalBranchProfit, &$actualTotalWorkshopProfit) {
+            $orderIds = $paymentsChunk->pluck('order_id')->filter()->unique()->toArray();
+            if (empty($orderIds)) return;
+            
+            $allTransactions = PaymentTransaction::whereIn('order_id', $orderIds)
+                ->select('id', 'order_id', 'amount')
+                ->get()
+                ->groupBy('order_id');
 
-                if ($paidBefore >= $deliveryFee) {
-                    $paidToDelivery = 0;
-                    $commissionable = $payment->amount;
-                } else {
-                    $remainingDeliveryFee = $deliveryFee - $paidBefore;
-                    $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
-                    $commissionable = $payment->amount - $paidToDelivery;
-                }
-                
-                $actualTotalDeliveryFees += $paidToDelivery;
-                
-                if ($commissionable > 0) {
-                    $branchProfitPercent = $order->branch->branch_profit_percentage ?? 0;
+            foreach ($paymentsChunk as $payment) {
+                if ($payment->order) {
+                    $order = $payment->order;
+                    $deliveryFee = $order->delivery_fee ?? 0;
                     
-                    if ($order->branch_id == $order->workshop_id || !$order->workshop_id) {
-                        $actualTotalWorkshopProfit += $commissionable;
+                    $transactionsForOrder = $allTransactions->get($order->id, collect());
+                    $paidBefore = $transactionsForOrder->where('id', '<', $payment->id)->sum('amount');
+
+                    if ($paidBefore >= $deliveryFee) {
+                        $paidToDelivery = 0;
+                        $commissionable = $payment->amount;
                     } else {
-                        $branchComm = $commissionable * ($branchProfitPercent / 100);
-                        $workshopComm = $commissionable - $branchComm;
+                        $remainingDeliveryFee = $deliveryFee - $paidBefore;
+                        $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
+                        $commissionable = $payment->amount - $paidToDelivery;
+                    }
+                    
+                    $actualTotalDeliveryFees += $paidToDelivery;
+                    
+                    if ($commissionable > 0) {
+                        $branchProfitPercent = $order->branch->branch_profit_percentage ?? 0;
                         
-                        $actualTotalBranchProfit += $branchComm;
-                        $actualTotalWorkshopProfit += $workshopComm;
+                        if ($order->branch_id == $order->workshop_id || !$order->workshop_id) {
+                            $actualTotalWorkshopProfit += $commissionable;
+                        } else {
+                            $branchComm = $commissionable * ($branchProfitPercent / 100);
+                            $workshopComm = $commissionable - $branchComm;
+                            
+                            $actualTotalBranchProfit += $branchComm;
+                            $actualTotalWorkshopProfit += $workshopComm;
+                        }
                     }
                 }
             }
-        }
+        });
         
         // Add package payments to branch profit as they don't have delivery fees
         $actualTotalBranchProfit += $packagePayments->sum('amount');
@@ -333,12 +348,8 @@ class ReportController extends Controller
         $totalInventoryCost = $inventoryCostQuery->sum(\DB::raw('inventory_transactions.quantity * inventory_items.cost_per_unit'));
 
 
-        $totalCredit = $orders->where('payment_method', 'credit')->sum(function ($q) {
-            return max(0, $q->total - $q->paid_amount);
-        });
-        $totalPending = $orders->whereNotIn('payment_method', ['credit'])->sum(function ($q) {
-            return max(0, $q->total - $q->paid_amount);
-        });
+        $totalCredit = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
+        $totalPending = (clone $salesQuery)->whereNotIn('payment_method', ['credit'])->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
 
         $customerPackagesQuery = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);

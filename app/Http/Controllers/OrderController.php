@@ -114,7 +114,7 @@ class OrderController extends Controller
         }
 
         $counts = [
-            'received' => (clone $baseQuery)->whereIn('status', ['received', 'dispatched_to_workshop'])->count(),
+            'received' => (clone $baseQuery)->whereIn('status', ['received', 'picked_up', 'dispatched_to_workshop'])->count(),
             'processing' => (clone $baseQuery)->whereIn('status', ['processing', 'completed_at_workshop'])->count(),
             'arriving' => (clone $baseQuery)->where('status', 'returned_from_workshop')->count(),
             'done' => (clone $baseQuery)->where('status', 'done')->count(),
@@ -137,7 +137,7 @@ class OrderController extends Controller
             $query->where('status', $status);
         } elseif (!$q) { // Only apply tab filter if not searching for a specific order
             if ($tab === 'received') {
-                $query->whereIn('status', ['received', 'dispatched_to_workshop']);
+                $query->whereIn('status', ['received', 'picked_up', 'dispatched_to_workshop']);
             } elseif ($tab === 'processing') {
                 $query->whereIn('status', ['processing', 'completed_at_workshop']);
             } elseif ($tab === 'arriving') {
@@ -180,12 +180,16 @@ class OrderController extends Controller
 
         $orders = $query->paginate(15)->withQueryString();
         
-        $orders->getCollection()->transform(function($order) {
+        $orderIds = $orders->pluck('id')->toArray();
+        $dispatches = \App\Models\WorkshopDispatch::whereIn('order_id', $orderIds)
+            ->whereIn('status', ['returned_to_branch', 'received_at_branch'])
+            ->orderByDesc('returned_at')
+            ->get()
+            ->groupBy('order_id');
+
+        $orders->getCollection()->transform(function($order) use ($dispatches) {
             // Attach the latest workshop dispatch ID so the branch can confirm receipt
-            $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
-                ->whereIn('status', ['returned_to_branch', 'received_at_branch'])
-                ->orderByDesc('returned_at')
-                ->first();
+            $dispatch = $dispatches->has($order->id) ? $dispatches->get($order->id)->first() : null;
             $order->workshop_dispatch_id = $dispatch ? $dispatch->id : null;
             return $order;
         });

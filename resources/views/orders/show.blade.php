@@ -80,13 +80,57 @@
     @endif
 
     <!-- Status Banner -->
-    <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:center;gap:10px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;
+    <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;
         {{ $order->status === 'received' ? 'background:#fffbeb;color:#d97706;border:1.5px solid #fde68a;' :
     ($order->status === 'done' ? 'background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;' :
         ($order->status === 'delivered' ? 'background:#f8fafc;color:#475569;border:1.5px solid #e2e8f0;' :
             'background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;')) }}">
-        <span>Order Status:</span>
-        <span style="font-size:16px;font-weight:900;">{{ $order->status }}</span>
+        
+        <div style="display:flex;align-items:center;gap:10px;">
+            <span>Order Status:</span>
+            <span style="font-size:16px;font-weight:900;">{{ $order->status }}</span>
+        </div>
+
+        @php
+            $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
+            $hasPayment = $order->paymentTransactions()->whereIn('status', ['completed', 'pending'])->exists() || $order->receipt_path || ($order->deliveryAppointment && $order->deliveryAppointment->receipt_path);
+            $canStartWashing = $dispatch && in_array($dispatch->status, ['dispatched_to_workshop', 'received_at_workshop']) && $hasPayment;
+        @endphp
+
+        @if($canStartWashing)
+            <button onclick="startWashing({{ $dispatch->id }})"
+                style="padding:8px 16px;background:#eab308;color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-play"></i> Start Washing
+            </button>
+            <script>
+                async function startWashing(dispatchId) {
+                    if(!confirm('Are you sure you want to start washing this order?')) return;
+                    try {
+                        const res = await fetch(`/workshop/dispatches/${dispatchId}/start-processing`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            if (data.order_number) {
+                                window.open(`/orders/${data.order_number}/chit`, '_blank');
+                            }
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Failed to start washing.');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        alert('Connection error');
+                    }
+                }
+            </script>
+        @endif
     </div>
 
     @if($order->correctionRequests->count() > 0)
@@ -490,6 +534,61 @@
                                 </div>
                             </div>
 
+                            @if($order->is_delivery_order && $order->deliveryAppointment)
+                                <hr style="border:0;border-top:1px solid #f1f5f9;margin:4px 0;">
+                                <div>
+                                    <h3
+                                        style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Logistics & Delivery</h3>
+                                    <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
+                                        <div>
+                                            <span
+                                                style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup Address</span>
+                                            <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">
+                                                {{ $order->deliveryAppointment->pickup_address ?? 'N/A' }}</p>
+                                        </div>
+                                        @if($order->deliveryAppointment->pickup_scheduled_at)
+                                            <div>
+                                                <span
+                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup Scheduled</span>
+                                                <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
+                                                    {{ \Carbon\Carbon::parse($order->deliveryAppointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</p>
+                                            </div>
+                                        @endif
+                                        <div style="margin-top:4px;">
+                                            <span
+                                                style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery Preference</span>
+                                            <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
+                                                @if(in_array($order->deliveryAppointment->delivery_preference, ['pickup_from_branch', 'pickup_from_store', 'self_pickup']))
+                                                    Customer Pickup from Branch
+                                                @else
+                                                    Deliver to Address
+                                                @endif
+                                            </p>
+                                        </div>
+                                        @if(!in_array($order->deliveryAppointment->delivery_preference, ['pickup_from_branch', 'pickup_from_store', 'self_pickup']))
+                                            <div>
+                                                <span
+                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery Address</span>
+                                                <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">
+                                                    {{ $order->deliveryAppointment->delivery_address ?: ($order->deliveryAppointment->pickup_address ?? 'N/A') }}</p>
+                                            </div>
+                                        @endif
+                                        @if($order->deliveryAppointment->delivery_scheduled_at)
+                                            <div>
+                                                <span
+                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery Scheduled</span>
+                                                <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
+                                                    {{ \Carbon\Carbon::parse($order->deliveryAppointment->delivery_scheduled_at)->format('M d, Y h:i A') }}</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                <hr style="border:0;border-top:1px solid #f1f5f9;margin:4px 0;">
+                            @else
+                                <hr style="border:0;border-top:1px solid #f1f5f9;margin:4px 0;">
+                            @endif
+
                             <!-- Payment Info -->
                             <div>
                                 <h3
@@ -760,7 +859,6 @@
                 <!-- Storage Location / Cubby -->
                 @php
                     $paymentTxs = \App\Models\PaymentTransaction::where('order_id', $order->id)
-                        ->whereNotNull('receipt_path')
                         ->orderBy('created_at', 'desc')
                         ->get();
                 @endphp
@@ -802,11 +900,15 @@
                                     </div>
 
                                     <div style="display:flex;gap:6px;margin-top:4px;">
-                                        <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
-                                            target="_blank"
-                                            style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;"
-                                            onmouseover="this.style.background='#f1f5f9'"
-                                            onmouseout="this.style.background='white'">View Slip</a>
+                                        @if($tx->receipt_path)
+                                            <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
+                                                target="_blank"
+                                                style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;"
+                                                onmouseover="this.style.background='#f1f5f9'"
+                                                onmouseout="this.style.background='white'">View Slip</a>
+                                        @else
+                                            <span style="flex:1;text-align:center;padding:6px;background:#f8fafc;color:#94a3b8;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-weight:700;">No Slip (Card)</span>
+                                        @endif
 
                                         @if($tx->status === 'pending')
                                             <button type="button" @click="openReviewModal = true"
@@ -833,24 +935,44 @@
                                                     <div
                                                         style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                                                         <h3 style="font-size:15px;font-weight:900;color:#0f172a;margin:0;">
-                                                            Review Slip</h3>
+                                                            Review Payment</h3>
                                                         <button @click="openReviewModal = false"
                                                             style="background:none;border:none;cursor:pointer;color:#64748b;font-size:16px;line-height:1;">✕</button>
                                                     </div>
 
-                                                    <!-- Scrollable Image -->
-                                                    <div
-                                                        style="width:100%;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;overflow-y:auto;overflow-x:hidden;max-height:220px;margin-bottom:12px;">
-                                                        <img src="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
-                                                            alt="Payment Slip" style="width:100%;height:auto;display:block;">
-                                                    </div>
-                                                    <div style="text-align:right;margin-bottom:12px;">
-                                                        <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
-                                                            target="_blank"
-                                                            style="font-size:11px;color:#4f46e5;font-weight:700;text-decoration:none;"><i
-                                                                class="fa-solid fa-arrow-up-right-from-square"></i> Open in New
-                                                            Tab</a>
-                                                    </div>
+                                                    @if($tx->receipt_path)
+                                                        <!-- Scrollable Image -->
+                                                        <div
+                                                            style="width:100%;background:#f1f5f9;border-radius:12px;border:1px solid #e2e8f0;overflow-y:auto;overflow-x:hidden;max-height:220px;margin-bottom:12px;">
+                                                            <img src="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
+                                                                alt="Payment Slip" style="width:100%;height:auto;display:block;">
+                                                        </div>
+                                                        <div style="text-align:right;margin-bottom:12px;">
+                                                            <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
+                                                                target="_blank"
+                                                                style="font-size:11px;color:#4f46e5;font-weight:700;text-decoration:none;"><i
+                                                                    class="fa-solid fa-arrow-up-right-from-square"></i> Open in New
+                                                                Tab</a>
+                                                        </div>
+                                                    @else
+                                                        <!-- No Image Info -->
+                                                        <div style="padding:24px 20px;text-align:center;background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);border-radius:16px;border:1px solid #e2e8f0;margin-bottom:16px;box-shadow:inset 0 2px 4px rgba(255,255,255,0.7), 0 4px 12px rgba(0,0,0,0.02);position:relative;overflow:hidden;">
+                                                            <!-- Decorative circles -->
+                                                            <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);border-radius:50%;opacity:0.5;"></div>
+                                                            <div style="position:absolute;bottom:-30px;left:-10px;width:60px;height:60px;background:linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);border-radius:50%;opacity:0.4;"></div>
+                                                            
+                                                            <div style="position:relative;z-index:1;">
+                                                                <div style="width:56px;height:56px;background:linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 16px rgba(79,70,229,0.25);transform:rotate(-5deg);">
+                                                                    <i class="fa-solid fa-credit-card" style="font-size:24px;color:white;transform:rotate(5deg);"></i>
+                                                                </div>
+                                                                <h4 style="font-size:16px;font-weight:900;color:#0f172a;margin:0 0 6px;letter-spacing:-0.02em;">Online Card Payment</h4>
+                                                                <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;font-weight:500;padding:0 10px;">
+                                                                    No physical slip was uploaded.<br>
+                                                                    <span style="color:#475569;font-weight:700;">Please verify with your payment gateway.</span>
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    @endif
 
                                                     <div
                                                         style="margin-bottom:12px;background:#f8fafc;padding:12px;border-radius:10px;border:1px solid #e2e8f0;font-size:12px;color:#334155;display:flex;justify-content:space-between;align-items:center;">
@@ -971,5 +1093,142 @@
                 @endif
             </div>
         </div>
+
+    @if($order->is_delivery_order && $order->deliveryAppointment)
+        <!-- Maps Section -->
+        <div x-data="orderMaps()" style="margin-top:24px;">
+            <h2 class="ph-title" style="margin-bottom:12px; font-size:16px;">Logistics Overview</h2>
+            <div style="display:flex;gap:24px;flex-wrap:wrap;">
+                
+                @if($order->deliveryAppointment->latitude && $order->deliveryAppointment->longitude)
+                <!-- Pickup Map -->
+                <div style="flex:1;min-width:300px;background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                    <div style="padding:12px 16px;background:#fff7ed;border-bottom:1px solid #ffedd5;display:flex;align-items:center;gap:10px;">
+                        <div style="width:28px;height:28px;background:#ffedd5;color:#ea580c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fa-solid fa-arrow-up"></i></div>
+                        <div>
+                            <div style="font-size:10px;font-weight:900;color:#ea580c;text-transform:uppercase;letter-spacing:0.05em;">Pickup Route</div>
+                            <div style="font-size:12px;font-weight:800;color:#431407;margin-top:2px;">Customer to Branch</div>
+                        </div>
+                    </div>
+                    <div id="pickup-route-badge" style="display:none;padding:8px 14px;background:linear-gradient(135deg,#ea580c,#f97316);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
+                        <i class="fa-solid fa-route" style="margin-right:6px;"></i>
+                        <span id="pickup-route-text">Calculating route...</span>
+                    </div>
+                    <div id="pickup-route-map" style="width:100%;height:300px;background:#f8fafc;z-index:1;"></div>
+                </div>
+                @endif
+
+                @if($order->deliveryAppointment->delivery_lat && $order->deliveryAppointment->delivery_lng)
+                <!-- Delivery Map -->
+                <div style="flex:1;min-width:300px;background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                    <div style="padding:12px 16px;background:#f0fdf4;border-bottom:1px solid #dcfce7;display:flex;align-items:center;gap:10px;">
+                        <div style="width:28px;height:28px;background:#dcfce7;color:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fa-solid fa-arrow-down"></i></div>
+                        <div>
+                            <div style="font-size:10px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:0.05em;">Delivery Route</div>
+                            <div style="font-size:12px;font-weight:800;color:#166534;margin-top:2px;">Branch to Customer</div>
+                        </div>
+                    </div>
+                    <div id="route-distance-badge" style="display:none;padding:8px 14px;background:linear-gradient(135deg,#1d4ed8,#4f46e5);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
+                        <i class="fa-solid fa-route" style="margin-right:6px;"></i>
+                        <span id="route-distance-text">Calculating route...</span>
+                    </div>
+                    <div id="delivery-route-map" style="width:100%;height:300px;background:#f8fafc;z-index:1;"></div>
+                </div>
+                @endif
+
+            </div>
+        </div>
+
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('orderMaps', () => ({
+                    pickupMap: null,
+                    deliveryMap: null,
+                    pLat: {{ $order->deliveryAppointment->latitude ?? 'null' }},
+                    pLng: {{ $order->deliveryAppointment->longitude ?? 'null' }},
+                    dLat: {{ $order->deliveryAppointment->delivery_lat ?? 'null' }},
+                    dLng: {{ $order->deliveryAppointment->delivery_lng ?? 'null' }},
+                    bLat: {{ $order->branch->latitude ?? 'null' }},
+                    bLng: {{ $order->branch->longitude ?? 'null' }},
+                    bName: '{{ addslashes($order->branch->name ?? "Branch") }}',
+                    init() {
+                        setTimeout(() => this.initMaps(), 300);
+                    },
+                    initMaps() {
+                        let branchIcon = L.divIcon({
+                            html: '<div style="background:#0f172a;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-store" style="font-size:12px;"></i></div>',
+                            className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
+                        });
+                        let pickupIcon = L.divIcon({
+                            html: '<div style="background:#ea580c;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-arrow-up" style="font-size:12px;"></i></div>',
+                            className: '', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+                        });
+                        let customerIcon = L.divIcon({
+                            html: '<div style="background:#16a34a;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-house" style="font-size:12px;"></i></div>',
+                            className: '', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+                        });
+
+                        if (this.pLat && this.pLng && document.getElementById('pickup-route-map')) {
+                            this.pickupMap = L.map('pickup-route-map').setView([this.pLat, this.pLng], 13);
+                            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                                attribution: '&copy; OpenStreetMap'
+                            }).addTo(this.pickupMap);
+
+                            L.marker([this.pLat, this.pLng], {icon: pickupIcon}).bindPopup('<b>Customer Pickup</b>').addTo(this.pickupMap);
+
+                            if (this.bLat && this.bLng) {
+                                L.marker([this.bLat, this.bLng], {icon: branchIcon}).bindPopup('<b>' + this.bName + '</b>').addTo(this.pickupMap);
+                                
+                                document.getElementById('pickup-route-badge').style.display = 'block';
+                                fetch(`https://router.project-osrm.org/route/v1/driving/${this.bLng},${this.bLat};${this.pLng},${this.pLat}?overview=full&geometries=geojson`)
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.routes && data.routes.length > 0) {
+                                            let route = data.routes[0];
+                                            let distKm = (route.distance / 1000).toFixed(1);
+                                            let durationMin = Math.ceil(route.duration / 60);
+                                            let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                                            L.polyline(routeCoords, { color: '#ea580c', weight: 4, opacity: 0.8 }).addTo(this.pickupMap);
+                                            document.getElementById('pickup-route-text').innerHTML = `${this.bName} &rarr; Pickup &nbsp;|&nbsp; ${distKm} km &nbsp;|&nbsp; ~${durationMin} min`;
+                                            this.pickupMap.fitBounds(L.latLngBounds(routeCoords), {padding: [25, 25]});
+                                        }
+                                    }).catch(() => document.getElementById('pickup-route-text').textContent = 'Route unavailable');
+                            }
+                        }
+
+                        if (this.dLat && this.dLng && document.getElementById('delivery-route-map')) {
+                            this.deliveryMap = L.map('delivery-route-map').setView([this.dLat, this.dLng], 13);
+                            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                                attribution: '&copy; OpenStreetMap'
+                            }).addTo(this.deliveryMap);
+
+                            L.marker([this.dLat, this.dLng], {icon: customerIcon}).bindPopup('<b>Customer Delivery</b>').addTo(this.deliveryMap);
+
+                            if (this.bLat && this.bLng) {
+                                L.marker([this.bLat, this.bLng], {icon: branchIcon}).bindPopup('<b>' + this.bName + '</b>').addTo(this.deliveryMap);
+                                
+                                document.getElementById('route-distance-badge').style.display = 'block';
+                                fetch(`https://router.project-osrm.org/route/v1/driving/${this.bLng},${this.bLat};${this.dLng},${this.dLat}?overview=full&geometries=geojson`)
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.routes && data.routes.length > 0) {
+                                            let route = data.routes[0];
+                                            let distKm = (route.distance / 1000).toFixed(1);
+                                            let durationMin = Math.ceil(route.duration / 60);
+                                            let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                                            L.polyline(routeCoords, { color: '#4f46e5', weight: 4, opacity: 0.8 }).addTo(this.deliveryMap);
+                                            document.getElementById('route-distance-text').innerHTML = `${this.bName} &rarr; Customer &nbsp;|&nbsp; ${distKm} km &nbsp;|&nbsp; ~${durationMin} min`;
+                                            this.deliveryMap.fitBounds(L.latLngBounds(routeCoords), {padding: [25, 25]});
+                                        }
+                                    }).catch(() => document.getElementById('route-distance-text').textContent = 'Route unavailable');
+                            }
+                        }
+                    }
+                }));
+            });
+        </script>
+    @endif
 
 </x-app-layout>

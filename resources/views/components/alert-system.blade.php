@@ -48,6 +48,7 @@
             count: 0,
             alerts: [],
             lastCount: 0,
+            seenAlertKeys: JSON.parse(localStorage.getItem('laundry_seen_alerts') || '[]'),
             init() {
                 this.check();
                 setInterval(() => {
@@ -79,11 +80,51 @@
                 .then(data => {
                     // Map new alerts but keep open state
                     let newAlerts = data.alerts || [];
+                    let newlyArrived = [];
+                    
                     newAlerts = newAlerts.map(na => {
                         let existing = this.alerts.find(a => a.id === na.id);
                         na.open = existing ? existing.open : false;
+                        
+                        if (na.order_numbers && na.order_numbers.length > 0) {
+                            na.order_numbers.forEach(n => {
+                                let text = typeof n === 'object' ? n.number : n;
+                                let url = typeof n === 'object' && n.url ? n.url : '#';
+                                let key = na.id + '_' + text;
+                                if (!this.seenAlertKeys.includes(key)) {
+                                    this.seenAlertKeys.push(key);
+                                    newlyArrived.push({ label: na.label, text: text, url: url });
+                                }
+                            });
+                        }
                         return na;
                     });
+                    
+                    if (newlyArrived.length > 0) {
+                        localStorage.setItem('laundry_seen_alerts', JSON.stringify(this.seenAlertKeys));
+                        
+                        if (window.Swal) {
+                            let htmlContent = newlyArrived.map(arr => `
+                                <div style="margin-bottom:10px;padding:12px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;text-align:left;">
+                                    <span style="display:block;font-size:11px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:4px;">${arr.label}</span>
+                                    <a href="${arr.url}" style="font-size:15px;font-weight:900;color:#3b82f6;text-decoration:none;">${arr.text}</a>
+                                </div>
+                            `).join('');
+                            
+                            Swal.fire({
+                                title: '<span style="font-size:20px;font-weight:900;color:#0f172a;">🔔 New Alert Received!</span>',
+                                html: htmlContent,
+                                showConfirmButton: true,
+                                confirmButtonText: 'Dismiss',
+                                confirmButtonColor: '#334155',
+                                backdrop: `rgba(15,23,42,0.6)`,
+                                customClass: {
+                                    popup: 'rounded-2xl shadow-2xl'
+                                }
+                            });
+                        }
+                    }
+
                     this.alerts = newAlerts;
                     this.count = data.count || 0;
 

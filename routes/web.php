@@ -229,6 +229,7 @@ Route::middleware(['auth'])->group(function () {
 
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
+            Route::get('/settings/services', [SettingsController::class, 'servicesManager'])->name('settings.services');
             Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
             Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
             Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');

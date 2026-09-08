@@ -104,18 +104,22 @@
                     <div class="p-5 flex-1 overflow-y-auto custom-scrollbar">
                         <!-- Level 0: Main Categories Grid -->
                         <div x-show="currentViewLevel === 0">
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
                                 <template x-for="cat in categories" :key="cat.id">
-                                    <button type="button" @click="selectLevel1(cat)" class="bg-white rounded-2xl p-4 flex flex-col items-center justify-center gap-3 border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
-                                        <div class="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-                                            <template x-if="cat.image_path">
-                                                <img :src="cat.image_path?.startsWith('http') ? cat.image_path : '/' + cat.image_path" class="w-12 h-12 object-contain mix-blend-multiply">
-                                            </template>
-                                            <template x-if="!cat.image_path">
-                                                <i class="fa-solid fa-shirt text-2xl opacity-60"></i>
-                                            </template>
+                                    <button type="button" @click="selectLevel1(cat)" class="bg-white rounded-2xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
+                                        <div class="w-full aspect-[4/3] bg-blue-50 text-blue-600 flex items-center justify-center relative overflow-hidden">
+                                            <div class="absolute inset-0 transition-transform duration-300 group-hover:scale-110 flex items-center justify-center">
+                                                <template x-if="cat.image_path">
+                                                    <img :src="cat.image_path?.startsWith('http') ? cat.image_path : '/' + cat.image_path" class="w-full h-full object-cover">
+                                                </template>
+                                                <template x-if="!cat.image_path">
+                                                    <i class="fa-solid fa-shirt text-4xl opacity-40"></i>
+                                                </template>
+                                            </div>
                                         </div>
-                                        <span class="text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center" x-text="cat.name"></span>
+                                        <div class="p-2 sm:p-4 w-full bg-white relative z-10 border-t border-slate-50">
+                                            <span class="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center block w-full truncate" x-text="cat.name"></span>
+                                        </div>
                                     </button>
                                 </template>
                             </div>
@@ -123,18 +127,22 @@
 
                         <!-- Level 1: Subcategories Grid -->
                         <div x-show="currentViewLevel === 1">
-                            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
                                 <template x-for="sub in currentSubcategories" :key="sub.id">
-                                    <button type="button" @click="selectLevel2(sub)" class="bg-white rounded-xl p-3 flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all w-full group">
-                                        <div class="w-14 h-14 bg-slate-50 rounded-lg flex items-center justify-center p-2 group-hover:scale-105 transition-transform">
-                                            <template x-if="sub.image_path">
-                                                <img :src="sub.image_path?.startsWith('http') ? sub.image_path : '/' + sub.image_path" class="w-full h-full object-contain mix-blend-multiply">
-                                            </template>
-                                            <template x-if="!sub.image_path">
-                                                <i class="fa-solid fa-layer-group text-slate-300 text-xl group-hover:text-blue-400 transition-colors"></i>
-                                            </template>
+                                    <button type="button" @click="selectLevel2(sub)" class="bg-white rounded-xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
+                                        <div class="w-full aspect-[4/3] bg-slate-50 text-slate-400 flex items-center justify-center relative overflow-hidden">
+                                            <div class="absolute inset-0 transition-transform duration-300 group-hover:scale-110 flex items-center justify-center">
+                                                <template x-if="sub.image_path">
+                                                    <img :src="sub.image_path?.startsWith('http') ? sub.image_path : '/' + sub.image_path" class="w-full h-full object-cover">
+                                                </template>
+                                                <template x-if="!sub.image_path">
+                                                    <i class="fa-solid fa-layer-group text-3xl opacity-40 group-hover:text-blue-400 transition-colors"></i>
+                                                </template>
+                                            </div>
                                         </div>
-                                        <span class="text-xs font-bold text-slate-700 text-center leading-tight group-hover:text-blue-700" x-text="sub.name"></span>
+                                        <div class="p-2 sm:p-3 w-full bg-white relative z-10 border-t border-slate-50">
+                                            <span class="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center block w-full truncate" x-text="sub.name"></span>
+                                        </div>
                                     </button>
                                 </template>
                                 <div x-show="currentSubcategories.length === 0" class="col-span-full py-12 text-center text-slate-500 text-sm font-medium">
@@ -272,6 +280,25 @@
                                     <option :value="tt.id" x-text="tt.name"></option>
                                 </template>
                             </select>
+                        </div>
+
+                        <!-- Requested Delivery Time -->
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-2">Requested Delivery Time (Optional)</label>
+                            <p class="text-xs text-slate-500 font-medium mb-3">When would you like to receive your items back?</p>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <input type="date" name="delivery_date" x-model="deliveryDate" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 font-medium" min="{{ date('Y-m-d') }}">
+                                </div>
+                                <div>
+                                    <select name="delivery_time_period_id" x-model="deliveryTimePeriodId" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 font-medium">
+                                        <option value="">Select time...</option>
+                                        @foreach($pickupTimePeriods as $period)
+                                            <option value="{{ $period->id }}">{{ \Carbon\Carbon::parse($period->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($period->end_time)->format('h:i A') }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Extras -->
@@ -681,8 +708,14 @@
                     serviceQty: 1,
                     selectedTurnaround: '',
                     
-                    
-                    routeLayer: null,
+                    // New step 3 state
+                    isCartExpanded: false,
+                    isQtyModalOpen: false,
+                    isGlobalCheckoutModalOpen: false,
+                    globalTurnaround: '',
+                    deliveryDate: '',
+                    deliveryTimePeriodId: '',
+                    globalExtras: {},                    routeLayer: null,
                     step: isLoggedIn ? 2 : 1,
                     highestStepReached: isLoggedIn ? 2 : 1,
                     minLimit: Number(minOrderLimit || 0),
@@ -768,6 +801,13 @@
 
                     async goToStep(n) {
                         if (n > this.highestStepReached + 1) return; // Must go in order initially
+
+                        // Validation: Must be authenticated to proceed past Step 1
+                        if (n > 1 && !this.isAuthenticated) {
+                            alert("Please login or register first to continue your booking.");
+                            this.step = 1;
+                            return;
+                        }
 
                         // Validation logic before moving to next step
                         if (n === 3) { // Going to Pickup

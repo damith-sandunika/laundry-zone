@@ -260,9 +260,8 @@ class DashboardController extends Controller
         }
 
         if ($request->payment_method === 'gateway') {
-            // Handle mock payment gateway success
+            // Handle mock payment gateway success - set to pending for admin approval
             $order->update([
-                'paid_amount' => $order->paid_amount + $request->amount,
                 'payment_method' => 'card',
             ]);
             
@@ -270,7 +269,7 @@ class DashboardController extends Controller
                 'order_id' => $order->id,
                 'amount' => $request->amount,
                 'payment_method' => 'card',
-                'status' => 'completed',
+                'status' => 'pending',
                 'transaction_id' => 'TXN-' . strtoupper(uniqid()),
             ]);
         } else {

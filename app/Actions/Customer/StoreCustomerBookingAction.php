@@ -105,7 +105,15 @@ class StoreCustomerBookingAction
             $deliveryCost = (float) $data['estimated_delivery_fee'];
         }
 
-        $appointment = DB::transaction(function () use ($data, $customer, $deliveryLat, $deliveryLng, $deliveryAddress, $receiptPath, $deliveryCost, $pickupScheduledAt, $closestWorkshop) {
+        $deliveryScheduledAt = null;
+        if (!empty($data['delivery_date']) && !empty($data['delivery_time_period_id'])) {
+            $deliveryPeriod = PickupTimePeriod::find($data['delivery_time_period_id']);
+            if ($deliveryPeriod) {
+                $deliveryScheduledAt = Carbon::parse($data['delivery_date'] . ' ' . $deliveryPeriod->start_time);
+            }
+        }
+
+        $appointment = DB::transaction(function () use ($data, $customer, $deliveryLat, $deliveryLng, $deliveryAddress, $receiptPath, $deliveryCost, $pickupScheduledAt, $deliveryScheduledAt, $closestWorkshop) {
             
             $appointment = DeliveryAppointment::create([
                 'customer_id' => $customer->id,
@@ -115,6 +123,7 @@ class StoreCustomerBookingAction
                 'latitude' => $data['latitude'] ?? null,
                 'longitude' => $data['longitude'] ?? null,
                 'pickup_scheduled_at' => $pickupScheduledAt,
+                'delivery_scheduled_at' => $deliveryScheduledAt,
                 'item_description' => $data['item_description'] ?? null,
                 'cart_json' => $data['cart_json'] ?? null,
                 'notes' => $data['notes'] ?? null,
@@ -132,6 +141,8 @@ class StoreCustomerBookingAction
 
             $admin = User::where('branch_id', $closestWorkshop->id)->first() ?? User::first();
             
+            $dueDate = $deliveryScheduledAt ? Carbon::parse($deliveryScheduledAt) : Carbon::parse($pickupScheduledAt)->addDays(2);
+
             $order = Order::create([
                 'order_number' => Order::generateOrderNumber($closestWorkshop->id, true),
                 'customer_id' => $customer->id,
@@ -143,7 +154,7 @@ class StoreCustomerBookingAction
                 'paid_amount' => 0,
                 'payment_status' => 'pending',
                 'payment_method' => 'cash',
-                'due_date' => Carbon::parse($pickupScheduledAt)->addDays(2),
+                'due_date' => $dueDate,
                 'created_by' => $admin ? $admin->id : 1,
                 'is_delivery_order' => true,
                 'delivery_appointment_id' => $appointment->id,

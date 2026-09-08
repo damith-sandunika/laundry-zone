@@ -28,6 +28,9 @@ class CustomerStoreBookingRequest extends FormRequest
             'delivery_lat' => 'nullable|numeric',
             'delivery_lng' => 'nullable|numeric',
             'delivery_address' => 'nullable|string|max:255',
+            'delivery_date' => 'nullable|date|after_or_equal:today',
+            'delivery_time_period_id' => 'nullable|exists:pickup_time_periods,id',
+            
             'receipt_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'estimated_delivery_fee' => 'nullable|numeric',
             

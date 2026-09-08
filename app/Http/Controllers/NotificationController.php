@@ -11,7 +11,7 @@ class NotificationController extends Controller
     public function check()
     {
         $user = auth()->user();
-        if (!$user) {
+        if (!$user || $user->role === 'super_admin') {
             return response()->json(['count' => 0, 'alerts' => []]);
         }
 
@@ -112,7 +112,7 @@ class NotificationController extends Controller
 
             // 5. Pending Payment Approvals
             $pendingPaymentsQuery = Order::whereHas('paymentTransactions', function ($q) {
-                $q->where('status', 'pending')->whereNotNull('receipt_path');
+                $q->where('status', 'pending');
             })->whereNotIn('status', ['delivered', 'cancelled']);
             $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
             if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {

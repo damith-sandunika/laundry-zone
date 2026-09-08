@@ -39,7 +39,15 @@
                                 {{ $task->task_type === 'pickup' ? 'background:#fef3c7; color:#d97706; border:1px solid #fde68a;' : 'background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe;' }}">
                                 {{ $task->task_type === 'pickup' ? '📦 Pickup' : '🚚 Delivery' }}
                             </span>
-                            <div style="font-size:16px; font-weight:900; color:#0f172a;">#{{ str_pad($task->id, 5, '0', STR_PAD_LEFT) }}</div>
+                            <div style="font-size:16px; font-weight:900; color:#0f172a;">
+                                @if($task->appointment && $task->appointment->order)
+                                    {{ $task->appointment->order->order_number }}
+                                @elseif($task->order)
+                                    {{ $task->order->order_number }}
+                                @else
+                                    Task #{{ str_pad($task->id, 5, '0', STR_PAD_LEFT) }}
+                                @endif
+                            </div>
                         </div>
                         <div style="text-align:right;">
                             <span style="display:inline-block; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:0.04em;
@@ -93,10 +101,17 @@
                                     Handover Cash to Admin
                                 </div>
                             @elseif($task->task_type === 'pickup')
-                                <a href="{{ route('rider.createOrder', $task->id) }}" style="flex:2; padding:12px; background:#16a34a; color:white; text-decoration:none; border-radius:12px; font-size:13px; font-weight:800; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
-                                    Pick Order
-                                </a>
+                                @if($task->appointment && $task->appointment->order_id)
+                                    <button onclick="updateTask({{ $task->id }}, 'complete')" style="flex:2; padding:12px; background:#16a34a; color:white; border:none; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        Complete Pickup
+                                    </button>
+                                @else
+                                    <a href="{{ route('rider.createOrder', $task->id) }}" style="flex:2; padding:12px; background:#16a34a; color:white; text-decoration:none; border-radius:12px; font-size:13px; font-weight:800; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                        Pick Order
+                                    </a>
+                                @endif
                             @else
                                 @php
                                     $due = 0;
