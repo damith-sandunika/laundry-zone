@@ -632,17 +632,25 @@
                         }
                     }
 
-                    let existing = this.cart.find(i => i.service_type_id === service.id);
+                    let defaultTt = this.allTurnaroundTypes.find(tt => tt.is_default);
+                    let defaultTtId = defaultTt ? defaultTt.id : null;
+                    
+                    let existing = this.cart.find(i => 
+                        i.service_type_id === service.id && 
+                        parseFloat(i.base_price) === parseFloat(service.base_price) &&
+                        i.turnaround_type_id == defaultTtId &&
+                        (!i.selected_extras || i.selected_extras.length === 0)
+                    );
+                    
                     if (existing) {
                         existing.qty++;
                     } else {
-                        let defaultTt = this.allTurnaroundTypes.find(tt => tt.is_default);
                         this.cart.push({
                             service_type_id: service.id,
                             name: service.name,
                             base_price: service.base_price,
                             qty: 1,
-                            turnaround_type_id: defaultTt ? defaultTt.id : null,
+                            turnaround_type_id: defaultTtId,
                             selected_extras: []
                         });
                     }

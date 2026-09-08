@@ -134,17 +134,18 @@
     </div>
 
     @if($order->correctionRequests->count() > 0)
-        @foreach($order->correctionRequests->sortByDesc('created_at') as $cr)
-            <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;font-size:13px;
-                        {{ $cr->status === 'pending' ? 'background:#fffbeb;color:#92400e;border:1.5px solid #fde68a;' :
-                    ($cr->status === 'approved' ? 'background:#f0fdf4;color:#166534;border:1.5px solid #bbf7d0;' :
-                        'background:#fef2f2;color:#991b1b;border:1.5px solid #fecaca;') }}">
-                <div>
-                    <strong style="text-transform:uppercase;font-size:11px;">{{ ucfirst($cr->status) }} Correction Request
-                        ({{ str_replace('_', ' ', $cr->type) }})</strong><br>
-                    Requested by <strong>{{ $cr->requestedBy->name ?? 'Unknown' }}</strong> on
-                    {{ $cr->created_at->format('M d, Y h:i A') }}<br>
-                    <span style="font-style:italic;">"{{ $cr->reason }}"</span>
+        <div class="flex flex-col gap-3 mb-6">
+            @foreach($order->correctionRequests->sortByDesc('created_at') as $cr)
+                <div class="p-4 rounded-xl flex items-start justify-between gap-4 text-[13px] border-2 shadow-sm
+                    {{ $cr->status === 'pending' ? 'bg-amber-50 text-amber-900 border-amber-200 shadow-amber-100/50' :
+                   ($cr->status === 'approved' ? 'bg-emerald-50 text-emerald-900 border-emerald-200 shadow-emerald-100/50' :
+                       'bg-red-50 text-red-900 border-red-200 shadow-red-100/50') }}">
+                <div class="flex-1 w-full">
+                    <strong class="uppercase text-[11px] tracking-wider">{{ ucfirst($cr->status) }} Correction Request
+                        <span class="opacity-75 font-semibold">({{ str_replace('_', ' ', $cr->type) }})</span></strong><br>
+                    <span class="text-slate-600">Requested by <strong class="text-slate-800">{{ $cr->requestedBy->name ?? 'Unknown' }}</strong> on
+                    {{ $cr->created_at->format('M d, Y h:i A') }}</span><br>
+                    <div class="mt-1.5 p-2.5 bg-white/60 rounded-lg border border-slate-200/50 italic text-slate-700">"{{ $cr->reason }}"</div>
 
                     @if(is_array($cr->old_data) && is_array($cr->new_data))
                         @php
@@ -153,29 +154,25 @@
                             $oldMethod = $cr->old_data['payment_method'] ?? $order->payment_method;
                             $newMethod = $cr->new_data['payment_method'] ?? $cr->old_data['payment_method'] ?? $order->payment_method;
                         @endphp
-                        <div
-                            style="margin-top:6px;background:rgba(255,255,255,0.6);padding:8px 12px;border-radius:8px;font-size:11.5px;border:1px solid rgba(0,0,0,0.06);display:inline-block;width:100%;">
+                        <div class="mt-3 bg-white/70 backdrop-blur-sm p-3 rounded-xl text-[12px] border border-slate-200/60 shadow-sm w-full space-y-1.5">
                             @if((isset($cr->old_data['total']) || isset($cr->new_data['calculated_total'])) && $oldTotal != $newTotal)
-                                <div
-                                    style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,0.04);padding-bottom:4px;margin-bottom:4px;">
-                                    <strong style="color:#475569;">Total Amount:</strong>
-                                    <span>
-                                        <span
-                                            style="color:#dc2626;text-decoration:line-through;">Rs.{{ number_format($oldTotal, 2) }}</span>
-                                        <i class="fa-solid fa-arrow-right" style="font-size:9px;margin:0 6px;color:#94a3b8;"></i>
-                                        <strong style="color:#16a34a;">Rs.{{ number_format($newTotal, 2) }}</strong>
-                                    </span>
+                                <div class="flex justify-between items-center border-b border-slate-200/50 pb-1.5">
+                                    <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Total Amount:</strong>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-red-500 line-through font-bold">Rs.{{ number_format($oldTotal, 2) }}</span>
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                        <strong class="text-emerald-600 font-black text-[13px]">Rs.{{ number_format($newTotal, 2) }}</strong>
+                                    </div>
                                 </div>
                             @endif
                             @if((isset($cr->old_data['payment_method']) || isset($cr->new_data['payment_method'])) && $oldMethod != $newMethod)
-                                <div
-                                    style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(0,0,0,0.04);padding-bottom:4px;margin-bottom:4px;">
-                                    <strong style="color:#475569;">Payment Method:</strong>
-                                    <span>
-                                        <span style="color:#dc2626;text-decoration:line-through;">{{ ucfirst($oldMethod) }}</span>
-                                        <i class="fa-solid fa-arrow-right" style="font-size:9px;margin:0 6px;color:#94a3b8;"></i>
-                                        <strong style="color:#16a34a;">{{ ucfirst($newMethod) }}</strong>
-                                    </span>
+                                <div class="flex justify-between items-center border-b border-slate-200/50 pb-1.5">
+                                    <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Payment Method:</strong>
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-red-500 line-through font-bold">{{ ucfirst($oldMethod) }}</span>
+                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                        <strong class="text-emerald-600 font-black text-[13px]">{{ ucfirst($newMethod) }}</strong>
+                                    </div>
                                 </div>
                             @endif
 
@@ -209,58 +206,57 @@
                                 @endphp
 
                                 @if(count($diff) > 0)
-                                    <div style="margin-top:6px; font-size:11px;">
-                                        <strong style="color:#475569;">Cart Updates:</strong>
-                                        <ul style="padding-left:15px; margin-top:4px; color:#334155; list-style-type:circle;">
+                                    <div class="mt-2 text-[11px]">
+                                        <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Cart Updates:</strong>
+                                        <div class="mt-1 space-y-1 bg-white/50 rounded-lg p-2 border border-slate-100">
                                             @foreach($diff as $change)
                                                 @if($change['type'] === 'added')
-                                                    <li><span style="color:#16a34a;font-weight:bold;">[+]</span> {{ $change['item']['qty'] ?? 1 }}x
-                                                        {{ $change['item']['name'] ?? 'Service' }}
-                                                        (Rs.{{ number_format((float) ($change['item']['base_price'] ?? 0) * (float) ($change['item']['qty'] ?? 1), 2) }})
-                                                    </li>
+                                                    <div class="flex items-center gap-1.5"><span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Add</span> <span class="font-bold text-slate-800">{{ $change['item']['qty'] ?? 1 }}x {{ $change['item']['name'] ?? 'Service' }}</span>
+                                                        <span class="text-slate-500 ml-auto">(Rs.{{ number_format((float) ($change['item']['base_price'] ?? 0) * (float) ($change['item']['qty'] ?? 1), 2) }})</span>
+                                                    </div>
                                                 @elseif($change['type'] === 'changed')
-                                                    <li><span style="color:#ca8a04;font-weight:bold;">[~]</span> <span
-                                                            style="text-decoration:line-through;color:#94a3b8;">{{ $change['old_qty'] }}x</span> <i
-                                                            class="fa-solid fa-arrow-right" style="font-size:8px;"></i>
-                                                        {{ $change['item']['qty'] }}x {{ $change['item']['name'] ?? 'Service' }}</li>
+                                                    <div class="flex items-center gap-1.5"><span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Mod</span> <span
+                                                            class="text-slate-400 line-through font-bold">{{ $change['old_qty'] }}x</span> <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                                        <span class="font-bold text-slate-800">{{ $change['item']['qty'] }}x {{ $change['item']['name'] ?? 'Service' }}</span></div>
                                                 @elseif($change['type'] === 'removed')
-                                                    <li><span style="color:#dc2626;font-weight:bold;">[-]</span> <span
-                                                            style="text-decoration:line-through;color:#94a3b8;">{{ $change['item']['qty'] ?? 1 }}x
-                                                            {{ $change['item']['name'] ?? 'Service' }}</span></li>
+                                                    <div class="flex items-center gap-1.5"><span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Del</span> <span
+                                                            class="text-red-400 line-through font-bold">{{ $change['item']['qty'] ?? 1 }}x
+                                                            {{ $change['item']['name'] ?? 'Service' }}</span></div>
                                                 @endif
                                             @endforeach
-                                        </ul>
+                                        </div>
                                     </div>
                                 @endif
                             @endif
                         </div>
                     @endif
                     @if($cr->status !== 'pending' && $cr->approvedBy)
-                        <div style="margin-top:4px;font-size:11px;">
-                            {{ ucfirst($cr->status) }} by <strong>{{ $cr->approvedBy->name }}</strong> on
+                        <div class="mt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                            {{ ucfirst($cr->status) }} by <strong class="text-slate-700">{{ $cr->approvedBy->name }}</strong> on
                             {{ $cr->resolved_at ? $cr->resolved_at->format('M d, Y h:i A') : 'Unknown' }}
                         </div>
                     @endif
                 </div>
 
                 @if($cr->status === 'pending' && in_array(auth()->user()->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']))
-                    <div style="display:flex;gap:8px;">
+                    <div class="flex flex-col gap-2 shrink-0">
                         <form action="{{ route('corrections.approve', $cr->id) }}" method="POST"
                             onsubmit="return confirm('Approve this request? This will permanently alter the order details.')">
                             @csrf
                             <button type="submit"
-                                style="padding:6px 12px;background:#16a34a;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Approve</button>
+                                class="w-full px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] uppercase tracking-wide rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>Approve</button>
                         </form>
                         <form action="{{ route('corrections.reject', $cr->id) }}" method="POST"
                             onsubmit="return confirm('Reject this request?')">
                             @csrf
                             <button type="submit"
-                                style="padding:6px 12px;background:#dc2626;color:white;border:none;border-radius:6px;font-weight:bold;cursor:pointer;">Reject</button>
+                                class="w-full px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-black text-[11px] uppercase tracking-wide rounded-lg transition-colors flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>Reject</button>
                         </form>
                     </div>
                 @endif
             </div>
-        @endforeach
+            @endforeach
+        </div>
     @endif
 
     <div class="flex flex-col gap-4 items-start">

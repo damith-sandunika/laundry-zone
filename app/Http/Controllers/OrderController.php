@@ -85,7 +85,7 @@ class OrderController extends Controller
         $turnaroundTypes = \App\Models\TurnaroundType::all();
         $systemExtras = \App\Models\Extra::where('is_active', true)->get();
 
-        return view('workshop.finalize_bill', compact('dispatch', 'services', 'categories', 'cartItems', 'minimumDeliveryCost', 'turnaroundTypes', 'systemExtras'));
+        return view('orders.edit', compact('order', 'dispatch', 'services', 'categories', 'cartItems', 'minimumDeliveryCost', 'turnaroundTypes', 'systemExtras'));
     }
 
     public function index(Request $request)
