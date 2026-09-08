@@ -91,6 +91,41 @@ class CommunicationService
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
                     <p style='margin:0 0 16px;'>The bill for your order <strong>#{$orderId}</strong> has been finalized. The total amount is <strong>{$total}</strong> and the amount due is <strong>{$due}</strong>. Please arrange the payment. Thank you! - 365 Laundry</p>
                 ",
+            ],
+            'order_picked_up' => [
+                'subject' => "Order #{$orderId} Picked Up",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been picked up by our rider.</p>
+                ",
+            ],
+            'order_processing' => [
+                'subject' => "Order #{$orderId} is Processing",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is currently being processed at our workshop.</p>
+                ",
+            ],
+            'order_dispatched' => [
+                'subject' => "Order #{$orderId} Dispatched from Workshop",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been cleaned and dispatched back to the branch/delivery hub.</p>
+                ",
+            ],
+            'payment_received' => [
+                'subject' => "Payment Received for Order #{$orderId}",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>We have successfully received and approved a payment for your order <strong>#{$orderId}</strong>.</p>
+                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total Amount</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Amount Due</td><td style='padding:8px 12px;background:#f8fafc;'>{$due}</td></tr>
+                    </table>
+                    <p style='margin:16px 0 0;'>Thank you! - 365 Laundry</p>
+                ",
             ]
         ];
 
@@ -111,6 +146,12 @@ class CommunicationService
     public function sendCollectionOrderReady(Order $order)  { $this->dispatch('collection_order_ready', $order); }
     public function sendCollectionOrderCompleted(Order $order) { $this->dispatch('collection_order_completed', $order); }
     public function sendFinalizedBill(Order $order) { $this->dispatch('bill_finalized', $order); }
+    
+    // New triggers
+    public function sendOrderPickedUp(Order $order) { $this->dispatch('order_picked_up', $order); }
+    public function sendOrderProcessing(Order $order) { $this->dispatch('order_processing', $order); }
+    public function sendOrderDispatched(Order $order) { $this->dispatch('order_dispatched', $order); }
+    public function sendPaymentReceived(Order $order) { $this->dispatch('payment_received', $order); }
 
     // ─── Master Dispatch ─────────────────────────────────────────────────────
 
@@ -177,7 +218,7 @@ class CommunicationService
         // Process Email — isolated so failure doesn't block SMS/WhatsApp
         if ($isEmailEnabled && !empty($customer->email)) {
             try {
-                $dbTemplate = \App\Models\EmailTemplate::where('type', $type)->first();
+                $dbTemplate = \App\Models\EmailTemplate::where('type', $type)->where('is_active', true)->first();
                 if ($dbTemplate && !empty($dbTemplate->body)) {
                     $replacements = [
                         '{customer_name}'  => $data['customer_name'],

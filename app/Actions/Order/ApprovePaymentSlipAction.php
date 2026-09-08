@@ -30,5 +30,12 @@ class ApprovePaymentSlipAction
 
             $order->save();
         });
+
+        try {
+            $commService = new \App\Services\CommunicationService();
+            $commService->sendPaymentReceived($order);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Payment notification failed: ' . $e->getMessage());
+        }
     }
 }

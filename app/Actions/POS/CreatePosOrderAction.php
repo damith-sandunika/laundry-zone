@@ -261,6 +261,14 @@ class CreatePosOrderAction
                 $order->update(['status' => 'processing']);
             }
 
+            if ($paidAmount > 0 && $paymentMode === 'pay_now') {
+                try {
+                    $commService->sendPaymentReceived($orderForComm);
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error('POS Payment notification failed: ' . $e->getMessage());
+                }
+            }
+
             return [
                 'success' => true,
                 'order_id' => $order->id,

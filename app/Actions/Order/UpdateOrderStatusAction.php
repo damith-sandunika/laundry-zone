@@ -149,6 +149,12 @@ class UpdateOrderStatusAction
                 } else {
                     $commService->sendPosWalkinCompleted($order);
                 }
+            } elseif ($status === 'picked_up') {
+                $commService->sendOrderPickedUp($order);
+            } elseif ($status === 'processing') {
+                $commService->sendOrderProcessing($order);
+            } elseif ($status === 'returned_from_workshop') {
+                $commService->sendOrderDispatched($order);
             }
         } catch (\Exception $e) {
             Log::error('Notification failed: ' . $e->getMessage());

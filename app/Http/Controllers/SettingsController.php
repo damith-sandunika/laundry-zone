@@ -159,6 +159,19 @@ class SettingsController extends Controller
         return redirect()->back()->with('success', 'General settings saved.');
     }
 
+    public function updateNotifications(Request $request)
+    {
+        if (!\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
+            abort(403);
+        }
+
+        \App\Models\Setting::set('is_sms_enabled', $request->has('is_sms_enabled') ? 'true' : 'false');
+        \App\Models\Setting::set('is_whatsapp_enabled', $request->has('is_whatsapp_enabled') ? 'true' : 'false');
+        \App\Models\Setting::set('is_email_enabled', $request->has('is_email_enabled') ? 'true' : 'false');
+
+        return redirect()->back()->with('success', 'Notification settings saved successfully.');
+    }
+
     public function storeService(Request $request)
     {
         $request->validate([

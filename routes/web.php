@@ -212,8 +212,12 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
 
-        // Payment Settings
-        Route::post('/settings/payment-methods', [PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
+            // Payment Settings
+            Route::post('/settings/payment-methods', [\App\Http\Controllers\PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
+
+            // Notifications Settings
+            Route::post('/settings/notifications', [\App\Http\Controllers\SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
+
 
 
         Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
