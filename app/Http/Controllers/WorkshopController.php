@@ -540,14 +540,40 @@ class WorkshopController extends Controller
             ->latest()
             ->firstOrFail();
 
-        $services = \App\Models\ServiceType::where('is_active', true)->get();
-        
-        $categories = \App\Models\ServiceCategory::with(['children' => function($q) {
+        // Scope to the workshop's branch (fall back to order branch if dispatch has no branch)
+        $branchId = $dispatch->workshop->branch_id
+            ?? $dispatch->branch_id
+            ?? $order->branch_id
+            ?? null;
+
+        $services = \App\Models\ServiceType::where('is_active', true)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->get();
+
+        $categories = \App\Models\ServiceCategory::with(['children' => function($q) use ($branchId) {
             $q->where('is_active', true)->orderBy('order_index');
-        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
-        
-        $turnaroundTypes = \App\Models\TurnaroundType::all();
-        $systemExtras = \App\Models\Extra::where('is_active', true)->get();
+        }])
+            ->whereNull('parent_id')
+            ->where('is_active', true)
+            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->orderBy('order_index')
+            ->get();
+
+        $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId) {
+            $q->whereNull('branch_id');
+            if ($branchId) {
+                $q->orWhere('branch_id', $branchId);
+            }
+        })->get();
+
+        $systemExtras = \App\Models\Extra::where('is_active', true)
+            ->where(function($q) use ($branchId) {
+                $q->whereNull('branch_id');
+                if ($branchId) {
+                    $q->orWhere('branch_id', $branchId);
+                }
+            })
+            ->get();
         
         $cartItems = $order->items->map(function($item) {
             $selectedExtras = $item->extras->map(function($ext) {

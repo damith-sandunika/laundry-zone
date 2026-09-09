@@ -7,5 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 class PaymentMethod extends Model
 {
     protected $guarded = ['id'];
+
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
 }
 

@@ -10,8 +10,8 @@
     })(window,document,'script','dataLayer','GTM-5P9DLW49');</script>
     <!-- End Google Tag Manager -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Customer Dashboard - 365 Laundry</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/365_laundry_logo.png') }}">
+    <title>Customer Dashboard - Rapid Laundromat</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -36,7 +36,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="flex justify-between h-20 items-center">
             <!-- Logo + Brand Name -->
             <a href="{{ route('home') }}" class="flex items-center gap-2">
-                <img src="{{ asset('images/365_laundry_logo_site.png') }}" alt="365 Laundry" class="h-10">
+                <img src="{{ asset('images/rapid_laundromat_logo_site.png') }}" alt="Rapid Laundromat" class="h-10">
             </a>
             
             <!-- Desktop Menu -->
@@ -119,7 +119,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <footer class="bg-white border-t border-slate-200 mt-auto py-8">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="text-center">
-            <p class="text-sm font-bold text-brand mb-2">365Laundry.lk</p>
+            <p class="text-sm font-bold text-brand mb-2">Rapid Laundromat</p>
             <p class="text-xs text-slate-500 mb-4">&copy; {{ date('Y') }} All Rights Reserved.</p>
             <p class="text-[10px] font-extrabold text-slate-400 tracking-widest uppercase">Powered by <a href="https://dsrzone.com" target="_blank" class="text-blue-500 hover:text-blue-400 font-black transition-colors">DSRZone</a></p>
         </div>

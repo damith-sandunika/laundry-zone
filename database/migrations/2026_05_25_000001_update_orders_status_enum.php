@@ -11,13 +11,17 @@ return new class extends Migration
         DB::statement("UPDATE orders SET status = 'done' WHERE status IN ('washing', 'drying', 'ready')");
 
         // 2. Update the ENUM column to use new status values
-        DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','done','delivered','cancelled') NOT NULL DEFAULT 'received'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','done','delivered','cancelled') NOT NULL DEFAULT 'received'");
+        }
     }
 
     public function down(): void
     {
         // Restore old enum values
-        DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','washing','drying','ready','delivered','cancelled') NOT NULL DEFAULT 'received'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','washing','drying','ready','delivered','cancelled') NOT NULL DEFAULT 'received'");
+        }
         // Convert 'done' back to 'ready'
         DB::statement("UPDATE orders SET status = 'ready' WHERE status = 'done'");
     }

@@ -65,7 +65,7 @@ class CreatePosDeliveryOrderAction
 
                     $processedCart[] = [
                         'service_type_id' => $serviceTypeId,
-                        'name' => $item['name'],
+                        'name' => $item['name'] ?? $item['item_description'] ?? 'Item',
                         'qty' => $qty,
                         'base_price' => $basePrice,
                         'total_price' => $itemSubtotal,
@@ -147,15 +147,18 @@ class CreatePosDeliveryOrderAction
                 }
 
                 // Save cart_json matching the frontend structure for consistency
-                $cartJson = array_map(fn($i) => [
-                    'id'              => $i['service_type_id'],
-                    'service_type_id' => $i['service_type_id'],
-                    'name'            => $i['name'],
-                    'base_price'      => $i['base_price'],
-                    'qty'             => $i['qty'],
-                    'turnaround_type_id' => $i['turnaround_type_id'],
-                    'selected_extras' => $i['selected_extras'],
-                ], $cart);
+                $cartJson = array_map(function($i) {
+                    $sId = $i['service_type_id'] ?? $i['id'] ?? $i['service_id'] ?? null;
+                    return [
+                        'id'                 => $sId,
+                        'service_type_id'    => $sId,
+                        'name'               => $i['name'] ?? 'Item',
+                        'base_price'         => $i['base_price'] ?? 0,
+                        'qty'                => $i['qty'] ?? $i['quantity'] ?? 1,
+                        'turnaround_type_id' => $i['turnaround_type_id'] ?? null,
+                        'selected_extras'    => $i['selected_extras'] ?? [],
+                    ];
+                }, $cart);
 
                 $appointment->update([
                     'order_id'  => $order->id,

@@ -38,7 +38,7 @@
         .leaflet-tile-pane { filter: saturate(1.1) brightness(1.02); }
     </style>
 
-    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }}, {{ Js::from($deliveryRanges) }}, {{ Js::from($workshops) }}, {{ Js::from($turnaroundTypes) }}, {{ Js::from($extras) }}, {{ $shopLat }}, {{ $shopLng }})" x-init="initData()">
+    <div x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }}, {{ Js::from($deliveryRanges) }}, {{ Js::from($workshops) }}, {{ Js::from($turnaroundTypes) }}, {{ Js::from($extras) }}, {{ $shopLat }}, {{ $shopLng }}, {{ Js::from($pickupTimePeriods) }})" x-init="initData()">
         
         <!-- Wizard Progress Bar -->
         <div class="mb-8">
@@ -55,7 +55,7 @@
                         </div>
                         <span class="text-[11px] font-extrabold mt-2 uppercase tracking-wider absolute top-14 w-32 text-center" 
                               :class="step === i ? 'text-blue-700' : 'text-slate-400'"
-                              x-text="['Account', 'Services', 'Pickup', 'Delivery & Pay'][i-1]"></span>
+                              x-text="['Account', 'Pickup', 'Services', 'Delivery & Pay'][i-1]"></span>
                     </div>
                 </template>
             </div>
@@ -78,8 +78,8 @@
             @endif
 
             
-            <!-- Step 2: Services (Drill-Down UI) -->
-            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms class="pb-24">
+            <!-- Step 3: Services (Drill-Down UI) -->
+            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms class="pb-24">
                 <div class="mb-6">
                     <h3 class="text-xl font-semibold text-slate-800">Select Services</h3>
                     <p class="text-sm text-slate-500 mt-1">Navigate through categories to add items to your cart.</p>
@@ -188,7 +188,7 @@
             </div>
 
             <!-- Fixed Bottom Cart Bar -->
-            <div x-show="step === 2" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div x-show="step === 3" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 
                 <!-- Expandable Cart List -->
                 <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
@@ -228,7 +228,7 @@
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <button type="button" @click="goToStep(1)" class="hidden sm:flex text-slate-500 hover:text-slate-800 font-medium items-center gap-2 px-4 py-2 border border-transparent hover:border-slate-200 rounded-md transition-all">
+                        <button type="button" @click="goToStep(2)" class="hidden sm:flex text-slate-500 hover:text-slate-800 font-medium items-center gap-2 px-4 py-2 border border-transparent hover:border-slate-200 rounded-md transition-all">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
                         <button type="button" @click="openGlobalCheckoutModal()" :disabled="cart.length === 0" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-2.5 rounded-md font-semibold transition-colors shadow-sm flex items-center gap-2">
@@ -413,8 +413,8 @@
                 </div>
             </div>
 
-            <!-- STEP 3: Pickup Details -->
-            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
+            <!-- STEP 2: Pickup Details -->
+            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
                         <span class="bg-amber-50 text-amber-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
@@ -431,9 +431,12 @@
                             <label class="block text-sm font-bold text-slate-700 mb-1">Pickup Time</label>
                             <select name="pickup_time_period_id" id="pickup_time_input" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold">
                                 <option value="">Select a time slot...</option>
-                                @foreach($pickupTimePeriods as $period)
-                                    <option value="{{ $period->id }}">{{ $period->label }} ({{ \Carbon\Carbon::parse($period->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($period->end_time)->format('h:i A') }})</option>
-                                @endforeach
+                                <template x-for="period in branchPickupTimes" :key="period.id">
+                                    <option :value="period.id" x-text="(period.label || '') + ' (' + formatTime(period.start_time) + ' - ' + formatTime(period.end_time) + ')'"></option>
+                                </template>
+                                <template x-if="branchPickupTimes.length === 0">
+                                    <option disabled value="">No time slots available for this branch</option>
+                                </template>
                             </select>
                         </div>
                     </div>
@@ -511,11 +514,12 @@
 
                 <div class="flex justify-between items-center mt-6">
                     <div class="flex items-center justify-between w-full">
-                        <button type="button" @click="goToStep(2)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
+                        <button type="button" @click="goToStep(1)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <button type="button" @click="goToStep(4)" :disabled="isOutOfRange" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2">
-                            Next Step <i class="fa-solid fa-arrow-right"></i>
+                        <button type="button" @click="goToStep(3)" :disabled="isOutOfRange || servicesLoading" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2">
+                            <span x-show="!servicesLoading">Choose Services <i class="fa-solid fa-arrow-right"></i></span>
+                            <span x-show="servicesLoading"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading Services...</span>
                         </button>
                     </div>
                 </div>
@@ -541,9 +545,9 @@
                                 <label class="block text-sm font-bold text-slate-700 mb-1">Preferred Time Slot</label>
                                 <select name="delivery_time_period_id" x-model="deliveryTimePeriodId" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold">
                                     <option value="">Select time slot...</option>
-                                    @foreach($pickupTimePeriods as $period)
-                                        <option value="{{ $period->id }}">{{ \Carbon\Carbon::parse($period->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($period->end_time)->format('h:i A') }}</option>
-                                    @endforeach
+                                    <template x-for="period in branchPickupTimes" :key="period.id">
+                                        <option :value="period.id" x-text="formatTime(period.start_time) + ' - ' + formatTime(period.end_time)"></option>
+                                    </template>
                                 </select>
                             </div>
                         </div>
@@ -712,14 +716,55 @@
 
     <x-slot name="scripts">
         <script>
-            function bookingWizard(categories, isLoggedIn, user, minOrderLimit, deliveryRanges, workshops, turnaroundTypes, extras, shopLat, shopLng) {
+            function bookingWizard(categories, isLoggedIn, user, minOrderLimit, deliveryRanges, workshops, turnaroundTypes, extras, shopLat, shopLng, pickupTimePeriods) {
                 return {
                     categories: categories,
                     turnaroundTypes: turnaroundTypes,
                     extras: extras,
                     shopLat: shopLat,
                     shopLng: shopLng,
+                    branchPickupTimes: pickupTimePeriods || [],
+                    servicesLoading: false,
+                    detectedBranchId: null,
                     
+                    formatTime(timeStr) {
+                        if (!timeStr) return '';
+                        const parts = timeStr.split(':');
+                        const hour = parseInt(parts[0]);
+                        const ampm = hour >= 12 ? 'PM' : 'AM';
+                        const displayHour = hour % 12 || 12;
+                        return `${displayHour}:${parts[1]} ${ampm}`;
+                    },
+
+                    async fetchBranchServices(branchId) {
+                        if (!branchId) return;
+                        if (this.detectedBranchId === branchId) return;
+                        this.servicesLoading = true;
+                        try {
+                            const response = await axios.get(`/customer/branch-services/${branchId}`);
+                            if (response.data.categories) {
+                                this.categories = response.data.categories;
+                            }
+                            if (response.data.turnaroundTypes) {
+                                this.turnaroundTypes = response.data.turnaroundTypes;
+                            }
+                            if (response.data.extras) {
+                                this.extras = response.data.extras;
+                            }
+                            if (response.data.pickupTimePeriods) {
+                                this.branchPickupTimes = response.data.pickupTimePeriods;
+                            }
+                            this.detectedBranchId = branchId;
+                            this.currentViewLevel = 0;
+                            this.selectedMainCategory = null;
+                            this.selectedSubcategory = null;
+                        } catch(e) {
+                            console.error('Failed to fetch branch services', e);
+                        } finally {
+                            this.servicesLoading = false;
+                        }
+                    },
+
                     selectedMainCategory: null,
                     selectedSubcategory: null,
                     currentSubcategories: [],
@@ -785,8 +830,8 @@
                     isOutOfRange: false,
 
                     initData() {
-                        // Check if we are starting on step 3
-                        if (this.step === 3) {
+                        // Check if we are starting on step 2
+                        if (this.step === 2) {
                             setTimeout(() => {
                                 if (this.pickupMap) {
                                     this.pickupMap.invalidateSize();
@@ -799,8 +844,8 @@
                         this.$watch('step', value => {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                             
-                            // Initialize map on step 3 if not already done
-                            if (value === 3) {
+                            // Initialize map on step 2 if not already done
+                            if (value === 2) {
                                 setTimeout(() => {
                                     if (this.pickupMap) {
                                         this.pickupMap.invalidateSize();
@@ -837,7 +882,13 @@
                         }
 
                         // Validation logic before moving to next step
-                        if (n === 3) { // Going to Pickup
+                        if (n === 3) { // Going to Services (Step 3)
+                            if (this.nearestWorkshop && this.nearestWorkshop.id) {
+                                await this.fetchBranchServices(this.nearestWorkshop.id);
+                            }
+                        }
+                        
+                        if (n === 4) { // Going to Delivery & Pay (Step 4)
                             if (this.cart.length === 0) {
                                 alert("Please select at least one service before proceeding.");
                                 return;
@@ -846,9 +897,6 @@
                                 alert("Minimum delivery limit is LKR " + this.minLimit.toFixed(2) + ". Please add more items to proceed.");
                                 return;
                             }
-                        }
-                        
-                        if (n === 4) { // Going to Delivery
                             const date = document.getElementById('pickup_date_input').value;
                             const time = document.getElementById('pickup_time_input').value;
                             const addr = document.getElementById('pickup_address').value;
@@ -1331,7 +1379,7 @@
                         });
                         
                         this.isGlobalCheckoutModalOpen = false;
-                        this.goToStep(3);
+                        this.goToStep(4);
                     },
                 }
             }

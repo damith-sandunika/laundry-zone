@@ -8,15 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('branches', function (Blueprint $table) {
-            $table->unsignedBigInteger('order_sequence')->default(0)->after('branch_profit_percentage');
-        });
+        if (!Schema::hasColumn('branches', 'order_sequence')) {
+            Schema::table('branches', function (Blueprint $table) {
+                $table->unsignedBigInteger('order_sequence')->default(0)->after('branch_profit_percentage');
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('branches', function (Blueprint $table) {
-            $table->dropColumn('order_sequence');
-        });
+        if (Schema::hasColumn('branches', 'order_sequence')) {
+            Schema::table('branches', function (Blueprint $table) {
+                $table->dropColumn('order_sequence');
+            });
+        }
     }
 };

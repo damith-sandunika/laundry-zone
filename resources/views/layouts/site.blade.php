@@ -11,8 +11,8 @@
     })(window,document,'script','dataLayer','GTM-5P9DLW49');</script>
     <!-- End Google Tag Manager -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>365laundry.lk - Premium Laundry Delivery</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/365_laundry_logo.png') }}">
+    <title>Rapid Laundromat - Premium Laundry Delivery</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap"
         rel="stylesheet">
@@ -140,7 +140,7 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Brand -->
                 <a href="{{ route('customer.booking') }}" class="flex items-center gap-2">
-                    <img src="{{ asset('images/365_laundry_logo_site.png') }}" alt="365 Laundry Logo" class="h-10 w-auto">
+                    <img src="{{ asset('images/rapid_laundromat_logo_site.png') }}" alt="Rapid Laundromat Logo" class="h-10 w-auto">
                 </a>
 
                 <!-- Right: Sign In + Book Now -->
@@ -165,7 +165,7 @@
                 <div class="col-span-1 md:col-span-1">
                     <div class="flex items-center mb-6">
                         <span class="text-3xl mr-2 text-white"><i class="fa-solid fa-bolt"></i></span>
-                        <span class="font-bold text-2xl text-white">365laundry.lk</span>
+                        <span class="font-bold text-2xl text-white">Rapid Laundromat</span>
                     </div>
                     <p class="text-sm text-slate-400 mb-6">Professional laundry and dry cleaning services with care and
                         convenience.</p>
@@ -219,7 +219,7 @@
             <div
                 class="text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <p>&copy; {{ date('Y') }} 365laundry.lk. All Rights Reserved.</p>
+                    <p>&copy; {{ date('Y') }} Rapid Laundromat. All Rights Reserved.</p>
                     <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com"
                             target="_blank"
                             class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>

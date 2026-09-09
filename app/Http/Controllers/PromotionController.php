@@ -26,7 +26,7 @@ class PromotionController extends Controller
                 try {
                     $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                     $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => '365_laundry/promotions',
+                        'folder' => 'rapid_laundromat/promotions',
                         'format' => 'webp',
                         'quality' => 'auto'
                     ]);

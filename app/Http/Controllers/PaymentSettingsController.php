@@ -9,8 +9,6 @@ class PaymentSettingsController extends Controller
 {
     public function index()
     {
-        abort_unless(auth()->user()->isSuperAdmin(), 403, 'Only Super Admin can manage payment methods.');
-
         $methods = [
             (object) [
                 'id' => 'bank_transfer',
@@ -49,8 +47,6 @@ class PaymentSettingsController extends Controller
 
     public function update(Request $request)
     {
-        abort_unless(auth()->user()->isSuperAdmin(), 403, 'Only Super Admin can manage payment methods.');
-
         $request->validate([
             'is_active' => 'array',
             'bank_name' => 'nullable|string|max:255',

@@ -12,6 +12,11 @@ class Package extends Model
 
     protected $guarded = [];
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function services()
     {
         return $this->hasMany(PackageService::class);

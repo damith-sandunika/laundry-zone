@@ -24,12 +24,13 @@ return new class extends Migration
         });
 
         // Data Migration Script: Move data from users table
-        DB::statement('
+        $nowFunc = DB::getDriverName() === 'sqlite' ? 'CURRENT_TIMESTAMP' : 'NOW()';
+        DB::statement("
             INSERT INTO employee_profiles (user_id, nic, dob, address, emergency_contact, basic_salary, standard_working_hours, ot_rate_per_hour, casual_leaves, created_at, updated_at)
-            SELECT id, nic, dob, address, emergency_contact, basic_salary, standard_working_hours, ot_rate_per_hour, casual_leaves, NOW(), NOW()
+            SELECT id, nic, dob, address, emergency_contact, basic_salary, standard_working_hours, ot_rate_per_hour, casual_leaves, {$nowFunc}, {$nowFunc}
             FROM users
-            WHERE role != "customer"
-        ');
+            WHERE role != 'customer'
+        ");
 
         // Drop HR columns from Users table
         Schema::table('users', function (Blueprint $table) {
