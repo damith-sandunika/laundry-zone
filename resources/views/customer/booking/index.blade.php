@@ -3,7 +3,7 @@
         <div class="flex justify-between items-center flex-wrap gap-3">
             <div class="flex items-center gap-4">
                 <div>
-                    <h2 class="font-black text-xl sm:text-2xl text-slate-800 tracking-tight">Book a Pickup</h2>
+                    <h2 class="font-bold text-xl sm:text-2xl text-slate-800 tracking-tight">Book a Pickup</h2>
                     <p class="text-xs sm:text-sm text-slate-500 font-medium mt-1 hidden sm:block">Schedule a laundry pickup right to your doorstep.</p>
                 </div>
             </div>
@@ -48,7 +48,7 @@
                 
                 <template x-for="i in 4" :key="i">
                     <div class="relative z-10 flex flex-col items-center bg-transparent">
-                        <div @click="goToStep(i)" class="w-12 h-12 rounded-full flex items-center justify-center font-black text-base border-4 transition-all duration-300 cursor-pointer"
+                        <div @click="goToStep(i)" class="w-12 h-12 rounded-full flex items-center justify-center font-bold text-base border-4 transition-all duration-300 cursor-pointer"
                              :class="step === i ? 'step-active scale-110 shadow-md' : (step > i ? 'step-completed' : 'step-inactive bg-white')">
                             <i x-show="step > i" class="fa-solid fa-check"></i>
                             <span x-show="step <= i" x-text="i"></span>
@@ -162,7 +162,7 @@
                                         <div class="font-bold text-slate-800 text-sm group-hover:text-blue-700 transition-colors" x-text="service.name"></div>
                                         <div class="text-[10px] text-slate-500 font-medium mt-0.5 leading-tight" x-text="service.description || 'Professional cleaning'"></div>
                                         <div class="flex items-center gap-2 mt-2">
-                                            <div class="text-blue-600 font-black text-sm">LKR <span x-text="service.base_price"></span></div>
+                                            <div class="text-blue-600 font-bold text-sm">LKR <span x-text="service.base_price"></span></div>
                                             <div class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></div>
                                         </div>
                                     </div>
@@ -286,7 +286,7 @@
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-2">Requested Delivery Time (Optional)</label>
                             <p class="text-xs text-slate-500 font-medium mb-3">When would you like to receive your items back?</p>
-                            <div class="grid grid-cols-2 gap-3">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                                 <div>
                                     <input type="date" name="delivery_date" x-model="deliveryDate" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 font-medium" min="{{ date('Y-m-d') }}">
                                 </div>
@@ -346,8 +346,10 @@
                             <div class="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center text-4xl mx-auto mb-4 border-4 border-blue-100">
                                 <i class="fa-solid fa-user-check"></i>
                             </div>
-                            <h3 class="text-2xl font-black text-slate-800 mb-2">Welcome back, <span x-text="authCustomer.name"></span>!</h3>
-                            <p class="text-slate-500 font-medium">You are currently logged in with <span x-text="authCustomer.phone"></span>.</p>
+                            <div class="mb-8">
+                                <h3 class="text-xl md:text-2xl font-bold text-slate-800 mb-2">Welcome back, <span x-text="authCustomer.name"></span>!</h3>
+                                <p class="text-sm text-slate-500 font-medium">You are currently logged in with <span x-text="authCustomer.phone"></span>.</p>
+                            </div>
                         </div>
                     </template>
 
@@ -374,7 +376,7 @@
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
                                         <input type="password" x-model="loginData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢">
                                     </div>
-                                    <button type="button" @click="submitLogin()" :disabled="authLoading" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-black mt-2 transition-all flex justify-center items-center gap-2">
+                                    <button type="button" @click="submitLogin()" :disabled="authLoading" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold mt-2 transition-all flex justify-center items-center gap-2">
                                         <span x-show="!authLoading">Login to Continue</span>
                                         <i x-show="authLoading" class="fa-solid fa-spinner fa-spin"></i>
                                     </button>
@@ -400,7 +402,7 @@
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
                                         <input type="password" x-model="registerData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢">
                                     </div>
-                                    <button type="button" @click="submitRegister()" :disabled="authLoading" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-black mt-2 transition-all flex justify-center items-center gap-2">
+                                    <button type="button" @click="submitRegister()" :disabled="authLoading" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-bold mt-2 transition-all flex justify-center items-center gap-2">
                                         <span x-show="!authLoading">Create Account & Continue</span>
                                         <i x-show="authLoading" class="fa-solid fa-spinner fa-spin"></i>
                                     </button>
@@ -412,7 +414,7 @@
                 
                 <div class="flex justify-between items-center mt-6">
                     <!-- Only show next if authenticated -->
-                    <button type="button" x-show="isAuthenticated" @click="goToStep(2)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2 mt-4 ml-auto">
+                    <button type="button" x-show="isAuthenticated" @click="goToStep(2)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 mt-4 ml-auto">
                         Next Step <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
@@ -421,7 +423,7 @@
             <!-- STEP 3: Pickup Details -->
             <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                    <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
+                    <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
                         <span class="bg-amber-50 text-amber-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
                         Pickup Details
                     </h3>
@@ -461,7 +463,7 @@
                             <!-- Centered Pin -->
                             <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full z-[400] pointer-events-none flex flex-col items-center">
                                 <div :class="isOutOfRange ? 'bg-red-600 border-red-700' : 'bg-slate-900 border-slate-700'"
-                                    class="text-white text-[11px] font-black px-2.5 py-1.5 rounded-lg mb-1 shadow-xl whitespace-nowrap border flex flex-col items-center gap-0.5 transition-colors">
+                                    class="text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg mb-1 shadow-xl whitespace-nowrap border flex flex-col items-center gap-0.5 transition-colors">
                                     <template x-if="!isOutOfRange">
                                         <div class="flex flex-col items-center gap-0.5">
                                             <span x-show="pickupDistance > 0" class="text-[9px] font-bold opacity-80 flex items-center gap-1">
@@ -493,12 +495,12 @@
                                         </div>
                                         <div>
                                             <div class="text-white text-[10px] font-bold opacity-70">Nearest Branch</div>
-                                            <div class="text-white text-xs font-black" x-text="nearestWorkshop ? nearestWorkshop.name : ''"></div>
+                                            <div class="text-white text-xs font-bold" x-text="nearestWorkshop ? nearestWorkshop.name : ''"></div>
                                         </div>
                                     </div>
                                     <div x-show="pickupDistance > 0" class="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
                                         <i class="fa-solid fa-route text-amber-300 text-xs"></i>
-                                        <span class="text-white text-xs font-black"><span x-text="pickupDistance"></span> km</span>
+                                        <span class="text-white text-xs font-bold"><span x-text="pickupDistance"></span> km</span>
                                     </div>
                                 </div>
                             </div>
@@ -519,7 +521,7 @@
                         <button type="button" @click="goToStep(2)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <button type="button" @click="goToStep(4)" :disabled="isOutOfRange" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-black transition-all shadow-md flex items-center gap-2">
+                        <button type="button" @click="goToStep(4)" :disabled="isOutOfRange" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2">
                             Next Step <i class="fa-solid fa-arrow-right"></i>
                         </button>
                     </div>
@@ -531,7 +533,7 @@
                 <div class="space-y-6">
                     <!-- Delivery Section -->
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                        <h3 class="text-xl font-black text-slate-800 mb-2 flex items-center gap-3">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
                             <span class="bg-emerald-50 text-emerald-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-box-open"></i></span>
                             Return Delivery
                         </h3>
@@ -545,7 +547,7 @@
                                         <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
                                     </div>
                                     <div>
-                                        <div class="font-black text-sm text-slate-800">Deliver to me</div>
+                                        <div class="font-bold text-sm text-slate-800">Deliver to me</div>
                                         <div class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Rider brings it back</div>
                                     </div>
                                 </div>
@@ -557,7 +559,7 @@
                                         <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
                                     </div>
                                     <div>
-                                        <div class="font-black text-sm text-slate-800">I will pick up</div>
+                                        <div class="font-bold text-sm text-slate-800">I will pick up</div>
                                         <div class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Collect from branch</div>
                                     </div>
                                 </div>
@@ -567,7 +569,7 @@
                         <div x-show="deliveryPref === 'deliver_to_address'" x-collapse>
                             <label class="flex items-center gap-3 cursor-pointer p-4 bg-blue-50 border border-blue-100 rounded-xl mb-4">
                                 <input type="checkbox" name="same_as_pickup" value="1" x-model="sameAsPickup" class="w-5 h-5 text-blue-600 rounded border-blue-200 focus:ring-blue-500 bg-white">
-                                <span class="font-black text-sm text-blue-800">Delivery address is same as pickup</span>
+                                <span class="font-bold text-sm text-blue-800">Delivery address is same as pickup</span>
                             </label>
 
                             <div x-show="!sameAsPickup" x-collapse>
@@ -583,7 +585,7 @@
                                         <!-- Centered Pin -->
                                         <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-full z-[400] pointer-events-none flex flex-col items-center">
                                             <div :class="isOutOfRange ? 'bg-red-600 border-red-700' : 'bg-slate-900 border-slate-700'"
-                                                class="text-white text-[11px] font-black px-2.5 py-1.5 rounded-lg mb-1 shadow-xl whitespace-nowrap border flex flex-col items-center gap-0.5 transition-colors">
+                                                class="text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg mb-1 shadow-xl whitespace-nowrap border flex flex-col items-center gap-0.5 transition-colors">
                                                 <template x-if="!isOutOfRange">
                                                     <div class="flex flex-col items-center gap-0.5">
                                                         <span x-show="deliveryDistance > 0" class="text-[9px] font-bold opacity-80 flex items-center gap-1">
@@ -612,12 +614,12 @@
                                                     </div>
                                                     <div>
                                                         <div class="text-white text-[10px] font-bold opacity-70">Delivery Location</div>
-                                                        <div class="text-white text-xs font-black">Move pin to set location</div>
+                                                        <div class="text-white text-xs font-bold">Move pin to set location</div>
                                                     </div>
                                                 </div>
                                                 <div x-show="deliveryDistance > 0" class="flex items-center gap-2 bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1.5">
                                                     <i class="fa-solid fa-route text-amber-300 text-xs"></i>
-                                                    <span class="text-white text-xs font-black"><span x-text="deliveryDistance"></span> km</span>
+                                                    <span class="text-white text-xs font-bold"><span x-text="deliveryDistance"></span> km</span>
                                                 </div>
                                             </div>
                                         </div>
@@ -640,7 +642,7 @@
                                 <i class="fa-solid fa-file-invoice-dollar"></i>
                             </div>
                             <div>
-                                <h3 class="text-lg font-black text-white">Order Summary</h3>
+                                <h3 class="text-lg font-bold text-white">Order Summary</h3>
                                 <p class="text-slate-400 text-xs font-medium">Estimated costs — final bill after inspection</p>
                             </div>
                         </div>
@@ -650,14 +652,14 @@
                                 <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
                                     <i class="fa-solid fa-shirt text-blue-400 text-xs"></i> Services (Estimate)
                                 </span>
-                                <span class="text-white text-sm font-black">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></span>
+                                <span class="text-white text-sm font-bold">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></span>
                             </div>
 
                             <div x-show="estimatedDeliveryFee > 0" class="flex justify-between items-center py-2.5 border-b border-slate-700">
                                 <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
                                     <i class="fa-solid fa-truck text-emerald-400 text-xs"></i> Delivery Fee
                                 </span>
-                                <span class="text-white text-sm font-black">LKR <span x-text="estimatedDeliveryFee.toFixed(2)"></span></span>
+                                <span class="text-white text-sm font-bold">LKR <span x-text="estimatedDeliveryFee.toFixed(2)"></span></span>
                             </div>
 
                             <div x-show="pickupDistance > 0" class="flex justify-between items-center py-1.5 text-slate-400 text-xs">
@@ -667,8 +669,8 @@
                         </div>
 
                         <div class="bg-blue-600 rounded-xl p-4 flex justify-between items-center">
-                            <span class="text-blue-100 font-black text-sm">Total Estimated Amount</span>
-                            <span class="text-white font-black text-xl">LKR <span x-text="totalPrice.toFixed(2)"></span></span>
+                            <span class="text-blue-100 font-bold text-sm">Total Estimated Amount</span>
+                            <span class="text-white font-bold text-xl">LKR <span x-text="totalPrice.toFixed(2)"></span></span>
                         </div>
 
                         <p class="text-[11px] text-slate-500 text-center mt-4">
@@ -682,7 +684,7 @@
                     <button type="button" @click="goToStep(3)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
                         <i class="fa-solid fa-arrow-left"></i> Back
                     </button>
-                    <button type="submit" :disabled="isOutOfRange" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-black transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-lg">
+                    <button type="submit" :disabled="isOutOfRange" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-lg">
                         Confirm Booking <i class="fa-solid fa-check-circle"></i>
                     </button>
                 </div>

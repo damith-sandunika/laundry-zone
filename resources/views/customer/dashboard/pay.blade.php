@@ -3,7 +3,7 @@
         <div class="flex items-center gap-3">
             <a href="{{ route('customer.orders.show', $order->order_number) }}" class="text-slate-400 hover:text-blue-600 transition p-2 bg-white rounded-lg shadow-sm border border-slate-100"><i class="fa-solid fa-arrow-left"></i></a>
             <div>
-                <h2 class="font-black text-2xl text-slate-800 leading-tight">Complete Payment</h2>
+                <h2 class="font-bold text-2xl text-slate-800 leading-tight">Complete Payment</h2>
                 <p class="text-sm font-bold text-slate-500">Order #{{ $order->order_number }} &middot; Amount Due: <span class="text-blue-600">LKR {{ number_format($order->total, 2) }}</span></p>
             </div>
         </div>
@@ -26,7 +26,7 @@
             
             <!-- Step 1: Select Payment Method -->
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 lg:p-8">
-                <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
+                <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
                     <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">1</span>
                     Select Payment Method
                 </h3>
@@ -50,7 +50,7 @@
                                         <div class="w-2.5 h-2.5 rounded-full bg-blue-600 opacity-0 transition-opacity" :class="selectedMethod === '{{ $method->name }}' ? 'opacity-100' : ''"></div>
                                     </div>
                                 </div>
-                                <h4 class="font-black text-slate-800">{{ $method->name }}</h4>
+                                <h4 class="font-bold text-slate-800">{{ $method->name }}</h4>
                                 @if($method->type === 'bank_transfer')
                                     <p class="text-xs font-bold text-slate-500 mt-1">Upload your transfer receipt</p>
                                 @elseif($method->type === 'card_transfer')
@@ -66,7 +66,7 @@
 
             <!-- Step 2: Bank Transfer Details (Dynamic) -->
             <div x-show="isBankTransfer()" x-transition.opacity style="display: none;" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 lg:p-8">
-                <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2">
+                <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2">
                     <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">2</span>
                     Bank Transfer Details
                 </h3>
@@ -103,7 +103,7 @@
             <!-- Step 2: Simulated Card Payment (Dynamic) -->
             <div x-show="isCardPayment()" x-transition.opacity style="display: none;" class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 lg:p-8">
                 <div class="flex justify-between items-center mb-6">
-                    <h3 class="font-black text-slate-800 flex items-center gap-2">
+                    <h3 class="font-bold text-slate-800 flex items-center gap-2">
                         <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm">2</span>
                         Card Details
                     </h3>
@@ -146,7 +146,7 @@
 
             <!-- Submit Button -->
             <div class="text-right border-t border-slate-200 pt-6">
-                <button type="submit" class="bg-slate-800 text-white px-8 py-3.5 rounded-xl font-black text-lg hover:bg-slate-900 hover:shadow-xl hover:shadow-slate-200 transition-all inline-flex items-center gap-2" :class="!selectedMethod ? 'opacity-50 cursor-not-allowed' : ''" :disabled="!selectedMethod">
+                <button type="submit" class="bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold text-lg hover:bg-slate-900 hover:shadow-xl hover:shadow-slate-200 transition-all inline-flex items-center gap-2" :class="!selectedMethod ? 'opacity-50 cursor-not-allowed' : ''" :disabled="!selectedMethod">
                     <span x-text="selectedMethod === 'Bank Transfer' ? 'Submit Receipt' : 'Pay LKR {{ number_format($order->total, 2) }}'"></span>
                     <i class="fa-solid fa-arrow-right"></i>
                 </button>

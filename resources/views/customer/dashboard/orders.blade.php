@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center flex-wrap gap-3">
             <div>
-                <h2 class="font-black text-xl md:text-2xl text-slate-800 tracking-tight">Order History</h2>
+                <h2 class="font-bold text-xl md:text-2xl text-slate-800 tracking-tight">Order History</h2>
                 <p class="text-sm text-slate-500 font-medium mt-1">View all your past and current laundry orders.</p>
             </div>
             <a href="{{ route('customer.dashboard') }}" class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-bold shadow-sm transition-all flex items-center gap-2">
@@ -87,7 +87,7 @@
                         </div>
                         <div class="relative z-10 flex justify-between items-end">
                             <div>
-                                <p class="text-sm font-black text-slate-800">LKR {{ number_format($orderObj->total, 2) }}</p>
+                                <p class="text-sm font-bold text-slate-800">LKR {{ number_format($orderObj->total, 2) }}</p>
                                 <p class="text-xs text-slate-500 font-bold">{{ $orderObj->created_at->format('M d, Y') }}</p>
                             </div>
                             
@@ -123,7 +123,7 @@
             <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-slate-300 mx-auto mb-4 shadow-sm border border-slate-100">
                 <i class="fa-solid fa-box-open text-3xl text-slate-400"></i>
             </div>
-            <h4 class="font-black text-slate-700 text-lg mb-2">No orders found</h4>
+            <h4 class="font-bold text-slate-700 text-lg mb-2">No orders found</h4>
             <p class="text-slate-500 mb-6 font-medium">You don't have any past or current laundry orders.</p>
             <a href="{{ route('customer.booking') }}" class="inline-block bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 px-6 py-3 rounded-xl font-bold transition-all">
                 Book a Pickup Now

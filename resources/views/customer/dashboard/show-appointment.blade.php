@@ -4,7 +4,7 @@
             <div class="flex items-center gap-3">
                 <a href="{{ route('customer.orders') }}" class="text-slate-400 hover:text-blue-600 transition p-2 bg-white rounded-lg shadow-sm border border-slate-100"><i class="fa-solid fa-arrow-left"></i></a>
                 <div>
-                    <h2 class="font-black text-xl md:text-2xl text-slate-800 leading-tight">#{{ $appointment->order->order_number ?? $appointment->id }}</h2>
+                    <h2 class="font-bold text-xl md:text-2xl text-slate-800 leading-tight">#{{ $appointment->order->order_number ?? $appointment->id }}</h2>
                     <p class="text-sm font-bold text-slate-500">Requested on {{ $appointment->created_at->format('M d, Y h:i A') }}</p>
                 </div>
             </div>
@@ -26,30 +26,30 @@
         <div class="lg:col-span-2 space-y-6">
             
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                <h3 class="font-black text-slate-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-list-check text-blue-500"></i> Request Details</h3>
+                <h3 class="font-bold text-slate-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-list-check text-blue-500"></i> Request Details</h3>
                 
                 <div class="space-y-4">
                     <div class="flex justify-between border-b border-slate-100 pb-3">
                         <span class="text-slate-500 font-bold text-sm">Status</span>
-                        <span class="text-slate-800 font-black text-sm uppercase {{ $appointment->status === 'cancelled' ? 'text-red-600' : '' }}">{{ ucfirst($appointment->status) }}</span>
+                        <span class="text-slate-800 font-bold text-sm uppercase {{ $appointment->status === 'cancelled' ? 'text-red-600' : '' }}">{{ ucfirst($appointment->status) }}</span>
                     </div>
                     @if($appointment->status === 'cancelled')
                         <div class="flex justify-between border-b border-slate-100 pb-3">
                             <span class="text-slate-500 font-bold text-sm">Rejection Reason</span>
-                            <span class="text-red-600 font-black text-sm">{{ $appointment->cancel_reason ?: 'No specific reason provided' }}</span>
+                            <span class="text-red-600 font-bold text-sm">{{ $appointment->cancel_reason ?: 'No specific reason provided' }}</span>
                         </div>
                     @endif
                     <div class="flex justify-between border-b border-slate-100 pb-3">
                         <span class="text-slate-500 font-bold text-sm">Scheduled Pickup</span>
-                        <span class="text-slate-800 font-black text-sm">{{ \Carbon\Carbon::parse($appointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</span>
+                        <span class="text-slate-800 font-bold text-sm">{{ \Carbon\Carbon::parse($appointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</span>
                     </div>
                     <div class="flex justify-between border-b border-slate-100 pb-3">
                         <span class="text-slate-500 font-bold text-sm">Payment Method</span>
-                        <span class="text-slate-800 font-black text-sm">{{ ucfirst(str_replace('_', ' ', $appointment->payment_method ?? 'Cash')) }}</span>
+                        <span class="text-slate-800 font-bold text-sm">{{ ucfirst(str_replace('_', ' ', $appointment->payment_method ?? 'Cash')) }}</span>
                     </div>
                     <div class="flex justify-between border-b border-slate-100 pb-3">
                         <span class="text-slate-500 font-bold text-sm">Delivery Fee (Estimate)</span>
-                        <span class="text-slate-800 font-black text-sm">Rs. {{ number_format($appointment->delivery_cost, 2) }}</span>
+                        <span class="text-slate-800 font-bold text-sm">Rs. {{ number_format($appointment->delivery_cost, 2) }}</span>
                     </div>
                 </div>
 
@@ -80,7 +80,7 @@
             @if($appointment->item_description)
                 <div class="bg-white rounded-xl border border-slate-100 shadow-sm overflow-hidden">
                     <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50">
-                        <h3 class="font-black text-slate-800"><i class="fa-solid fa-shirt text-blue-500 mr-2"></i> Requested Items & Notes</h3>
+                        <h3 class="font-bold text-slate-800"><i class="fa-solid fa-shirt text-blue-500 mr-2"></i> Requested Items & Notes</h3>
                     </div>
                     <div class="p-6">
                         <p class="text-sm text-slate-700 font-medium whitespace-pre-line">{{ $appointment->item_description }}</p>
@@ -94,7 +94,7 @@
             <!-- Branch Info -->
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6 relative overflow-hidden">
                 <div class="absolute top-0 right-0 w-20 h-20 bg-gradient-to-bl from-blue-100 to-transparent rounded-bl-[40px] -z-0"></div>
-                <h3 class="font-black text-slate-800 mb-4 relative z-10"><i class="fa-solid fa-shop text-blue-500 mr-2"></i> Assigned Branch</h3>
+                <h3 class="font-bold text-slate-800 mb-4 relative z-10"><i class="fa-solid fa-shop text-blue-500 mr-2"></i> Assigned Branch</h3>
                 <div class="relative z-10">
                     <p class="font-bold text-slate-800 text-sm">{{ $appointment->branch->name ?? 'Pending Assignment' }}</p>
                     @if($appointment->branch)
@@ -107,7 +107,7 @@
             </div>
             
             <div class="bg-white rounded-xl border border-slate-100 shadow-sm p-6">
-                <h3 class="font-black text-slate-800 mb-4"><i class="fa-solid fa-truck-pickup text-blue-500 mr-2"></i> Pickup Address</h3>
+                <h3 class="font-bold text-slate-800 mb-4"><i class="fa-solid fa-truck-pickup text-blue-500 mr-2"></i> Pickup Address</h3>
                 <p class="text-sm font-bold text-slate-700 leading-relaxed">{{ $appointment->pickup_address }}</p>
             </div>
         </div>

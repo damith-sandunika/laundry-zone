@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex justify-between items-center flex-wrap gap-3">
             <div>
-                <h2 class="font-black text-xl md:text-2xl text-slate-800 tracking-tight">Welcome, {{ $customer->name }}!</h2>
+                <h2 class="font-bold text-xl md:text-2xl text-slate-800 tracking-tight">Welcome, {{ $customer->name }}!</h2>
                 <p class="text-sm text-slate-500 font-medium mt-1">Manage your laundry orders and track deliveries.</p>
             </div>
             <a href="{{ route('customer.booking') }}" class="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-md shadow-blue-200 transition-all flex items-center gap-2">
@@ -19,7 +19,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Active Orders</p>
-                <h3 class="text-xl md:text-2xl font-black text-slate-800">{{ $activeCount }}</h3>
+                <h3 class="text-xl md:text-2xl font-bold text-slate-800">{{ $activeCount }}</h3>
             </div>
         </div>
         <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex items-center gap-4">
@@ -28,7 +28,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Orders</p>
-                <h3 class="text-xl md:text-2xl font-black text-slate-800">{{ $totalOrders }}</h3>
+                <h3 class="text-xl md:text-2xl font-bold text-slate-800">{{ $totalOrders }}</h3>
             </div>
         </div>
         <div class="bg-white rounded-xl p-5 border border-slate-100 shadow-sm flex items-center gap-4 col-span-2 md:col-span-1">
@@ -37,7 +37,7 @@
             </div>
             <div>
                 <p class="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Spent</p>
-                <h3 class="text-xl md:text-2xl font-black text-slate-800">LKR {{ number_format($totalSpent, 2) }}</h3>
+                <h3 class="text-xl md:text-2xl font-bold text-slate-800">LKR {{ number_format($totalSpent, 2) }}</h3>
             </div>
         </div>
     </div>
@@ -158,7 +158,7 @@
                                             </span>
                                             <h4 class="font-bold text-slate-800 mb-1">{{ $order->order_number }}</h4>
                                             @if($deliveryAppointment->pickup_scheduled_at)
-                                                <div class="text-[11px] font-black text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md mb-2 inline-flex items-center gap-1.5">
+                                                <div class="text-[11px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-100 px-2 py-1 rounded-md mb-2 inline-flex items-center gap-1.5">
                                                     <i class="fa-solid fa-calendar-day text-indigo-500"></i> 
                                                     {{ \Carbon\Carbon::parse($deliveryAppointment->pickup_scheduled_at)->format('M d, Y') }} 
                                                     @if($deliveryAppointment->pickupTimePeriod)
@@ -270,10 +270,10 @@
                             <div class="mt-4 pt-5 border-t border-slate-100 relative z-10">
                                 <div class="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-xl shadow p-5 text-center flex flex-col sm:flex-row items-center justify-between gap-4">
                                     <div class="text-left text-white">
-                                        <h4 class="font-black text-lg mb-1"><i class="fa-solid fa-circle-exclamation text-yellow-300 animate-pulse mr-1"></i> Action Required</h4>
+                                        <h4 class="font-bold text-lg mb-1"><i class="fa-solid fa-circle-exclamation text-yellow-300 animate-pulse mr-1"></i> Action Required</h4>
                                         <p class="text-blue-100 text-sm font-medium">To start processing your laundry, please pay the requested advance of <strong class="text-white bg-blue-800/50 px-1.5 py-0.5 rounded">LKR {{ number_format($order->requested_advance - $order->paid_amount, 2) }}</strong></p>
                                     </div>
-                                    <a href="{{ route('customer.orders.show', $order->order_number) }}" class="shrink-0 w-full sm:w-auto inline-block bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl transition-all">
+                                    <a href="{{ route('customer.orders.show', $order->order_number) }}" class="shrink-0 w-full sm:w-auto inline-block bg-yellow-400 hover:bg-yellow-300 text-yellow-900 px-6 py-3 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all">
                                         <i class="fa-solid fa-bolt mr-1"></i> PAY NOW
                                     </a>
                                 </div>
