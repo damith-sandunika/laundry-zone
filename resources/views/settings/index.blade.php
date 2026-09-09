@@ -419,8 +419,11 @@
                                 <h4 class="font-bold text-gray-800 mt-2">{{ $extra->name }}</h4>
                                 <p class="text-xs text-gray-500 mt-1">Rs. {{ number_format($extra->price, 2) }}
                                     ({{ $extra->price_type == 'per_piece' ? 'Per Piece' : 'Per KG' }})</p>
+                                @if(is_null($extra->branch_id))
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded mt-1 inline-block bg-purple-100 text-purple-700 border border-purple-200">🌐 Global</span>
+                                @endif
                                 <span
-                                    class="text-xs font-semibold px-2 py-0.5 rounded mt-2 inline-block {{ $extra->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700' }}">
+                                    class="text-xs font-semibold px-2 py-0.5 rounded mt-1 inline-block {{ $extra->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700' }}">
                                     {{ $extra->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </div>
@@ -475,7 +478,10 @@
                     @forelse($turnaroundTypes ?? [] as $tt)
                         <div x-data="{ editing: false, newName: '{{ addslashes($tt->name) }}', newMarkupType: '{{ $tt->markup_type }}', newMarkupValue: {{ $tt->markup_value }}, newIsDefault: {{ $tt->is_default ? 1 : 0 }}, newIsActive: {{ $tt->is_active ? 1 : 0 }} }"
                             class="p-4 border rounded-md text-center relative {{ $tt->is_active ? 'bg-green-50 border-green-200' : 'bg-gray-50 border-gray-200' }}">
+                            {{-- Edit/Delete buttons: only super admin can modify global records --}}
+                            @php $canEdit = Gate::allows('is-super-admin') || !is_null($tt->branch_id); @endphp
                             <div class="absolute top-1 right-1 flex gap-1">
+                                @if($canEdit)
                                 <button type="button" @click="editing = true"
                                     class="text-blue-500 hover:text-blue-700 p-1 rounded hover:bg-blue-50 transition-colors"
                                     title="Edit">
@@ -498,6 +504,7 @@
                                         </svg>
                                     </button>
                                 </form>
+                                @endif
                             </div>
 
                             <div x-show="!editing">
@@ -511,8 +518,11 @@
                                 <p class="text-xs text-gray-500 mt-1">Extra:
                                     {{ $tt->markup_type == 'percentage' ? $tt->markup_value . '%' : 'Rs. ' . number_format($tt->markup_value, 2) }}
                                 </p>
+                                @if(is_null($tt->branch_id))
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded mt-1 inline-block bg-purple-100 text-purple-700 border border-purple-200">🌐 Global</span>
+                                @endif
                                 <span
-                                    class="text-xs font-semibold px-2 py-0.5 rounded mt-2 inline-block {{ $tt->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700' }}">
+                                    class="text-xs font-semibold px-2 py-0.5 rounded mt-1 inline-block {{ $tt->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700' }}">
                                     {{ $tt->is_active ? 'Active' : 'Inactive' }}
                                 </span>
                             </div>

@@ -51,8 +51,20 @@ class SettingsController extends Controller
         $mainCategories = $serviceCategories->whereNull('parent_id');
 
         $services = ServiceType::with(['inventoryItems', 'category'])->orderBy('order_index')->get();
-        $turnaroundTypes = \App\Models\TurnaroundType::where('branch_id', $branchId)->get();
-        $extras = \App\Models\Extra::where('branch_id', $branchId)->get();
+
+        // Super admin sees all; branch users see their own + global (null branch_id)
+        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
+        if ($isSuperAdmin) {
+            $turnaroundTypes = \App\Models\TurnaroundType::orderBy('is_default', 'desc')->orderBy('name')->get();
+            $extras = \App\Models\Extra::orderBy('name')->get();
+        } else {
+            $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            })->orderBy('is_default', 'desc')->orderBy('name')->get();
+            $extras = \App\Models\Extra::where(function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            })->orderBy('name')->get();
+        }
 
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
@@ -597,7 +609,9 @@ class SettingsController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        $branchId = $this->getActiveBranchId();
+        // Super admin creates global (no branch) extras; branch admins create branch-scoped
+        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
+        $branchId = $isSuperAdmin ? null : $this->getActiveBranchId();
 
         \App\Models\Extra::create([
             'branch_id' => $branchId,
@@ -640,10 +654,19 @@ class SettingsController extends Controller
             'is_default' => 'boolean',
         ]);
 
-        $branchId = $this->getActiveBranchId();
+        // Super admin creates global (no branch) turnarounds; branch admins create branch-scoped
+        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
+        $branchId = $isSuperAdmin ? null : $this->getActiveBranchId();
 
         if ($request->has('is_default')) {
-            \App\Models\TurnaroundType::where('branch_id', $branchId)->update(['is_default' => false]);
+            // Reset default only within same scope
+            $q = \App\Models\TurnaroundType::query();
+            if ($isSuperAdmin) {
+                $q->whereNull('branch_id');
+            } else {
+                $q->where('branch_id', $branchId);
+            }
+            $q->update(['is_default' => false]);
         }
 
         \App\Models\TurnaroundType::create([
@@ -668,10 +691,17 @@ class SettingsController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $branchId = $this->getActiveBranchId();
+        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
+        $branchId = $turnaroundType->branch_id ?? $this->getActiveBranchId();
 
         if ($request->has('is_default') && $request->is_default) {
-            \App\Models\TurnaroundType::where('branch_id', $branchId)->where('id', '!=', $turnaroundType->id)->update(['is_default' => false]);
+            $q = \App\Models\TurnaroundType::where('id', '!=', $turnaroundType->id);
+            if ($isSuperAdmin && is_null($turnaroundType->branch_id)) {
+                $q->whereNull('branch_id');
+            } else {
+                $q->where('branch_id', $branchId);
+            }
+            $q->update(['is_default' => false]);
         }
 
         $turnaroundType->update([
