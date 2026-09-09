@@ -66,6 +66,7 @@
                     'delivery_completed'         => ['label'=>'Delivery Completed',      'emoji'=>'🎉'],
                     'bill_finalized'             => ['label'=>'Payment Request',         'emoji'=>'💰'],
                     'payment_received'           => ['label'=>'Payment Received',        'emoji'=>'💳'],
+                    'rider_assigned'             => ['label'=>'Rider Assigned',          'emoji'=>'🛵'],
                 ];
                 $info = $labels[$template->type] ?? ['label'=>$template->name ?? ucwords(str_replace('_',' ',$template->type)),'emoji'=>'📱'];
             @endphp
@@ -102,7 +103,7 @@
                         <textarea name="message" rows="4" required
                             style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:12px;color:#374151;resize:vertical;outline:none;background:#f8fafc;box-sizing:border-box;font-family:sans-serif;">{{ $template->message }}</textarea>
                         <div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px;">
-                            @foreach(['{customer_name}','{order_id}','{total}','{amount_due}','{payment_status}'] as $var)
+                            @foreach(['{customer_name}','{order_id}','{total}','{rider_name}','{rider_phone}','{rider_vehicle_number}'] as $var)
                             <span style="font-family:monospace;font-size:10px;background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;border-radius:4px;padding:2px 7px;cursor:pointer;"
                                 onclick="insertSmsVar(this,'{{ $var }}')">{{ $var }}</span>
                             @endforeach

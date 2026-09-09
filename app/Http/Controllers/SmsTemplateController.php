@@ -103,7 +103,12 @@ class SmsTemplateController extends Controller
                 'type' => 'payment_received',
                 'name' => 'Payment Received',
                 'message' => 'Hi {customer_name}, we have received and approved a payment for your order #{order_id}. Total: {total}. Status: {payment_status}.',
-            ]
+            ],
+            [
+                'type' => 'rider_assigned',
+                'name' => 'Delivery Rider Assigned',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - Rapid Laundromat',
+            ],
         ];
 
         $defaultTypes = array_column($defaults, 'type');
