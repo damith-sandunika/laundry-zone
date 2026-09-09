@@ -43,9 +43,9 @@ class BookingsController extends Controller
         ]);
 
         $query = Order::withoutGlobalScopes()
-            ->with(['branch:id,name', 'items:id,order_id,service_type_id', 'items.serviceType:id,name'])
+            ->with(['branch:id,name', 'customer:id,name,phone', 'items:id,order_id,service_type_id', 'items.serviceType:id,name'])
             ->select([
-                'id', 'order_number', 'branch_id',
+                'id', 'order_number', 'branch_id', 'customer_id',
                 'status', 'payment_status', 'total',
                 'is_delivery_order', 'created_at',
             ]);
@@ -78,6 +78,8 @@ class BookingsController extends Controller
             'status'         => $order->status,
             'payment_status' => $order->payment_status,
             'total'          => (float) $order->total,
+            'customer_name'  => $order->customer->name ?? null,
+            'customer_phone' => $order->customer->phone ?? null,
             'created_at'     => $order->created_at->toIso8601String(),
         ]);
 
