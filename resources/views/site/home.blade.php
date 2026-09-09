@@ -600,7 +600,7 @@
     <section class="py-16 lg:py-20 bg-slate-50 border-t border-slate-100">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mb-4">Why Choose 365laundry.lk?</h2>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mb-4">Why Choose Rapid Laundromat?</h2>
                 <p class="text-slate-500 max-w-2xl mx-auto font-medium">We combine state-of-the-art technology with expert care to give your clothes the premium treatment they deserve.</p>
             </div>
             
