@@ -25,8 +25,8 @@ use App\Http\Controllers\Api\CustomersController;
 |
 */
 
-// ── PUBLIC — no API key required ─────────────────────────────────────────────
-Route::middleware('api')->group(function () {
+// ── PUBLIC — no API key required, rate limited 60 req/min ────────────────────
+Route::middleware(['api', 'throttle:api-public'])->group(function () {
     Route::get('/bookings',      [BookingsController::class, 'index']);
     Route::get('/bookings/{id}', [BookingsController::class, 'show']);
 });

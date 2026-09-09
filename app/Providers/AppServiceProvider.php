@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Model;
@@ -24,6 +27,17 @@ class AppServiceProvider extends ServiceProvider
     {
         Schema::defaultStringLength(191);
         Model::preventLazyLoading(! app()->isProduction());
+
+        // ── API Rate Limiting ────────────────────────────────────────────────
+        // Public /api/bookings — 60 requests per minute per IP
+        RateLimiter::for('api-public', function (Request $request) {
+            return Limit::perMinute(60)->by($request->ip());
+        });
+
+        // Protected /api/orders, /api/customers — 300 requests per minute per IP
+        RateLimiter::for('api', function (Request $request) {
+            return Limit::perMinute(300)->by($request->ip());
+        });
 
         // Global Authorization Gates
         Gate::define('is-super-admin', function ($user) {
