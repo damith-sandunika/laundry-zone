@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ApiKeyMiddleware;
 use App\Http\Middleware\RiderMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\WorkshopMiddleware;
@@ -19,10 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role' => RoleMiddleware::class,
-            'admin' => AdminMiddleware::class,
-            'rider' => RiderMiddleware::class,
-            'workshop' => WorkshopMiddleware::class,
+            'role'    => RoleMiddleware::class,
+            'admin'   => AdminMiddleware::class,
+            'rider'   => RiderMiddleware::class,
+            'workshop'=> WorkshopMiddleware::class,
+            'api.key' => ApiKeyMiddleware::class,
         ]);
         
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {

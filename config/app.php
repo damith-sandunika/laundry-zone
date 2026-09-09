@@ -99,6 +99,9 @@ return [
 
     'key' => env('APP_KEY'),
 
+    // API key for external integrations (mobile apps, third-party)
+    'api_key' => env('APP_API_KEY', ''),
+
     'previous_keys' => [
         ...array_filter(
             explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
