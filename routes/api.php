@@ -6,35 +6,32 @@ use App\Http\Controllers\Api\CustomersController;
 
 /*
 |--------------------------------------------------------------------------
-| API Routes
+| API Routes  —  ALL routes protected by X-API-Key header
 |--------------------------------------------------------------------------
 |
-| PUBLIC  (no key needed — share the link directly):
-|   GET /api/bookings               All bookings flat JSON array
-|   GET /api/bookings/{id}          Single booking detail
+| All endpoints require:  X-API-Key: <value from APP_API_KEY in .env>
+| Or query param:         ?api_key=<value>
 |
-| PROTECTED (requires X-API-Key header or ?api_key= param):
-|   GET /api/orders                 All orders with customer info (paginated)
-|   GET /api/orders/delivery        Delivery orders only
-|   GET /api/orders/walkin          Walk-in orders only
-|   GET /api/orders/{id}            Single order full detail
-|   GET /api/customers              Customer list with contacts
-|   GET /api/customers/{id}         Single customer detail
+|  GET /api/bookings               All orders (paginated)
+|  GET /api/bookings/{id}          Single order full detail
 |
-| Common query params: branch_id, status, from, to, per_page, page
+|  GET /api/orders                 All orders with customer info
+|  GET /api/orders/delivery        Delivery orders only
+|  GET /api/orders/walkin          Walk-in orders only
+|  GET /api/orders/{id}            Single order detail
+|
+|  GET /api/customers              Customer list with contacts
+|  GET /api/customers/{id}         Single customer detail
 |
 */
 
-// ── PUBLIC — no API key required, rate limited 60 req/min ────────────────────
-Route::middleware(['api', 'throttle:api-public'])->group(function () {
+Route::middleware(['api', 'throttle:api', 'api.key'])->group(function () {
+
+    // ── Bookings ──────────────────────────────────────────────────────────────
     Route::get('/bookings',      [BookingsController::class, 'index']);
     Route::get('/bookings/{id}', [BookingsController::class, 'show']);
-});
 
-// ── PROTECTED — requires X-API-Key header ────────────────────────────────────
-Route::middleware(['api', 'api.key'])->group(function () {
-
-    // Orders (with customer details, paginated)
+    // ── Orders ────────────────────────────────────────────────────────────────
     Route::get('/orders', [BookingsController::class, 'indexProtected']);
 
     Route::get('/orders/delivery', function (\Illuminate\Http\Request $request) {
@@ -49,7 +46,8 @@ Route::middleware(['api', 'api.key'])->group(function () {
 
     Route::get('/orders/{id}', [BookingsController::class, 'show']);
 
-    // Customers
+    // ── Customers ─────────────────────────────────────────────────────────────
     Route::get('/customers',      [CustomersController::class, 'index']);
     Route::get('/customers/{id}', [CustomersController::class, 'show']);
+
 });
