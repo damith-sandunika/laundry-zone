@@ -105,16 +105,26 @@
                 <input type="hidden" name="address" value="{{ $customer->address }}">
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
+                    <div x-data="{ showPass: false }">
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">New Password <span class="text-red-500">*</span></label>
-                        <input type="password" name="password" minlength="6" placeholder="Min. 6 characters"
-                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all">
+                        <div class="relative">
+                            <input :type="showPass ? 'text' : 'password'" name="password" minlength="6" placeholder="Min. 6 characters"
+                                class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all pr-10">
+                            <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                            </button>
+                        </div>
                         @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                     </div>
-                    <div>
+                    <div x-data="{ showPass: false }">
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Confirm New Password <span class="text-red-500">*</span></label>
-                        <input type="password" name="password_confirmation" minlength="6" placeholder="Re-enter new password"
-                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all">
+                        <div class="relative">
+                            <input :type="showPass ? 'text' : 'password'" name="password_confirmation" minlength="6" placeholder="Re-enter new password"
+                                class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-amber-500 focus:ring-2 focus:ring-amber-200 transition-all pr-10">
+                            <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 

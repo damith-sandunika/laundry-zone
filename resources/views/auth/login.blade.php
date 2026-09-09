@@ -35,7 +35,7 @@
         </div>
 
         <!-- Password -->
-        <div>
+        <div x-data="{ showPass: false }">
             <div class="flex justify-between items-center mb-2">
                 <label for="password" class="text-[11px] font-extrabold text-slate-400 uppercase tracking-widest">Password</label>
                 @if (Route::has('password.request'))
@@ -49,13 +49,16 @@
                     </svg>
                 </div>
                 <input id="password"
-                    type="password"
+                    :type="showPass ? 'text' : 'password'"
                     name="password"
                     required
                     autocomplete="new-password"
-                    placeholder="••••••••"
-                    class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-slate-400"
+                    placeholder="Password"
+                    class="w-full pl-11 pr-10 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none placeholder:text-slate-400"
                 />
+                <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                    <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                </button>
             </div>
         </div>
 

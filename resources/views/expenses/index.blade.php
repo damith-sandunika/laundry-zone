@@ -2,13 +2,28 @@
     <x-slot name="header">
         <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
-                <h2 class="ph-title">Expenses</h2>
-                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log and track daily shop expenditures</p>
+                <h2 class="ph-title">Petty Cash</h2>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log and track petty cash expenditures</p>
+                @if($currentBranch)
+                <div style="margin-top:8px; display:inline-block; background:#f0f9ff; border:1px solid #bae6fd; padding:4px 12px; border-radius:8px;">
+                    <span style="font-size:12px; font-weight:700; color:#0369a1;">{{ $currentBranch->name }} &mdash; Balance: Rs. {{ number_format($currentBranch->petty_cash_balance ?? 0, 2) }}</span>
+                </div>
+                @elseif($isSuperAdmin)
+                <div style="margin-top:8px; display:inline-block; background:#fefce8; border:1px solid #fde68a; padding:4px 12px; border-radius:8px;">
+                    <span style="font-size:12px; font-weight:700; color:#b45309;">Super Admin View &mdash; Filter by branch below</span>
+                </div>
+                @endif
             </div>
-            <button @click="$dispatch('open-add-modal')" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
-                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
-                Record Expense
-            </button>
+            <div style="display:flex; gap:10px;">
+                <button @click="$dispatch('open-topup-modal')" class="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded hover:bg-emerald-700 transition-colors flex items-center gap-2">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                    Top-up Cash
+                </button>
+                <button @click="$dispatch('open-add-modal')" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors flex items-center gap-2">
+                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M12 5v14M5 12h14"/></svg>
+                    Record Expense
+                </button>
+            </div>
         </div>
     </x-slot>
 
@@ -19,15 +34,42 @@
         </div>
     @endif
 
-    <div x-data="{ addModalOpen: false }" @open-add-modal.window="addModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
+    <div x-data="{ addModalOpen: false, topupModalOpen: false, activeTab: 'expenses' }" @open-add-modal.window="addModalOpen = true" @open-topup-modal.window="topupModalOpen = true" style="display:flex;flex-direction:column;gap:20px;">
+
+        <!-- Tabs -->
+        <div style="display:flex; gap:10px; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">
+            <button @click="activeTab = 'expenses'" :class="activeTab === 'expenses' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'" style="padding:8px 16px; font-size:13px; font-weight:700; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer;">
+                Petty Cash Log
+            </button>
+            <button @click="activeTab = 'topups'" :class="activeTab === 'topups' ? 'bg-blue-600 text-white' : 'bg-white text-slate-600'" style="padding:8px 16px; font-size:13px; font-weight:700; border-radius:8px; border:1px solid #e2e8f0; cursor:pointer;">
+                Top-ups Log
+            </button>
+        </div>
+
+        <div x-show="activeTab === 'expenses'" x-transition style="display:flex;flex-direction:column;gap:20px;">
 
         <!-- Filter Bar -->
         <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);padding:16px 24px;">
             <form x-data="{ selectedPeriod: '{{ $period }}' }" action="{{ route('expenses.index') }}" method="GET" style="display:flex;gap:16px;align-items:flex-end;margin:0;flex-wrap:wrap;">
+
+                @if($isSuperAdmin)
+                <div style="flex:1;min-width:200px;">
+                    <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Branch</label>
+                    <select name="branch_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
+                        <option value="">All Branches</option>
+                        @foreach($branches as $branch)
+                            <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                @endif
+
                 <div style="flex:1;min-width:200px;">
                     <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Time Period</label>
                     <select name="period" x-model="selectedPeriod" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
+                        @if(!$isSuperAdmin)
                         <option value="shift">Current Open Shift</option>
+                        @endif
                         <option value="today">Today</option>
                         <option value="this_week">This Week</option>
                         <option value="this_month">This Month</option>
@@ -63,7 +105,7 @@
                     <button type="submit" style="padding:10px 20px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border-radius:10px;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(29,78,216,0.25);">
                         Apply Filter
                     </button>
-                    @if($period !== 'shift' || $category !== '')
+                    @if($period !== 'shift' || $category !== '' || $branchId)
                         <a href="{{ route('expenses.index') }}" style="display:inline-block;padding:10px 20px;background:#f1f5f9;color:#475569;font-size:13px;font-weight:700;border-radius:10px;border:none;text-decoration:none;margin-left:8px;">Clear</a>
                     @endif
                 </div>
@@ -75,9 +117,9 @@
             <div style="padding:18px 24px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
                 <span style="font-size:14px;font-weight:700;color:#0f172a;">
                     @if($period === 'shift')
-                        {{ $activeSession ? 'Current Shift Expenditures' : 'No Open Shift' }}
+                        {{ $activeSession ? 'Current Shift Petty Cash' : 'No Open Shift' }}
                     @else
-                        Filtered Expenditures
+                        Filtered Petty Cash
                     @endif
                 </span>
             </div>
@@ -123,7 +165,7 @@
                             </td>
                         </tr>
                         @empty
-                        <tr><td colspan="5" style="padding:40px;text-align:center;font-size:13px;color:#94a3b8;font-weight:500;">No expenses recorded yet.</td></tr>
+                        <tr><td colspan="5" style="padding:40px;text-align:center;font-size:13px;color:#94a3b8;font-weight:500;">No petty cash recorded yet.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -135,6 +177,105 @@
             {{ $expenses->appends(request()->query())->links() }}
         </div>
         @endif
+        
+        </div> <!-- End of Expenses Tab -->
+
+        <!-- Top-ups Tab -->
+        <div x-show="activeTab === 'topups'" x-transition style="display:none;flex-direction:column;gap:20px;">
+
+            <!-- Top-ups Filter Card -->
+            <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);padding:16px 24px;">
+                <form action="{{ route('expenses.index') }}" method="GET" style="display:flex;gap:12px;align-items:flex-end;margin:0;flex-wrap:wrap;">
+                    <input type="hidden" name="period" value="{{ $period }}">
+                    <input type="hidden" name="category" value="{{ $category }}">
+                    @if($startDate) <input type="hidden" name="start_date" value="{{ $startDate }}"> @endif
+                    @if($endDate) <input type="hidden" name="end_date" value="{{ $endDate }}"> @endif
+                    <input type="hidden" name="tab" value="topups">
+
+                    @if($isSuperAdmin)
+                    <div style="flex:1;min-width:180px;">
+                        <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Branch</label>
+                        <select name="branch_id" style="width:100%;padding:9px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
+                            <option value="">All Branches</option>
+                            @foreach($branches as $branch)
+                                <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>{{ $branch->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    @else
+                    @if($branchId) <input type="hidden" name="branch_id" value="{{ $branchId }}"> @endif
+                    @endif
+
+                    <div style="display:flex;align-items:center;gap:8px;padding:9px 14px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;">
+                        @if($currentBranch)
+                            <span style="font-size:12px;font-weight:700;color:#0369a1;">{{ $currentBranch->name }}</span>
+                            <span style="font-size:11px;color:#94a3b8;">|</span>
+                        @endif
+                        <span style="font-size:12px;font-weight:600;color:#374151;">
+                            Total Top-ups: <strong style="color:#10b981;">Rs.{{ number_format($topups->sum('amount'), 2) }}</strong>
+                        </span>
+                    </div>
+
+                    @if($isSuperAdmin)
+                    <button type="submit" style="padding:9px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border-radius:10px;border:none;cursor:pointer;">
+                        Filter
+                    </button>
+                    @endif
+                </form>
+            </div>
+
+            <div style="background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);overflow:hidden;">
+                <div style="padding:18px 24px;border-bottom:1px solid #f8fafc;display:flex;justify-content:space-between;align-items:center;">
+                    <span style="font-size:14px;font-weight:700;color:#0f172a;">Petty Cash Top-ups</span>
+                </div>
+                <div style="overflow-x:auto;">
+                    <table style="width:100%;border-collapse:collapse;">
+                        <thead>
+                            <tr style="background:#f8fafc;">
+                                <th style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">Date & Time</th>
+                                @if($isSuperAdmin && !$branchId)
+                                <th style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">Branch</th>
+                                @endif
+                                <th style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">Reference Note</th>
+                                <th style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:left;">Added By</th>
+                                <th style="padding:10px 24px;font-size:10px;font-weight:700;color:#94a3b8;text-transform:uppercase;letter-spacing:0.08em;text-align:right;">Amount</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($topups as $topup)
+                            <tr style="border-top:1px solid #f8fafc;transition:background 0.1s;"
+                                onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                                <td style="padding:14px 24px;font-size:12px;font-weight:500;color:#94a3b8;">
+                                    {{ \Carbon\Carbon::parse($topup->created_at)->format('M d, Y h:i A') }}
+                                </td>
+                                @if($isSuperAdmin && !$branchId)
+                                <td style="padding:14px 24px;font-size:13px;font-weight:600;color:#374151;">
+                                    @php $topupBranchName = $branches->firstWhere('id', $topup->branch_id)?->name ?? 'N/A'; @endphp
+                                    {{ $topupBranchName }}
+                                </td>
+                                @endif
+                                <td style="padding:14px 24px;font-size:13px;font-weight:600;color:#374151;">{{ $topup->reference_note }}</td>
+                                <td style="padding:14px 24px;font-size:13px;font-weight:600;color:#374151;">
+                                    @php $topupUser = \App\Models\User::find($topup->user_id); @endphp
+                                    {{ $topupUser ? $topupUser->name : 'Unknown' }}
+                                </td>
+                                <td style="padding:14px 24px;text-align:right;font-size:14px;font-weight:800;color:#10b981;">
+                                    + Rs.{{ number_format($topup->amount, 2) }}
+                                </td>
+                            </tr>
+                            @empty
+                            <tr><td colspan="{{ ($isSuperAdmin && !$branchId) ? 5 : 4 }}" style="padding:40px;text-align:center;font-size:13px;color:#94a3b8;font-weight:500;">No top-ups recorded yet.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            @if($topups->hasPages())
+            <div style="padding:16px 24px;background:white;border-radius:16px;border:1px solid #f1f5f9;box-shadow:0 1px 4px rgba(0,0,0,0.04);">
+                {{ $topups->appends(request()->query())->links() }}
+            </div>
+            @endif
+        </div>
 
         <!-- Add Expense Modal -->
         <div x-show="addModalOpen" x-transition.opacity class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display:none;">
@@ -142,11 +283,11 @@
                 <form action="{{ route('expenses.store') }}" method="POST" style="margin:0;">
                     @csrf
                     <div style="padding:24px 30px;">
-                        <h3 style="font-size:18px;font-weight:900;color:#0f172a;margin:0 0 20px;letter-spacing:-0.02em;">Record New Expense</h3>
+                        <h3 style="font-size:18px;font-weight:900;color:#0f172a;margin:0 0 20px;letter-spacing:-0.02em;">Record Petty Cash Expense</h3>
                         
                         <div style="display:flex;flex-direction:column;gap:16px;">
                             <div>
-                                <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Expense Category</label>
+                                <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Petty Cash Category</label>
                                 <select name="category" style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13.5px;font-weight:500;color:#0f172a;background:#f8fafc;outline:none;">
                                     <option value="utilities">Utilities (Water, Electricity)</option>
                                     <option value="supplies">Laundry Supplies (Detergent etc)</option>
@@ -186,6 +327,43 @@
                         </button>
                         <button type="submit" style="padding:10px 18px;background:#1d4ed8;color:white;font-size:13px;font-weight:700;border-radius:10px;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(29,78,216,0.25);">
                             Record Expense
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Top-up Modal -->
+        <div x-show="topupModalOpen" class="fixed inset-0 z-[999] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" style="display:none;" x-cloak>
+            <div class="bg-white rounded-[20px] border border-slate-200 w-full max-w-[400px] shadow-2xl overflow-hidden relative" @click.away="topupModalOpen = false">
+                <form action="{{ route('petty_cash.topup') }}" method="POST" style="margin:0;">
+                    @csrf
+                    <div style="padding:24px 30px;">
+                        <h3 style="font-size:18px;font-weight:900;color:#0f172a;margin:0 0 20px;letter-spacing:-0.02em;">Top-up Petty Cash</h3>
+                        
+                        <div style="display:flex;flex-direction:column;gap:16px;">
+                            <div>
+                                <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Top-up Amount (Rs.)</label>
+                                <input type="number" step="0.01" name="amount" required placeholder="e.g. 5000"
+                                    style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13.5px;font-weight:500;color:#0f172a;background:#f8fafc;outline:none;box-sizing:border-box;"
+                                    onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#e2e8f0'">
+                            </div>
+                            
+                            <div>
+                                <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Reference Note</label>
+                                <input type="text" name="reference_note" required placeholder="e.g. Weekly Top-up from Bank" 
+                                    style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13.5px;font-weight:500;color:#0f172a;background:#f8fafc;outline:none;box-sizing:border-box;"
+                                    onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#e2e8f0'">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="padding:16px 30px;background:#f8fafc;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;">
+                        <button type="button" @click="topupModalOpen = false" style="padding:10px 16px;background:white;color:#64748b;font-size:13px;font-weight:600;border-radius:10px;border:1.5px solid #e2e8f0;cursor:pointer;">
+                            Cancel
+                        </button>
+                        <button type="submit" style="padding:10px 18px;background:#10b981;color:white;font-size:13px;font-weight:700;border-radius:10px;border:none;cursor:pointer;box-shadow:0 2px 8px rgba(16,185,129,0.25);">
+                            Add Funds
                         </button>
                     </div>
                 </form>

@@ -1565,22 +1565,22 @@
             document.getElementById('edit-category-modal').style.display = 'flex';
         }
 
-        document.getElementById('add-service-modal').addEventListener('click', function (e) {
+        document.getElementById('add-service-modal')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
-        document.getElementById('edit-service-modal').addEventListener('click', function (e) {
+        document.getElementById('edit-service-modal')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
-        document.getElementById('add-category-modal').addEventListener('click', function (e) {
+        document.getElementById('add-category-modal')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
-        document.getElementById('edit-category-modal').addEventListener('click', function (e) {
+        document.getElementById('edit-category-modal')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
-        document.getElementById('add-delivery-range-modal').addEventListener('click', function (e) {
+        document.getElementById('add-delivery-range-modal')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
-        document.getElementById('add-pickup-time-modal').addEventListener('click', function (e) {
+        document.getElementById('add-pickup-time-modal')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
     </script>

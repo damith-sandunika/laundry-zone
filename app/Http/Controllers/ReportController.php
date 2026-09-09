@@ -71,12 +71,15 @@ class ReportController extends Controller
                 $q->where('branch_id', $branchId);
             });
         }
-        $packagePayments = $packagePaymentsQuery->get();
+        $packagePaymentsSum = (clone $packagePaymentsQuery)->sum('amount');
+        $packagePaymentsCash = (clone $packagePaymentsQuery)->where('payment_method', 'cash')->sum('amount');
+        $packagePaymentsCard = (clone $packagePaymentsQuery)->where('payment_method', 'card')->sum('amount');
+        $packagePaymentsBank = (clone $packagePaymentsQuery)->where('payment_method', 'bank')->sum('amount');
 
-        $totalCollected = (clone $paymentsQuery)->sum('amount') + $packagePayments->sum('amount');
-        $collectedCash  = (clone $paymentsQuery)->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
-        $collectedCard  = (clone $paymentsQuery)->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        $collectedBank  = (clone $paymentsQuery)->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
+        $totalCollected = (clone $paymentsQuery)->sum('amount') + $packagePaymentsSum;
+        $collectedCash  = (clone $paymentsQuery)->where('payment_method', 'cash')->sum('amount') + $packagePaymentsCash;
+        $collectedCard  = (clone $paymentsQuery)->where('payment_method', 'card')->sum('amount') + $packagePaymentsCard;
+        $collectedBank  = (clone $paymentsQuery)->where('payment_method', 'bank')->sum('amount') + $packagePaymentsBank;
 
         $actualTotalDeliveryFees = 0;
         $actualTotalBranchProfit = 0;
@@ -128,7 +131,7 @@ class ReportController extends Controller
         });
         
         // Add package payments to branch profit as they don't have delivery fees
-        $actualTotalBranchProfit += $packagePayments->sum('amount');
+        $actualTotalBranchProfit += $packagePaymentsSum;
 
         $totalBranchProfit   = $actualTotalBranchProfit;
         $totalWorkshopProfit = $actualTotalWorkshopProfit;
@@ -141,7 +144,7 @@ class ReportController extends Controller
         if ($branchId) {
             $creditOrdersQuery->where('branch_id', $branchId);
         }
-        $creditOrders = $creditOrdersQuery->orderBy('created_at', 'asc')->get();
+        $creditOrders = collect(); // Optimized out, not used in view
 
         // 2. Service-wise breakdown (already DB-aggregated, no pagination needed)
         $serviceBreakdown = OrderItem::select(
@@ -213,12 +216,40 @@ class ReportController extends Controller
         }
         $bankDeposits = $depositsQuery->orderBy('deposited_at', 'desc')->paginate(15);
 
+        // 8. Petty Cash Topups
+        $topupsQuery = \DB::table('petty_cash_topups')
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        if ($branchId) {
+            $topupsQuery->where('branch_id', $branchId);
+        }
+        $totalTopupsAmount = (clone $topupsQuery)->sum('amount');
+        $pettyCashTopups = (clone $topupsQuery)->orderBy('created_at', 'desc')->paginate(15);
+
+        // 9. Branch Petty Cash Summary (super admin only - all branches current balances)
+        $branchPettyCashSummary = collect();
+        if ($isSuperAdmin) {
+            $branchPettyCashSummary = Branch::where('is_active', true)
+                ->select('id', 'name', 'petty_cash_balance')
+                ->get()
+                ->map(function ($branch) use ($startDate, $endDate) {
+                    $branch->total_expenses = Expense::where('branch_id', $branch->id)
+                        ->whereBetween('expense_date', [$startDate, $endDate])
+                        ->sum('amount');
+                    $branch->total_topups = \DB::table('petty_cash_topups')
+                        ->where('branch_id', $branch->id)
+                        ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+                        ->sum('amount');
+                    return $branch;
+                });
+        }
+
         return view('reports.index', compact(
             'orders', 'totalSales', 'totalDeliveryFees', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank', 'totalCredit', 'totalPending',
             'services', 'expensesList', 'totalExpensesAmount', 'inventoryLogs', 'startDate', 'endDate', 'creditOrders',
-            'customerPackages', 'packagePayments', 'branches', 'branchId', 'isSuperAdmin',
+            'customerPackages', 'branches', 'branchId', 'isSuperAdmin',
             'deliveryRevenue', 'walkinRevenue', 'deliveryOrders', 'walkinOrders', 'dailyRevenue', 'topCustomers',
-            'totalBranchProfit', 'totalWorkshopProfit', 'bankDeposits'
+            'totalBranchProfit', 'totalWorkshopProfit', 'bankDeposits',
+            'pettyCashTopups', 'totalTopupsAmount', 'branchPettyCashSummary'
         ));
     }
 
@@ -251,13 +282,15 @@ class ReportController extends Controller
                 $q->where('branch_id', $branchId);
             });
         }
-        $packagePayments = $packagePaymentsQuery->get();
-        $totalPackagePayments = $packagePayments->sum('amount');
+        $packagePaymentsSum = (clone $packagePaymentsQuery)->sum('amount');
+        $packagePaymentsCash = (clone $packagePaymentsQuery)->where('payment_method', 'cash')->sum('amount');
+        $packagePaymentsCard = (clone $packagePaymentsQuery)->where('payment_method', 'card')->sum('amount');
+        $packagePaymentsBank = (clone $packagePaymentsQuery)->where('payment_method', 'bank')->sum('amount');
         
-        $totalCollected = (clone $paymentsQuery)->sum('amount') + $totalPackagePayments;
-        $collectedCash = (clone $paymentsQuery)->where('payment_method', 'cash')->sum('amount') + $packagePayments->where('payment_method', 'cash')->sum('amount');
-        $collectedCard = (clone $paymentsQuery)->where('payment_method', 'card')->sum('amount') + $packagePayments->where('payment_method', 'card')->sum('amount');
-        $collectedBank = (clone $paymentsQuery)->where('payment_method', 'bank')->sum('amount') + $packagePayments->where('payment_method', 'bank')->sum('amount');
+        $totalCollected = (clone $paymentsQuery)->sum('amount') + $packagePaymentsSum;
+        $collectedCash = (clone $paymentsQuery)->where('payment_method', 'cash')->sum('amount') + $packagePaymentsCash;
+        $collectedCard = (clone $paymentsQuery)->where('payment_method', 'card')->sum('amount') + $packagePaymentsCard;
+        $collectedBank = (clone $paymentsQuery)->where('payment_method', 'bank')->sum('amount') + $packagePaymentsBank;
 
         $actualTotalDeliveryFees = 0;
         $actualTotalBranchProfit = 0;
@@ -309,7 +342,7 @@ class ReportController extends Controller
         });
         
         // Add package payments to branch profit as they don't have delivery fees
-        $actualTotalBranchProfit += $packagePayments->sum('amount');
+        $actualTotalBranchProfit += $packagePaymentsSum;
 
         $totalBranchProfit = $actualTotalBranchProfit;
         $totalWorkshopProfit = $actualTotalWorkshopProfit;
@@ -356,7 +389,7 @@ class ReportController extends Controller
         if ($branchId) {
             $customerPackagesQuery->where('branch_id', $branchId);
         }
-        $customerPackages = $customerPackagesQuery->latest()->get();
+        $customerPackages = collect(); // Optimized out for PDF
 
         $branch = Branch::find($branchId ?? \App\Models\Branch::first()->id);
 
@@ -366,7 +399,7 @@ class ReportController extends Controller
         return view('reports.pdf', compact(
             'recentOrders', 'totalSales', 'totalDeliveryFees', 'services', 'salaries', 'totalSalaries',
             'expenses', 'totalExpenses', 'totalInventoryCost', 'startDate', 'endDate', 'branch',
-            'totalPackagePayments', 'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank',
+            'totalCollected', 'collectedCash', 'collectedCard', 'collectedBank',
             'totalCredit', 'totalPending', 'customerPackages', 'totalBranchProfit', 'totalWorkshopProfit'
         ));
     }
@@ -434,7 +467,7 @@ class ReportController extends Controller
         $totalBank = (clone $query)->where('payment_method', 'bank')->sum('paid_amount');
         $totalSalesAmount = $totalCash + $totalCard + $totalBank;
 
-        $orders = $query->get();
+        $orders = $query->paginate(500); // Optimized for PDF generation
         $branch = Branch::find($branchId ?? 1);
 
         return view('reports.sales_pdf', compact('orders', 'startDate', 'endDate', 'branch', 'isSuperAdmin', 'branchId', 'totalCash', 'totalCard', 'totalBank', 'totalSalesAmount'));

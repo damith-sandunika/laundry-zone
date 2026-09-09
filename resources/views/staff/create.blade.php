@@ -56,6 +56,11 @@
                                 <input type="text" name="emergency_contact" value="{{ old('emergency_contact') }}"
                                     class="w-full text-sm bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5">
                             </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Vehicle Number (Optional)</label>
+                                <input type="text" name="vehicle_number" value="{{ old('vehicle_number') }}" placeholder="Ex: WP CAD-1234"
+                                    class="w-full text-sm bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5">
+                            </div>
                             <div class="md:col-span-2">
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Address</label>
                                 <textarea name="address" rows="2"
@@ -126,10 +131,15 @@
                             </div>
                             @endif
 
-                            <div>
+                            <div x-data="{ showPass: false }">
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Login Password <span class="text-red-500">*</span></label>
-                                <input type="password" name="password" required
-                                    class="w-full text-sm bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5">
+                                <div class="relative">
+                                    <input :type="showPass ? 'text' : 'password'" name="password" required
+                                        class="w-full text-sm bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5 pr-10">
+                                    <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                        <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                    </button>
+                                </div>
                                 @error('password') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
                             </div>
                         </div>

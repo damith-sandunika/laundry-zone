@@ -147,9 +147,14 @@
                                             @endif
                                         </select>
                                     </div>
-                                    <div>
+                                    <div x-data="{ showPass: false }">
                                         <label class="block text-xs font-bold text-gray-700 mb-1">Login Password</label>
-                                        <input type="password" name="password" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
+                                        <div class="relative">
+                                            <input :type="showPass ? 'text' : 'password'" name="password" required class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 pr-10">
+                                            <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                                <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                                 
@@ -174,7 +179,7 @@
                                             <input type="number" step="0.01" name="ot_rate_per_hour" value="0" class="w-full text-sm border-gray-300 rounded-lg shadow-sm">
                                         </div>
                                     </div>
-                                    <div class="grid grid-cols-3 gap-3">
+                                    <div class="grid grid-cols-4 gap-3">
                                         <div>
                                             <label class="block text-xs font-bold text-gray-700 mb-1">NIC (Optional)</label>
                                             <input type="text" name="nic" class="w-full text-sm border-gray-300 rounded-lg shadow-sm">
@@ -186,6 +191,10 @@
                                         <div>
                                             <label class="block text-xs font-bold text-gray-700 mb-1">Emergency Contact</label>
                                             <input type="text" name="emergency_contact" class="w-full text-sm border-gray-300 rounded-lg shadow-sm">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-gray-700 mb-1">Vehicle No (Opt)</label>
+                                            <input type="text" name="vehicle_number" placeholder="WP CAD-1234" class="w-full text-sm border-gray-300 rounded-lg shadow-sm">
                                         </div>
                                     </div>
                                     <div class="mt-3">

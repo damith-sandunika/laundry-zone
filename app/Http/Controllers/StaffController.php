@@ -53,6 +53,7 @@ class StaffController extends Controller
             'dob' => 'nullable|date',
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string|max:255',
+            'vehicle_number' => 'nullable|string|max:50',
             'basic_salary' => 'nullable|numeric|min:0',
             'casual_leaves' => 'nullable|integer|min:0',
             'standard_working_hours' => 'nullable|numeric|min:0',
@@ -88,6 +89,7 @@ class StaffController extends Controller
             'dob' => $request->dob,
             'address' => $request->address,
             'emergency_contact' => $request->emergency_contact,
+            'vehicle_number' => $request->vehicle_number,
             'basic_salary' => $request->basic_salary ?? 0,
             'casual_leaves' => $request->casual_leaves ?? 0,
             'standard_working_hours' => $request->standard_working_hours ?? 8.0,
@@ -162,6 +164,7 @@ class StaffController extends Controller
             'dob' => 'nullable|date',
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string|max:255',
+            'vehicle_number' => 'nullable|string|max:50',
             'basic_salary' => 'nullable|numeric|min:0',
             'casual_leaves' => 'nullable|integer|min:0',
             'standard_working_hours' => 'nullable|numeric|min:0',
@@ -177,7 +180,7 @@ class StaffController extends Controller
         $request->validate($rules);
 
         $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id']);
-        $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour']);
+        $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'vehicle_number', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour']);
         
         $profileData['basic_salary'] = $profileData['basic_salary'] ?? 0;
         $profileData['casual_leaves'] = $profileData['casual_leaves'] ?? 0;

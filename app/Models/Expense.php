@@ -35,15 +35,34 @@ class Expense extends Model
         parent::boot();
 
         static::created(function ($expense) {
-            // Deduct cash from branch for any expense logged
             if ($expense->branch_id) {
-                app(\App\Services\CashBalanceService::class)->decrementCashBalance($expense->branch_id, $expense->amount);
+                $branch = \App\Models\Branch::find($expense->branch_id);
+                if ($branch) {
+                    $branch->petty_cash_balance -= $expense->amount;
+                    $branch->save();
+                }
+            }
+        });
+
+        static::updated(function ($expense) {
+            if ($expense->branch_id && $expense->isDirty('amount')) {
+                $branch = \App\Models\Branch::find($expense->branch_id);
+                if ($branch) {
+                    // Add back the old amount, deduct the new amount
+                    $branch->petty_cash_balance += $expense->getOriginal('amount');
+                    $branch->petty_cash_balance -= $expense->amount;
+                    $branch->save();
+                }
             }
         });
 
         static::deleted(function ($expense) {
             if ($expense->branch_id) {
-                app(\App\Services\CashBalanceService::class)->incrementCashBalance($expense->branch_id, $expense->amount);
+                $branch = \App\Models\Branch::find($expense->branch_id);
+                if ($branch) {
+                    $branch->petty_cash_balance += $expense->amount;
+                    $branch->save();
+                }
             }
         });
     }

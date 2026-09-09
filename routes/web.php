@@ -149,6 +149,7 @@ Route::middleware(['auth'])->group(function () {
     // Note: payment_methods are managed via PaymentSettingsController (settings page)
 
     Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
+    Route::post('/petty-cash/topup', [ExpenseController::class, 'topup'])->name('petty_cash.topup');
 
     Route::get('/online-bookings', [OnlineBookingController::class, 'index'])->name('online_bookings.index');
     Route::post('/online-bookings/{booking}/status', [OnlineBookingController::class, 'updateStatus'])->name('online_bookings.updateStatus');

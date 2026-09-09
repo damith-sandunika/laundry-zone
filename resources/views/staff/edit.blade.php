@@ -114,6 +114,11 @@
                             <input type="text" name="emergency_contact" value="{{ old('emergency_contact', $staff->profile->emergency_contact ?? '') }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Vehicle Number (Optional)</label>
+                            <input type="text" name="vehicle_number" value="{{ old('vehicle_number', $staff->profile->vehicle_number ?? '') }}" placeholder="Ex: WP CAD-1234"
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        </div>
                         <div class="md:col-span-2">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Address</label>
                             <textarea name="address" rows="2"
@@ -129,17 +134,27 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100">
-                        <div>
+                        <div x-data="{ showPass: false }">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">New Password</label>
-                            <input type="password" name="password"
-                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                                placeholder="Leave blank to keep current">
+                            <div class="relative">
+                                <input :type="showPass ? 'text' : 'password'" name="password"
+                                    class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all pr-10"
+                                    placeholder="Leave blank to keep current">
+                                <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                    <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                </button>
+                            </div>
                         </div>
-                        <div>
+                        <div x-data="{ showPass: false }">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Confirm Password</label>
-                            <input type="password" name="password_confirmation"
-                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all"
-                                placeholder="Re-type new password">
+                            <div class="relative">
+                                <input :type="showPass ? 'text' : 'password'" name="password_confirmation"
+                                    class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all pr-10"
+                                    placeholder="Re-type new password">
+                                <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                    <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

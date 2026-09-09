@@ -246,7 +246,11 @@ class OrderController extends Controller
             $action->execute($order, $request->all(), auth()->id());
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
-            Log::error('Order Update Error: '.$e->getMessage());
+            Log::error('Order Update Error', [
+                'order_id' => $order->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
             return response()->json(['success' => false, 'message' => 'Failed to update order.']);
         }
     }
@@ -318,7 +322,11 @@ class OrderController extends Controller
             return redirect()->back()->with('success', 'Status updated successfully!');
 
         } catch (\Exception $e) {
-            \Log::error('updateStatus failed: ' . $e->getMessage());
+            \Log::error('updateStatus failed', [
+                'order_id' => $order->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
 
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()], 500);
@@ -330,14 +338,7 @@ class OrderController extends Controller
 
     public function reverseOrder(\App\Http\Requests\Order\ReverseOrderRequest $request, Order $order, \App\Actions\Order\ReverseOrderAction $action)
     {
-        $admins = \App\Models\User::whereIn('role', ['admin', 'super_admin', 'branch_admin', 'staff'])->get();
-        $authorized = false;
-        foreach ($admins as $admin) {
-            if (\Hash::check($request->password, $admin->password)) {
-                $authorized = true;
-                break;
-            }
-        }
+        $authorized = \Illuminate\Support\Facades\Hash::check($request->password, auth()->user()->password);
 
         if (! $authorized) {
             return response()->json([
@@ -372,7 +373,12 @@ class OrderController extends Controller
             $action->execute($order, $request->validated(), auth()->id());
             return redirect()->back()->with('success', 'Credit payment collected successfully!');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Collect Credit Payment Failed', [
+                'order_id' => $order->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'An error occurred while collecting payment. Please try again.');
         }
     }
 
@@ -382,7 +388,12 @@ class OrderController extends Controller
             $action->execute($order, $transaction);
             return redirect()->back()->with('success', 'Payment slip approved successfully.');
         } catch (\Exception $e) {
-            abort(403, $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Approve Payment Failed', [
+                'order_id' => $order->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            abort(403, 'An error occurred while approving payment.');
         }
     }
 
@@ -392,7 +403,12 @@ class OrderController extends Controller
             $action->execute($order, $transaction, $request->validated());
             return redirect()->back()->with('success', 'Payment slip rejected successfully.');
         } catch (\Exception $e) {
-            abort(403, $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Reject Payment Failed', [
+                'order_id' => $order->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            abort(403, 'An error occurred while rejecting payment.');
         }
     }
 
@@ -402,7 +418,12 @@ class OrderController extends Controller
             $result = $action->execute($order, $request->validated(), auth()->id());
             return response()->json(array_merge(['success' => true], $result));
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Illuminate\Support\Facades\Log::error('Dispatch Delivery Failed', [
+                'order_id' => $order->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred while dispatching delivery.'], 500);
         }
     }
 }

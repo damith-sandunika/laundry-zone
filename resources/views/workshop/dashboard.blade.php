@@ -54,10 +54,7 @@
                                             <span class="text-[14px] font-black text-blue-700">Total Sales</span>
                                             <span class="text-[16px] font-black text-blue-700">Rs.{{ number_format($stats['total_sale'] ?? 0, 0) }}</span>
                                         </div>
-                                        <div class="flex justify-between items-center py-3">
-                                            <span class="text-[13px] font-bold text-slate-500">Expenses</span>
-                                            <span class="text-[14px] font-black text-red-500">- Rs.{{ number_format($stats['expenses_logged'] ?? 0, 0) }}</span>
-                                        </div>
+
                                         <div class="flex justify-between items-center py-4 bg-emerald-50/50 -mx-6 px-6 border-b-0">
                                             <span class="text-[14px] font-black text-emerald-700 uppercase tracking-wide">Cash in Drawer</span>
                                             <span class="text-[20px] font-black text-emerald-700">Rs.{{ number_format($stats['cash_balance'] ?? 0, 0) }}</span>
@@ -481,10 +478,7 @@
                         <span class="text-[14px] font-bold text-slate-300">+ Rs.{{ number_format($stats['workshop_direct_delivery_fees'] ?? 0, 0) }}</span>
                     </div>
 
-                    <div class="flex justify-between items-center py-2">
-                        <span class="text-[12px] font-semibold text-slate-400">Expenses</span>
-                        <span class="text-[14px] font-bold text-red-400">- Rs.{{ number_format($stats['expenses_logged'] ?? 0, 0) }}</span>
-                    </div>
+
                     <div class="flex justify-between items-center py-3 bg-blue-900/20 -mx-6 px-6 border-y border-slate-800">
                         <span class="text-[13px] font-bold text-amber-400">Today Total Sales (Net Income)</span>
                         <span class="text-[16px] font-black text-amber-400">Rs.{{ number_format($stats['net_income'] ?? 0, 0) }}</span>

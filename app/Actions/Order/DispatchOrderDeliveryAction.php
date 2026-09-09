@@ -39,6 +39,13 @@ class DispatchOrderDeliveryAction
             $riderUser = User::find($data['rider_id']);
             if ($riderUser) {
                 Notification::send($riderUser, new SystemAlertNotification('New Delivery Task: Order #' . $order->order_number, route('rider.tasks')));
+
+                try {
+                    $commService = new CommunicationService();
+                    $commService->sendRiderAssigned($order, $riderUser);
+                } catch (Exception $e) {
+                    Log::warning('sendRiderAssigned failed (DispatchOrderDelivery): ' . $e->getMessage());
+                }
             }
 
             return ['status' => 'dispatched_for_delivery'];

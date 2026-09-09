@@ -18,7 +18,11 @@ class WorkshopController extends Controller
             $action->execute($order, $request->validated(), auth()->id());
             return redirect()->back()->with('success', 'Order dispatched to workshop successfully.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            \Log::error('WorkshopController::index error', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'An error occurred loading the workshop.');
         }
     }
 
@@ -28,7 +32,11 @@ class WorkshopController extends Controller
             $count = $action->execute($request->validated(), auth()->id());
             return redirect()->back()->with('success', $count . ' orders dispatched to workshop.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            \Log::error('WorkshopController::bulkDispatch error', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'An error occurred during bulk dispatch.');
         }
     }
 
@@ -110,7 +118,7 @@ class WorkshopController extends Controller
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
-            $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged - $bankDepositsLogged;
+            $cashBalance = $activeSession->opening_cash + $cashCollected - $bankDepositsLogged;
             $currentBalance = $cashBalance;
             $totalPaymentsCollected = $cashCollected + $cardPaymentsAmount + $bankTransfers;
 
@@ -123,14 +131,22 @@ class WorkshopController extends Controller
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->get();
 
+            // Pre-group ALL transactions for these orders in ONE query (fixes N+1)
+            $shiftOrderIds = $shiftPayments->pluck('order_id')->filter()->unique()->toArray();
+            $allOrderTransactions = \App\Models\PaymentTransaction::whereIn('order_id', $shiftOrderIds)
+                ->select('id', 'order_id', 'amount')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('order_id');
+
             foreach ($shiftPayments as $payment) {
                 if ($payment->order) {
                     $order = $payment->order;
                     $deliveryFee = $order->delivery_fee ?? 0;
-                    
-                    $paidBefore = \App\Models\PaymentTransaction::where('order_id', $order->id)
-                        ->where('id', '<', $payment->id)
-                        ->sum('amount');
+
+                    // In-memory lookup — no extra DB query per payment
+                    $orderTxns = $allOrderTransactions->get($order->id, collect());
+                    $paidBefore = $orderTxns->where('id', '<', $payment->id)->sum('amount');
 
                     if ($paidBefore >= $deliveryFee) {
                         $paidToDelivery = 0;
@@ -140,7 +156,7 @@ class WorkshopController extends Controller
                         $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
                         $commissionable = $payment->amount - $paidToDelivery;
                     }
-                    
+
                     $workshopDirectDeliveryFees += $paidToDelivery;
                     $workshopDirectCommissionableSales += $commissionable;
                 }
@@ -232,7 +248,7 @@ class WorkshopController extends Controller
             $workshopCommissionFromBranches = $commissionableSales - $branchCommissionsGiven;
             
             $totalSalesRevenue = $workshopDirectCommissionableSales + $workshopCommissionFromBranches;
-            $netIncome = $totalSalesRevenue + $workshopDirectDeliveryFees - $expensesLogged;
+            $netIncome = $totalSalesRevenue + $workshopDirectDeliveryFees;
 
         } else {
             $totalPaymentsCollected = 0;
@@ -432,8 +448,12 @@ class WorkshopController extends Controller
             $action->execute($dispatch, auth()->id());
             return response()->json(['success' => true, 'status' => 'received_at_workshop']);
         } catch (\Exception $e) {
-            \Log::error('WorkshopController::receive error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('WorkshopController::receive error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 
@@ -444,8 +464,12 @@ class WorkshopController extends Controller
             $action->execute($dispatch, auth()->id());
             return response()->json(['success' => true, 'status' => 'processing', 'order_number' => $dispatch->order->order_number]);
         } catch (\Exception $e) {
-            \Log::error('WorkshopController::startProcessing error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('WorkshopController::startProcessing error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 
@@ -456,8 +480,12 @@ class WorkshopController extends Controller
             $action->execute($dispatch, $request->validated(), auth()->id());
             return response()->json(['success' => true, 'status' => 'completed_at_workshop']);
         } catch (\Exception $e) {
-            \Log::error('WorkshopController::complete error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('WorkshopController::complete error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 
@@ -475,49 +503,30 @@ class WorkshopController extends Controller
             $amount = $request->input('custom_amount', $order->total);
         }
 
+        $customer = $order->customer;
         if ($customer) {
-            $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
-            
             $commService = new CommunicationService();
-            // $commService->sendFinalizedBill($order);
-            
+            $commService->sendFinalizedBill($order, $amount);
+
             return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
 
         return response()->json(['success' => false, 'message' => 'Customer has no phone number.'], 400);
     }
 
-    public function approvePayment(WorkshopDispatch $dispatch)
+    public function approvePayment(WorkshopDispatch $dispatch, \App\Actions\Workshop\ApproveWorkshopPaymentAction $action)
     {
-        $order = $dispatch->order;
-        
-        // IMPORTANT: Do NOT add to paid_amount here.
-        // The customer already paid via bank transfer (submitPayment added it).
-        // We are just APPROVING the payment and starting processing.
-        $order->update([
-            'payment_approved' => true,
-        ]);
-        
-        // Update payment_status based on current paid_amount vs total
-        $freshOrder = $order->fresh();
-        if ($freshOrder->paid_amount >= $freshOrder->total) {
-            $freshOrder->update(['payment_status' => 'paid']);
-        } elseif ($freshOrder->paid_amount > 0) {
-            $freshOrder->update(['payment_status' => 'partial']);
-        }
-
-        if (in_array($dispatch->status, ['dispatched_to_workshop', 'received_at_workshop'])) {
-            $dispatch->update(['status' => 'processing']);
-            $freshOrder->update(['status' => 'processing']);
-            \App\Models\OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'processing',
-                'changed_by' => auth()->id(),
-                'note' => 'Payment approved, processing started',
+        try {
+            $action->execute($dispatch, auth()->id());
+            return response()->json(['success' => true, 'message' => 'Payment approved. Order is now processing.']);
+        } catch (\Exception $e) {
+            \Log::error('WorkshopController::approvePayment error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
             ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
-
-        return response()->json(['success' => true, 'message' => 'Payment approved. Order is now processing.']);
     }
 
     public function finalizeBill(string $order_number)
@@ -587,8 +596,12 @@ class WorkshopController extends Controller
             $action->execute($dispatch, auth()->id());
             return response()->json(['success' => true, 'status' => 'returned_to_branch']);
         } catch (\Exception $e) {
-            \Log::error('WorkshopController::returnToBranch error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('WorkshopController::returnToBranch error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 
@@ -599,7 +612,12 @@ class WorkshopController extends Controller
             $result = $action->execute($dispatch, $request->validated(), auth()->id());
             return response()->json(array_merge(['success' => true], $result));
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('WorkshopController::bulkUpdate error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 
@@ -610,7 +628,11 @@ class WorkshopController extends Controller
             $action->execute($request->validated(), auth()->id());
             return response()->json(['success' => true]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('WorkshopController::bulkReturn error', [
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 
@@ -621,7 +643,12 @@ class WorkshopController extends Controller
             $action->execute($dispatch, $request->all());
             return redirect()->back()->with('success', 'Order received back from workshop. Customer notified.');
         } catch (\Exception $e) {
-            return redirect()->back()->with('error', $e->getMessage());
+            \Log::error('WorkshopController::dispatchDelivery error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', 'An error occurred during dispatch.');
         }
     }
 
@@ -632,8 +659,12 @@ class WorkshopController extends Controller
             $action->execute($dispatch, $request->validated(), auth()->id());
             return response()->json(['success' => true, 'order_id' => $dispatch->order_id, 'order_number' => $dispatch->order->order_number]);
         } catch (\Exception $e) {
-            \Log::error('WorkshopController::handover error: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            \Log::error('WorkshopController::handover error', [
+                'dispatch_id' => $dispatch->id ?? null,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
         }
     }
 

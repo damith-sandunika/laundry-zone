@@ -53,7 +53,7 @@
                 this.check();
                 setInterval(() => {
                     this.check();
-                }, 45000);
+                }, 120000);
             },
             renderOrderNumbers(alert) {
                 if (!alert || !alert.order_numbers || alert.order_numbers.length === 0) return '';

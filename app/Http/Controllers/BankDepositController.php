@@ -40,15 +40,11 @@ class BankDepositController extends Controller
                 ->sum('paid_amount');
             $cashCollected += $directCashOrders;
 
-            $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
-                ->where('created_at', '>=', $activeSession->opened_at)
-                ->sum('amount');
-                
             $bankDepositsLogged = BankDeposit::where('branch_id', $branchId)
                 ->where('created_at', '>=', $activeSession->opened_at)
                 ->sum('amount');
 
-            $availableCash = $activeSession->opening_cash + $cashCollected - $expensesLogged - $bankDepositsLogged;
+            $availableCash = $activeSession->opening_cash + $cashCollected - $bankDepositsLogged;
 
             if ($request->amount > $availableCash) {
                 return redirect()->back()->with('error', 'Deposit amount cannot exceed current drawer cash balance (Rs. ' . number_format($availableCash, 2) . ')');

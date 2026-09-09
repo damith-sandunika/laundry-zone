@@ -132,27 +132,7 @@ class SettingsController extends Controller
         $data = $request->only(['name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'auto_close_time']);
 
         if ($request->hasFile('logo')) {
-            $file = $request->file('logo');
-            if (env('CLOUDINARY_URL')) {
-                try {
-                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
-                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => '365_laundry/logos',
-                        'format' => 'webp',
-                        'quality' => 'auto'
-                    ]);
-                    $data['logo_path'] = $result['secure_url'];
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Branch: ' . $e->getMessage());
-                    $filename = time().'_'.$file->getClientOriginalName();
-                    $file->move(public_path('logos'), $filename);
-                    $data['logo_path'] = 'logos/'.$filename;
-                }
-            } else {
-                $filename = time().'_'.$file->getClientOriginalName();
-                $file->move(public_path('logos'), $filename);
-                $data['logo_path'] = 'logos/'.$filename;
-            }
+            $data['logo_path'] = app(\App\Actions\UploadImageAction::class)->execute($request->file('logo'), 'logos', 'logo');
         }
 
         if ($branch) {
@@ -242,27 +222,7 @@ class SettingsController extends Controller
 
         $imagePath = null;
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            if (env('CLOUDINARY_URL')) {
-                try {
-                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
-                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => '365_laundry/categories',
-                        'format' => 'webp',
-                        'quality' => 'auto'
-                    ]);
-                    $imagePath = $result['secure_url'];
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Category: ' . $e->getMessage());
-                    $filename = time().'_cat_'.$file->getClientOriginalName();
-                    $file->move(public_path('categories'), $filename);
-                    $imagePath = 'categories/'.$filename;
-                }
-            } else {
-                $filename = time().'_cat_'.$file->getClientOriginalName();
-                $file->move(public_path('categories'), $filename);
-                $imagePath = 'categories/'.$filename;
-            }
+            $imagePath = app(\App\Actions\UploadImageAction::class)->execute($request->file('image'), 'categories', 'cat');
         }
 
         ServiceCategory::create([
@@ -287,27 +247,7 @@ class SettingsController extends Controller
         $data = $request->only(['name', 'parent_id', 'is_active']);
 
         if ($request->hasFile('image')) {
-            $file = $request->file('image');
-            if (env('CLOUDINARY_URL')) {
-                try {
-                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
-                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => '365_laundry/categories',
-                        'format' => 'webp',
-                        'quality' => 'auto'
-                    ]);
-                    $data['image_path'] = $result['secure_url'];
-                } catch (\Exception $e) {
-                    \Illuminate\Support\Facades\Log::error('Cloudinary Upload Failed in Category Update: ' . $e->getMessage());
-                    $filename = time().'_cat_'.$file->getClientOriginalName();
-                    $file->move(public_path('categories'), $filename);
-                    $data['image_path'] = 'categories/'.$filename;
-                }
-            } else {
-                $filename = time().'_cat_'.$file->getClientOriginalName();
-                $file->move(public_path('categories'), $filename);
-                $data['image_path'] = 'categories/'.$filename;
-            }
+            $data['image_path'] = app(\App\Actions\UploadImageAction::class)->execute($request->file('image'), 'categories', 'cat');
         }
 
         $category->update($data);
@@ -343,10 +283,12 @@ class SettingsController extends Controller
         }
         
         foreach ($request->ordered_ids as $index => $id) {
-            ServiceType::where('id', $id)->update([
-                'order_index' => $index,
-                'category_id' => $categoryId
-            ]);
+            if ($id) {
+                ServiceType::where('id', $id)->update([
+                    'order_index' => $index,
+                    'category_id' => $categoryId
+                ]);
+            }
         }
         return response()->json(['success' => true]);
     }

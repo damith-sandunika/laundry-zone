@@ -125,6 +125,7 @@ class AssignDropoffRiderAction
             }
             $commService = new CommunicationService();
             $commService->sendDeliveryConfirmation($order);
+            $commService->sendRiderAssigned($order, $rider);
         }
 
         Notification::send($rider, new SystemAlertNotification('New Delivery Drop-off Task Assigned: Order #' . $appointment->order->id, route('rider.tasks')));

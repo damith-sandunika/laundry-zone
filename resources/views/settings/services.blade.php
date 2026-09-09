@@ -75,7 +75,7 @@
                                 <div class="bg-slate-50/50 p-3 border-b border-gray-100">
                                     <h5 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 pl-2">
                                         Subcategories</h5>
-                                    <div class="space-y-2 pl-4">
+                                    <div class="subcategory-sortable space-y-2 pl-4" data-parent-id="{{ $category->id }}">
                                         @foreach($category->children as $child)
                                             <div x-data="{ subExpanded: false }" class="bg-white rounded-lg border border-slate-200 overflow-hidden shadow-sm category-item" data-id="{{ $child->id }}">
                                                 <div class="flex justify-between items-center p-3 border-b border-slate-100 bg-slate-50/80">
@@ -150,7 +150,7 @@
                                                                 </div>
                                                             </div>
                                                         @empty
-                                                            <div class="p-2 text-center text-[11px] text-slate-400 font-medium bg-slate-50/30">
+                                                            <div class="p-2 text-center text-[11px] text-slate-400 font-medium bg-slate-50/30 service-empty-state">
                                                                 No services in this subcategory.
                                                             </div>
                                                         @endforelse
@@ -181,7 +181,7 @@
                                                     {{ $service->is_active ? 'Active' : 'Inactive' }}
                                                 </span>
                                                 @if($service->is_visible_on_website)
-                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">🌐 Website</span>
+                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">ðŸŒ Website</span>
                                                 @endif
                                             </div>
                                         </div>
@@ -197,7 +197,7 @@
                                         </div>
                                     </div>
                                 @empty
-                                    <div class="p-4 text-center text-xs text-gray-400 font-medium bg-gray-50/50">
+                                    <div class="p-4 text-center text-xs text-gray-400 font-medium bg-gray-50/50 service-empty-state">
                                         No services in this category.
                                     </div>
                                 @endforelse
@@ -242,7 +242,7 @@
                                                     {{ $service->is_active ? 'Active' : 'Inactive' }}
                                                 </span>
                                                 @if($service->is_visible_on_website)
-                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">🌐 Website</span>
+                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">ðŸŒ Website</span>
                                                 @endif
                                             </div>
                                         </div>
@@ -526,7 +526,7 @@
                                 'Content-Type': 'application/json',
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
-                            body: JSON.stringify({ order: order })
+                            body: JSON.stringify({ ordered_ids: order })
                         });
                     }
                 });
@@ -544,7 +544,9 @@
                         const newCategoryEl = evt.to;
                         const newCategoryId = newCategoryEl.dataset.categoryId || null;
                         
-                        const order = Array.from(newCategoryEl.children).map(item => item.dataset.id);
+                        const order = Array.from(newCategoryEl.children)
+                            .filter(item => item.classList.contains('service-item'))
+                            .map(item => item.dataset.id);
                         const serviceId = itemEl.dataset.id;
 
                         fetch('{{ route("settings.reorderServices") }}', {
@@ -554,14 +556,47 @@
                                 'X-CSRF-TOKEN': '{{ csrf_token() }}'
                             },
                             body: JSON.stringify({ 
-                                order: order,
-                                service_id: serviceId,
+                                ordered_ids: order,
                                 category_id: newCategoryId
                             })
                         });
                     }
                 });
             });
+
+            // Sort Subcategories within each Main Category
+            document.querySelectorAll('.subcategory-sortable').forEach(function(el) {
+                new Sortable(el, {
+                    handle: '.category-handle',
+                    animation: 150,
+                    ghostClass: 'bg-blue-50',
+                    onEnd: function (evt) {
+                        const order = Array.from(el.children).map(item => item.dataset.id).filter(Boolean);
+                        fetch('{{ route("settings.reorderCategories") }}', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ ordered_ids: order })
+                        });
+                    }
+                });
+            });
         });
+        function showServiceMoveToast() {
+            let toast = document.getElementById('service-move-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'service-move-toast';
+                toast.style.cssText = 'position:fixed;bottom:24px;right:24px;z-index:9999;background:#1d4ed8;color:white;padding:12px 20px;border-radius:12px;font-size:13px;font-weight:700;box-shadow:0 8px 24px rgba(29,78,216,0.4);display:flex;align-items:center;gap:8px;transform:translateY(80px);transition:transform 0.3s ease;';
+                toast.innerHTML = '<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Service moved & saved';
+                document.body.appendChild(toast);
+            }
+            setTimeout(function() { toast.style.transform = 'translateY(0)'; }, 10);
+            clearTimeout(toast._timeout);
+            toast._timeout = setTimeout(function() { toast.style.transform = 'translateY(80px)'; }, 2500);
+        }
     </script>
+
 </x-app-layout>

@@ -282,24 +282,7 @@
                             </select>
                         </div>
 
-                        <!-- Requested Delivery Time -->
-                        <div>
-                            <label class="block text-sm font-semibold text-slate-700 mb-2">Requested Delivery Time (Optional)</label>
-                            <p class="text-xs text-slate-500 font-medium mb-3">When would you like to receive your items back?</p>
-                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <div>
-                                    <input type="date" name="delivery_date" x-model="deliveryDate" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 font-medium" min="{{ date('Y-m-d') }}">
-                                </div>
-                                <div>
-                                    <select name="delivery_time_period_id" x-model="deliveryTimePeriodId" class="w-full px-4 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-md focus:ring-2 focus:ring-blue-500 font-medium">
-                                        <option value="">Select time...</option>
-                                        @foreach($pickupTimePeriods as $period)
-                                            <option value="{{ $period->id }}">{{ \Carbon\Carbon::parse($period->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($period->end_time)->format('h:i A') }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+
 
                         <!-- Extras -->
                         <div x-show="extras.length > 0">
@@ -372,9 +355,14 @@
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
                                         <input type="text" x-model="loginData.phone" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="07XXXXXXXX">
                                     </div>
-                                    <div>
+                                    <div x-data="{ showPass: false }">
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
-                                        <input type="password" x-model="loginData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢">
+                                        <div class="relative">
+                                            <input :type="showPass ? 'text' : 'password'" x-model="loginData.password" class="w-full px-4 py-3 pr-10 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Password">
+                                            <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                                <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <button type="button" @click="submitLogin()" :disabled="authLoading" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3.5 rounded-xl font-bold mt-2 transition-all flex justify-center items-center gap-2">
                                         <span x-show="!authLoading">Login to Continue</span>
@@ -398,9 +386,14 @@
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Email (Optional)</label>
                                         <input type="email" x-model="registerData.email" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="john@example.com">
                                     </div>
-                                    <div>
+                                    <div x-data="{ showPass: false }">
                                         <label class="block text-xs font-bold text-slate-700 mb-1">Password</label>
-                                        <input type="password" x-model="registerData.password" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¢">
+                                        <div class="relative">
+                                            <input :type="showPass ? 'text' : 'password'" x-model="registerData.password" class="w-full px-4 py-3 pr-10 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="Password">
+                                            <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
+                                                <i class="fa-solid" :class="showPass ? 'fa-eye-slash' : 'fa-eye'"></i>
+                                            </button>
+                                        </div>
                                     </div>
                                     <button type="button" @click="submitRegister()" :disabled="authLoading" class="w-full bg-slate-900 hover:bg-slate-800 text-white py-3.5 rounded-xl font-bold mt-2 transition-all flex justify-center items-center gap-2">
                                         <span x-show="!authLoading">Create Account & Continue</span>
@@ -531,6 +524,31 @@
             <!-- STEP 4: Delivery & Payment -->
             <div x-show="step === 4" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="space-y-6">
+
+                    <!-- Requested Delivery Time Card -->
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
+                        <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
+                            <span class="bg-blue-50 text-blue-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-clock"></i></span>
+                            Requested Delivery Time
+                        </h3>
+                        <p class="text-sm text-slate-500 mb-6 font-medium">When would you like to receive your clean items back? (Optional)</p>
+                        <div class="grid sm:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Preferred Date</label>
+                                <input type="date" name="delivery_date" x-model="deliveryDate" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold" min="{{ date('Y-m-d') }}">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1">Preferred Time Slot</label>
+                                <select name="delivery_time_period_id" x-model="deliveryTimePeriodId" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold">
+                                    <option value="">Select time slot...</option>
+                                    @foreach($pickupTimePeriods as $period)
+                                        <option value="{{ $period->id }}">{{ \Carbon\Carbon::parse($period->start_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($period->end_time)->format('h:i A') }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Delivery Section -->
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                         <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">

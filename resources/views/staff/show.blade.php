@@ -51,6 +51,10 @@
                     <p class="text-sm font-semibold text-gray-800">{{ $staff->profile->nic ?? 'Not Provided' }}</p>
                 </div>
                 <div>
+                    <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Vehicle Number</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ $staff->profile->vehicle_number ?? 'Not Provided' }}</p>
+                </div>
+                <div>
                     <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Date of Birth</p>
                     <p class="text-sm font-semibold text-gray-800">{{ $staff->profile?->dob ? \Carbon\Carbon::parse($staff->profile->dob)->format('M d, Y') : 'Not Provided' }}</p>
                 </div>

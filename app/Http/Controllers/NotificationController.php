@@ -24,7 +24,7 @@ class NotificationController extends Controller
             $newOrders = Order::where('is_online_booking', true)
                 ->where('status', 'received')
                 ->where('payment_approved', false)
-                ->get()->map(function($o) {
+                ->limit(50)->get()->map(function($o) {
                     return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
                 })->toArray();
             if (count($newOrders) > 0) {
@@ -47,7 +47,7 @@ class NotificationController extends Controller
                     $query->where('payment_approved', true)
                           ->orWhereRaw('paid_amount >= requested_advance AND requested_advance > 0');
                 })
-                ->get()->map(function($o) {
+                ->limit(50)->get()->map(function($o) {
                     return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
                 })->toArray();
             if (count($readyToStart) > 0) {
@@ -68,7 +68,7 @@ class NotificationController extends Controller
             if ($user->role !== 'super_admin') {
                 $incomingDispatchQuery->where('workshop_id', $user->branch_id);
             }
-            $incomingDispatch = $incomingDispatchQuery->get()->map(function($o) {
+            $incomingDispatch = $incomingDispatchQuery->limit(50)->get()->map(function($o) {
                 return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
             })->toArray();
             if (count($incomingDispatch) > 0) {
@@ -92,7 +92,7 @@ class NotificationController extends Controller
             if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
                 $pendingPickupsQuery->where('branch_id', $user->branch_id);
             }
-            $pendingPickups = $pendingPickupsQuery->get()->map(function ($p) {
+            $pendingPickups = $pendingPickupsQuery->limit(50)->get()->map(function ($p) {
                 $numberStr = $p->order_id && $p->order ? $p->order->order_number : ('Pickup: ' . ($p->customer->name ?? $p->contact_phone ?? 'Unknown'));
                 $url = $p->order_id && $p->order ? route('orders.show', $p->order->order_number) : route('delivery.index');
                 return ['number' => $numberStr, 'url' => $url];
@@ -118,7 +118,7 @@ class NotificationController extends Controller
             if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
                 $pendingPaymentsQuery->where('branch_id', $user->branch_id);
             }
-            $pendingPayments = $pendingPaymentsQuery->get()->map(function($o) {
+            $pendingPayments = $pendingPaymentsQuery->limit(50)->get()->map(function($o) {
                 return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
             })->toArray();
             if (count($pendingPayments) > 0) {
@@ -141,7 +141,7 @@ class NotificationController extends Controller
                     $q->where('branch_id', $user->branch_id);
                 });
             }
-            $pendingCorrections = $pendingCorrectionsQuery->get()->map(function($cr) {
+            $pendingCorrections = $pendingCorrectionsQuery->limit(50)->get()->map(function($cr) {
                 return ['number' => $cr->order->order_number . ' (' . str_replace('_', ' ', $cr->type) . ')', 'url' => route('orders.show', $cr->order->order_number)];
             })->toArray();
 
@@ -165,7 +165,7 @@ class NotificationController extends Controller
                 $lowStockQuery->where('branch_id', $user->branch_id);
             }
             
-            $lowStockItems = $lowStockQuery->get()->map(function($item) {
+            $lowStockItems = $lowStockQuery->limit(50)->get()->map(function($item) {
                 return ['number' => $item->name, 'url' => route('inventory.index')];
             })->toArray();
 
@@ -190,7 +190,7 @@ class NotificationController extends Controller
             if ($user->role !== 'super_admin') {
                 $incomingReturnQuery->where('branch_id', $user->branch_id);
             }
-            $incomingReturn = $incomingReturnQuery->get()->map(function($o) {
+            $incomingReturn = $incomingReturnQuery->limit(50)->get()->map(function($o) {
                 return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
             })->toArray();
             if (count($incomingReturn) > 0) {
@@ -213,7 +213,7 @@ class NotificationController extends Controller
             if ($user->role !== 'super_admin') {
                 $lowStockQuery->where('branch_id', $user->branch_id);
             }
-            $lowStockItems = $lowStockQuery->get()->map(function($i) {
+            $lowStockItems = $lowStockQuery->limit(50)->get()->map(function($i) {
                 return ['number' => $i->name . ' (' . $i->current_stock . '/' . $i->low_stock_threshold . ' ' . $i->unit . ')', 'url' => route('inventory.index')];
             })->toArray();
 
@@ -234,7 +234,7 @@ class NotificationController extends Controller
         if ($user->role === 'rider') {
             // 7. New Rider Tasks
             $newTasks = \App\Models\DeliveryTask::with('order')->where('rider_id', $user->id)
-                ->where('status', 'assigned')->get()->map(function ($t) {
+                ->where('status', 'assigned')->limit(50)->get()->map(function ($t) {
                     $numberStr = ucfirst($t->task_type) . ' - ' . substr($t->pickup_location ?? 'Unknown', 0, 15) . '...';
                     $url = $t->order_id && $t->order ? route('orders.show', $t->order->order_number) : '#';
                     if ($t->order_id && $t->order) {

@@ -49,6 +49,13 @@ class AssignPickupRiderAction
             } catch (\Exception $e) {
                 \Log::warning('OrderStatusHistory insert failed (assignPickup): ' . $e->getMessage());
             }
+
+            try {
+                $commService = new \App\Services\CommunicationService();
+                $commService->sendRiderAssigned($order, $rider);
+            } catch (\Exception $e) {
+                \Log::warning('sendRiderAssigned failed (assignPickup): ' . $e->getMessage());
+            }
         }
 
         Notification::send($rider, new SystemAlertNotification('New Pickup Task Assigned: #' . $appointment->id, route('rider.tasks')));

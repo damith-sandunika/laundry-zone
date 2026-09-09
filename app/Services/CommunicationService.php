@@ -126,6 +126,19 @@ class CommunicationService
                     </table>
                     <p style='margin:16px 0 0;'>Thank you! - 365 Laundry</p>
                 ",
+            ],
+            'rider_assigned' => [
+                'subject' => "Delivery Rider Assigned for Order #{$orderId}",
+                'body'    => "
+                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been assigned to our delivery rider.</p>
+                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Rider Name</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_name'] ?? '') . "</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Rider Phone</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_phone'] ?? '') . "</td></tr>
+                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Vehicle Number</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_vehicle_number'] ?? 'N/A') . "</td></tr>
+                    </table>
+                    <p style='margin:16px 0 0;'>Thank you! - 365 Laundry</p>
+                ",
             ]
         ];
 
@@ -147,6 +160,7 @@ class CommunicationService
 
     public function sendFinalizedBill(Order $order, $requestedAmount = null) { $this->dispatch('bill_finalized', $order, ['requested_amount' => $requestedAmount]); }
     public function sendPaymentReceived(Order $order) { $this->dispatch('payment_received', $order); }
+    public function sendRiderAssigned(Order $order, \App\Models\User $rider) { $this->dispatch('rider_assigned', $order, ['rider' => $rider]); }
 
     // ─── Master Dispatch ─────────────────────────────────────────────────────
 
@@ -172,6 +186,11 @@ class CommunicationService
         
         $requestedAmountRaw = $extraData['requested_amount'] ?? ($order->requested_advance > 0 ? $order->requested_advance : max(0, $order->total - $order->paid_amount));
         
+        $rider = $extraData['rider'] ?? null;
+        $riderName = $rider ? $rider->name : '';
+        $riderPhone = $rider ? $rider->phone : '';
+        $riderVehicle = ($rider && $rider->profile && !empty($rider->profile->vehicle_number)) ? $rider->profile->vehicle_number : 'N/A';
+
         $data = [
             'customer_name'  => trim($title . $customer->name),
             'order_id'       => $order->order_number,
@@ -179,7 +198,10 @@ class CommunicationService
             'amount_due'     => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
             'payment_status' => $paymentStatusText,
             'tracking_link'  => url("/customer/orders/{$order->id}"),
-            'requested_amount' => 'Rs.' . number_format($requestedAmountRaw, 2)
+            'requested_amount' => 'Rs.' . number_format($requestedAmountRaw, 2),
+            'rider_name'     => $riderName,
+            'rider_phone'    => $riderPhone,
+            'rider_vehicle_number' => $riderVehicle,
         ];
 
         // Process SMS — isolated so failure doesn't block WhatsApp/Email
@@ -194,7 +216,10 @@ class CommunicationService
                         '{amount_due}' => $data['amount_due'], 
                         '{payment_status}' => $data['payment_status'],
                         '{tracking_link}' => $data['tracking_link'],
-                        '{requested_amount}' => $data['requested_amount']
+                        '{requested_amount}' => $data['requested_amount'],
+                        '{rider_name}' => $data['rider_name'],
+                        '{rider_phone}' => $data['rider_phone'],
+                        '{rider_vehicle_number}' => $data['rider_vehicle_number'],
                     ];
                     $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                     $this->sendSms($order, $customer->phone, $type, $message);
@@ -212,11 +237,12 @@ class CommunicationService
                     $parameters = [
                         $data['customer_name'],
                         $data['order_id'],
+                        $data['rider_name'],
+                        $data['rider_phone'],
+                        $data['rider_vehicle_number'],
                         $data['total'],
                         $data['amount_due'],
-                        $data['payment_status'],
-                        $data['tracking_link'],
-                        $data['requested_amount']
+                        $data['tracking_link']
                     ];
                     $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
                 }
@@ -238,6 +264,9 @@ class CommunicationService
                         '{payment_status}' => $data['payment_status'],
                         '{tracking_link}'  => $data['tracking_link'],
                         '{requested_amount}'=> $data['requested_amount'],
+                        '{rider_name}'     => $data['rider_name'],
+                        '{rider_phone}'    => $data['rider_phone'],
+                        '{rider_vehicle_number}' => $data['rider_vehicle_number'],
                     ];
                     $subject = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->subject);
                     $body    = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->body);

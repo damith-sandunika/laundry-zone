@@ -142,12 +142,25 @@ class DashboardController extends Controller
 
             // Chart 1: Sales by Branch (Today)
             $branches = Branch::all();
+            
+            $branchSalesMap = Order::whereDate('created_at', $today)
+                ->selectRaw('branch_id, SUM(total) as total_sales')
+                ->groupBy('branch_id')
+                ->pluck('total_sales', 'branch_id');
+                
+            $packageSalesMap = PackagePayment::whereDate('package_payments.created_at', $today)
+                ->join('customer_packages', 'package_payments.customer_package_id', '=', 'customer_packages.id')
+                ->selectRaw('customer_packages.branch_id, SUM(package_payments.amount) as total_amount')
+                ->groupBy('customer_packages.branch_id')
+                ->pluck('total_amount', 'branch_id');
+
             $branchLabels = [];
             $branchSales = [];
             foreach ($branches as $b) {
                 $branchLabels[] = $b->name;
-                $branchSales[] = Order::where('branch_id', $b->id)->whereDate('created_at', $today)->sum('total')
-                               + PackagePayment::whereHas('customerPackage', fn ($q) => $q->where('branch_id', $b->id))->whereDate('created_at', $today)->sum('amount');
+                $orderSales = $branchSalesMap->get($b->id, 0);
+                $pkgSales = $packageSalesMap->get($b->id, 0);
+                $branchSales[] = $orderSales + $pkgSales;
             }
             $chartBranchSales = ['labels' => $branchLabels, 'data' => $branchSales];
 
@@ -305,15 +318,11 @@ class DashboardController extends Controller
             
         $cashCollected += $directCashOrders;
 
-        $expensesLogged = \App\Models\Expense::where('branch_id', $branchId)
-            ->where('created_at', '>=', $session->opened_at)
-            ->sum('amount');
-            
         $bankDepositsLogged = \App\Models\BankDeposit::where('branch_id', $branchId)
             ->where('created_at', '>=', $session->opened_at)
             ->sum('amount');
 
-        $finalCash = $session->opening_cash + $cashCollected - $expensesLogged - $bankDepositsLogged;
+        $finalCash = $session->opening_cash + $cashCollected - $bankDepositsLogged;
 
         $session->update([
             'closing_cash' => $finalCash,

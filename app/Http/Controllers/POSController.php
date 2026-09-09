@@ -99,9 +99,10 @@ class POSController extends Controller
             ]);
 
         } catch (\Exception $e) {
+            \Log::error('POSController::placeOrder error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to place order: '.$e->getMessage(),
+                'message' => 'An error occurred while placing the order. Please try again.',
             ], 500);
         }
     }
@@ -127,9 +128,10 @@ class POSController extends Controller
                 'redirect_url'   => route('delivery.index'),
             ]);
         } catch (\Exception $e) {
+            \Log::error('POSController::placeDeliveryOrder error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create delivery request: '.$e->getMessage(),
+                'message' => 'An error occurred while placing the delivery order. Please try again.',
             ], 500);
         }
     }
