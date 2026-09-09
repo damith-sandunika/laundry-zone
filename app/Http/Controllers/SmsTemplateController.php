@@ -10,6 +10,16 @@ class SmsTemplateController extends Controller
 {
     public function index()
     {
+        // Auto-seed rider_assigned if missing
+        if (!SmsTemplate::where('type', 'rider_assigned')->exists()) {
+            SmsTemplate::create([
+                'type' => 'rider_assigned',
+                'name' => 'Delivery Rider Assigned',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - Rapid Laundromat',
+                'is_active' => true,
+            ]);
+        }
+
         $templates = SmsTemplate::all();
         $isSmsEnabled = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
 
