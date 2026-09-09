@@ -2,13 +2,6 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-5P9DLW49');</script>
-    <!-- End Google Tag Manager -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Dashboard - Rapid Laundromat</title>
     <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
@@ -24,11 +17,6 @@
     </style>
 </head>
 <body class="antialiased text-slate-800 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden min-h-screen flex flex-col">
-
-<!-- Google Tag Manager (noscript) -->
-<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5P9DLW49"
-height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-<!-- End Google Tag Manager (noscript) -->
 
 <!-- Navbar -->
 <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300" x-data="{ mobileMenuOpen: false }">
