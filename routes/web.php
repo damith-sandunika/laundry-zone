@@ -311,6 +311,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
         Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
         Route::post('/hr/{staff}/adjustments', [HRController::class, 'storeAdjustment'])->name('hr.adjustments.store');
+        Route::delete('/hr/adjustments/{adjustment}', [HRController::class, 'destroyAdjustment'])->name('hr.adjustments.destroy');
         Route::get('/hr/{staff}/payslip', [StaffController::class, 'downloadPayslip'])->name('hr.payslip.download');
 
         // Branches
