@@ -14,7 +14,7 @@ class HRController extends Controller
         $request->validate([
             'date' => 'required|date',
             'clock_in' => 'nullable|date_format:H:i',
-            'status' => 'required|in:present,half_day,late',
+            'status' => 'required|in:present,half_day,late,leave,paid_leave',
         ]);
 
         $staff->attendances()->updateOrCreate(
@@ -174,6 +174,32 @@ class HRController extends Controller
         ]);
 
         return back()->with('success', 'Salary advance recorded.');
+    }
+
+    public function storeAdjustment(Request $request, User $staff)
+    {
+        $request->validate([
+            'type' => 'required|in:allowance,deduction',
+            'amount' => 'required|numeric|min:0.01',
+            'date' => 'required|date',
+            'reason' => 'nullable|string',
+        ]);
+
+        $staff->salaryAdjustments()->create([
+            'type' => $request->type,
+            'amount' => $request->amount,
+            'date' => $request->date,
+            'reason' => $request->reason,
+            'created_by' => auth()->id(),
+        ]);
+
+        return back()->with('success', ucfirst($request->type) . ' recorded successfully.');
+    }
+
+    public function destroyAdjustment(\App\Models\SalaryAdjustment $adjustment)
+    {
+        $adjustment->delete();
+        return back()->with('success', 'Adjustment removed successfully.');
     }
 }
 

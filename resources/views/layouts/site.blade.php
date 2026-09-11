@@ -139,7 +139,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <!-- Brand -->
-                <a href="{{ route('customer.booking') }}" class="flex items-center gap-2">
+                <a href="{{ route('home') }}" class="flex items-center gap-2">
                     <img src="{{ asset('images/365_laundry_logo_site.png') }}" alt="365 Laundry Logo" class="h-10 w-auto">
                 </a>
 
@@ -147,7 +147,7 @@
                 <div class="flex items-center gap-3">
                     <a href="{{ route('customer.login') }}"
                         class="text-slate-600 font-semibold hover:text-blue-600 transition text-sm hidden sm:block">My Account</a>
-                    <a href="{{ route('customer.booking') }}"
+                    <a href="{{ route('customer.login') }}"
                         class="bg-blue-600 text-white px-5 py-2 rounded-full font-bold hover:bg-blue-700 hover:shadow-lg transition-all text-sm flex items-center gap-2">
                         Book Now <i class="fa-solid fa-arrow-right text-xs"></i>
                     </a>
@@ -185,7 +185,7 @@
                 <div>
                     <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Quick Links</h4>
                     <ul class="space-y-3 text-sm">
-                        <li><a href="{{ route('customer.booking') }}" class="hover:text-white transition">Book
+                        <li><a href="{{ route('customer.login') }}" class="hover:text-white transition">Book
                                 Pickup</a></li>
                         <li><a href="{{ route('customer.login') }}" class="hover:text-white transition">My Account</a>
                         </li>

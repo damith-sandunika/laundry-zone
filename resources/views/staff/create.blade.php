@@ -74,15 +74,25 @@
                         <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
                             <h3 class="font-bold text-gray-800 text-sm">HR & Salary Details</h3>
                         </div>
-                        <div class="p-6 grid grid-cols-2 md:grid-cols-4 gap-5">
+                        <div class="p-6 grid grid-cols-2 md:grid-cols-3 gap-5">
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Basic Salary (Rs.)</label>
                                 <input type="number" step="0.01" name="basic_salary" value="{{ old('basic_salary') }}"
                                     class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5" placeholder="0.00">
                             </div>
                             <div>
-                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Casual Leaves / Year</label>
-                                <input type="number" name="casual_leaves" value="{{ old('casual_leaves', 14) }}"
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Hourly Rate (Rs.)</label>
+                                <input type="number" step="0.01" name="hourly_rate" value="{{ old('hourly_rate', 0) }}"
+                                    class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Daily Rate (Rs.)</label>
+                                <input type="number" step="0.01" name="daily_rate" value="{{ old('daily_rate', 0) }}"
+                                    class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Allowed Monthly Leaves (Free)</label>
+                                <input type="number" name="casual_leaves" value="{{ old('casual_leaves', 2) }}"
                                     class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5">
                             </div>
                             <div>

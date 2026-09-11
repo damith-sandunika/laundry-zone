@@ -15,19 +15,28 @@ class BranchPlanController extends Controller
             abort(403, 'Unauthorized action.');
         }
 
-        $branchId = $user->isSuperAdmin() ? $request->input('branch_id', $user->branch_id ?? 1) : $user->branch_id;
-        if (!$branchId) {
-            $branchId = Branch::first()->id ?? 1;
+        $branches = $user->isSuperAdmin() ? Branch::where('is_active', true)->get() : collect();
+        $firstBranch = Branch::where('is_active', true)->first() ?? Branch::first();
+
+        $branchId = $user->isSuperAdmin() 
+            ? $request->input('branch_id', $user->branch_id) 
+            : $user->branch_id;
+
+        $selectedBranch = $branchId ? Branch::find($branchId) : null;
+        if (!$selectedBranch) {
+            $selectedBranch = $firstBranch;
+            $branchId = $firstBranch?->id;
         }
 
-        $month = $request->input('month', now()->month);
-        $year = $request->input('year', now()->year);
+        if (!$selectedBranch) {
+            return redirect()->back()->with('error', 'No branches found in system.');
+        }
 
-        $branches = $user->isSuperAdmin() ? Branch::where('is_active', true)->get() : collect();
-        $selectedBranch = Branch::find($branchId);
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
 
         $plan = BranchMonthlyPlan::firstOrCreate(
-            ['branch_id' => $branchId, 'year' => $year, 'month' => $month],
+            ['branch_id' => $selectedBranch->id, 'year' => $year, 'month' => $month],
             ['plan_data' => []]
         );
 

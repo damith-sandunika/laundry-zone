@@ -294,12 +294,15 @@ Route::middleware(['auth'])->group(function () {
 
         // HR Routes
         Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->name('hr.dashboard');
+        Route::get('/hr/dashboard/pdf', [HRDashboardController::class, 'exportPdf'])->name('hr.dashboard.pdf');
         Route::post('/hr/{staff}/attendance', [HRController::class, 'storeAttendance'])->name('hr.attendance.store');
         Route::post('/hr/{staff}/attendance/bulk', [HRController::class, 'bulkUpdateAttendance'])->name('hr.attendance.bulkUpdate');
         Route::put('/hr/attendance/{attendance}', [HRController::class, 'updateAttendance'])->name('hr.attendance.update');
         Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
         Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
+        Route::post('/hr/{staff}/adjustments', [HRController::class, 'storeAdjustment'])->name('hr.adjustments.store');
+        Route::delete('/hr/adjustments/{adjustment}', [HRController::class, 'destroyAdjustment'])->name('hr.adjustments.destroy');
         Route::get('/hr/{staff}/payslip', [StaffController::class, 'downloadPayslip'])->name('hr.payslip.download');
 
         // Branches

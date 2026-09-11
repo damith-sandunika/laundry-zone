@@ -13,7 +13,7 @@
                 <p class="text-sm text-gray-500">Update the staff member's profile and permissions.</p>
             </div>
             
-            <form action="{{ route('staff.update', $staff) }}" method="POST" class="p-6 space-y-6">
+            <form action="{{ route('staff.update', $staff) }}" method="POST" autocomplete="off" class="p-6 space-y-6">
                 @csrf @method('PUT')
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -78,15 +78,25 @@
                         <h4 class="text-sm font-bold text-gray-700">HR & Salary Details</h4>
                     </div>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Basic Salary (Rs.)</label>
                             <input type="number" step="0.01" name="basic_salary" value="{{ old('basic_salary', $staff->profile->basic_salary ?? 0) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Casual Leaves (Per Year)</label>
-                            <input type="number" name="casual_leaves" value="{{ old('casual_leaves', $staff->profile->casual_leaves ?? 0) }}"
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Hourly Rate (Rs.)</label>
+                            <input type="number" step="0.01" name="hourly_rate" value="{{ old('hourly_rate', $staff->profile->hourly_rate ?? 0) }}"
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Daily Rate (Rs.)</label>
+                            <input type="number" step="0.01" name="daily_rate" value="{{ old('daily_rate', $staff->profile->daily_rate ?? 0) }}"
+                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Allowed Monthly Leaves (Free)</label>
+                            <input type="number" name="casual_leaves" value="{{ old('casual_leaves', $staff->profile->casual_leaves ?? 2) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
                         <div>
@@ -137,7 +147,7 @@
                         <div x-data="{ showPass: false }">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">New Password</label>
                             <div class="relative">
-                                <input :type="showPass ? 'text' : 'password'" name="password"
+                                <input :type="showPass ? 'text' : 'password'" name="password" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');"
                                     class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all pr-10"
                                     placeholder="Leave blank to keep current">
                                 <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">
@@ -148,7 +158,7 @@
                         <div x-data="{ showPass: false }">
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Confirm Password</label>
                             <div class="relative">
-                                <input :type="showPass ? 'text' : 'password'" name="password_confirmation"
+                                <input :type="showPass ? 'text' : 'password'" name="password_confirmation" autocomplete="new-password" readonly onfocus="this.removeAttribute('readonly');"
                                     class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all pr-10"
                                     placeholder="Re-type new password">
                                 <button type="button" @click="showPass = !showPass" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 focus:outline-none">

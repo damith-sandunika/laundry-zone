@@ -1,21 +1,34 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap justify-between items-center gap-3">
             <div>
                 <p class="text-xs text-gray-400 mb-1"><a href="{{ route('staff.index') }}" class="hover:text-blue-600">← Staff Directory</a></p>
                 <h2 class="text-xl font-bold text-gray-800">{{ $staff->name }}'s Profile</h2>
             </div>
-            <a href="{{ route('staff.edit', $staff) }}" class="px-4 py-2 bg-blue-50 text-blue-600 font-bold text-xs rounded-lg hover:bg-blue-100 transition-colors">
-                Edit Profile
-            </a>
+            <div class="flex items-center gap-2">
+                <button @click="$dispatch('open-allowance')" class="px-3.5 py-2 bg-emerald-600 text-white font-bold text-xs rounded-lg hover:bg-emerald-700 transition-colors shadow-sm cursor-pointer">
+                    + Allowance
+                </button>
+                <button @click="$dispatch('open-deduction')" class="px-3.5 py-2 bg-rose-600 text-white font-bold text-xs rounded-lg hover:bg-rose-700 transition-colors shadow-sm cursor-pointer">
+                    - Deduction
+                </button>
+                <a href="{{ route('staff.edit', $staff) }}" class="px-4 py-2 bg-gray-100 text-gray-700 font-bold text-xs rounded-lg hover:bg-gray-200 transition-colors">
+                    Edit Profile
+                </a>
+            </div>
         </div>
     </x-slot>
 
     <div x-data="{ 
         attendanceModalOpen: false, 
         leaveModalOpen: false, 
-        advanceModalOpen: false 
-    }" class="max-w-6xl mx-auto space-y-6">
+        advanceModalOpen: false,
+        allowanceModalOpen: false,
+        deductionModalOpen: false
+    }" 
+    @open-allowance.window="allowanceModalOpen = true"
+    @open-deduction.window="deductionModalOpen = true"
+    class="max-w-6xl mx-auto space-y-6">
         
         <!-- Top Profile Card -->
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col md:flex-row">
@@ -71,13 +84,37 @@
                         <p class="text-sm font-bold text-gray-800">{{ $staff->profile->emergency_contact ?? 'Not Provided' }}</p>
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-blue-500 mb-1">Casual Leaves Left</p>
+                        <p class="text-[10px] uppercase font-bold text-blue-500 mb-1 flex items-center gap-1">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            Monthly Free Leaves
+                        </p>
                         @php
-                            $approvedLeavesCount = $staff->leaves()->where('type', 'casual')->where('status', 'approved')
-                                ->whereYear('start_date', now()->year)->sum(\Illuminate\Support\Facades\DB::raw('DATEDIFF(end_date, start_date) + 1'));
-                            $leavesLeft = max(0, ($staff->profile->casual_leaves ?? 0) - $approvedLeavesCount);
+                            $monthlyAllowed = $payroll->monthly_allowed_leaves ?? ($staff->profile->casual_leaves ?? 2);
+                            $unpaidTaken = $payroll->unpaid_leave_days ?? 0;
+                            $freeRemaining = max(0, $monthlyAllowed - $unpaidTaken);
+                            $excessTaken = $payroll->excess_leaves ?? 0;
                         @endphp
-                        <p class="text-lg font-black text-gray-800">{{ $leavesLeft }} / {{ $staff->profile->casual_leaves ?? 0 }}</p>
+                        
+                        <div class="flex items-baseline gap-1.5">
+                            <span class="text-xl font-black {{ $freeRemaining == 0 ? 'text-amber-600' : 'text-gray-800' }}">
+                                {{ $freeRemaining }} / {{ $monthlyAllowed }}
+                            </span>
+                            <span class="text-[10px] font-bold text-gray-400 uppercase">Days Free</span>
+                        </div>
+
+                        @if($excessTaken > 0)
+                            <div class="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-700 border border-rose-200">
+                                ⚠️ {{ $excessTaken }} Excess Day{{ $excessTaken > 1 ? 's' : '' }} (-Rs. {{ number_format($payroll->excess_leave_deduction, 2) }})
+                            </div>
+                        @elseif($unpaidTaken > 0)
+                            <div class="mt-1 text-[10px] font-bold text-emerald-600">
+                                ✓ {{ $unpaidTaken }} Day{{ $unpaidTaken > 1 ? 's' : '' }} used within free limit
+                            </div>
+                        @else
+                            <div class="mt-1 text-[10px] font-semibold text-gray-400">
+                                Full quota available
+                            </div>
+                        @endif
                     </div>
                     <div>
                         <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Basic Monthly Salary</p>
@@ -141,33 +178,55 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 <template x-for="(day, dateStr) in days" :key="dateStr">
-                                    <tr class="hover:bg-gray-50/50 transition">
+                                    <tr class="transition" :class="{
+                                        'bg-red-50/90 text-red-900 border-l-4 border-red-500 font-medium': day.rule.type === 'holiday',
+                                        'hover:bg-gray-50/50': day.rule.type !== 'holiday'
+                                    }">
                                         <td class="px-4 py-3">
                                             <div class="font-bold text-gray-800" x-text="formatDate(dateStr)"></div>
                                             <div class="text-[9px] text-gray-400 font-bold uppercase tracking-wider" x-text="formatDay(dateStr)"></div>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
-                                                  :class="{
-                                                      'bg-green-100 text-green-700': day.rule.type === 'normal',
-                                                      'bg-blue-100 text-blue-700': day.rule.type === 'special',
-                                                      'bg-red-100 text-red-700': day.rule.type === 'holiday'
-                                                  }" x-text="day.rule.type"></span>
+                                            <template x-if="day.rule.type === 'holiday'">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-red-600 text-white uppercase tracking-wide inline-flex items-center gap-1 shadow-sm">
+                                                    🔴 Branch Closed
+                                                </span>
+                                            </template>
+                                            <template x-if="day.rule.type !== 'holiday'">
+                                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase"
+                                                      :class="{
+                                                          'bg-green-100 text-green-700': day.rule.type === 'normal',
+                                                          'bg-blue-100 text-blue-700': day.rule.type === 'special'
+                                                      }" x-text="day.rule.type"></span>
+                                            </template>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <select x-model="day.status" @change="recalculate(dateStr)" class="w-full text-xs border-gray-200 rounded py-1 px-2 font-bold" :class="{'text-gray-400': !day.status, 'text-green-700': day.status === 'present', 'text-orange-600': day.status === 'leave', 'text-red-600': day.status === 'absent'}">
-                                                <option value="">-</option>
-                                                <option value="present">Present</option>
-                                                <option value="leave">Leave</option>
-                                                <option value="absent">Absent</option>
-                                                <option value="holiday">Holiday</option>
+                                            <select x-model="day.status" @change="recalculate(dateStr)" 
+                                                :disabled="day.rule.type === 'holiday'"
+                                                class="w-full text-xs border-gray-200 rounded py-1 px-2 font-bold disabled:bg-red-100 disabled:text-red-700" 
+                                                :class="{
+                                                    'text-gray-400': !day.status, 
+                                                    'text-green-700': day.status === 'present',
+                                                    'text-emerald-700': day.status === 'paid_leave',
+                                                    'text-orange-600': day.status === 'leave',
+                                                    'text-red-700 font-black': day.rule.type === 'holiday'
+                                                }">
+                                                <option value="" x-show="day.rule.type !== 'holiday'">-</option>
+                                                <option value="holiday" x-show="day.rule.type === 'holiday'">🔴 Branch Holiday</option>
+                                                <option value="present" x-show="day.rule.type !== 'holiday'">🟢 Present</option>
+                                                <option value="paid_leave" x-show="day.rule.type !== 'holiday'">🟢 Leave (Paid / With Salary)</option>
+                                                <option value="leave" x-show="day.rule.type !== 'holiday'">🟠 Leave (Unpaid)</option>
                                             </select>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <input type="time" x-model="day.clock_in" @change="recalculate(dateStr)" class="w-24 text-xs border-gray-200 rounded py-1 px-2 disabled:bg-gray-100 disabled:text-gray-400" :disabled="day.status !== 'present'">
+                                            <input type="time" x-model="day.clock_in" @change="recalculate(dateStr)" 
+                                                class="w-24 text-xs border-gray-200 rounded py-1 px-2 disabled:bg-gray-100 disabled:text-gray-400" 
+                                                :disabled="day.status !== 'present' || day.rule.type === 'holiday'">
                                         </td>
                                         <td class="px-4 py-3">
-                                            <input type="time" x-model="day.clock_out" @change="recalculate(dateStr)" class="w-24 text-xs border-gray-200 rounded py-1 px-2 disabled:bg-gray-100 disabled:text-gray-400" :disabled="day.status !== 'present'">
+                                            <input type="time" x-model="day.clock_out" @change="recalculate(dateStr)" 
+                                                class="w-24 text-xs border-gray-200 rounded py-1 px-2 disabled:bg-gray-100 disabled:text-gray-400" 
+                                                :disabled="day.status !== 'present' || day.rule.type === 'holiday'">
                                         </td>
                                         <td class="px-4 py-3 text-center">
                                             <span class="font-black text-gray-700" x-text="formatHours(day.normal_minutes)"></span>
@@ -259,21 +318,47 @@
                 <!-- Current Month Payroll -->
                 <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 shadow-sm overflow-hidden p-5 mb-6">
                     <h3 class="font-bold text-gray-800 mb-4">Payroll ({{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }})</h3>
-                    <div class="space-y-2 mb-4">
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Basic Salary:</span>
-                            <span class="font-bold text-gray-800">Rs. {{ number_format($staff->profile->basic_salary ?? 0, 2) }}</span>
+                    <div class="space-y-2 mb-4 text-xs">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600 font-medium">Basic Salary:</span>
+                            <span class="font-bold text-gray-800">Rs. {{ number_format($payroll->basic_salary, 2) }}</span>
                         </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">OT ({{ floor($payroll->ot_minutes / 60) }}h {{ $payroll->ot_minutes % 60 }}m):</span>
-                            <span class="font-bold text-indigo-600">+ Rs. {{ number_format($payroll->ot_amount, 2) }}</span>
+                        @if($payroll->excess_leave_deduction > 0)
+                        <div class="flex justify-between text-rose-600">
+                            <span>Excess Leaves ({{ $payroll->excess_leaves }} d × Rs. {{ number_format($payroll->daily_rate, 2) }}):</span>
+                            <span class="font-bold">- Rs. {{ number_format($payroll->excess_leave_deduction, 2) }}</span>
                         </div>
-                        <div class="flex justify-between text-sm">
-                            <span class="text-gray-600">Advances:</span>
-                            <span class="font-bold text-red-500">- Rs. {{ number_format($payroll->advances, 2) }}</span>
+                        @endif
+                        @if($payroll->short_hours_deduction > 0)
+                        <div class="flex justify-between text-amber-600">
+                            <span>Short Hours ({{ $payroll->short_hours }} h × Rs. {{ number_format($payroll->hourly_rate, 2) }}):</span>
+                            <span class="font-bold">- Rs. {{ number_format($payroll->short_hours_deduction, 2) }}</span>
                         </div>
-                        <div class="pt-2 border-t border-green-200/50 flex justify-between">
-                            <span class="font-black text-gray-800">Net Pay:</span>
+                        @endif
+                        <div class="flex justify-between text-indigo-600">
+                            <span>OT ({{ $payroll->ot_hours }} h):</span>
+                            <span class="font-bold">+ Rs. {{ number_format($payroll->ot_amount, 2) }}</span>
+                        </div>
+                        @if($payroll->allowances > 0)
+                        <div class="flex justify-between text-emerald-600">
+                            <span>Allowances:</span>
+                            <span class="font-bold">+ Rs. {{ number_format($payroll->allowances, 2) }}</span>
+                        </div>
+                        @endif
+                        @if($payroll->manual_deductions > 0)
+                        <div class="flex justify-between text-rose-600">
+                            <span>Manual Deductions:</span>
+                            <span class="font-bold">- Rs. {{ number_format($payroll->manual_deductions, 2) }}</span>
+                        </div>
+                        @endif
+                        @if($payroll->advances > 0)
+                        <div class="flex justify-between text-purple-600">
+                            <span>Salary Advances:</span>
+                            <span class="font-bold">- Rs. {{ number_format($payroll->advances, 2) }}</span>
+                        </div>
+                        @endif
+                        <div class="pt-2 border-t border-green-200/60 flex justify-between items-center text-sm">
+                            <span class="font-black text-gray-800">Net Payable:</span>
                             <span class="font-black text-green-700 text-lg">Rs. {{ number_format($payroll->net_salary, 2) }}</span>
                         </div>
                     </div>
@@ -292,6 +377,43 @@
                                 💸 Pay Now
                             </button>
                         </form>
+                    </div>
+                </div>
+
+                <!-- Allowances & Deductions History -->
+                <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                    <div class="p-4 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                        <h3 class="font-bold text-gray-800 text-xs">Allowances & Deductions</h3>
+                        <div class="flex gap-1">
+                            <button @click="allowanceModalOpen = true" class="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded hover:bg-emerald-100">+ Allowance</button>
+                            <button @click="deductionModalOpen = true" class="text-[10px] font-bold text-rose-600 bg-rose-50 px-2 py-0.5 rounded hover:bg-rose-100">- Deduction</button>
+                        </div>
+                    </div>
+                    <div class="p-0 divide-y divide-gray-50 text-xs">
+                        @forelse($staff->salaryAdjustments()->whereMonth('date', $payroll->month)->whereYear('date', $payroll->year)->latest('date')->get() as $adj)
+                            <div class="p-3 flex justify-between items-center hover:bg-gray-50/50 transition">
+                                <div>
+                                    <span class="text-[9px] px-1.5 py-0.5 rounded font-bold uppercase {{ $adj->type === 'allowance' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700' }}">
+                                        {{ $adj->type }}
+                                    </span>
+                                    <p class="text-[11px] font-bold text-gray-700 mt-1">{{ \Carbon\Carbon::parse($adj->date)->format('M d, Y') }}</p>
+                                    <p class="text-[10px] text-gray-400 truncate max-w-[140px]">{{ $adj->reason ?? 'No reason' }}</p>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-bold {{ $adj->type === 'allowance' ? 'text-emerald-600' : 'text-rose-600' }}">
+                                        {{ $adj->type === 'allowance' ? '+' : '-' }} Rs. {{ number_format($adj->amount, 2) }}
+                                    </span>
+                                    <form method="POST" action="{{ route('hr.adjustments.destroy', $adj->id) }}" onsubmit="return confirm('Remove this adjustment?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-gray-300 hover:text-red-500 font-bold text-xs">&times;</button>
+                                    </form>
+                                </div>
+                            </div>
+                        @empty
+                            <div class="p-4 text-center">
+                                <p class="text-xs text-gray-400 font-medium">No adjustments for this month.</p>
+                            </div>
+                        @endforelse
                     </div>
                 </div>
                 
@@ -427,6 +549,70 @@
                         <div class="mt-6 flex justify-end gap-3">
                             <button type="button" @click="advanceModalOpen = false" class="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
                             <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-500/30">Add Advance</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. Allowance Modal -->
+        <div x-show="allowanceModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" @click="allowanceModalOpen = false"></div>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-2xl transform transition-all max-w-md w-full relative z-10 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Add Salary Allowance</h3>
+                    <form action="{{ route('hr.adjustments.store', $staff->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="type" value="allowance">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Amount (Rs.)</label>
+                                <input type="number" step="0.01" name="amount" required class="w-full text-sm border-gray-200 rounded-lg focus:border-emerald-500 focus:ring-emerald-500" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Date</label>
+                                <input type="date" name="date" required value="{{ now()->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Reason / Description</label>
+                                <input type="text" name="reason" placeholder="Ex: Performance Bonus" class="w-full text-sm border-gray-200 rounded-lg">
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button type="button" @click="allowanceModalOpen = false" class="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                            <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm shadow-emerald-500/30">Save Allowance</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Deduction Modal -->
+        <div x-show="deductionModalOpen" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto">
+            <div class="flex items-center justify-center min-h-screen px-4">
+                <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm" @click="deductionModalOpen = false"></div>
+                <div class="bg-white rounded-2xl overflow-hidden shadow-2xl transform transition-all max-w-md w-full relative z-10 p-6">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Add Manual Salary Deduction</h3>
+                    <form action="{{ route('hr.adjustments.store', $staff->id) }}" method="POST">
+                        @csrf
+                        <input type="hidden" name="type" value="deduction">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Amount (Rs.)</label>
+                                <input type="number" step="0.01" name="amount" required class="w-full text-sm border-gray-200 rounded-lg focus:border-rose-500 focus:ring-rose-500" placeholder="0.00">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Date</label>
+                                <input type="date" name="date" required value="{{ now()->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Reason / Description</label>
+                                <input type="text" name="reason" placeholder="Ex: Uniform Damage Fine" class="w-full text-sm border-gray-200 rounded-lg">
+                            </div>
+                        </div>
+                        <div class="mt-6 flex justify-end gap-3">
+                            <button type="button" @click="deductionModalOpen = false" class="px-4 py-2 text-sm font-bold text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200">Cancel</button>
+                            <button type="submit" class="px-4 py-2 text-sm font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 shadow-sm shadow-rose-500/30">Save Deduction</button>
                         </div>
                     </form>
                 </div>

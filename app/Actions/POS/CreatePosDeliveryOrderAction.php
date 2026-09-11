@@ -40,7 +40,8 @@ class CreatePosDeliveryOrderAction
                 $subtotal = 0;
 
                 foreach ($cart as $item) {
-                    $serviceTypeId = $item['service_type_id'] ?? $item['id'];
+                    $serviceTypeId = $item['service_type_id'] ?? $item['id'] ?? null;
+                    $name = $item['name'] ?? 'Laundry Service';
                     $qty = (float) ($item['qty'] ?? 1);
                     $basePrice = (float) ($item['base_price'] ?? 0);
 
@@ -65,7 +66,7 @@ class CreatePosDeliveryOrderAction
 
                     $processedCart[] = [
                         'service_type_id' => $serviceTypeId,
-                        'name' => $item['name'],
+                        'name' => $name,
                         'qty' => $qty,
                         'base_price' => $basePrice,
                         'total_price' => $itemSubtotal,
@@ -125,7 +126,7 @@ class CreatePosDeliveryOrderAction
                     'additional'              => 0,
                     'total'                   => $subtotal,
                     'paid_amount'             => $paidAmount,
-                    'payment_method'          => $paymentMode === 'pay_now' ? 'cash' : null,
+                    'payment_method'          => $paymentMode === 'pay_now' ? ($data['payment_method'] ?? 'cash') : null,
                     'due_date'                => $pickupDate,
                     'is_delivery_order'       => true,
                     'delivery_appointment_id' => $appointment->id,
@@ -147,15 +148,18 @@ class CreatePosDeliveryOrderAction
                 }
 
                 // Save cart_json matching the frontend structure for consistency
-                $cartJson = array_map(fn($i) => [
-                    'id'              => $i['service_type_id'],
-                    'service_type_id' => $i['service_type_id'],
-                    'name'            => $i['name'],
-                    'base_price'      => $i['base_price'],
-                    'qty'             => $i['qty'],
-                    'turnaround_type_id' => $i['turnaround_type_id'],
-                    'selected_extras' => $i['selected_extras'],
-                ], $cart);
+                $cartJson = array_map(function ($i) {
+                    $stId = $i['service_type_id'] ?? $i['id'] ?? null;
+                    return [
+                        'id'                 => $stId,
+                        'service_type_id'    => $stId,
+                        'name'               => $i['name'] ?? 'Laundry Service',
+                        'base_price'         => $i['base_price'] ?? 0,
+                        'qty'                => $i['qty'] ?? 1,
+                        'turnaround_type_id' => $i['turnaround_type_id'] ?? null,
+                        'selected_extras'    => $i['selected_extras'] ?? [],
+                    ];
+                }, $cart);
 
                 $appointment->update([
                     'order_id'  => $order->id,

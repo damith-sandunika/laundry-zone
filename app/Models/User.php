@@ -58,6 +58,11 @@ class User extends Authenticatable
         return $this->hasMany(SalaryAdvance::class);
     }
 
+    public function salaryAdjustments()
+    {
+        return $this->hasMany(SalaryAdjustment::class);
+    }
+
     // ─── Role Helpers ───
     public function isSuperAdmin(): bool
     {

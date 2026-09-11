@@ -58,6 +58,8 @@ class StaffController extends Controller
             'casual_leaves' => 'nullable|integer|min:0',
             'standard_working_hours' => 'nullable|numeric|min:0',
             'ot_rate_per_hour' => 'nullable|numeric|min:0',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'daily_rate' => 'nullable|numeric|min:0',
         ];
         $this->authorize('create', User::class);
         if (\Illuminate\Support\Facades\Gate::allows('manage-users')) {
@@ -94,6 +96,8 @@ class StaffController extends Controller
             'casual_leaves' => $request->casual_leaves ?? 0,
             'standard_working_hours' => $request->standard_working_hours ?? 8.0,
             'ot_rate_per_hour' => $request->ot_rate_per_hour ?? 0,
+            'hourly_rate' => $request->hourly_rate ?? 0,
+            'daily_rate' => $request->daily_rate ?? 0,
         ]);
 
         return redirect()->back()->with('success', 'Staff member added successfully.');
@@ -105,10 +109,9 @@ class StaffController extends Controller
             ->where('description', 'like', "%{$staff->name}%")
             ->latest()->get();
 
-        $month = request('month', now()->month);
-        $year = request('year', now()->year);
+        $month = (int) request('month', now()->month);
+        $year = (int) request('year', now()->year);
         
-        // Calculate OT for the requested month
         $attendancesThisMonth = \App\Models\Attendance::where('user_id', $staff->id)
             ->whereMonth('date', $month)
             ->whereYear('date', $year)
@@ -121,27 +124,7 @@ class StaffController extends Controller
             ->where('month', $month)
             ->first();
             
-        $totalOtMinutes = $attendancesThisMonth->sum('ot_minutes');
-        $otAmount = $totalOtMinutes * (($staff->profile->ot_rate_per_hour ?? 0) / 60);
-        
-        // Calculate Advances for the requested month
-        $advancesThisMonth = $staff->salaryAdvances()
-            ->whereMonth('date', $month)
-            ->whereYear('date', $year)
-            ->sum('amount');
-            
-        // Calculate Net Salary
-        $basicSalary = $staff->profile->basic_salary ?? 0;
-        $netSalary = $basicSalary + $otAmount - $advancesThisMonth;
-        
-        $payroll = (object)[
-            'month' => $month,
-            'year' => $year,
-            'ot_minutes' => $totalOtMinutes,
-            'ot_amount' => $otAmount,
-            'advances' => $advancesThisMonth,
-            'net_salary' => $netSalary,
-        ];
+        $payroll = \App\Services\PayrollCalculator::calculate($staff, $month, $year);
 
         return view('staff.show', compact('staff', 'salaries', 'payroll', 'attendancesThisMonth', 'branchPlan'));
     }
@@ -169,6 +152,8 @@ class StaffController extends Controller
             'casual_leaves' => 'nullable|integer|min:0',
             'standard_working_hours' => 'nullable|numeric|min:0',
             'ot_rate_per_hour' => 'nullable|numeric|min:0',
+            'hourly_rate' => 'nullable|numeric|min:0',
+            'daily_rate' => 'nullable|numeric|min:0',
         ];
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
@@ -180,12 +165,14 @@ class StaffController extends Controller
         $request->validate($rules);
 
         $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id']);
-        $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'vehicle_number', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour']);
+        $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'vehicle_number', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour', 'hourly_rate', 'daily_rate']);
         
         $profileData['basic_salary'] = $profileData['basic_salary'] ?? 0;
         $profileData['casual_leaves'] = $profileData['casual_leaves'] ?? 0;
         $profileData['standard_working_hours'] = $profileData['standard_working_hours'] ?? 8.0;
         $profileData['ot_rate_per_hour'] = $profileData['ot_rate_per_hour'] ?? 0;
+        $profileData['hourly_rate'] = $profileData['hourly_rate'] ?? 0;
+        $profileData['daily_rate'] = $profileData['daily_rate'] ?? 0;
 
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
@@ -240,35 +227,26 @@ class StaffController extends Controller
 
     public function downloadPayslip(User $staff, Request $request)
     {
-        $month = $request->query('month', now()->month);
-        $year = $request->query('year', now()->year);
+        $month = (int) $request->query('month', now()->month);
+        $year = (int) $request->query('year', now()->year);
         
-        $attendancesThisMonth = \App\Models\Attendance::where('user_id', $staff->id)
-            ->whereMonth('date', $month)
-            ->whereYear('date', $year)
-            ->get();
-            
-        $totalOtMinutes = $attendancesThisMonth->sum('ot_minutes');
-        $otAmount = $totalOtMinutes * (($staff->profile->ot_rate_per_hour ?? 0) / 60);
-        
-        $advancesThisMonth = $staff->salaryAdvances()
-            ->whereMonth('date', $month)
-            ->whereYear('date', $year)
-            ->sum('amount');
-            
-        $basicSalary = $staff->profile->basic_salary ?? 0;
-        $netSalary = $basicSalary + $otAmount - $advancesThisMonth;
-        
-        $payroll = (object)[
-            'month' => $month,
-            'year' => $year,
-            'ot_minutes' => $totalOtMinutes,
-            'ot_amount' => $otAmount,
-            'advances' => $advancesThisMonth,
-            'net_salary' => $netSalary,
-        ];
+        $payroll = \App\Services\PayrollCalculator::calculate($staff, $month, $year);
+        $monthName = date('F Y', mktime(0, 0, 0, $month, 10, $year));
 
-        return view('staff.payslip', compact('staff', 'payroll'));
+        $salaryPayment = Expense::with('createdBy')
+            ->where('category', 'salary')
+            ->where('description', 'like', "%{$staff->name}%")
+            ->where('description', 'like', "%{$monthName}%")
+            ->latest()
+            ->first();
+
+        $attendances = \App\Models\Attendance::where('user_id', $staff->id)
+            ->whereMonth('date', $month)
+            ->whereYear('date', $year)
+            ->orderBy('date', 'asc')
+            ->get();
+
+        return view('staff.payslip', compact('staff', 'payroll', 'salaryPayment', 'attendances'));
     }
 }
 
