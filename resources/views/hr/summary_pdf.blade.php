@@ -111,9 +111,9 @@
                     <td>{{ $s['branch'] }}</td>
                     <td class="text-center">{{ $s['present_days'] }} d</td>
                     <td class="text-center">{{ $s['leave_days'] }} d</td>
-                    <td class="text-center">{{ $s['total_worked_hours'] }} h</td>
-                    <td class="text-center">{{ $s['day_hours'] }} h</td>
-                    <td class="text-center">{{ $s['ot_hours'] }} h</td>
+                    <td class="text-center">{{ \App\Services\PayrollCalculator::formatHoursAndMinutes($s['total_worked_hours']) }}</td>
+                    <td class="text-center">{{ \App\Services\PayrollCalculator::formatHoursAndMinutes($s['day_hours']) }}</td>
+                    <td class="text-center">{{ \App\Services\PayrollCalculator::formatHoursAndMinutes($s['ot_hours']) }}</td>
                     <td class="text-right">Rs. {{ number_format($s['adjusted_basic_salary'], 2) }}</td>
                     <td class="text-right" style="color: #2563eb;">Rs. {{ number_format($s['ot_amount'], 2) }}</td>
                     <td class="text-right" style="color: {{ $s['net_adjustments'] >= 0 ? '#16a34a' : '#dc2626' }};">

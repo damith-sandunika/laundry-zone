@@ -114,19 +114,26 @@
                         this.sortCol = col;
                         this.sortAsc = true;
                     }
+                },
+                formatHM(val) {
+                    if (!val || val <= 0) return '0h';
+                    let totalMins = Math.round(val * 60);
+                    let h = Math.floor(totalMins / 60);
+                    let m = totalMins % 60;
+                    if (h > 0 && m > 0) return `${h}h ${m}m`;
+                    if (h > 0) return `${h}h`;
+                    return `${m}m`;
                 }
              }">
             <div class="p-5 border-b border-gray-100 bg-gray-50/50 flex flex-wrap justify-between items-center gap-3">
                 <div>
-                    <h3 class="font-black text-gray-800 text-lg">
-                        Monthly Attendance & Performance Summary ({{ date('F Y', mktime(0, 0, 0, $month, 10, $year)) }})
-                    </h3>
-                    <p class="text-xs text-gray-500 font-medium">Individual performance breakdown, working hours, basic salary deductions & net pay</p>
+                    <h3 class="font-bold text-gray-800 text-base">Monthly Staff Performance Summary</h3>
+                    <p class="text-xs text-gray-400 font-medium mt-0.5">Calculated based on attendance, working hours, free leaves, and overtime</p>
                 </div>
                 <a href="{{ route('hr.dashboard.pdf', ['branch_id' => $branchId, 'month' => $month, 'year' => $year]) }}" 
                    target="_blank"
-                   class="px-4 py-2 bg-gray-900 hover:bg-black text-white font-bold text-xs rounded-xl shadow-sm transition">
-                    🖨️ Download PDF Report
+                   class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold text-xs rounded-lg transition border border-gray-200">
+                    🖨️ Print Summary PDF
                 </a>
             </div>
             
@@ -171,10 +178,10 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100">
                         <template x-for="user in sortedStaff" :key="user.id">
-                            <tr class="hover:bg-blue-50/30 transition">
-                                <td class="p-4">
-                                    <a :href="'/staff/' + user.id" class="font-bold text-blue-600 hover:text-blue-800 hover:underline text-sm" x-text="user.name"></a>
-                                    <div class="text-[10px] text-gray-400 font-semibold" x-text="user.role"></div>
+                            <tr class="hover:bg-gray-50/80 transition">
+                                <td class="p-4 font-bold text-gray-800">
+                                    <a :href="'/staff/' + user.id + '?month={{ $month }}&year={{ $year }}'" class="hover:text-blue-600 transition" x-text="user.name"></a>
+                                    <p class="text-[10px] text-gray-400 font-semibold" x-text="user.role"></p>
                                 </td>
                                 <td class="p-4">
                                     <span class="text-[10px] uppercase font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded" x-text="user.branch"></span>
@@ -186,13 +193,13 @@
                                     <span class="text-sm font-black" :class="user.leave_days > 0 ? 'text-rose-600' : 'text-gray-400'" x-text="user.leave_days + ' d'"></span>
                                 </td>
                                 <td class="p-4 text-center">
-                                    <span class="text-sm font-black text-blue-700" x-text="user.total_worked_hours + ' h'"></span>
+                                    <span class="text-sm font-black text-blue-700" x-text="formatHM(user.total_worked_hours)"></span>
                                 </td>
                                 <td class="p-4 text-center">
-                                    <span class="text-sm font-black text-gray-700" x-text="user.day_hours + ' h'"></span>
+                                    <span class="text-sm font-black text-gray-700" x-text="formatHM(user.day_hours)"></span>
                                 </td>
                                 <td class="p-4 text-center">
-                                    <span class="text-sm font-black text-indigo-600" x-text="user.ot_hours + ' h'"></span>
+                                    <span class="text-sm font-black text-indigo-600" x-text="formatHM(user.ot_hours)"></span>
                                 </td>
                                 <td class="p-4 text-right">
                                     <span class="text-xs font-bold text-gray-800" x-text="'Rs. ' + Number(user.adjusted_basic_salary).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></span>
@@ -215,9 +222,9 @@
                             <td colspan="2" class="p-4 text-right text-xs uppercase tracking-wider">Grand Totals:</td>
                             <td class="p-4 text-center text-sm text-emerald-700" x-text="staff.reduce((acc, u) => acc + Number(u.present_days), 0) + ' d'"></td>
                             <td class="p-4 text-center text-sm text-rose-600" x-text="staff.reduce((acc, u) => acc + Number(u.leave_days), 0) + ' d'"></td>
-                            <td class="p-4 text-center text-sm text-blue-700" x-text="staff.reduce((acc, u) => acc + Number(u.total_worked_hours), 0).toFixed(1) + ' h'"></td>
-                            <td class="p-4 text-center text-sm text-slate-700" x-text="staff.reduce((acc, u) => acc + Number(u.day_hours), 0).toFixed(1) + ' h'"></td>
-                            <td class="p-4 text-center text-sm text-indigo-600" x-text="staff.reduce((acc, u) => acc + Number(u.ot_hours), 0).toFixed(1) + ' h'"></td>
+                            <td class="p-4 text-center text-sm text-blue-700" x-text="formatHM(staff.reduce((acc, u) => acc + Number(u.total_worked_hours), 0))"></td>
+                            <td class="p-4 text-center text-sm text-slate-700" x-text="formatHM(staff.reduce((acc, u) => acc + Number(u.day_hours), 0))"></td>
+                            <td class="p-4 text-center text-sm text-indigo-600" x-text="formatHM(staff.reduce((acc, u) => acc + Number(u.ot_hours), 0))"></td>
                             <td class="p-4 text-right text-sm text-gray-800" x-text="'Rs. ' + staff.reduce((acc, u) => acc + Number(u.adjusted_basic_salary), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></td>
                             <td class="p-4 text-right text-sm text-indigo-600" x-text="'Rs. ' + staff.reduce((acc, u) => acc + Number(u.ot_amount), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></td>
                             <td class="p-4 text-right text-sm text-purple-600" x-text="'Rs. ' + staff.reduce((acc, u) => acc + Number(u.net_adjustments), 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})"></td>

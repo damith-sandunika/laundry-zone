@@ -414,18 +414,18 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Total Worked Hours:</span>
-                    <span class="info-value">{{ $payroll->total_worked_hours }} Hrs</span>
+                    <span class="info-value">{{ $payroll->total_worked_hours_formatted }}</span>
                 </div>
                 @if($payroll->short_hours > 0)
                 <div class="info-row">
                     <span class="info-label">Short Working Hours:</span>
-                    <span class="info-value text-amber">{{ $payroll->short_hours }} Hrs</span>
+                    <span class="info-value text-amber">{{ $payroll->short_hours_formatted }}</span>
                 </div>
                 @endif
                 @if($payroll->ot_hours > 0)
                 <div class="info-row">
                     <span class="info-label">Overtime Hours:</span>
-                    <span class="info-value text-indigo">{{ $payroll->ot_hours }} Hrs</span>
+                    <span class="info-value text-indigo">{{ $payroll->ot_hours_formatted }}</span>
                 </div>
                 @endif
             </div>
@@ -464,7 +464,7 @@
                 @if($payroll->short_hours_deduction > 0)
                 <tr>
                     <td class="text-amber">Short Hours Deduction</td>
-                    <td>{{ $payroll->short_hours }} hrs @ Rs. {{ number_format($payroll->hourly_rate, 2) }}/hr</td>
+                    <td>{{ $payroll->short_hours_formatted }} @ Rs. {{ number_format($payroll->hourly_rate, 2) }}/hr</td>
                     <td class="text-right font-mono">-</td>
                     <td class="text-right font-mono text-amber">- {{ number_format($payroll->short_hours_deduction, 2) }}</td>
                 </tr>
@@ -474,7 +474,7 @@
                 @if($payroll->ot_amount > 0)
                 <tr>
                     <td class="text-indigo">Overtime (OT) Earnings</td>
-                    <td>{{ $payroll->ot_hours }} hrs @ Rs. {{ number_format($staff->profile->ot_rate_per_hour ?? 0, 2) }}/hr</td>
+                    <td>{{ $payroll->ot_hours_formatted }} @ Rs. {{ number_format($staff->profile->ot_rate_per_hour ?? 0, 2) }}/hr</td>
                     <td class="text-right font-mono text-indigo">+ {{ number_format($payroll->ot_amount, 2) }}</td>
                     <td class="text-right font-mono">-</td>
                 </tr>
@@ -564,14 +564,14 @@
                         <td>{{ $att->clock_out ? \Carbon\Carbon::parse($att->clock_out)->format('h:i A') : '-' }}</td>
                         <td class="text-right font-mono">
                             @if($att->normal_minutes > 0)
-                                {{ round($att->normal_minutes / 60, 2) }} h
+                                {{ \App\Services\PayrollCalculator::formatHoursAndMinutes($att->normal_minutes, true) }}
                             @else
                                 -
                             @endif
                         </td>
                         <td class="text-right font-mono text-indigo">
                             @if($att->ot_minutes > 0)
-                                + {{ round($att->ot_minutes / 60, 2) }} h
+                                + {{ \App\Services\PayrollCalculator::formatHoursAndMinutes($att->ot_minutes, true) }}
                             @else
                                 -
                             @endif

@@ -165,12 +165,16 @@ class PayrollCalculator
             'leave_days' => $totalLeaveDays,
             'excess_leaves' => $excessLeaves,
             'excess_leave_deduction' => $excessLeaveDeduction,
+            'total_worked_minutes' => $totalWorkedMinutes,
             'total_worked_hours' => round($totalWorkedMinutes / 60, 2),
+            'total_worked_hours_formatted' => self::formatHoursAndMinutes($totalWorkedMinutes, true),
             'short_hours' => round($shortHours, 2),
+            'short_hours_formatted' => self::formatHoursAndMinutes($shortHours, false),
             'short_hours_deduction' => round($shortHoursDeduction, 2),
             'adjusted_basic_salary' => round($adjustedBasicSalary, 2),
             'total_ot_minutes' => $totalOtMinutes,
             'ot_hours' => round($totalOtMinutes / 60, 2),
+            'ot_hours_formatted' => self::formatHoursAndMinutes($totalOtMinutes, true),
             'ot_amount' => round($otAmount, 2),
             'allowances' => $allowances,
             'manual_deductions' => $manualDeductions,
@@ -179,5 +183,16 @@ class PayrollCalculator
             'net_salary' => round($netSalary, 2),
             'adjustments' => $adjustments,
         ];
+    }
+
+    public static function formatHoursAndMinutes(float|int $value, bool $isMinutes = false): string
+    {
+        $totalMinutes = $isMinutes ? (int) round($value) : (int) round($value * 60);
+        if ($totalMinutes <= 0) return '0h';
+        $h = intdiv($totalMinutes, 60);
+        $m = $totalMinutes % 60;
+        if ($h > 0 && $m > 0) return "{$h}h {$m}m";
+        if ($h > 0) return "{$h}h";
+        return "{$m}m";
     }
 }

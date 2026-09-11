@@ -331,12 +331,12 @@
                         @endif
                         @if($payroll->short_hours_deduction > 0)
                         <div class="flex justify-between text-amber-600">
-                            <span>Short Hours ({{ $payroll->short_hours }} h × Rs. {{ number_format($payroll->hourly_rate, 2) }}):</span>
+                            <span>Short Hours ({{ $payroll->short_hours_formatted }} × Rs. {{ number_format($payroll->hourly_rate, 2) }}/h):</span>
                             <span class="font-bold">- Rs. {{ number_format($payroll->short_hours_deduction, 2) }}</span>
                         </div>
                         @endif
                         <div class="flex justify-between text-indigo-600">
-                            <span>OT ({{ $payroll->ot_hours }} h):</span>
+                            <span>OT ({{ $payroll->ot_hours_formatted }}):</span>
                             <span class="font-bold">+ Rs. {{ number_format($payroll->ot_amount, 2) }}</span>
                         </div>
                         @if($payroll->allowances > 0)
