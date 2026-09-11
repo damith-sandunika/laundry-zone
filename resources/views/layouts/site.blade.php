@@ -150,59 +150,47 @@
     </main>
     <footer class="bg-[#0f172a] text-slate-300 py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-10 border-b border-slate-700 pb-12 mb-8">
-                <div class="col-span-1 md:col-span-1">
-                    <div class="flex items-center mb-6">
-                        <span class="text-3xl mr-2 text-white"><i class="fa-solid fa-bolt"></i></span>
-                        <span class="font-bold text-2xl text-white">Rapid Laundromat</span>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-8 border-b border-slate-700 pb-12 mb-8">
+                <div class="col-span-1 md:col-span-2">
+                    <div class="flex items-center mb-4">
+                        <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="360 Laundry Logo" class="h-10 w-auto bg-white/10 p-1.5 rounded-xl border border-white/20">
                     </div>
-                    <p class="text-sm text-slate-400 mb-6">Professional laundry and dry cleaning services with care and
-                        convenience.</p>
+                    <p class="text-sm text-slate-400 mb-6 max-w-sm">Professional laundry and dry cleaning services with care and convenience delivered right to your doorstep.</p>
                     <div class="flex gap-4">
-                        <a href="#"
-                            class="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition"><i
-                                class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#"
-                            class="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition"><i
-                                class="fa-brands fa-instagram"></i></a>
-                        <a href="#"
-                            class="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition"><i
-                                class="fa-brands fa-whatsapp"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition"><i class="fa-brands fa-instagram"></i></a>
+                        <a href="#" class="w-10 h-10 rounded-full border border-slate-700 flex items-center justify-center hover:bg-accent hover:border-accent hover:text-white transition"><i class="fa-brands fa-whatsapp"></i></a>
                     </div>
                 </div>
 
                 <div>
-                    <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Quick Links</h4>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="{{ route('customer.login') }}" class="hover:text-white transition">Book
-                                Pickup</a></li>
-                        <li><a href="{{ route('customer.login') }}" class="hover:text-white transition">My Account</a>
-                        </li>
-                        <li><a href="{{ route('customer.orders') }}" class="hover:text-white transition">Track Order</a>
-                        </li>
+                    <h4 class="text-white font-bold mb-5 uppercase tracking-wider text-xs">Quick Links</h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="{{ route('customer.login') }}" class="hover:text-white transition">Book Pickup</a></li>
+                        <li><a href="{{ route('customer.login') }}" class="hover:text-white transition">My Account</a></li>
+                        <li><a href="{{ route('customer.orders') }}" class="hover:text-white transition">Track Order</a></li>
                     </ul>
                 </div>
 
                 <div>
-                    <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Our Services</h4>
-                    <ul class="space-y-3 text-sm">
+                    <h4 class="text-white font-bold mb-5 uppercase tracking-wider text-xs">Company & Legal</h4>
+                    <ul class="space-y-2.5 text-sm">
+                        <li><a href="{{ route('site.about') }}" class="hover:text-white transition">About Us</a></li>
+                        <li><a href="{{ route('site.how-it-works') }}" class="hover:text-white transition">How It Works</a></li>
+                        <li><a href="{{ route('site.quality') }}" class="hover:text-white transition">Quality Guarantee</a></li>
+                        <li><a href="{{ route('site.faq') }}" class="hover:text-white transition">FAQ</a></li>
+                        <li><a href="{{ route('site.terms') }}" class="hover:text-white transition">Terms & Conditions</a></li>
+                        <li><a href="{{ route('site.privacy') }}" class="hover:text-white transition">Privacy Policy</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 class="text-white font-bold mb-5 uppercase tracking-wider text-xs">Our Services</h4>
+                    <ul class="space-y-2.5 text-sm">
                         @foreach(\App\Models\ServiceCategory::where('is_active', 1)->take(5)->get() as $cat)
-                            <li><a href="{{ url('/#services') }}" class="hover:text-white transition">{{ $cat->name }}</a>
-                            </li>
+                            <li><a href="{{ url('/#services') }}" class="hover:text-white transition">{{ $cat->name }}</a></li>
                         @endforeach
                     </ul>
-                </div>
-
-                <div>
-                    <h4 class="text-white font-bold mb-6 uppercase tracking-wider text-sm">Newsletter</h4>
-                    <p class="text-sm text-slate-400 mb-4">Subscribe to get special offers and updates.</p>
-                    <form class="flex">
-                        <input type="email" placeholder="Enter your email"
-                            class="bg-slate-800 border-none rounded-l-lg px-4 py-2 w-full text-sm focus:ring-1 focus:ring-accent outline-none text-white">
-                        <button type="submit"
-                            class="bg-accent text-white px-4 py-2 rounded-r-lg hover:bg-blue-500 transition"><i
-                                class="fa-solid fa-paper-plane"></i></button>
-                    </form>
                 </div>
             </div>
             <div
