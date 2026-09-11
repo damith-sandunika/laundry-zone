@@ -579,6 +579,19 @@
                     </tr>
                     @endforeach
                 </tbody>
+                <tfoot>
+                    <tr style="background-color: #f8fafc; font-weight: 800; border-top: 2px solid #e2e8f0;">
+                        <td colspan="5" class="text-right" style="font-size: 11px; text-transform: uppercase; color: #475569; padding: 10px 12px;">
+                            <strong>Month Total Hours:</strong>
+                        </td>
+                        <td class="text-right font-mono" style="color: #1e3a8a; font-size: 12px; padding: 10px 12px;">
+                            <strong>{{ $payroll->total_worked_hours_formatted }}</strong>
+                        </td>
+                        <td class="text-right font-mono" style="color: #4f46e5; font-size: 12px; padding: 10px 12px;">
+                            <strong>+ {{ $payroll->ot_hours_formatted }}</strong>
+                        </td>
+                    </tr>
+                </tfoot>
             </table>
         </div>
         @endif
