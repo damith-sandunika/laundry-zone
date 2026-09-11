@@ -90,7 +90,7 @@
                         x-transition:leave-end="opacity-0"
                         class="grid grid-cols-2 gap-3 lg:flex lg:flex-row lg:gap-5 justify-center lg:justify-start w-full max-w-[280px] lg:max-w-none mx-auto lg:mx-0"
                         style="display: none;">
-                        <a href="{{ route('customer.booking') }}"
+                        <a href="{{ route('customer.login') }}"
                             class="w-full bg-accent text-white px-2 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-sm lg:text-base shadow-xl shadow-blue-200/50 hover:bg-blue-700 transition flex items-center justify-center gap-2">
                             <i class="fa-regular fa-calendar-check"></i> Book <span
                                 class="hidden sm:inline">Pickup</span>
@@ -163,7 +163,7 @@
                         x-transition:leave-end="opacity-0"
                         class="grid grid-cols-2 gap-3 lg:flex lg:flex-row lg:gap-5 justify-center lg:justify-end w-full max-w-[280px] lg:max-w-none mx-auto lg:mx-0"
                         style="display: none;">
-                        <a href="{{ route('customer.booking') }}"
+                        <a href="{{ route('customer.login') }}"
                             class="w-full bg-accent text-white px-2 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-sm lg:text-base shadow-xl shadow-blue-200/50 hover:bg-blue-700 transition flex items-center justify-center gap-2">
                             <i class="fa-regular fa-calendar-check"></i> Book <span
                                 class="hidden sm:inline">Pickup</span>
@@ -236,7 +236,7 @@
                         x-transition:leave-end="opacity-0"
                         class="grid grid-cols-2 gap-3 lg:flex lg:flex-row lg:gap-5 justify-center lg:justify-start w-full max-w-[280px] lg:max-w-none mx-auto lg:mx-0"
                         style="display: none;">
-                        <a href="{{ route('customer.booking') }}"
+                        <a href="{{ route('customer.login') }}"
                             class="w-full bg-accent text-white px-2 sm:px-6 py-2.5 sm:py-3 rounded-full font-bold text-sm lg:text-base shadow-xl shadow-blue-200/50 hover:bg-blue-700 transition flex items-center justify-center gap-2">
                             <i class="fa-regular fa-calendar-check"></i> Book <span
                                 class="hidden sm:inline">Pickup</span>
@@ -383,7 +383,7 @@
                     <div x-ref="slider" class="flex flex-row gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 px-2 max-w-full">
                         @foreach($categories as $category)
                             <div class="snap-start shrink-0 w-[130px] sm:w-[150px] h-full">
-                                <a href="{{ route('customer.booking') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center h-full flex flex-col justify-center items-center">
+                                <a href="{{ route('customer.login') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center h-full flex flex-col justify-center items-center">
                                     <!-- Category Image -->
                                     <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-slate-50 mb-2 sm:mb-3 group-hover:scale-105 transition-transform shadow-sm">
                                         @if($category->image_path)
@@ -409,7 +409,7 @@
                 </button>
             </div>
             <div class="text-center mt-8">
-                <a href="{{ route('customer.booking') }}" class="inline-flex items-center gap-2 bg-accent hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-200 transition-all">
+                <a href="{{ route('customer.login') }}" class="inline-flex items-center gap-2 bg-accent hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-200 transition-all">
                     View All Services & Book <i class="fa-solid fa-arrow-right"></i>
                 </a>
             </div>

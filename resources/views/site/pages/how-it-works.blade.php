@@ -83,7 +83,7 @@
 <div class="py-16 bg-slate-900 text-center">
     <div class="max-w-3xl mx-auto px-4">
         <h2 class="text-3xl font-black text-white mb-6">Ready to get started?</h2>
-        <a href="{{ route('customer.booking') }}" class="inline-block bg-accent text-white px-8 py-4 rounded-xl font-black text-lg hover:bg-blue-600 transition shadow-lg">
+        <a href="{{ route('customer.login') }}" class="inline-block bg-accent text-white px-8 py-4 rounded-xl font-black text-lg hover:bg-blue-600 transition shadow-lg">
             Book a Pickup Now
         </a>
     </div>
