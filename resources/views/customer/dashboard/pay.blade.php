@@ -75,7 +75,7 @@
                     <p class="text-sm font-bold text-slate-600 mb-2">Please transfer <strong class="text-blue-600">LKR {{ number_format($order->total, 2) }}</strong> to the following account:</p>
                     <div class="grid grid-cols-2 gap-y-2 text-sm">
                         <div class="text-slate-500">Bank Name:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_name', 'Commercial Bank') }}</div>
-                        <div class="text-slate-500">Account Name:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_account_name', '365 Laundry') }}</div>
+                        <div class="text-slate-500">Account Name:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_account_name', 'Rapid Laundromat') }}</div>
                         <div class="text-slate-500">Account Number:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_account_number', '1234567890') }}</div>
                         <div class="text-slate-500">Branch:</div><div class="font-bold text-slate-800">{{ \App\Models\Setting::get('bank_branch', 'Colombo 07') }}</div>
                     </div>

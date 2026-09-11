@@ -21,9 +21,27 @@ class Customer extends Authenticatable
 
     protected $guarded = ['id'];
 
-    protected $casts = [
-        'address' => 'encrypted',
-    ];
+    public function getAddressAttribute($value)
+    {
+        if (empty($value)) {
+            return null;
+        }
+
+        try {
+            return \Illuminate\Support\Facades\Crypt::decryptString($value);
+        } catch (\Illuminate\Contracts\Encryption\DecryptException $e) {
+            return $value;
+        }
+    }
+
+    public function setAddressAttribute($value)
+    {
+        if ($value === null || $value === '') {
+            $this->attributes['address'] = null;
+        } else {
+            $this->attributes['address'] = \Illuminate\Support\Facades\Crypt::encryptString($value);
+        }
+    }
 
     protected $hidden = [
         'password',

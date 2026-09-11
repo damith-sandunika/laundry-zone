@@ -31,8 +31,10 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
 
-// ─── Root → Customer Site Home ───
-Route::get('/', [\App\Http\Controllers\CustomerSiteController::class, 'home'])->name('home');
+// ─── Root → Redirect to Customer Login ───
+Route::get('/', function () {
+    return redirect()->route('customer.login');
+})->name('home');
 
 // Fix for Windows PHP built-in server symlink 403 error
 Route::get('/storage/receipts/{filename}', function ($filename) {
@@ -232,38 +234,39 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/services/reorder', [SettingsController::class, 'reorderServices'])->name('settings.reorderServices');
         Route::post('/settings/service-categories/reorder', [SettingsController::class, 'reorderCategories'])->name('settings.reorderCategories');
 
+        // Services, Categories, Packages, Extras, Turnaround, Delivery & Pickup Settings (Branch & Workshop Admins)
+        Route::get('/settings/services', [SettingsController::class, 'servicesManager'])->name('settings.services');
+        Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
+        Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
+        Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');
+
+        Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
+        Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
+        Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
+
+        Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
+        Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
+        Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
+
+        // Extras
+        Route::post('/settings/extras', [SettingsController::class, 'storeExtra'])->name('settings.storeExtra');
+        Route::put('/settings/extras/{extra}', [SettingsController::class, 'updateExtra'])->name('settings.updateExtra');
+        Route::delete('/settings/extras/{extra}', [SettingsController::class, 'destroyExtra'])->name('settings.destroyExtra');
+
+        // Turnaround Types
+        Route::post('/settings/turnaround-types', [SettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
+        Route::put('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
+        Route::delete('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
+        
+        Route::post('/settings/delivery-global', [SettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
+        Route::post('/settings/delivery-ranges', [SettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
+        Route::delete('/settings/delivery-ranges/{deliveryRange}', [SettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
+        
+        Route::post('/settings/pickup-time-periods', [SettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
+        Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [SettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
+
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
-            Route::get('/settings/services', [SettingsController::class, 'servicesManager'])->name('settings.services');
-            Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
-            Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
-            Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');
-
-            Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
-            Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
-            Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
-
-            Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
-            Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
-            Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
-
-            // Extras
-            Route::post('/settings/extras', [SettingsController::class, 'storeExtra'])->name('settings.storeExtra');
-            Route::put('/settings/extras/{extra}', [SettingsController::class, 'updateExtra'])->name('settings.updateExtra');
-            Route::delete('/settings/extras/{extra}', [SettingsController::class, 'destroyExtra'])->name('settings.destroyExtra');
-
-            // Turnaround Types
-            Route::post('/settings/turnaround-types', [SettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
-            Route::put('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
-            Route::delete('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
-            
-            Route::post('/settings/delivery-global', [SettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
-            Route::post('/settings/delivery-ranges', [SettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
-            Route::delete('/settings/delivery-ranges/{deliveryRange}', [SettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
-            
-            Route::post('/settings/pickup-time-periods', [SettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
-            Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [SettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
-
             Route::get('/branch-logs', [\App\Http\Controllers\BranchLogController::class, 'index'])->name('superadmin.branch-logs');
 
             Route::get('/sms-templates', [SmsTemplateController::class, 'index'])->name('sms-templates.index');

@@ -21,7 +21,7 @@ class UploadImageAction
             try {
                 $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
                 $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                    'folder' => '365_laundry/' . $folder,
+                    'folder' => 'rapid_laundromat/' . $folder,
                     'format' => 'webp',
                     'quality' => 'auto'
                 ]);

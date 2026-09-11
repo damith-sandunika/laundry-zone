@@ -3,16 +3,9 @@
 
 <head>
     <meta charset="UTF-8">
-    <!-- Google Tag Manager -->
-    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-    })(window,document,'script','dataLayer','GTM-5P9DLW49');</script>
-    <!-- End Google Tag Manager -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>365laundry.lk - Premium Laundry Delivery</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/365_laundry_logo.png') }}">
+    <title>Rapid Laundromat - Premium Laundry Delivery</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap"
         rel="stylesheet">
@@ -129,10 +122,6 @@
 </head>
 
 <body class="antialiased text-gray-800 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
-    <!-- Google Tag Manager (noscript) -->
-    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-5P9DLW49"
-    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
-    <!-- End Google Tag Manager (noscript) -->
 
     <!-- Navbar -->
     <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300">
@@ -165,7 +154,7 @@
                 <div class="col-span-1 md:col-span-1">
                     <div class="flex items-center mb-6">
                         <span class="text-3xl mr-2 text-white"><i class="fa-solid fa-bolt"></i></span>
-                        <span class="font-bold text-2xl text-white">365laundry.lk</span>
+                        <span class="font-bold text-2xl text-white">Rapid Laundromat</span>
                     </div>
                     <p class="text-sm text-slate-400 mb-6">Professional laundry and dry cleaning services with care and
                         convenience.</p>
@@ -219,7 +208,7 @@
             <div
                 class="text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <p>&copy; {{ date('Y') }} 365laundry.lk. All Rights Reserved.</p>
+                    <p>&copy; {{ date('Y') }} Rapid Laundromat. All Rights Reserved.</p>
                     <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com"
                             target="_blank"
                             class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>

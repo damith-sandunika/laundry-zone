@@ -8,6 +8,11 @@ class ServiceType extends Model
 {
     protected $guarded = ['id'];
 
+    public function branch()
+    {
+        return $this->belongsTo(Branch::class);
+    }
+
     public function category()
     {
         return $this->belongsTo(ServiceCategory::class, 'category_id');

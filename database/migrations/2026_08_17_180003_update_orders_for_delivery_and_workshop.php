@@ -10,20 +10,22 @@ return new class extends Migration
     public function up(): void
     {
         // Update orders status enum to include workshop & delivery statuses
-        DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
-            'received',
-            'processing',
-            'washing',
-            'drying',
-            'folding',
-            'done',
-            'dispatched_to_workshop',
-            'at_workshop',
-            'returned_from_workshop',
-            'out_for_delivery',
-            'delivered',
-            'cancelled'
-        ) DEFAULT 'received'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
+                'received',
+                'processing',
+                'washing',
+                'drying',
+                'folding',
+                'done',
+                'dispatched_to_workshop',
+                'at_workshop',
+                'returned_from_workshop',
+                'out_for_delivery',
+                'delivered',
+                'cancelled'
+            ) DEFAULT 'received'");
+        }
 
         // Add delivery-related columns to orders
         Schema::table('orders', function (Blueprint $table) {
@@ -43,8 +45,10 @@ return new class extends Migration
             $table->dropColumn(['delivery_appointment_id', 'is_delivery_order', 'delivery_address', 'picked_up_at', 'dispatched_to_workshop_at', 'returned_from_workshop_at']);
         });
 
-        DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
-            'received','processing','washing','drying','folding','done','delivered','cancelled'
-        ) DEFAULT 'received'");
+        if (DB::getDriverName() !== 'sqlite') {
+            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
+                'received','processing','washing','drying','folding','done','delivered','cancelled'
+            ) DEFAULT 'received'");
+        }
     }
 };

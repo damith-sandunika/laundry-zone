@@ -37,30 +37,32 @@ class POSController extends Controller
             }
         }
 
-        $services = Cache::rememberForever('pos_services', function () {
-            return ServiceType::where('is_active', true)->orderBy('order_index')->get();
-        });
+        $services = ServiceType::where(function($q) use ($branchId) {
+            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+        })->where('is_active', true)->orderBy('order_index')->get();
 
-        $categories = Cache::rememberForever('pos_categories', function () {
-            return ServiceCategory::with(['children' => function($q) {
-                $q->where('is_active', true)->orderBy('order_index');
-            }])->where('is_active', true)->orderBy('order_index')->get();
-        });
+        $categories = ServiceCategory::where(function($q) use ($branchId) {
+            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+        })->with(['children' => function($q) use ($branchId) {
+            $q->where(function($sq) use ($branchId) {
+                $sq->where('branch_id', $branchId)->orWhereNull('branch_id');
+            })->where('is_active', true)->orderBy('order_index');
+        }])->where('is_active', true)->orderBy('order_index')->get();
 
         $customers = collect();
         $customerPackages = collect();
 
-        $timeSlots = Cache::rememberForever('pos_timeslots', function () {
-            return \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
-        });
+        $timeSlots = \App\Models\PickupTimePeriod::where(function($q) use ($branchId) {
+            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+        })->where('is_active', true)->orderBy('start_time')->get();
 
-        $extras = Cache::rememberForever('pos_extras', function () {
-            return \App\Models\Extra::where('is_active', true)->get();
-        });
+        $extras = \App\Models\Extra::where(function($q) use ($branchId) {
+            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+        })->where('is_active', true)->get();
 
-        $turnaroundTypes = Cache::rememberForever('pos_turnarounds', function () {
-            return \App\Models\TurnaroundType::where('is_active', true)->get();
-        });
+        $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId) {
+            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+        })->where('is_active', true)->get();
 
         return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages', 'timeSlots', 'extras', 'turnaroundTypes'));
     }

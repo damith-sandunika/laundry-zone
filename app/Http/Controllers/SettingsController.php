@@ -25,14 +25,21 @@ class SettingsController extends Controller
 
     public function servicesManager()
     {
-        $serviceCategories = ServiceCategory::with(['children.services' => function($q) {
-            $q->orderBy('order_index');
-        }, 'services' => function($q) {
-            $q->orderBy('order_index');
-        }])->orderBy('order_index')->get();
+        if (auth()->user()->role === 'super_admin') {
+            return redirect()->route('branches.index')->with('info', 'Services and settings are managed by branch admins.');
+        }
+
+        $branchId = $this->getActiveBranchId();
+        $serviceCategories = ServiceCategory::where('branch_id', $branchId)
+            ->with(['children.services' => function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orderBy('order_index');
+            }, 'services' => function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orderBy('order_index');
+            }])->orderBy('order_index')->get();
 
         $mainCategories = $serviceCategories->whereNull('parent_id');
-        $services = ServiceType::with(['inventoryItems', 'category'])->orderBy('order_index')->get();
+        $services = ServiceType::where('branch_id', $branchId)
+            ->with(['inventoryItems', 'category'])->orderBy('order_index')->get();
 
         return view('settings.services', compact('serviceCategories', 'mainCategories', 'services'));
     }
@@ -42,34 +49,29 @@ class SettingsController extends Controller
         $branchId = $this->getActiveBranchId();
         $branch = Branch::find($branchId);
         
-        $serviceCategories = ServiceCategory::with(['children.services' => function($q) {
-            $q->orderBy('order_index');
-        }, 'services' => function($q) {
-            $q->orderBy('order_index');
-        }])->orderBy('order_index')->get();
+        $serviceCategories = ServiceCategory::where('branch_id', $branchId)
+            ->with(['children.services' => function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orderBy('order_index');
+            }, 'services' => function($q) use ($branchId) {
+                $q->where('branch_id', $branchId)->orderBy('order_index');
+            }])->orderBy('order_index')->get();
 
         $mainCategories = $serviceCategories->whereNull('parent_id');
 
-        $services = ServiceType::with(['inventoryItems', 'category'])->orderBy('order_index')->get();
+        $services = ServiceType::where('branch_id', $branchId)
+            ->with(['inventoryItems', 'category'])->orderBy('order_index')->get();
 
-        // Super admin sees all; branch users see their own + global (null branch_id)
-        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
-        if ($isSuperAdmin) {
-            $turnaroundTypes = \App\Models\TurnaroundType::orderBy('is_default', 'desc')->orderBy('name')->get();
-            $extras = \App\Models\Extra::orderBy('name')->get();
-        } else {
-            $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId) {
-                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
-            })->orderBy('is_default', 'desc')->orderBy('name')->get();
-            $extras = \App\Models\Extra::where(function($q) use ($branchId) {
-                $q->where('branch_id', $branchId)->orWhereNull('branch_id');
-            })->orderBy('name')->get();
-        }
+        $turnaroundTypes = \App\Models\TurnaroundType::where('branch_id', $branchId)
+            ->orderBy('is_default', 'desc')->orderBy('name')->get();
+        
+        $extras = \App\Models\Extra::where('branch_id', $branchId)
+            ->orderBy('name')->get();
 
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
-        $packages = Package::with('services.serviceType')->get();
-        $deliveryRanges = \App\Models\DeliveryRange::where('branch_id', $branchId)->orWhereNull('branch_id')->get();
+        $packages = Package::where('branch_id', $branchId)
+            ->with('services.serviceType')->get();
+        $deliveryRanges = \App\Models\DeliveryRange::where('branch_id', $branchId)->get();
         $paymentMethods = collect();
         if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
             $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
@@ -77,7 +79,8 @@ class SettingsController extends Controller
         if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
             $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
         }
-        $pickupTimePeriods = \App\Models\PickupTimePeriod::orderBy('start_time')->get();
+        $pickupTimePeriods = \App\Models\PickupTimePeriod::where('branch_id', $branchId)
+            ->orderBy('start_time')->get();
         $workshops = Branch::workshops()->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
@@ -174,7 +177,9 @@ class SettingsController extends Controller
             'inventory' => 'nullable|array',
         ]);
 
+        $branchId = $this->getActiveBranchId();
         $service = ServiceType::create([
+            'branch_id' => $branchId,
             'name' => $request->name,
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
@@ -225,7 +230,9 @@ class SettingsController extends Controller
             $imagePath = app(\App\Actions\UploadImageAction::class)->execute($request->file('image'), 'categories', 'cat');
         }
 
+        $branchId = $this->getActiveBranchId();
         ServiceCategory::create([
+            'branch_id' => $branchId,
             'parent_id' => $request->parent_id,
             'name' => $request->name,
             'is_active' => true,
@@ -409,6 +416,7 @@ class SettingsController extends Controller
         ]);
 
         $package = Package::create([
+            'branch_id' => $branchId,
             'name' => $request->name,
             'price' => $request->price,
             'payment_type' => $request->payment_type,
@@ -468,7 +476,6 @@ class SettingsController extends Controller
 
     public function updateDeliverySettings(Request $request)
     {
-        \Illuminate\Support\Facades\Gate::authorize('is-super-admin');
 
         $request->validate([
             'minimum_delivery_cost' => 'required|numeric|min:0',
@@ -526,7 +533,9 @@ class SettingsController extends Controller
             'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
+        $branchId = $this->getActiveBranchId();
         \App\Models\PickupTimePeriod::create([
+            'branch_id' => $branchId,
             'label' => $request->label,
             'start_time' => $request->start_time,
             'end_time' => $request->end_time,
@@ -551,9 +560,7 @@ class SettingsController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        // Super admin creates global (no branch) extras; branch admins create branch-scoped
-        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
-        $branchId = $isSuperAdmin ? null : $this->getActiveBranchId();
+        $branchId = $this->getActiveBranchId();
 
         \App\Models\Extra::create([
             'branch_id' => $branchId,
@@ -596,19 +603,10 @@ class SettingsController extends Controller
             'is_default' => 'boolean',
         ]);
 
-        // Super admin creates global (no branch) turnarounds; branch admins create branch-scoped
-        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
-        $branchId = $isSuperAdmin ? null : $this->getActiveBranchId();
+        $branchId = $this->getActiveBranchId();
 
         if ($request->has('is_default')) {
-            // Reset default only within same scope
-            $q = \App\Models\TurnaroundType::query();
-            if ($isSuperAdmin) {
-                $q->whereNull('branch_id');
-            } else {
-                $q->where('branch_id', $branchId);
-            }
-            $q->update(['is_default' => false]);
+            \App\Models\TurnaroundType::where('branch_id', $branchId)->update(['is_default' => false]);
         }
 
         \App\Models\TurnaroundType::create([
@@ -633,17 +631,12 @@ class SettingsController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $isSuperAdmin = \Illuminate\Support\Facades\Gate::allows('is-super-admin');
         $branchId = $turnaroundType->branch_id ?? $this->getActiveBranchId();
 
         if ($request->has('is_default') && $request->is_default) {
-            $q = \App\Models\TurnaroundType::where('id', '!=', $turnaroundType->id);
-            if ($isSuperAdmin && is_null($turnaroundType->branch_id)) {
-                $q->whereNull('branch_id');
-            } else {
-                $q->where('branch_id', $branchId);
-            }
-            $q->update(['is_default' => false]);
+            \App\Models\TurnaroundType::where('id', '!=', $turnaroundType->id)
+                ->where('branch_id', $branchId)
+                ->update(['is_default' => false]);
         }
 
         $turnaroundType->update([

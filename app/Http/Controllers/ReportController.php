@@ -37,9 +37,10 @@ class ReportController extends Controller
         }
 
         // --- DB-level Aggregates (no data loaded into RAM for totals) ---
+        $maxFunc = \DB::getDriverName() === 'sqlite' ? 'MAX(0, total - paid_amount)' : 'GREATEST(0, total - paid_amount)';
         $totalSales        = (clone $salesQuery)->sum('total');
-        $totalCredit       = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
-        $totalPending      = (clone $salesQuery)->whereNotIn('payment_method', ['credit'])->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
+        $totalCredit       = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw("SUM({$maxFunc})")->value(\DB::raw("SUM({$maxFunc})")) ?? 0;
+        $totalPending      = (clone $salesQuery)->whereNotIn('payment_method', ['credit'])->selectRaw("SUM({$maxFunc})")->value(\DB::raw("SUM({$maxFunc})")) ?? 0;
 
         // Delivery/Walkin revenue via DB
         $deliveryOrderIds  = DeliveryAppointment::whereNotNull('order_id')
@@ -381,8 +382,8 @@ class ReportController extends Controller
         $totalInventoryCost = $inventoryCostQuery->sum(\DB::raw('inventory_transactions.quantity * inventory_items.cost_per_unit'));
 
 
-        $totalCredit = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
-        $totalPending = (clone $salesQuery)->whereNotIn('payment_method', ['credit'])->selectRaw('SUM(GREATEST(0, total - paid_amount))')->value(\DB::raw('SUM(GREATEST(0, total - paid_amount))')) ?? 0;
+        $totalCredit = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw("SUM({$maxFunc})")->value(\DB::raw("SUM({$maxFunc})")) ?? 0;
+        $totalPending = (clone $salesQuery)->whereNotIn('payment_method', ['credit'])->selectRaw("SUM({$maxFunc})")->value(\DB::raw("SUM({$maxFunc})")) ?? 0;
 
         $customerPackagesQuery = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
