@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rapid Laundromat - Premium Laundry Delivery</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
+    <title>360 Laundry - Premium Laundry & Dry Cleaning Service</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap"
         rel="stylesheet">
@@ -129,7 +129,7 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Brand -->
                 <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <img src="{{ asset('images/365_laundry_logo_site.png') }}" alt="365 Laundry Logo" class="h-10 w-auto">
+                    <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="360 Laundry Logo" class="h-10 w-auto">
                 </a>
 
                 <!-- Right: Sign In + Book Now -->
@@ -208,7 +208,7 @@
             <div
                 class="text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
                 <div>
-                    <p>&copy; {{ date('Y') }} Rapid Laundromat. All Rights Reserved.</p>
+                    <p>&copy; {{ date('Y') }} 360 Laundry. All Rights Reserved.</p>
                     <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com"
                             target="_blank"
                             class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>

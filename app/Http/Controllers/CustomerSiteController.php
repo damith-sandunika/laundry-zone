@@ -15,6 +15,22 @@ use Illuminate\Validation\ValidationException;
 
 class CustomerSiteController extends Controller
 {
+    public function home()
+    {
+        // Include both workshop branches and delivery-enabled branches on the map
+        $branches = Branch::where('is_active', true)
+            ->where(function($q) {
+                $q->where('type', 'workshop')
+                  ->orWhere('is_delivery_enabled', true);
+            })
+            ->get();
+        $categories = ServiceCategory::with(['services' => function($q) {
+            $q->where('is_visible_on_website', true)->orderBy('order_index');
+        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        $packages = Package::with('services.serviceType')->where('is_active', true)->get();
+
+        return view('site.home', compact('branches', 'categories', 'packages'));
+    }
 
     public function booking()
     {

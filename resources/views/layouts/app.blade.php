@@ -7,8 +7,8 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ config('app.name', 'Rapid Laundromat') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/admin_logo.png') }}">
+    <title>{{ config('app.name', '360 Laundry') }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
@@ -34,16 +34,16 @@
         <!-- Mobile overlay -->
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen=false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" x-cloak></div>
 
-        <!-- â•â•â•â•â•â•â•â•â•â• SIDEBAR â•â•â•â•â•â•â•â•â•â• -->
+        <!-- â• â• â• â• â• â• â• â• â• â•  SIDEBAR â• â• â• â• â• â• â• â• â• â•  -->
         <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 transition-transform duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/60 lg:static lg:translate-x-0">
             
             <!-- Brand & Logo -->
             <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50">
                 <div class="w-20 h-20 rounded-[1.25rem] bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 mb-3 ring-4 ring-white transition-transform hover:scale-105 duration-300">
-                    <img src="{{ asset('images/rapid_laundromat_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
+                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
                 <div>
-                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', 'Rapid Laundromat') }}</div>
+                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '360 Laundry') }}</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
             </div>

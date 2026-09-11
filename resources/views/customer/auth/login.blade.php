@@ -3,29 +3,24 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Customer Login - Rapid Laundromat</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <title>Customer Login - 360 Laundry</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        body { font-family: 'Outfit', sans-serif; background-color: #f8fafc; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); }
-    </style>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="antialiased min-h-screen flex items-center justify-center p-4">
-
-    <div class="w-full max-w-md">
+<body class="bg-slate-50 font-['Outfit'] min-h-screen flex flex-col justify-center items-center p-4 antialiased">
+    
+    <div class="w-full max-w-md bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 overflow-hidden p-8 sm:p-10">
         <!-- Logo -->
         <div class="text-center mb-8">
-            <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
-                <img src="{{ asset('images/rapid_laundromat_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
+            <a href="{{ route('home') }}" class="inline-block">
+                <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
             </a>
             <p class="text-slate-500 mt-2 text-sm">Welcome back! Please login to your account.</p>
         </div>
 
         <!-- Form Card -->
-        <div class="glass-card rounded-xl shadow-xl overflow-hidden">
             <div class="p-8">
                 <form method="POST" action="{{ route('customer.login.submit') }}" class="space-y-5">
                     @csrf

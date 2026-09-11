@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Forgot Password - Rapid Laundromat</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/rapid_laundromat_logo.png') }}">
+    <title>Forgot Password - 360 Laundry</title>
+    <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -18,8 +18,8 @@
     <div class="w-full max-w-md">
         <!-- Logo -->
         <div class="text-center mb-8">
-            <a href="{{ url('/') }}" class="inline-flex items-center gap-2">
-                <img src="{{ asset('images/rapid_laundromat_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
+            <a href="{{ route('home') }}" class="inline-flex items-center gap-2">
+                <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
             </a>
             <p class="text-slate-500 mt-2 text-sm">Forgot your password? No problem. Just let us know your phone number and we will send you a reset code via WhatsApp/SMS.</p>
         </div>
