@@ -500,11 +500,18 @@
                 </tr>
                 @endif
 
+                <!-- Full Total Salary Row -->
+                <tr style="background-color: #f8fafc; font-weight: 800; border-top: 2px solid #cbd5e1; border-bottom: 2px solid #cbd5e1;">
+                    <td colspan="2" style="font-size: 13px; color: #0f172a;"><strong>FULL TOTAL SALARY (Gross Earnings)</strong></td>
+                    <td class="text-right font-mono" style="color: #1e40af; font-size: 14px;">Rs. {{ number_format($payroll->gross_salary, 2) }}</td>
+                    <td class="text-right font-mono">-</td>
+                </tr>
+
                 <!-- Salary Advances -->
                 @if($payroll->advances > 0)
                 <tr>
                     <td class="text-purple">Salary Advances Collected</td>
-                    <td>Month Advances</td>
+                    <td>Month Advances Deducted</td>
                     <td class="text-right font-mono">-</td>
                     <td class="text-right font-mono text-purple">- {{ number_format($payroll->advances, 2) }}</td>
                 </tr>
@@ -515,8 +522,8 @@
         <!-- Net Payable Salary Box -->
         <div class="net-salary-box">
             <div>
-                <div class="net-label">Net Payable Salary</div>
-                <div class="net-sub">Total Take-Home Pay for {{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }}</div>
+                <div class="net-label">Payable Balance</div>
+                <div class="net-sub">Net Remaining Payable Salary (After Advances) for {{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }}</div>
             </div>
             <div class="net-amount">Rs. {{ number_format($payroll->net_salary, 2) }}</div>
         </div>

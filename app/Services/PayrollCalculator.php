@@ -145,8 +145,11 @@ class PayrollCalculator
             ->whereYear('date', $year)
             ->sum('amount');
 
-        // Final Net Payable Salary
-        $netSalary = max(0, $adjustedBasicSalary + $otAmount + $allowances - $manualDeductions - $advances);
+        // Gross Salary / Full Total before deducting Salary Advances
+        $grossSalary = max(0, $adjustedBasicSalary + $otAmount + $allowances - $manualDeductions);
+
+        // Final Net Payable Salary (Payable Balance after Salary Advances)
+        $netSalary = max(0, $grossSalary - $advances);
 
         return (object) [
             'month' => $month,
@@ -171,6 +174,7 @@ class PayrollCalculator
             'ot_amount' => round($otAmount, 2),
             'allowances' => $allowances,
             'manual_deductions' => $manualDeductions,
+            'gross_salary' => round($grossSalary, 2),
             'advances' => $advances,
             'net_salary' => round($netSalary, 2),
             'adjustments' => $adjustments,

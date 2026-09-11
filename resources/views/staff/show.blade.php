@@ -351,14 +351,23 @@
                             <span class="font-bold">- Rs. {{ number_format($payroll->manual_deductions, 2) }}</span>
                         </div>
                         @endif
+                        
+                        <!-- Full Total Salary Row -->
+                        <div class="pt-2 pb-1 my-1 border-t border-b border-blue-100 bg-blue-50/60 px-2 rounded-lg flex justify-between items-center font-black">
+                            <span class="text-slate-800">Full Total Salary:</span>
+                            <span class="text-blue-700 text-sm">Rs. {{ number_format($payroll->gross_salary, 2) }}</span>
+                        </div>
+
                         @if($payroll->advances > 0)
-                        <div class="flex justify-between text-purple-600">
-                            <span>Salary Advances:</span>
+                        <div class="flex justify-between text-purple-600 px-1 pt-1">
+                            <span class="font-semibold">Salary Advances:</span>
                             <span class="font-bold">- Rs. {{ number_format($payroll->advances, 2) }}</span>
                         </div>
                         @endif
-                        <div class="pt-2 border-t border-green-200/60 flex justify-between items-center text-sm">
-                            <span class="font-black text-gray-800">Net Payable:</span>
+                        
+                        <!-- Payable Balance Row -->
+                        <div class="pt-2 border-t border-green-200 flex justify-between items-center text-sm">
+                            <span class="font-black text-slate-800">Payable Balance:</span>
                             <span class="font-black text-green-700 text-lg">Rs. {{ number_format($payroll->net_salary, 2) }}</span>
                         </div>
                     </div>
