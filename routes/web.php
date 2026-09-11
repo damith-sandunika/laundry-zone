@@ -31,10 +31,16 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
 
-// ─── Root → Redirect to Customer Login ───
-Route::get('/', function () {
-    return redirect()->route('customer.login');
-})->name('home');
+// ─── Root → Public Website Home ───
+Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
+
+// ─── Public Website Pages ───
+Route::get('/about', function () { return view('site.pages.about'); })->name('site.about');
+Route::get('/faq', function () { return view('site.pages.faq'); })->name('site.faq');
+Route::get('/how-it-works', function () { return view('site.pages.how-it-works'); })->name('site.how-it-works');
+Route::get('/terms', function () { return view('site.pages.terms'); })->name('site.terms');
+Route::get('/privacy', function () { return view('site.pages.privacy'); })->name('site.privacy');
+Route::get('/quality', function () { return view('site.pages.quality'); })->name('site.quality');
 
 // Fix for Windows PHP built-in server symlink 403 error
 Route::get('/storage/receipts/{filename}', function ($filename) {
