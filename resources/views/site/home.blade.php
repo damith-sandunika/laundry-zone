@@ -347,17 +347,53 @@
                 <div class="w-16 h-1 bg-accent mx-auto rounded-full mt-4"></div>
             </div>
 
-            <!-- Centered Navigation Breadcrumb (Level 1 & 2) -->
-            <div x-show="currentViewLevel > 0" x-transition.opacity class="flex items-center justify-center gap-3 mb-8">
-                <button type="button" @click="goBackLevel()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-bold px-4 py-2 rounded-xl text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer">
-                    <i class="fa-solid fa-arrow-left text-xs"></i> Back
-                </button>
-                <div class="bg-white border border-slate-200 px-4 py-2 rounded-xl shadow-sm flex items-center gap-2 text-xs sm:text-sm font-extrabold text-slate-800">
-                    <span class="bg-blue-600 text-white text-[10px] uppercase font-black px-2 py-0.5 rounded-md">
-                        <span x-show="currentViewLevel === 1">Category</span>
-                        <span x-show="currentViewLevel === 2">Selected</span>
-                    </span>
-                    <span x-text="currentViewLevel === 1 ? selectedMainCategory?.name : (selectedSubcategory?.name || selectedMainCategory?.name)"></span>
+            <!-- Interactive Main Category Tabs / Pills Bar (Fast Switching) -->
+            <div class="mb-6 max-w-6xl mx-auto">
+                <div class="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-2">
+                    <button type="button" @click="goHomeLevel()" class="px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5"
+                            :class="currentViewLevel === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'">
+                        <i class="fa-solid fa-shapes text-xs"></i> All Categories
+                    </button>
+                    <template x-for="cat in categories" :key="cat.id">
+                        <button type="button" @click="selectLevel1(cat)" class="px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5"
+                                :class="selectedMainCategory && selectedMainCategory.id === cat.id ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'">
+                            <span x-text="cat.name"></span>
+                        </button>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Sleek Interactive Breadcrumb & Back Header (when drilled down) -->
+            <div x-show="currentViewLevel > 0" x-transition.opacity class="flex flex-wrap items-center justify-between gap-3 mb-6 max-w-5xl mx-auto bg-white border border-slate-200 p-3 sm:p-4 rounded-2xl shadow-sm">
+                <!-- Back Button + Breadcrumb Path -->
+                <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
+                    <button type="button" @click="goBackLevel()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold px-3 py-1.5 rounded-xl text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer">
+                        <i class="fa-solid fa-arrow-left text-xs"></i> Back
+                    </button>
+                    
+                    <div class="h-4 w-px bg-slate-200 hidden sm:block"></div>
+
+                    <!-- Breadcrumb Links -->
+                    <div class="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-500 flex-wrap">
+                        <span @click="goHomeLevel()" class="hover:text-blue-600 cursor-pointer transition-colors flex items-center gap-1">
+                            <i class="fa-solid fa-house text-[10px]"></i> Categories
+                        </span>
+                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                        <span @click="selectLevel1(selectedMainCategory)" class="hover:text-blue-600 cursor-pointer transition-colors" x-text="selectedMainCategory?.name"></span>
+                        <template x-if="currentViewLevel === 2 && selectedSubcategory">
+                            <div class="flex items-center gap-1.5">
+                                <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
+                                <span class="text-blue-600 font-extrabold" x-text="selectedSubcategory?.name"></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Current Level Pill Badge -->
+                <div class="bg-blue-50 border border-blue-100 text-blue-700 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider hidden sm:inline-flex items-center gap-1.5">
+                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
+                    <span x-show="currentViewLevel === 1">Subcategories</span>
+                    <span x-show="currentViewLevel === 2">Available Services</span>
                 </div>
             </div>
 
@@ -573,6 +609,15 @@
                     this.selectedSubcategory = sub;
                     this.currentServices = sub.services ? (Array.isArray(sub.services) ? sub.services : Object.values(sub.services)) : [];
                     this.currentViewLevel = 2;
+                    this.scrollToServices();
+                },
+
+                goHomeLevel() {
+                    this.currentViewLevel = 0;
+                    this.selectedMainCategory = null;
+                    this.selectedSubcategory = null;
+                    this.currentSubcategories = [];
+                    this.currentServices = [];
                     this.scrollToServices();
                 },
 
