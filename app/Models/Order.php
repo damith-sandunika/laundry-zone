@@ -111,7 +111,7 @@ class Order extends Model
     {
         return $this->hasMany(SmsLog::class);
     }
-    
+
     public function emailLogs()
     {
         return $this->hasMany(EmailLog::class);

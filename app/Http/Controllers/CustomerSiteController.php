@@ -37,7 +37,35 @@ class CustomerSiteController extends Controller
         $turnaroundTypes = \App\Models\TurnaroundType::all();
         $extras = \App\Models\Extra::where('is_active', true)->get();
 
-        return view('site.home', compact('branches', 'categories', 'packages', 'turnaroundTypes', 'extras'));
+        $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
+        $minimumOrderLimit = \App\Models\Setting::get('minimum_delivery_cost', 0);
+        $shopLat = \App\Models\Setting::get('shop_latitude', '6.9271');
+        $shopLng = \App\Models\Setting::get('shop_longitude', '79.8612');
+        $deliveryRanges = \App\Models\DeliveryRange::orderBy('min_distance_km')->get();
+
+        $workshops = \App\Models\Branch::where('is_active', true)
+            ->where(function($q) {
+                $q->where('type', 'workshop')
+                  ->orWhere('is_delivery_enabled', true);
+            })
+            ->get();
+        if ($workshops->isEmpty()) {
+            $fallback = \App\Models\Branch::where('is_active', true)->first();
+            if ($fallback) $workshops = collect([$fallback]);
+        }
+
+        $paymentMethods = collect();
+        if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
+            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
+        }
+        if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
+            $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
+        }
+
+        return view('site.home', compact('branches', 'categories', 'packages', 'turnaroundTypes', 'extras', 'pickupTimePeriods', 'minimumOrderLimit', 'shopLat', 'shopLng', 'deliveryRanges', 'workshops', 'paymentMethods'));
     }
 
     public function booking()

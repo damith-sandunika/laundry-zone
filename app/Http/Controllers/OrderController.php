@@ -22,26 +22,27 @@ class OrderController extends Controller
     public function search(Request $request)
     {
         $q = $request->input('q', '');
-        if (strlen($q) < 2) return response()->json([]);
+        if (strlen($q) < 2)
+            return response()->json([]);
 
         $orders = Order::with('customer')
-            ->where(function($query) use ($q) {
+            ->where(function ($query) use ($q) {
                 $query->where('order_number', 'like', "%{$q}%")
-                      ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$q}%")
-                          ->orWhere('phone', 'like', "%{$q}%"));
+                    ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$q}%")
+                        ->orWhere('phone', 'like', "%{$q}%"));
             })
             ->orderBy('created_at', 'desc')
             ->limit(8)
             ->get(['id', 'order_number', 'status', 'total', 'customer_id', 'created_at']);
 
         return response()->json($orders->map(fn($o) => [
-            'id'           => $o->id,
+            'id' => $o->id,
             'order_number' => $o->order_number,
-            'status'       => $o->status,
+            'status' => $o->status,
             'status_label' => str_replace('_', ' ', ucfirst($o->status)),
-            'total'        => number_format($o->total, 2),
-            'customer'     => $o->customer?->name ?? 'Walk-in',
-            'url'          => route('orders.show', $o->order_number),
+            'total' => number_format($o->total, 2),
+            'customer' => $o->customer?->name ?? 'Walk-in',
+            'url' => route('orders.show', $o->order_number),
         ]));
     }
 
@@ -49,12 +50,14 @@ class OrderController extends Controller
     {
         $order->load('items.serviceType', 'customer');
         $services = \App\Models\ServiceType::where('is_active', true)->get();
-        
-        $categories = \App\Models\ServiceCategory::with(['children' => function($q) {
-            $q->where('is_active', true)->orderBy('order_index');
-        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
-        
-        $cartItems = $order->items->map(function($item) {
+
+        $categories = \App\Models\ServiceCategory::with([
+            'children' => function ($q) {
+                $q->where('is_active', true)->orderBy('order_index');
+            }
+        ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+
+        $cartItems = $order->items->map(function ($item) {
             return [
                 'service_type_id' => $item->service_type_id,
                 'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
@@ -62,11 +65,11 @@ class OrderController extends Controller
                 'qty' => $item->quantity,
             ];
         })->toArray();
-        
+
         if (empty($cartItems) && $order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
             $parsedCart = json_decode($order->deliveryAppointment->cart_json, true);
             if (is_array($parsedCart)) {
-                $cartItems = array_map(function($i) {
+                $cartItems = array_map(function ($i) {
                     $service = $i['service'] ?? $i;
                     $sId = $service['id'] ?? $service['service_id'] ?? $service['service_type_id'] ?? null;
                     return [
@@ -78,10 +81,10 @@ class OrderController extends Controller
                 }, $parsedCart);
             }
         }
-        
+
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
-        $dispatch = (object)['order' => $order, 'order_id' => $order->id];
-        
+        $dispatch = (object) ['order' => $order, 'order_id' => $order->id];
+
         $turnaroundTypes = \App\Models\TurnaroundType::all();
         $systemExtras = \App\Models\Extra::where('is_active', true)->get();
 
@@ -105,9 +108,9 @@ class OrderController extends Controller
         // Calculate counts for tabs
         $baseQuery = Order::query();
         if ($branchId && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
-            $baseQuery->where(function($q) use ($branchId) {
+            $baseQuery->where(function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
-                  ->orWhere('workshop_id', $branchId);
+                    ->orWhere('workshop_id', $branchId);
             });
         } elseif (\Illuminate\Support\Facades\Gate::allows('is-super-admin') && $filterBranchId) {
             $baseQuery->where('branch_id', $filterBranchId);
@@ -125,9 +128,9 @@ class OrderController extends Controller
             ->orderBy('created_at', 'desc');
 
         if ($branchId && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
-            $query->where(function($q) use ($branchId) {
+            $query->where(function ($q) use ($branchId) {
                 $q->where('branch_id', $branchId)
-                  ->orWhere('workshop_id', $branchId);
+                    ->orWhere('workshop_id', $branchId);
             });
         } elseif (\Illuminate\Support\Facades\Gate::allows('is-super-admin') && $filterBranchId) {
             $query->where('branch_id', $filterBranchId);
@@ -162,9 +165,9 @@ class OrderController extends Controller
         }
 
         if ($paymentReady) {
-            $query->where(function($q) {
+            $query->where(function ($q) {
                 $q->where('payment_approved', true)
-                  ->orWhereRaw('paid_amount >= requested_advance AND requested_advance > 0');
+                    ->orWhereRaw('paid_amount >= requested_advance AND requested_advance > 0');
             });
         }
 
@@ -179,7 +182,7 @@ class OrderController extends Controller
         }
 
         $orders = $query->paginate(15)->withQueryString();
-        
+
         $orderIds = $orders->pluck('id')->toArray();
         $dispatches = \App\Models\WorkshopDispatch::whereIn('order_id', $orderIds)
             ->whereIn('status', ['returned_to_branch', 'received_at_branch'])
@@ -187,7 +190,7 @@ class OrderController extends Controller
             ->get()
             ->groupBy('order_id');
 
-        $orders->getCollection()->transform(function($order) use ($dispatches) {
+        $orders->getCollection()->transform(function ($order) use ($dispatches) {
             // Attach the latest workshop dispatch ID so the branch can confirm receipt
             $dispatch = $dispatches->has($order->id) ? $dispatches->get($order->id)->first() : null;
             $order->workshop_dispatch_id = $dispatch ? $dispatch->id : null;
@@ -218,12 +221,12 @@ class OrderController extends Controller
         $customer = $order->customer;
         if ($customer) {
             $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
-            
+
             // Sending manual payment request using generic method or standard approach?
             // Actually they wanted a "bill finalize" message!
             $commService = new \App\Services\CommunicationService();
             $commService->sendFinalizedBill($order, $amount);
-            
+
             return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
 
@@ -238,7 +241,7 @@ class OrderController extends Controller
 
         $cart = $request->cart;
         Log::info('Order Update Request Payload: ', $request->all());
-        if (! $cart || ! is_array($cart) || count($cart) === 0) {
+        if (!$cart || !is_array($cart) || count($cart) === 0) {
             return response()->json(['success' => false, 'message' => 'Cart cannot be empty.']);
         }
 
@@ -263,17 +266,19 @@ class OrderController extends Controller
         $cubbies = Cubby::where('branch_id', $branchId)->orderBy('name')->get();
 
         $pickmeCost = \App\Models\Expense::where('category', 'PickMe')
-            ->where(function($q) use ($order) {
+            ->where(function ($q) use ($order) {
                 $q->where('description', 'like', '%Order #' . $order->order_number . '%');
                 if ($order->delivery_appointment_id) {
                     $q->orWhere('description', 'like', '%pickup delivery #' . $order->delivery_appointment_id . '%')
-                      ->orWhere('description', 'like', '%delivery dropoff #' . $order->delivery_appointment_id . '%');
+                        ->orWhere('description', 'like', '%delivery dropoff #' . $order->delivery_appointment_id . '%');
                 }
             })->sum('amount');
 
-        $categories = \App\Models\ServiceCategory::with(['services' => function($q) {
-            $q->where('is_active', true);
-        }])->orderBy('name')->get();
+        $categories = \App\Models\ServiceCategory::with([
+            'services' => function ($q) {
+                $q->where('is_active', true);
+            }
+        ])->orderBy('name')->get();
 
         return view('orders.show', compact('order', 'cubbies', 'pickmeCost', 'categories'));
     }
@@ -340,7 +345,7 @@ class OrderController extends Controller
     {
         $authorized = \Illuminate\Support\Facades\Hash::check($request->password, auth()->user()->password);
 
-        if (! $authorized) {
+        if (!$authorized) {
             return response()->json([
                 'success' => false,
                 'message' => 'Unauthorized password. Access denied.',
