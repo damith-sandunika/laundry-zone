@@ -98,28 +98,38 @@ class CustomerSiteController extends Controller
         $categories = \App\Models\ServiceCategory::with([
             'children' => function($q) use ($branchId) {
                 $q->where('is_active', true)
-                  ->where('branch_id', $branchId)
+                  ->where(function($sq) use ($branchId) {
+                      $sq->whereNull('branch_id')->orWhere('branch_id', $branchId);
+                  })
                   ->orderBy('order_index')
                   ->with(['services' => function($sq) use ($branchId) {
                       $sq->where('is_visible_on_website', true)
-                         ->where('branch_id', $branchId)
+                         ->where(function($ssq) use ($branchId) {
+                             $ssq->whereNull('branch_id')->orWhere('branch_id', $branchId);
+                         })
                          ->orderBy('order_index');
                   }]);
             },
             'services' => function($q) use ($branchId) {
                 $q->where('is_visible_on_website', true)
-                  ->where('branch_id', $branchId)
+                  ->where(function($sq) use ($branchId) {
+                      $sq->whereNull('branch_id')->orWhere('branch_id', $branchId);
+                  })
                   ->orderBy('order_index');
             }
         ])
             ->whereNull('parent_id')
             ->where('is_active', true)
-            ->where('branch_id', $branchId)
+            ->where(function($q) use ($branchId) {
+                $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
+            })
             ->orderBy('order_index')
             ->get();
 
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)
-            ->where('branch_id', $branchId)
+            ->where(function($q) use ($branchId) {
+                $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
+            })
             ->orderBy('start_time')
             ->get();
 
