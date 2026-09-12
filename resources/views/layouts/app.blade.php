@@ -312,7 +312,7 @@
                             @if(auth()->user()->role === 'rider')
                                 <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">Rider Dashboard</div>
                             @else
-                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ \App\Models\Setting::get('company_name', 'Rapid Laundromat') }}</div>
+                                <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">{{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</div>
                             @endif
                             
 

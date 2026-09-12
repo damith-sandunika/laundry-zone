@@ -237,7 +237,7 @@
     @if($branch && $branch->invoice_footer)
         <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($branch->invoice_footer)) !!}</div>
     @else
-        <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing Rapid Laundromat.</div>
+        <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing 365laundry.lk.</div>
         <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
             leave us a Google Review!</div>
     @endif

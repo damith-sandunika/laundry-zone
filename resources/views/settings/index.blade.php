@@ -354,7 +354,7 @@
                             <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
 
                             <div style="text-align: center; font-weight: 800; font-size: 12px; margin-top: 8px;">
-                                Thank you for choosing Rapid Laundromat.
+                                Thank you for choosing 365laundry.lk.
                             </div>
                             <div style="text-align: center; font-size: 10px; margin-top: 3px; color: #333;">
                                 If you are happy with our service, please leave us a Google Review!

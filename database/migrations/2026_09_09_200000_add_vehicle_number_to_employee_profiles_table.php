@@ -22,7 +22,7 @@ return new class extends Migration
                 DB::table('sms_templates')->insert([
                     'type' => 'rider_assigned',
                     'name' => 'Delivery Rider Assigned',
-                    'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - Rapid Laundromat',
+                    'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - 365laundry.lk',
                     'is_active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -38,7 +38,7 @@ return new class extends Migration
                     'type' => 'rider_assigned',
                     'name' => 'Delivery Rider Assigned',
                     'subject' => 'Delivery Rider Assigned for Order #{order_id}',
-                    'body' => '<p>Hi <strong>{customer_name}</strong>,</p><p>Your order <strong>#{order_id}</strong> has been assigned to our rider <strong>{rider_name}</strong>.</p><p>Rider Contact: <strong>{rider_phone}</strong><br>Vehicle Number: <strong>{rider_vehicle_number}</strong></p><p>Thank you for choosing Rapid Laundromat!</p>',
+                    'body' => '<p>Hi <strong>{customer_name}</strong>,</p><p>Your order <strong>#{order_id}</strong> has been assigned to our rider <strong>{rider_name}</strong>.</p><p>Rider Contact: <strong>{rider_phone}</strong><br>Vehicle Number: <strong>{rider_vehicle_number}</strong></p><p>Thank you for choosing 365laundry.lk!</p>',
                     'is_active' => true,
                     'created_at' => now(),
                     'updated_at' => now(),

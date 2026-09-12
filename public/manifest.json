@@ -1,7 +1,7 @@
 {
-    "name": "RAPID Laundromat",
-    "short_name": "RAPID",
-    "description": "RAPID Laundromat Management System",
+    "name": "365laundry.lk",
+    "short_name": "365laundry",
+    "description": "365laundry.lk Management System",
     "start_url": "/stafflogin",
     "display": "standalone",
     "background_color": "#ffffff",

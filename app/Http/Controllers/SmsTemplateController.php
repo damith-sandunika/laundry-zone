@@ -15,7 +15,7 @@ class SmsTemplateController extends Controller
             SmsTemplate::create([
                 'type' => 'rider_assigned',
                 'name' => 'Delivery Rider Assigned',
-                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - Rapid Laundromat',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - 365laundry.lk',
                 'is_active' => true,
             ]);
         }
@@ -117,7 +117,7 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'rider_assigned',
                 'name' => 'Delivery Rider Assigned',
-                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - Rapid Laundromat',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - 365laundry.lk',
             ],
         ];
 
