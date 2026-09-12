@@ -39,9 +39,6 @@ class CustomerSiteController extends Controller
 
     public function booking()
     {
-        if (!auth('customer')->check()) {
-            return redirect()->route('customer.login');
-        }
 
         $paymentMethods = collect();
         if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {

@@ -55,7 +55,7 @@
                         </div>
                         <span class="text-[11px] font-extrabold mt-2 uppercase tracking-wider absolute top-14 w-32 text-center" 
                               :class="step === i ? 'text-blue-700' : 'text-slate-400'"
-                              x-text="['Account', 'Pickup', 'Services', 'Delivery & Pay'][i-1]"></span>
+                              x-text="['Services', 'Account', 'Pickup', 'Delivery & Pay'][i-1]"></span>
                     </div>
                 </template>
             </div>
@@ -78,8 +78,8 @@
             @endif
 
             
-            <!-- Step 3: Services (Drill-Down UI) -->
-            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms class="pb-24">
+            <!-- Step 1: Services (Drill-Down UI) -->
+            <div x-show="step === 1" x-transition.opacity.duration.300ms class="pb-24">
                 <div class="mb-6">
                     <h3 class="text-xl font-semibold text-slate-800">Select Services</h3>
                     <p class="text-sm text-slate-500 mt-1">Navigate through categories to add items to your cart.</p>
@@ -188,7 +188,7 @@
             </div>
 
             <!-- Fixed Bottom Cart Bar -->
-            <div x-show="step === 3" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div x-show="step === 1" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 
                 <!-- Expandable Cart List -->
                 <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
@@ -319,8 +319,8 @@
                 </div>
             </div>
 
-            <!-- STEP 1: Authentication -->
-            <div x-show="step === 1" x-transition.opacity.duration.300ms>
+            <!-- STEP 2: Authentication -->
+            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     
                     <!-- If already logged in, show account info instead of form -->
@@ -407,14 +407,14 @@
                 
                 <div class="flex justify-between items-center mt-6">
                     <!-- Only show next if authenticated -->
-                    <button type="button" x-show="isAuthenticated" @click="goToStep(2)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 mt-4 ml-auto">
+                    <button type="button" x-show="isAuthenticated" @click="goToStep(3)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 mt-4 ml-auto">
                         Next Step <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 2: Pickup Details -->
-            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
+            <!-- STEP 3: Pickup Details -->
+            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
                         <span class="bg-amber-50 text-amber-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
@@ -514,11 +514,11 @@
 
                 <div class="flex justify-between items-center mt-6">
                     <div class="flex items-center justify-between w-full">
-                        <button type="button" @click="goToStep(1)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
+                        <button type="button" @click="goToStep(2)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <button type="button" @click="goToStep(3)" :disabled="isOutOfRange || servicesLoading" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2">
-                            <span x-show="!servicesLoading">Choose Services <i class="fa-solid fa-arrow-right"></i></span>
+                        <button type="button" @click="goToStep(4)" :disabled="isOutOfRange || servicesLoading" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2">
+                            <span x-show="!servicesLoading">Next: Delivery & Pay <i class="fa-solid fa-arrow-right"></i></span>
                             <span x-show="servicesLoading"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading Services...</span>
                         </button>
                     </div>
@@ -788,8 +788,8 @@
                     deliveryDate: '',
                     deliveryTimePeriodId: '',
                     globalExtras: {},                    routeLayer: null,
-                    step: isLoggedIn ? 2 : 1,
-                    highestStepReached: isLoggedIn ? 2 : 1,
+                    step: 1,
+                    highestStepReached: 1,
                     minLimit: Number(minOrderLimit || 0),
                     expandedCategory: null,
                     cart: [],
@@ -830,8 +830,8 @@
                     isOutOfRange: false,
 
                     initData() {
-                        // Check if we are starting on step 2
-                        if (this.step === 2) {
+                        // Check if we are starting on step 3
+                        if (this.step === 3) {
                             setTimeout(() => {
                                 if (this.pickupMap) {
                                     this.pickupMap.invalidateSize();
@@ -844,8 +844,8 @@
                         this.$watch('step', value => {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                             
-                            // Initialize map on step 2 if not already done
-                            if (value === 2) {
+                            // Initialize pickup map on step 3 if not already done
+                            if (value === 3) {
                                 setTimeout(() => {
                                     if (this.pickupMap) {
                                         this.pickupMap.invalidateSize();
@@ -874,32 +874,29 @@
                     async goToStep(n) {
                         if (n > this.highestStepReached + 1) return; // Must go in order initially
 
-                        // Validation: Must be authenticated to proceed past Step 1
-                        if (n > 1 && !this.isAuthenticated) {
-                            alert("Please login or register first to continue your booking.");
+                        // Validation: Step 1 (Services) -> Must have items in cart to proceed
+                        if (n > 1 && this.cart.length === 0) {
+                            alert("Please select at least one service before proceeding.");
                             this.step = 1;
                             return;
                         }
 
-                        // Validation logic before moving to next step
-                        if (n === 3) { // Going to Services (Step 3)
-                            if (this.nearestWorkshop && this.nearestWorkshop.id) {
-                                await this.fetchBranchServices(this.nearestWorkshop.id);
-                            }
+                        // Validation: Must be authenticated to proceed to Step 3 (Pickup) or Step 4 (Delivery)
+                        if (n >= 3 && !this.isAuthenticated) {
+                            alert("Please login or register first to continue your booking.");
+                            this.step = 2;
+                            return;
                         }
-                        
+
+                        // Validation logic before moving to step 4
                         if (n === 4) { // Going to Delivery & Pay (Step 4)
-                            if (this.cart.length === 0) {
-                                alert("Please select at least one service before proceeding.");
-                                return;
-                            }
                             if (this.totalPrice < this.minLimit) {
                                 alert("Minimum delivery limit is LKR " + this.minLimit.toFixed(2) + ". Please add more items to proceed.");
                                 return;
                             }
-                            const date = document.getElementById('pickup_date_input').value;
-                            const time = document.getElementById('pickup_time_input').value;
-                            const addr = document.getElementById('pickup_address').value;
+                            const date = document.getElementById('pickup_date_input')?.value;
+                            const time = document.getElementById('pickup_time_input')?.value;
+                            const addr = document.getElementById('pickup_address')?.value;
                             
                             if (!date || !time || !addr) {
                                 alert("Please fill in all pickup details (Date, Time, Address).");
@@ -911,12 +908,6 @@
                         if (n > this.highestStepReached) {
                             this.highestStepReached = n;
                         }
-                        
-                        // If going to step 1 but already authenticated, skip to step 2
-                        if (n === 1 && this.isAuthenticated) {
-                            this.step = 2;
-                            this.highestStepReached = Math.max(this.highestStepReached, 2);
-                        }
                     },
 
                     async submitLogin() {
@@ -927,7 +918,7 @@
                             if (response.data.success) {
                                 this.isAuthenticated = true;
                                 this.authCustomer = response.data.customer;
-                                this.goToStep(2);
+                                this.goToStep(3);
                             }
                         } catch (error) {
                             this.authError = error.response?.data?.message || 'Login failed. Please check your credentials.';
@@ -944,7 +935,7 @@
                             if (response.data.success) {
                                 this.isAuthenticated = true;
                                 this.authCustomer = response.data.customer;
-                                this.goToStep(2);
+                                this.goToStep(3);
                             }
                         } catch (error) {
                             this.authError = error.response?.data?.message || 'Registration failed. Please check the form.';
@@ -1379,7 +1370,11 @@
                         });
                         
                         this.isGlobalCheckoutModalOpen = false;
-                        this.goToStep(4);
+                        if (!this.isAuthenticated) {
+                            this.goToStep(2);
+                        } else {
+                            this.goToStep(3);
+                        }
                     },
                 }
             }
