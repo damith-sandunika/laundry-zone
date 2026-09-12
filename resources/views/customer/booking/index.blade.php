@@ -955,6 +955,20 @@
                                 if (Array.isArray(parsedCart) && parsedCart.length > 0) {
                                     this.cart = parsedCart;
                                     localStorage.removeItem('customer_booking_cart');
+                                    
+                                    const savedTurnaround = localStorage.getItem('customer_booking_turnaround');
+                                    if (savedTurnaround) {
+                                        this.globalTurnaround = savedTurnaround;
+                                        localStorage.removeItem('customer_booking_turnaround');
+                                    }
+                                    const savedExtras = localStorage.getItem('customer_booking_extras');
+                                    if (savedExtras) {
+                                        try {
+                                            this.globalExtras = JSON.parse(savedExtras);
+                                            localStorage.removeItem('customer_booking_extras');
+                                        } catch(err) {}
+                                    }
+
                                     // Auto-advance step: if not logged in -> step 2 (Account), if logged in -> step 3 (Pickup)
                                     if (!this.isAuthenticated) {
                                         this.step = 2;

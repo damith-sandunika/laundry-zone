@@ -34,7 +34,10 @@ class CustomerSiteController extends Controller
         ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
         $packages = Package::with('services.serviceType')->where('is_active', true)->get();
 
-        return view('site.home', compact('branches', 'categories', 'packages'));
+        $turnaroundTypes = \App\Models\TurnaroundType::all();
+        $extras = \App\Models\Extra::where('is_active', true)->get();
+
+        return view('site.home', compact('branches', 'categories', 'packages', 'turnaroundTypes', 'extras'));
     }
 
     public function booking()

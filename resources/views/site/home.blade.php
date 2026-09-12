@@ -337,9 +337,11 @@
         }
     </style>
 
-    <!-- Services Section -->
-    <section id="services" class="pt-12 pb-32 lg:pt-24 lg:pb-44 bg-slate-50/60 relative" x-data="homeServicesHandler({{ Js::from($categories) }})">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <!-- Services & Cart Section Wrapper -->
+    <div x-data="homeServicesHandler({{ Js::from($categories) }}, {{ Js::from($turnaroundTypes) }}, {{ Js::from($extras) }})">
+        <!-- Services Section -->
+        <section id="services" class="pt-12 pb-32 lg:pt-24 lg:pb-44 bg-slate-50/60 relative">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
                 <span class="bg-blue-100 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">What We Offer</span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-3">Our Services</h2>
@@ -378,7 +380,7 @@
 
             <!-- Level 0: Main Categories Grid (Plain clean cards without dark shade, 3 cols on mobile) -->
             <div x-show="currentViewLevel === 0" x-transition:enter="transition ease-out duration-300">
-                <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 max-w-6xl mx-auto justify-items-center">
+                <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6 max-w-6xl mx-auto justify-items-center">
                     <template x-for="cat in categories" :key="cat.id">
                         <div @click="selectLevel1(cat)" class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-500 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer w-full text-center group">
                             <!-- Full Image Container (No dark black shade!) -->
@@ -393,9 +395,9 @@
                                 </template>
                             </div>
                             
-                            <!-- Plain Title Bar Underneath -->
-                            <div class="p-2 sm:p-3 bg-white border-t border-slate-100 flex items-center justify-center text-center">
-                                <h4 class="text-slate-900 font-extrabold text-xs sm:text-base leading-tight group-hover:text-blue-600 transition-colors line-clamp-1 text-center" x-text="cat.name"></h4>
+                            <!-- Plain Title Bar Underneath (Full name visible, no truncation!) -->
+                            <div class="p-1.5 sm:p-3 bg-white border-t border-slate-100 flex items-center justify-center text-center min-h-[42px] sm:min-h-[52px]">
+                                <h4 class="text-slate-800 font-bold sm:font-extrabold text-[11px] sm:text-sm leading-tight group-hover:text-blue-600 transition-colors text-center px-0.5 break-words" x-text="cat.name"></h4>
                             </div>
                         </div>
                     </template>
@@ -404,7 +406,7 @@
 
             <!-- Level 1: Subcategories Grid (Plain clean cards without dark shade, 3 cols on mobile) -->
             <div x-show="currentViewLevel === 1" x-transition:enter="transition ease-out duration-300">
-                <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 max-w-6xl mx-auto justify-items-center">
+                <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-6 max-w-6xl mx-auto justify-items-center">
                     <template x-for="sub in currentSubcategories" :key="sub.id">
                         <div @click="selectLevel2(sub)" class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-500 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer w-full text-center group">
                             <!-- Full Image Container (No dark black shade!) -->
@@ -419,9 +421,9 @@
                                 </template>
                             </div>
 
-                            <!-- Plain Title Bar Underneath -->
-                            <div class="p-2 sm:p-3 bg-white border-t border-slate-100 flex items-center justify-center text-center">
-                                <h4 class="text-slate-900 font-extrabold text-xs sm:text-base leading-tight group-hover:text-blue-600 transition-colors line-clamp-1 text-center" x-text="sub.name"></h4>
+                            <!-- Plain Title Bar Underneath (Full name visible, no truncation!) -->
+                            <div class="p-1.5 sm:p-3 bg-white border-t border-slate-100 flex items-center justify-center text-center min-h-[42px] sm:min-h-[52px]">
+                                <h4 class="text-slate-800 font-bold sm:font-extrabold text-[11px] sm:text-sm leading-tight group-hover:text-blue-600 transition-colors text-center px-0.5 break-words" x-text="sub.name"></h4>
                             </div>
                         </div>
                     </template>
@@ -432,10 +434,10 @@
             <div x-show="currentViewLevel === 2" x-transition:enter="transition ease-out duration-300">
                 <div class="max-w-4xl mx-auto space-y-2.5 sm:space-y-3">
                     <template x-for="service in currentServices" :key="service.id">
-                        <div class="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-3">
+                        <div class="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl px-3 py-2 sm:px-5 sm:py-3.5 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-2.5">
                             <!-- Left: Service Name -->
-                            <div class="flex items-center gap-3 min-w-0 flex-1">
-                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-xs sm:text-base shadow-sm">
+                            <div class="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+                                <div class="w-7 h-7 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-xs sm:text-base shadow-sm">
                                     <i class="fa-solid fa-jug-detergent"></i>
                                 </div>
                                 <h5 class="font-extrabold text-slate-900 text-xs sm:text-base truncate" x-text="service.name"></h5>
@@ -443,14 +445,14 @@
 
                             <!-- Center/Right: Unit above Price -->
                             <div class="flex flex-col items-end shrink-0 leading-tight">
-                                <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></span>
+                                <span class="text-[9px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></span>
                                 <span class="text-xs sm:text-base font-black text-blue-600">LKR <span x-text="parseFloat(service.base_price).toFixed(2)"></span></span>
                             </div>
 
                             <!-- Right: Add Button -->
-                            <button type="button" @click="openQtyModal(service)" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer">
+                            <button type="button" @click="openQtyModal(service)" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-2.5 py-1 sm:px-4 sm:py-2 rounded-xl text-[11px] sm:text-xs transition-all flex items-center gap-1 shadow-sm shrink-0 cursor-pointer">
                                 <span>Add</span>
-                                <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] font-black">+</span>
+                                <span class="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[9px] sm:text-[10px] font-black">+</span>
                             </button>
                         </div>
                     </template>
@@ -483,57 +485,189 @@
                 </div>
             </div>
 
-            <!-- Fixed Bottom Cart Bar -->
-            <div x-show="cart.length > 0" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full opacity-0" x-transition:enter-end="translate-y-0 opacity-100" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+            <!-- Fixed Screen Bottom Cart Bar (Compact on mobile view) -->
+            <div x-show="cart.length > 0" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full opacity-0" x-transition:enter-end="translate-y-0 opacity-100" class="fixed bottom-0 left-0 right-0 w-full z-[100] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
                 <!-- Expandable Cart List -->
                 <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
-                    <div class="max-w-4xl mx-auto p-4 space-y-2">
-                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 text-center">Your Cart Items</h4>
+                    <div class="max-w-4xl mx-auto p-3 sm:p-4 space-y-2">
+                        <h4 class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Your Cart Items</h4>
                         <template x-for="(item, index) in cart" :key="item.cart_key">
-                            <div class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                                <div class="flex-1 min-w-0 pr-4">
-                                    <div class="font-bold text-sm text-slate-800 truncate" x-text="item.name"></div>
-                                    <div class="text-xs font-semibold text-blue-600 mt-0.5">LKR <span x-text="item.base_price.toFixed(2)"></span> x <span x-text="item.qty"></span> = LKR <span x-text="(item.base_price * item.qty).toFixed(2)"></span></div>
+                            <div class="flex items-center justify-between bg-white p-2 sm:p-3 rounded-xl border border-slate-200 shadow-sm">
+                                <div class="flex-1 min-w-0 pr-2 sm:pr-4">
+                                    <div class="font-bold text-xs sm:text-sm text-slate-800 truncate" x-text="item.name"></div>
+                                    <div class="text-[11px] sm:text-xs font-semibold text-blue-600 mt-0.5">LKR <span x-text="item.base_price.toFixed(2)"></span> x <span x-text="item.qty"></span> = LKR <span x-text="(item.base_price * item.qty).toFixed(2)"></span></div>
                                 </div>
-                                <div class="flex items-center gap-3 shrink-0">
-                                    <div class="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200">
-                                        <button type="button" @click="updateCartQty(index, -1)" class="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-red-500 border border-slate-200"><i class="fa-solid fa-minus text-[10px]"></i></button>
-                                        <span class="w-8 text-center text-xs font-bold text-slate-800" x-text="item.qty"></span>
-                                        <button type="button" @click="updateCartQty(index, 1)" class="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-blue-600 border border-slate-200"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                                    <div class="flex items-center bg-slate-50 rounded-lg p-0.5 sm:p-1 border border-slate-200">
+                                        <button type="button" @click="updateCartQty(index, -1)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-red-500 border border-slate-200"><i class="fa-solid fa-minus text-[9px] sm:text-[10px]"></i></button>
+                                        <span class="w-6 sm:w-8 text-center text-xs font-bold text-slate-800" x-text="item.qty"></span>
+                                        <button type="button" @click="updateCartQty(index, 1)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-blue-600 border border-slate-200"><i class="fa-solid fa-plus text-[9px] sm:text-[10px]"></i></button>
                                     </div>
-                                    <button type="button" @click="removeFromCartByIndex(index)" class="text-red-400 hover:text-red-600 p-2 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                                    <button type="button" @click="removeFromCartByIndex(index)" class="text-red-400 hover:text-red-600 p-1.5 transition-colors"><i class="fa-solid fa-trash-can text-xs sm:text-sm"></i></button>
                                 </div>
                             </div>
                         </template>
                     </div>
                 </div>
 
-                <!-- Main Cart Bar -->
-                <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
-                    <div class="flex items-center gap-3.5 cursor-pointer" @click="isCartExpanded = !isCartExpanded">
-                        <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center relative shadow-sm font-bold">
-                            <i class="fa-solid fa-basket-shopping text-lg"></i>
-                            <span class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md" x-text="cart.reduce((sum, i) => sum + i.qty, 0)"></span>
+                <!-- Main Cart Bar (Compact mobile layout, desktop remains spacious) -->
+                <div class="max-w-4xl mx-auto px-3 py-1.5 sm:px-4 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4">
+                    <div class="flex items-center gap-2 sm:gap-3.5 cursor-pointer" @click="isCartExpanded = !isCartExpanded">
+                        <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center relative shadow-sm font-bold shrink-0">
+                            <i class="fa-solid fa-basket-shopping text-xs sm:text-lg"></i>
+                            <span class="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-blue-600 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-md" x-text="cart.reduce((sum, i) => sum + i.qty, 0)"></span>
                         </div>
                         <div>
-                            <div class="text-xs font-bold text-slate-500 flex items-center gap-1">Cart Total <i class="fa-solid text-[10px] ml-1 transition-transform" :class="isCartExpanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i></div>
-                            <div class="text-lg font-black text-slate-900">LKR <span x-text="baseCartTotal.toFixed(2)"></span></div>
+                            <div class="text-[10px] sm:text-xs font-bold text-slate-500 flex items-center gap-0.5 leading-tight">Total <i class="fa-solid text-[9px] ml-0.5 transition-transform" :class="isCartExpanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i></div>
+                            <div class="text-xs sm:text-lg font-black text-slate-900 leading-tight">LKR <span x-text="baseCartTotal.toFixed(2)"></span></div>
                         </div>
                     </div>
                     
-                    <button type="button" @click="checkoutFromHomepage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-xl font-extrabold transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-sm sm:text-base cursor-pointer">
+                    <button type="button" @click="checkoutFromHomepage()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl font-extrabold transition-all shadow-md sm:shadow-lg shadow-blue-600/30 flex items-center gap-1.5 text-xs sm:text-base cursor-pointer shrink-0">
                         <span>Checkout Now</span>
+                        <i class="fa-solid fa-arrow-right text-[10px] sm:text-xs"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Finalize Order Popup Modal -->
+        <div x-show="isFinalizeBillModalOpen" style="display:none;" class="fixed inset-0 z-[130] flex items-center justify-center p-4">
+            <div x-show="isFinalizeBillModalOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="isFinalizeBillModalOpen = false"></div>
+            <div x-show="isFinalizeBillModalOpen" x-transition.scale.origin.center class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden border border-slate-100">
+                
+                <!-- Modal Header -->
+                <div class="p-5 border-b border-slate-100 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-lg shadow-md">
+                            <i class="fa-solid fa-receipt"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-base font-extrabold text-white">Finalize Order</h3>
+                            <p class="text-xs text-slate-300 font-medium">Select speed and extra options for your order</p>
+                        </div>
+                    </div>
+                    <button type="button" @click="isFinalizeBillModalOpen = false" class="w-8 h-8 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+
+                <!-- Modal Body -->
+                <div class="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-6">
+                    
+                    <!-- Turnaround Type -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-1">Do you need quick service? <span class="text-red-500">*</span></label>
+                        <p class="text-xs text-slate-500 font-medium mb-3">Charges apply only to the base services (not applied to extras).</p>
+                        <select x-model="globalTurnaround" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold text-slate-800">
+                            <template x-for="tt in turnaroundTypes" :key="tt.id">
+                                <option :value="tt.id" x-text="tt.name"></option>
+                            </template>
+                        </select>
+                    </div>
+
+                    <!-- Extras -->
+                    <div x-show="extras.length > 0">
+                        <label class="block text-sm font-bold text-slate-800 mb-1">Do you need any extra services?</label>
+                        <p class="text-xs text-slate-500 font-medium mb-3">Add extra services to your order.</p>
+                        <div class="space-y-2.5">
+                            <template x-for="extra in extras" :key="extra.id">
+                                <div class="flex items-center justify-between p-3.5 rounded-2xl border border-slate-200 bg-white shadow-sm hover:border-blue-300 transition-colors">
+                                    <div class="flex-1 min-w-0 pr-3">
+                                        <div class="text-sm font-extrabold text-slate-800 truncate" x-text="extra.name"></div>
+                                        <div class="text-xs font-bold text-blue-600 mt-0.5" x-text="'+ LKR ' + parseFloat(extra.price).toFixed(2) + ' / item'"></div>
+                                    </div>
+                                    <div class="flex items-center gap-3 shrink-0">
+                                        <button type="button" @click="globalExtras[extra.id] = Math.max(0, (globalExtras[extra.id] || 0) - 1)" class="w-8 h-8 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold transition-colors"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                        <span class="w-5 text-center text-sm font-black text-slate-800" x-text="globalExtras[extra.id] || 0"></span>
+                                        <button type="button" @click="globalExtras[extra.id] = (globalExtras[extra.id] || 0) + 1" class="w-8 h-8 rounded-xl border border-slate-200 bg-slate-50 flex items-center justify-center text-slate-600 hover:bg-slate-100 font-bold transition-colors"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Items Brief Summary -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                        <div class="flex justify-between items-center text-xs font-bold text-slate-500 uppercase tracking-wider pb-2 border-b border-slate-200">
+                            <span>Selected Services</span>
+                            <span class="text-blue-600 font-black" x-text="cart.reduce((sum, i) => sum + i.qty, 0) + ' Items'"></span>
+                        </div>
+                        <template x-for="item in cart" :key="item.cart_key">
+                            <div class="flex justify-between text-xs font-bold text-slate-700">
+                                <span class="truncate pr-2" x-text="item.name + ' x ' + item.qty"></span>
+                                <span class="shrink-0 text-slate-900">LKR <span x-text="(item.base_price * item.qty).toFixed(2)"></span></span>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+
+                <!-- Footer: Grand Total & Continue -->
+                <div class="p-5 border-t border-slate-200 bg-slate-50 flex items-center justify-between gap-4">
+                    <div class="flex-1">
+                        <div class="text-[11px] font-extrabold text-slate-500 uppercase tracking-wide">Grand Total</div>
+                        <div class="text-2xl font-black text-blue-600">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></div>
+                    </div>
+                    <button type="button" @click="confirmFinalizeBill()" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3.5 px-6 rounded-xl font-extrabold transition-all shadow-md shadow-blue-600/30 text-center flex items-center justify-center gap-2 text-sm cursor-pointer">
+                        <span>Continue</span>
                         <i class="fa-solid fa-arrow-right text-xs"></i>
                     </button>
                 </div>
             </div>
         </div>
-    </section>
+
+        <!-- Fixed Screen Bottom Cart Bar (Compact on mobile view) -->
+        <div x-show="cart.length > 0" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full opacity-0" x-transition:enter-end="translate-y-0 opacity-100" class="fixed bottom-0 left-0 right-0 w-full z-[100] bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+            <!-- Expandable Cart List -->
+            <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
+                <div class="max-w-4xl mx-auto p-3 sm:p-4 space-y-2">
+                    <h4 class="text-[10px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 text-center">Your Cart Items</h4>
+                    <template x-for="(item, index) in cart" :key="item.cart_key">
+                        <div class="flex items-center justify-between bg-white p-2 sm:p-3 rounded-xl border border-slate-200 shadow-sm">
+                            <div class="flex-1 min-w-0 pr-2 sm:pr-4">
+                                <div class="font-bold text-xs sm:text-sm text-slate-800 truncate" x-text="item.name"></div>
+                                <div class="text-[11px] sm:text-xs font-semibold text-blue-600 mt-0.5">LKR <span x-text="item.base_price.toFixed(2)"></span> x <span x-text="item.qty"></span> = LKR <span x-text="(item.base_price * item.qty).toFixed(2)"></span></div>
+                            </div>
+                            <div class="flex items-center gap-2 sm:gap-3 shrink-0">
+                                <div class="flex items-center bg-slate-50 rounded-lg p-0.5 sm:p-1 border border-slate-200">
+                                    <button type="button" @click="updateCartQty(index, -1)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-red-500 border border-slate-200"><i class="fa-solid fa-minus text-[9px] sm:text-[10px]"></i></button>
+                                    <span class="w-6 sm:w-8 text-center text-xs font-bold text-slate-800" x-text="item.qty"></span>
+                                    <button type="button" @click="updateCartQty(index, 1)" class="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-blue-600 border border-slate-200"><i class="fa-solid fa-plus text-[9px] sm:text-[10px]"></i></button>
+                                </div>
+                                <button type="button" @click="removeFromCartByIndex(index)" class="text-red-400 hover:text-red-600 p-1.5 transition-colors"><i class="fa-solid fa-trash-can text-xs sm:text-sm"></i></button>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </div>
+
+            <!-- Main Cart Bar (Compact mobile layout, desktop remains spacious) -->
+            <div class="max-w-4xl mx-auto px-3 py-1.5 sm:px-4 sm:py-3 flex items-center justify-between gap-2.5 sm:gap-4">
+                <div class="flex items-center gap-2 sm:gap-3.5 cursor-pointer" @click="isCartExpanded = !isCartExpanded">
+                    <div class="w-8 h-8 sm:w-11 sm:h-11 rounded-lg sm:rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center relative shadow-sm font-bold shrink-0">
+                        <i class="fa-solid fa-basket-shopping text-xs sm:text-lg"></i>
+                        <span class="absolute -top-1 -right-1 sm:-top-1.5 sm:-right-1.5 w-4 h-4 sm:w-5 sm:h-5 bg-blue-600 text-white text-[9px] sm:text-[10px] font-black rounded-full flex items-center justify-center shadow-md" x-text="cart.reduce((sum, i) => sum + i.qty, 0)"></span>
+                    </div>
+                    <div>
+                        <div class="text-[10px] sm:text-xs font-bold text-slate-500 flex items-center gap-0.5 leading-tight">Total <i class="fa-solid text-[9px] ml-0.5 transition-transform" :class="isCartExpanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i></div>
+                        <div class="text-xs sm:text-lg font-black text-slate-900 leading-tight">LKR <span x-text="baseCartTotal.toFixed(2)"></span></div>
+                    </div>
+                </div>
+                
+                <button type="button" @click="checkoutFromHomepage()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 sm:px-8 sm:py-3 rounded-lg sm:rounded-xl font-extrabold transition-all shadow-md sm:shadow-lg shadow-blue-600/30 flex items-center gap-1.5 text-xs sm:text-base cursor-pointer shrink-0">
+                    <span>Checkout Now</span>
+                    <i class="fa-solid fa-arrow-right text-[10px] sm:text-xs"></i>
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('homeServicesHandler', (categoriesData) => ({
+            Alpine.data('homeServicesHandler', (categoriesData, turnaroundTypesData, extrasData) => ({
                 categories: categoriesData || [],
+                turnaroundTypes: turnaroundTypesData || [],
+                extras: extrasData || [],
                 selectedMainCategory: null,
                 selectedSubcategory: null,
                 currentSubcategories: [],
@@ -543,8 +677,11 @@
                 cart: [],
                 isCartExpanded: false,
                 isQtyModalOpen: false,
+                isFinalizeBillModalOpen: false,
                 selectedService: null,
                 serviceQty: 1,
+                globalTurnaround: (turnaroundTypesData && turnaroundTypesData.length > 0) ? turnaroundTypesData[0].id : '',
+                globalExtras: {},
 
                 getServiceCount(cat) {
                     let count = cat.services ? Object.keys(cat.services).length : 0;
@@ -657,6 +794,7 @@
                     this.cart.splice(index, 1);
                     if (this.cart.length === 0) {
                         this.isCartExpanded = false;
+                        this.isFinalizeBillModalOpen = false;
                     }
                 },
 
@@ -664,9 +802,42 @@
                     return this.cart.reduce((total, item) => total + (parseFloat(item.base_price) * item.qty), 0);
                 },
 
+                get calculatedGrandTotal() {
+                    let base = this.baseCartTotal;
+                    let selectedTurn = this.turnaroundTypes.find(t => t.id == this.globalTurnaround);
+                    if (selectedTurn) {
+                        if (selectedTurn.multiplier && parseFloat(selectedTurn.multiplier) > 0) {
+                            base = base * parseFloat(selectedTurn.multiplier);
+                        } else if (selectedTurn.extra_fee && parseFloat(selectedTurn.extra_fee) > 0) {
+                            base = base + parseFloat(selectedTurn.extra_fee);
+                        }
+                    }
+                    
+                    let extrasTotal = 0;
+                    this.extras.forEach(extra => {
+                        let qty = this.globalExtras[extra.id] || 0;
+                        if (qty > 0) {
+                            extrasTotal += parseFloat(extra.price) * qty;
+                        }
+                    });
+                    
+                    return base + extrasTotal;
+                },
+
                 checkoutFromHomepage() {
                     if (this.cart.length === 0) return;
+                    this.isFinalizeBillModalOpen = true;
+                },
+
+                confirmFinalizeBill() {
+                    if (this.cart.length === 0) return;
                     localStorage.setItem('customer_booking_cart', JSON.stringify(this.cart));
+                    if (this.globalTurnaround) {
+                        localStorage.setItem('customer_booking_turnaround', this.globalTurnaround);
+                    }
+                    if (this.globalExtras) {
+                        localStorage.setItem('customer_booking_extras', JSON.stringify(this.globalExtras));
+                    }
                     window.location.href = "{{ route('customer.booking') }}";
                 }
             }));
