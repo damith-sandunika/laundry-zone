@@ -363,38 +363,33 @@
                 </div>
             </div>
 
-            <!-- Sleek Interactive Breadcrumb & Back Header (when drilled down) -->
-            <div x-show="currentViewLevel > 0" x-transition.opacity class="flex flex-wrap items-center justify-between gap-3 mb-6 max-w-5xl mx-auto bg-white border border-slate-200 p-3 sm:p-4 rounded-2xl shadow-sm">
-                <!-- Back Button + Breadcrumb Path -->
-                <div class="flex items-center gap-2 sm:gap-3 flex-wrap">
-                    <button type="button" @click="goBackLevel()" class="bg-slate-100 hover:bg-slate-200 text-slate-800 font-extrabold px-3 py-1.5 rounded-xl text-xs sm:text-sm transition-all flex items-center gap-1.5 cursor-pointer">
-                        <i class="fa-solid fa-arrow-left text-xs"></i> Back
-                    </button>
-                    
-                    <div class="h-4 w-px bg-slate-200 hidden sm:block"></div>
+            <!-- Sleek Minimal Navigation Header (when drilled down: Back + 2 Category Tabs) -->
+            <div x-show="currentViewLevel > 0" x-transition.opacity class="flex items-center justify-center gap-2 sm:gap-3 mb-8 max-w-4xl mx-auto flex-wrap">
+                <!-- Back Button -->
+                <button type="button" @click="goBackLevel()" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 font-extrabold px-3.5 py-2 rounded-xl text-xs sm:text-sm shadow-sm transition-all flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-arrow-left text-xs"></i> Back
+                </button>
 
-                    <!-- Breadcrumb Links -->
-                    <div class="flex items-center gap-1.5 text-xs sm:text-sm font-bold text-slate-500 flex-wrap">
-                        <span @click="goHomeLevel()" class="hover:text-blue-600 cursor-pointer transition-colors flex items-center gap-1">
-                            <i class="fa-solid fa-house text-[10px]"></i> Categories
-                        </span>
-                        <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
-                        <span @click="selectLevel1(selectedMainCategory)" class="hover:text-blue-600 cursor-pointer transition-colors" x-text="selectedMainCategory?.name"></span>
-                        <template x-if="currentViewLevel === 2 && selectedSubcategory">
-                            <div class="flex items-center gap-1.5">
-                                <i class="fa-solid fa-chevron-right text-[10px] text-slate-300"></i>
-                                <span class="text-blue-600 font-extrabold" x-text="selectedSubcategory?.name"></span>
-                            </div>
-                        </template>
+                <!-- Separator -->
+                <span class="text-slate-300 text-xs font-bold">/</span>
+
+                <!-- Tab 1: Main Category Pill -->
+                <button type="button" @click="selectLevel1(selectedMainCategory)" class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold transition-all cursor-pointer border shadow-sm flex items-center gap-1.5"
+                        :class="currentViewLevel === 1 ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'">
+                    <i class="fa-solid fa-folder text-[10px]" :class="currentViewLevel === 1 ? 'text-white' : 'text-blue-600'"></i>
+                    <span x-text="selectedMainCategory?.name"></span>
+                </button>
+
+                <!-- Tab 2: Subcategory Pill (if in level 2 and subcategory selected) -->
+                <template x-if="currentViewLevel === 2 && selectedSubcategory">
+                    <div class="flex items-center gap-2 sm:gap-3">
+                        <span class="text-slate-300 text-xs font-bold">/</span>
+                        <div class="px-3.5 py-2 rounded-xl text-xs sm:text-sm font-extrabold bg-blue-600 text-white border border-blue-600 shadow-sm flex items-center gap-1.5">
+                            <i class="fa-solid fa-tag text-[10px] text-white"></i>
+                            <span x-text="selectedSubcategory?.name"></span>
+                        </div>
                     </div>
-                </div>
-
-                <!-- Current Level Pill Badge -->
-                <div class="bg-blue-50 border border-blue-100 text-blue-700 text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider hidden sm:inline-flex items-center gap-1.5">
-                    <span class="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></span>
-                    <span x-show="currentViewLevel === 1">Subcategories</span>
-                    <span x-show="currentViewLevel === 2">Available Services</span>
-                </div>
+                </template>
             </div>
 
             <!-- Level 0: Main Categories Grid (Plain clean cards without dark shade, 3 cols on mobile) -->
