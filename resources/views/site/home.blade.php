@@ -338,7 +338,7 @@
     </style>
 
     <!-- Services Section -->
-    <section id="services" class="py-12 lg:py-24 bg-slate-50/60 relative" x-data="homeServicesHandler({{ Js::from($categories) }})">
+    <section id="services" class="pt-12 pb-32 lg:pt-24 lg:pb-44 bg-slate-50/60 relative" x-data="homeServicesHandler({{ Js::from($categories) }})">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-10">
                 <span class="bg-blue-100 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">What We Offer</span>
@@ -544,6 +544,15 @@
                     return count;
                 },
 
+                scrollToServices() {
+                    this.$nextTick(() => {
+                        const sec = document.getElementById('services');
+                        if (sec) {
+                            sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }
+                    });
+                },
+
                 selectLevel1(cat) {
                     this.selectedMainCategory = cat;
                     let childrenArray = cat.children ? (Array.isArray(cat.children) ? cat.children : Object.values(cat.children)) : [];
@@ -557,12 +566,14 @@
                         this.currentServices = cat.services ? (Array.isArray(cat.services) ? cat.services : Object.values(cat.services)) : [];
                         this.currentViewLevel = 2;
                     }
+                    this.scrollToServices();
                 },
 
                 selectLevel2(sub) {
                     this.selectedSubcategory = sub;
                     this.currentServices = sub.services ? (Array.isArray(sub.services) ? sub.services : Object.values(sub.services)) : [];
                     this.currentViewLevel = 2;
+                    this.scrollToServices();
                 },
 
                 goBackLevel() {
@@ -578,6 +589,7 @@
                         this.currentViewLevel = 0;
                         this.selectedMainCategory = null;
                     }
+                    this.scrollToServices();
                 },
 
                 openQtyModal(service) {
