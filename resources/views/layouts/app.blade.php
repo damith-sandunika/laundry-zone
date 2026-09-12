@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ config('app.name', '360 Laundry') }}</title>
+    <title>{{ config('app.name', '365laundry.lk') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -43,7 +43,7 @@
                     <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
                 </div>
                 <div>
-                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '360 Laundry') }}</div>
+                    <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
             </div>

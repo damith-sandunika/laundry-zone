@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name', '360 Laundry') }}</title>
+    <title>{{ config('app.name', '365laundry.lk') }}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -14,7 +14,7 @@
     <nav class="fixed top-0 inset-x-0 z-50 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <img src="{{ asset('images/360_laundry_logo.png') }}" alt="360 Laundry" class="h-10" onerror="this.style.display='none'">
+                <img src="{{ asset('images/360_laundry_logo.png') }}" alt="365laundry.lk" class="h-10" onerror="this.style.display='none'">
             </div>
             
             <div class="flex items-center gap-4">
@@ -72,7 +72,7 @@
     <!-- Footer -->
     <footer class="border-t border-slate-200/60 bg-white/50 backdrop-blur-xl relative z-10">
         <div class="max-w-7xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4">
-            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">&copy; {{ date('Y') }} 360 Laundry. All rights reserved.</p>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-widest">&copy; {{ date('Y') }} 365laundry.lk. All rights reserved.</p>
             <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Software by DSRZone</p>
         </div>
     </footer>

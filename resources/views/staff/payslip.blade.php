@@ -609,7 +609,7 @@
         </div>
 
         <div class="footer-watermark">
-            Computer Generated Document — Verified by 360 Laundry HR & Payroll System
+            Computer Generated Document — Verified by 365laundry.lk HR & Payroll System
         </div>
     </div>
 
