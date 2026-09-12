@@ -64,7 +64,7 @@
         @endif
 
 
-        <form action="{{ route('customer.booking.store') }}" method="POST" id="bookingForm" class="mt-16 lg:w-3/4 mx-auto pb-28" enctype="multipart/form-data">
+        <form action="{{ route('customer.booking.store') }}" method="POST" id="bookingForm" class="mt-10 sm:mt-16 lg:w-3/4 mx-auto pb-10 sm:pb-24" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="item_description" x-model="formattedCart">
             <input type="hidden" name="cart_json" x-bind:value="JSON.stringify(cart)">
@@ -95,25 +95,22 @@
                     
                     <!-- Header / Navigation Bar -->
                     <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
-                        <!-- Back Button -->
-                        <button type="button" x-show="currentViewLevel > 0" @click="goBackLevel()" class="text-slate-600 hover:text-slate-900 flex items-center gap-2 text-sm font-medium transition-colors">
-                            <i class="fa-solid fa-arrow-left"></i> Back
-                        </button>
-                        
-                        <!-- Title -->
-                        @if(!$isHomepage)
-                        <div x-show="currentViewLevel === 0" class="text-sm font-semibold text-slate-800">All Categories</div>
-                        @endif
-                        <div x-show="currentViewLevel === 1" class="text-sm font-semibold text-slate-800" x-text="selectedMainCategory?.name"></div>
-                        <div x-show="currentViewLevel === 2" class="text-sm font-semibold text-slate-800" x-text="selectedSubcategory?.name || selectedMainCategory?.name"></div>
+                        <!-- Breadcrumbs -->
+                        <div class="flex items-center flex-wrap gap-2 text-sm font-semibold text-slate-800">
+                            <button type="button" @click="currentViewLevel = 0" class="hover:text-blue-600 transition-colors">All Categories</button>
+                            <span x-show="currentViewLevel > 0" class="text-slate-400">/</span>
+                            <button type="button" x-show="currentViewLevel > 0" @click="currentViewLevel = 1" class="hover:text-blue-600 transition-colors" x-text="selectedMainCategory?.name"></button>
+                            <span x-show="currentViewLevel > 1" class="text-slate-400">/</span>
+                            <span x-show="currentViewLevel > 1" class="text-slate-600" x-text="selectedSubcategory?.name || selectedMainCategory?.name"></span>
+                        </div>
                     </div>
 
                     <div class="p-5 flex-1 overflow-y-auto custom-scrollbar">
                         <!-- Level 0: Main Categories Grid -->
                         <div x-show="currentViewLevel === 0">
-                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
+                            <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
                                 <template x-for="cat in categories" :key="cat.id">
-                                    <button type="button" @click="selectLevel1(cat)" class="bg-white rounded-xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
+                                    <button type="button" @click="selectLevel1(cat)" class="w-[30%] sm:w-[22%] md:w-[18%] bg-white rounded-xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group">
                                         <div class="w-full aspect-[4/3] bg-blue-50 text-blue-600 flex items-center justify-center relative overflow-hidden">
                                             <div class="absolute inset-0 transition-transform duration-300 group-hover:scale-110 flex items-center justify-center">
                                                 <template x-if="cat.image_path">
@@ -124,8 +121,8 @@
                                                 </template>
                                             </div>
                                         </div>
-                                        <div class="p-2 sm:p-4 w-full bg-white relative z-10 border-t border-slate-50">
-                                            <span class="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center block w-full truncate" x-text="cat.name"></span>
+                                        <div class="p-2 sm:p-4 w-full bg-white relative z-10 border-t border-slate-50 flex-1 flex items-center justify-center">
+                                            <span class="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center block w-full" x-text="cat.name"></span>
                                         </div>
                                     </button>
                                 </template>
@@ -134,9 +131,9 @@
 
                         <!-- Level 1: Subcategories Grid -->
                         <div x-show="currentViewLevel === 1">
-                            <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-3 sm:gap-4">
+                            <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
                                 <template x-for="sub in currentSubcategories" :key="sub.id">
-                                    <button type="button" @click="selectLevel2(sub)" class="bg-white rounded-xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group w-full">
+                                    <button type="button" @click="selectLevel2(sub)" class="w-[30%] sm:w-[22%] md:w-[18%] bg-white rounded-xl overflow-hidden flex flex-col border border-slate-100 shadow-sm hover:border-blue-200 hover:shadow-md transition-all group">
                                         <div class="w-full aspect-[4/3] bg-slate-50 text-slate-400 flex items-center justify-center relative overflow-hidden">
                                             <div class="absolute inset-0 transition-transform duration-300 group-hover:scale-110 flex items-center justify-center">
                                                 <template x-if="sub.image_path">
@@ -147,8 +144,8 @@
                                                 </template>
                                             </div>
                                         </div>
-                                        <div class="p-2 sm:p-3 w-full bg-white relative z-10 border-t border-slate-50">
-                                            <span class="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center block w-full truncate" x-text="sub.name"></span>
+                                        <div class="p-2 sm:p-3 w-full bg-white relative z-10 border-t border-slate-50 flex-1 flex items-center justify-center">
+                                            <span class="text-xs sm:text-sm font-bold text-slate-700 group-hover:text-blue-700 text-center block w-full" x-text="sub.name"></span>
                                         </div>
                                     </button>
                                 </template>
@@ -243,7 +240,11 @@
                 <div x-show="isQtyModalOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="isQtyModalOpen = false"></div>
                 <div x-show="isQtyModalOpen" x-transition.scale.origin.bottom class="relative bg-white rounded-lg shadow-xl w-full max-w-sm flex flex-col overflow-hidden">
                     <div class="p-6 text-center">
-                        <h3 class="text-lg font-semibold text-slate-800 mb-1" x-text="selectedService?.name"></h3>
+                        <div class="text-xs font-semibold text-slate-500 mb-1">
+                            <span x-text="selectedMainCategory?.name"></span>
+                            <span x-show="selectedSubcategory"> / <span x-text="selectedSubcategory?.name"></span></span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-slate-800 mb-1" x-text="selectedService?.name"></h3>
                         <p class="text-sm font-medium text-slate-500 mb-6">LKR <span x-text="selectedService?.base_price"></span></p>
                         
                         <div class="flex items-center justify-center gap-6">
@@ -417,9 +418,9 @@
 
             <!-- STEP 3: Pickup Details -->
             <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                    <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
-                        <span class="bg-amber-50 text-amber-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
+                <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-8">
+                    <h3 class="text-lg sm:text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
+                        <span class="bg-amber-50 text-amber-500 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
                         Pickup Details
                     </h3>
                     <p class="text-sm text-slate-500 mb-6 font-medium">When and where should we pick up your laundry?</p>
@@ -516,10 +517,10 @@
 
                 <div class="flex justify-between items-center mt-6">
                     <div class="flex items-center justify-between w-full">
-                        <button type="button" @click="goToStep(2)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
+                        <button type="button" @click="goToStep(2)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2 text-sm sm:text-base">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <button type="button" @click="goToStep(4)" :disabled="isOutOfRange || servicesLoading" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2">
+                        <button type="button" @click="goToStep(4)" :disabled="isOutOfRange || servicesLoading" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2.5 sm:px-8 sm:py-3.5 rounded-lg sm:rounded-xl font-bold transition-all shadow-md flex items-center gap-2 text-sm sm:text-base">
                             <span x-show="!servicesLoading">Next: Delivery & Pay <i class="fa-solid fa-arrow-right"></i></span>
                             <span x-show="servicesLoading"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading Services...</span>
                         </button>
@@ -529,12 +530,14 @@
 
             <!-- STEP 4: Delivery & Payment -->
             <div x-show="step === 4" style="display:none;" x-transition.opacity.duration.300ms>
-                <div class="space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 relative">
+                    <!-- Left Column: Delivery Details -->
+                    <div class="space-y-6 sm:space-y-8">
 
                     <!-- Requested Delivery Time Card -->
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                        <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
-                            <span class="bg-blue-50 text-blue-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-clock"></i></span>
+                    <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-8">
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
+                            <span class="bg-blue-50 text-blue-500 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center"><i class="fa-solid fa-clock"></i></span>
                             Requested Delivery Time
                         </h3>
                         <p class="text-sm text-slate-500 mb-6 font-medium">When would you like to receive your clean items back? (Optional)</p>
@@ -556,9 +559,9 @@
                     </div>
 
                     <!-- Delivery Section -->
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
-                        <h3 class="text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
-                            <span class="bg-emerald-50 text-emerald-500 w-10 h-10 rounded-xl flex items-center justify-center"><i class="fa-solid fa-box-open"></i></span>
+                    <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-8">
+                        <h3 class="text-lg sm:text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
+                            <span class="bg-emerald-50 text-emerald-500 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center"><i class="fa-solid fa-box-open"></i></span>
                             Return Delivery
                         </h3>
                         <p class="text-sm text-slate-500 mb-6 font-medium">How would you like to receive your clean laundry?</p>
@@ -651,7 +654,7 @@
                                     <input type="hidden" name="delivery_lat" id="delivery_lat">
                                     <input type="hidden" name="delivery_lng" id="delivery_lng">
                                 </div>
-                <div>
+                                <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Full Delivery Address</label>
                                     <textarea name="delivery_address" rows="2" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500" placeholder="House no, Street name, City"></textarea>
                                 </div>
@@ -659,58 +662,65 @@
                         </div>
                     </div>
 
-                    <!-- Payment Summary Card -->
-                    <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-xl shadow-lg border border-slate-700 p-6 sm:p-8">
-                        <div class="flex items-center gap-3 mb-5">
-                            <div class="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white text-xl shadow-lg">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </div>
+
+                    <!-- Right Column: Summary & Payment -->
+                    <div class="space-y-6 sm:space-y-8">
+                        <!-- Payment Summary Card -->
+                        <div class="bg-gradient-to-br from-slate-900 to-slate-800 rounded-lg sm:rounded-xl shadow-lg border border-slate-700 p-5 sm:p-8">
+                            <div class="flex items-center gap-3 mb-4 sm:mb-5">
+                                <div class="w-10 h-10 sm:w-12 sm:h-12 bg-blue-600 rounded-lg sm:rounded-xl flex items-center justify-center text-white text-lg sm:text-xl shadow-lg">
+                                    <i class="fa-solid fa-receipt"></i>
+                                </div>
+                                <div>
+                                    <h3 class="text-base sm:text-lg font-bold text-white">Order Summary</h3>
+                                    <p class="text-xs sm:text-sm text-slate-400 font-medium">Estimated costs — final bill after inspection</p>
+                                </div>
                             </div>
-                            <div>
-                                <h3 class="text-lg font-bold text-white">Order Summary</h3>
-                                <p class="text-slate-400 text-xs font-medium">Estimated costs — final bill after inspection</p>
+
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between items-center py-2.5 border-b border-slate-700">
+                                    <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
+                                        <i class="fa-solid fa-shirt text-blue-400 text-xs"></i> Services (Estimate)
+                                    </span>
+                                    <span class="text-white text-sm font-bold">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></span>
+                                </div>
+
+                                <div x-show="estimatedDeliveryFee > 0" class="flex justify-between items-center py-2.5 border-b border-slate-700">
+                                    <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
+                                        <i class="fa-solid fa-truck text-emerald-400 text-xs"></i> Delivery Fee
+                                    </span>
+                                    <span class="text-white text-sm font-bold">LKR <span x-text="estimatedDeliveryFee.toFixed(2)"></span></span>
+                                </div>
+
+                                <div x-show="pickupDistance > 0" class="flex justify-between items-center py-1.5 text-slate-400 text-xs">
+                                    <span class="flex items-center gap-1.5"><i class="fa-solid fa-route"></i> Pickup distance</span>
+                                    <span class="font-bold"><span x-text="pickupDistance"></span> km from branch</span>
+                                </div>
                             </div>
+
+                            <div class="border-t border-slate-700 my-4 sm:my-5"></div>
+
+                            <div class="bg-blue-600 rounded-lg sm:rounded-xl p-3 sm:p-4 flex justify-between items-center">
+                                <span class="text-blue-100 font-semibold text-sm sm:text-base">Total to Pay</span>
+                                <span class="text-white font-bold text-lg sm:text-xl">LKR <span x-text="totalPrice.toFixed(2)"></span></span>
+                            </div>
+
+                            <p class="text-[11px] text-slate-500 text-center mt-4">
+                                <i class="fa-solid fa-circle-info mr-1"></i>
+                                Payment collected by rider after workshop inspection. WhatsApp notification will be sent.
+                            </p>
                         </div>
-
-                        <div class="space-y-3 mb-4">
-                            <div class="flex justify-between items-center py-2.5 border-b border-slate-700">
-                                <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
-                                    <i class="fa-solid fa-shirt text-blue-400 text-xs"></i> Services (Estimate)
-                                </span>
-                                <span class="text-white text-sm font-bold">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></span>
-                            </div>
-
-                            <div x-show="estimatedDeliveryFee > 0" class="flex justify-between items-center py-2.5 border-b border-slate-700">
-                                <span class="text-slate-300 text-sm font-bold flex items-center gap-2">
-                                    <i class="fa-solid fa-truck text-emerald-400 text-xs"></i> Delivery Fee
-                                </span>
-                                <span class="text-white text-sm font-bold">LKR <span x-text="estimatedDeliveryFee.toFixed(2)"></span></span>
-                            </div>
-
-                            <div x-show="pickupDistance > 0" class="flex justify-between items-center py-1.5 text-slate-400 text-xs">
-                                <span class="flex items-center gap-1.5"><i class="fa-solid fa-route"></i> Pickup distance</span>
-                                <span class="font-bold"><span x-text="pickupDistance"></span> km from branch</span>
-                            </div>
-                        </div>
-
-                        <div class="bg-blue-600 rounded-xl p-4 flex justify-between items-center">
-                            <span class="text-blue-100 font-bold text-sm">Total Estimated Amount</span>
-                            <span class="text-white font-bold text-xl">LKR <span x-text="totalPrice.toFixed(2)"></span></span>
-                        </div>
-
-                        <p class="text-[11px] text-slate-500 text-center mt-4">
-                            <i class="fa-solid fa-circle-info mr-1"></i>
-                            Payment collected by rider after workshop inspection. WhatsApp notification will be sent.
-                        </p>
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center mt-6">
-                    <button type="button" @click="goToStep(3)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
-                        <i class="fa-solid fa-arrow-left"></i> Back
+                <div class="mt-6 sm:mt-10 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 border-t border-slate-200 pt-6 sm:pt-8">
+                    <button type="button" @click="goToStep(3)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-arrow-left"></i> Back to Pickup
                     </button>
-                    <button type="button" @click="submitBooking()" :disabled="isOutOfRange || isPlacingOrder" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 text-lg cursor-pointer min-w-[200px]">
+                    <button type="button" @click="submitBooking()" :disabled="isOutOfRange || isPlacingOrder" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 text-base sm:text-lg cursor-pointer min-w-[200px] w-full sm:w-auto">
                         <span x-show="!isPlacingOrder">Confirm Booking <i class="fa-solid fa-check-circle"></i></span>
-                        <i x-show="isPlacingOrder" class="fa-solid fa-spinner fa-spin text-xl"></i>
+                        <i x-show="isPlacingOrder" class="fa-solid fa-spinner fa-spin text-lg sm:text-xl"></i>
                     </button>
                 </div>
             </div>
@@ -855,7 +865,8 @@
                     isOutOfRange: false,
 
                     initData() {
-                        // Check for cart passed from Homepage checkout
+                        this.deliveryDate = new Date().toISOString().split('T')[0];
+                        // Try to restore cart and user state from localStorage if not authenticatedkout
                         const savedHomepageCart = localStorage.getItem('customer_booking_cart');
                         if (savedHomepageCart) {
                             try {
