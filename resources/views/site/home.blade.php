@@ -361,96 +361,82 @@
                 </div>
             </div>
 
-            <!-- Level 0: Main Categories Grid (Full background image cards, 3 cols on mobile) -->
+            <!-- Level 0: Main Categories Grid (Plain clean cards without dark shade, 3 cols on mobile) -->
             <div x-show="currentViewLevel === 0" x-transition:enter="transition ease-out duration-300">
                 <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 max-w-6xl mx-auto justify-items-center">
                     <template x-for="cat in categories" :key="cat.id">
-                        <div @click="selectLevel1(cat)" class="aspect-square w-full relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:scale-105 border border-slate-200/80 transition-all duration-300 group cursor-pointer flex flex-col justify-end p-2.5 sm:p-5 text-center">
-                            <!-- Full Background Image -->
-                            <template x-if="cat.image_path">
-                                <img :src="cat.image_path.startsWith('http') ? cat.image_path : '/' + cat.image_path" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 z-0" :alt="cat.name">
-                            </template>
-                            <template x-if="!cat.image_path">
-                                <div class="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-800 z-0 flex items-center justify-center">
-                                    <i class="fa-solid fa-soap text-3xl sm:text-5xl text-white/30"></i>
-                                </div>
-                            </template>
-
-                            <!-- Gradient Overlay for readability -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent z-10"></div>
-
-                            <!-- Card Content (Bottom Overlay) -->
-                            <div class="relative z-20 flex flex-col items-center justify-end text-center w-full">
-                                <h4 class="text-white font-black text-xs sm:text-lg leading-tight drop-shadow-md group-hover:text-blue-300 transition-colors line-clamp-2" x-text="cat.name"></h4>
-                                <span class="mt-1.5 sm:mt-2 inline-flex items-center justify-center gap-1 bg-white/20 backdrop-blur-md text-white border border-white/30 text-[9px] sm:text-xs font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-sm group-hover:bg-blue-600 transition-colors">
-                                    <span>View</span>
-                                    <i class="fa-solid fa-chevron-right text-[8px]"></i>
-                                </span>
+                        <div @click="selectLevel1(cat)" class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-500 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer w-full text-center group">
+                            <!-- Full Image Container (No dark black shade!) -->
+                            <div class="aspect-square w-full relative overflow-hidden bg-slate-100 flex items-center justify-center">
+                                <template x-if="cat.image_path">
+                                    <img :src="cat.image_path.startsWith('http') ? cat.image_path : '/' + cat.image_path" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" :alt="cat.name">
+                                </template>
+                                <template x-if="!cat.image_path">
+                                    <div class="w-full h-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                                        <i class="fa-solid fa-soap text-3xl sm:text-4xl"></i>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <!-- Plain Title Bar Underneath -->
+                            <div class="p-2 sm:p-3 bg-white border-t border-slate-100 flex items-center justify-center text-center">
+                                <h4 class="text-slate-900 font-extrabold text-xs sm:text-base leading-tight group-hover:text-blue-600 transition-colors line-clamp-1 text-center" x-text="cat.name"></h4>
                             </div>
                         </div>
                     </template>
                 </div>
             </div>
 
-            <!-- Level 1: Subcategories Grid (Full background image cards, 3 cols on mobile) -->
+            <!-- Level 1: Subcategories Grid (Plain clean cards without dark shade, 3 cols on mobile) -->
             <div x-show="currentViewLevel === 1" x-transition:enter="transition ease-out duration-300">
                 <div class="grid grid-cols-3 sm:grid-cols-3 lg:grid-cols-4 gap-2.5 sm:gap-6 max-w-6xl mx-auto justify-items-center">
                     <template x-for="sub in currentSubcategories" :key="sub.id">
-                        <div @click="selectLevel2(sub)" class="aspect-square w-full relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-sm hover:shadow-2xl hover:scale-105 border border-slate-200/80 transition-all duration-300 group cursor-pointer flex flex-col justify-end p-2.5 sm:p-5 text-center">
-                            <!-- Full Background Image -->
-                            <template x-if="sub.image_path">
-                                <img :src="sub.image_path.startsWith('http') ? sub.image_path : '/' + sub.image_path" class="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 z-0" :alt="sub.name">
-                            </template>
-                            <template x-if="!sub.image_path">
-                                <div class="absolute inset-0 bg-gradient-to-br from-indigo-600 to-blue-800 z-0 flex items-center justify-center">
-                                    <i class="fa-solid fa-layer-group text-3xl sm:text-5xl text-white/30"></i>
-                                </div>
-                            </template>
+                        <div @click="selectLevel2(sub)" class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/90 shadow-sm hover:shadow-xl hover:border-blue-500 hover:-translate-y-1.5 transition-all duration-300 overflow-hidden flex flex-col justify-between cursor-pointer w-full text-center group">
+                            <!-- Full Image Container (No dark black shade!) -->
+                            <div class="aspect-square w-full relative overflow-hidden bg-slate-100 flex items-center justify-center">
+                                <template x-if="sub.image_path">
+                                    <img :src="sub.image_path.startsWith('http') ? sub.image_path : '/' + sub.image_path" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" :alt="sub.name">
+                                </template>
+                                <template x-if="!sub.image_path">
+                                    <div class="w-full h-full bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                                        <i class="fa-solid fa-layer-group text-3xl sm:text-4xl"></i>
+                                    </div>
+                                </template>
+                            </div>
 
-                            <!-- Gradient Overlay for readability -->
-                            <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/40 to-transparent z-10"></div>
-
-                            <!-- Card Content (Bottom Overlay) -->
-                            <div class="relative z-20 flex flex-col items-center justify-end text-center w-full">
-                                <h4 class="text-white font-black text-xs sm:text-lg leading-tight drop-shadow-md group-hover:text-blue-300 transition-colors line-clamp-2" x-text="sub.name"></h4>
-                                <span class="mt-1.5 sm:mt-2 inline-flex items-center justify-center gap-1 bg-white/20 backdrop-blur-md text-white border border-white/30 text-[9px] sm:text-xs font-bold px-2 py-0.5 sm:px-3 sm:py-1 rounded-full shadow-sm group-hover:bg-blue-600 transition-colors">
-                                    <span>Select</span>
-                                    <i class="fa-solid fa-chevron-right text-[8px]"></i>
-                                </span>
+                            <!-- Plain Title Bar Underneath -->
+                            <div class="p-2 sm:p-3 bg-white border-t border-slate-100 flex items-center justify-center text-center">
+                                <h4 class="text-slate-900 font-extrabold text-xs sm:text-base leading-tight group-hover:text-blue-600 transition-colors line-clamp-1 text-center" x-text="sub.name"></h4>
                             </div>
                         </div>
                     </template>
                 </div>
             </div>
 
-            <!-- Level 2: Services Bar / Strip Cards List -->
+            <!-- Level 2: Compact Single-Line Services Bar List -->
             <div x-show="currentViewLevel === 2" x-transition:enter="transition ease-out duration-300">
-                <div class="max-w-4xl mx-auto space-y-3 sm:space-y-4">
+                <div class="max-w-4xl mx-auto space-y-2.5 sm:space-y-3">
                     <template x-for="service in currentServices" :key="service.id">
-                        <div class="bg-white border-2 border-slate-100 hover:border-blue-300 rounded-2xl p-3.5 sm:p-5 shadow-sm hover:shadow-md transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-center gap-3.5 sm:gap-4 flex-1 min-w-0">
-                                <div class="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-lg sm:text-xl shadow-sm">
+                        <div class="bg-white border border-slate-200 hover:border-blue-500 rounded-2xl px-3.5 py-2.5 sm:px-5 sm:py-3.5 shadow-sm hover:shadow-md transition-all flex items-center justify-between gap-3">
+                            <!-- Left: Service Name -->
+                            <div class="flex items-center gap-3 min-w-0 flex-1">
+                                <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-xs sm:text-base shadow-sm">
                                     <i class="fa-solid fa-jug-detergent"></i>
                                 </div>
-                                <div class="min-w-0 flex-1">
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <h5 class="font-extrabold text-slate-900 text-sm sm:text-base truncate" x-text="service.name"></h5>
-                                        <span class="bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-black px-2 py-0.5 rounded-full uppercase" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></span>
-                                    </div>
-                                    <p class="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1" x-text="service.description || 'Professional garment care service'"></p>
-                                </div>
+                                <h5 class="font-extrabold text-slate-900 text-xs sm:text-base truncate" x-text="service.name"></h5>
                             </div>
-                            
-                            <div class="flex items-center justify-between sm:justify-end gap-4 shrink-0 border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
-                                <div class="text-right">
-                                    <span class="text-[10px] text-slate-400 font-bold block sm:hidden">Price</span>
-                                    <span class="text-sm sm:text-base font-black text-blue-600">LKR <span x-text="parseFloat(service.base_price).toFixed(2)"></span></span>
-                                </div>
-                                <button type="button" @click="openQtyModal(service)" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm transition-all flex items-center gap-2 shadow-md shrink-0 cursor-pointer">
-                                    <span>Add</span>
-                                    <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-xs font-black">+</span>
-                                </button>
+
+                            <!-- Center/Right: Unit above Price -->
+                            <div class="flex flex-col items-end shrink-0 leading-tight">
+                                <span class="text-[10px] sm:text-xs font-extrabold text-slate-400 uppercase tracking-wider" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></span>
+                                <span class="text-xs sm:text-base font-black text-blue-600">LKR <span x-text="parseFloat(service.base_price).toFixed(2)"></span></span>
                             </div>
+
+                            <!-- Right: Add Button -->
+                            <button type="button" @click="openQtyModal(service)" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl text-xs transition-all flex items-center gap-1.5 shadow-sm shrink-0 cursor-pointer">
+                                <span>Add</span>
+                                <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-[10px] font-black">+</span>
+                            </button>
                         </div>
                     </template>
                     <template x-if="currentServices.length === 0">
