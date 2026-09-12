@@ -975,10 +975,12 @@
                         }
 
                         this.$nextTick(() => {
+                            const servicesHeader = document.getElementById('services');
                             const wiz = document.getElementById('booking-wizard-container');
-                            if (wiz) {
-                                // Add offset for sticky headers if any, or just scroll to start
-                                wiz.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                            const target = servicesHeader || wiz;
+                            if (target) {
+                                const y = target.getBoundingClientRect().top + window.scrollY - 80;
+                                window.scrollTo({top: y, behavior: 'smooth'});
                             }
                         });
                     },
