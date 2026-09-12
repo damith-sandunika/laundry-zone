@@ -830,6 +830,28 @@
                     isOutOfRange: false,
 
                     initData() {
+                        // Check for cart passed from Homepage checkout
+                        const savedHomepageCart = localStorage.getItem('customer_booking_cart');
+                        if (savedHomepageCart) {
+                            try {
+                                const parsedCart = JSON.parse(savedHomepageCart);
+                                if (Array.isArray(parsedCart) && parsedCart.length > 0) {
+                                    this.cart = parsedCart;
+                                    localStorage.removeItem('customer_booking_cart');
+                                    // Auto-advance step: if not logged in -> step 2 (Account), if logged in -> step 3 (Pickup)
+                                    if (!this.isAuthenticated) {
+                                        this.step = 2;
+                                        this.highestStepReached = 2;
+                                    } else {
+                                        this.step = 3;
+                                        this.highestStepReached = 3;
+                                    }
+                                }
+                            } catch(e) {
+                                console.error('Error parsing customer_booking_cart from localStorage', e);
+                            }
+                        }
+
                         // Check if we are starting on step 3
                         if (this.step === 3) {
                             setTimeout(() => {

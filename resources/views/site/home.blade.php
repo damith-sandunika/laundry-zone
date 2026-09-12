@@ -338,168 +338,196 @@
     </style>
 
     <!-- Services Section -->
-    <section id="services" class="py-12 lg:py-24 bg-slate-50/60 relative" x-data="serviceModalHandler()">
+    <section id="services" class="py-12 lg:py-24 bg-slate-50/60 relative" x-data="homeServicesHandler({{ Js::from($categories) }})">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="text-center mb-12">
+            <div class="text-center mb-10">
                 <span class="bg-blue-100 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">What We Offer</span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-3">Our Services</h2>
-                <p class="text-slate-500 max-w-2xl mx-auto text-sm md:text-base font-medium">Select a category below to explore available services, prices, and instant booking options.</p>
+                <p class="text-slate-500 max-w-2xl mx-auto text-sm md:text-base font-medium">Select a category below to explore services, prices, and build your order.</p>
                 <div class="w-16 h-1 bg-accent mx-auto rounded-full mt-4"></div>
             </div>
 
-            <!-- Main Categories Grid / Cards -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto mb-10">
-                @foreach($categories as $category)
-                    @php
-                        // Collect all services under this main category (direct services + children's services)
-                        $allServices = collect();
-                        foreach($category->services as $s) {
-                            $allServices->push([
-                                'id' => $s->id,
-                                'name' => $s->name,
-                                'price' => number_format($s->base_price, 2),
-                                'unit' => $s->price_type === 'per_kg' ? '/ kg' : ($s->price_type === 'per_piece' ? '/ piece' : ''),
-                                'description' => $s->description ?? ''
-                            ]);
-                        }
-                        foreach($category->children as $child) {
-                            foreach($child->services as $s) {
-                                $allServices->push([
-                                    'id' => $s->id,
-                                    'name' => $child->name . ' - ' . $s->name,
-                                    'price' => number_format($s->base_price, 2),
-                                    'unit' => $s->price_type === 'per_kg' ? '/ kg' : ($s->price_type === 'per_piece' ? '/ piece' : ''),
-                                    'description' => $s->description ?? ''
-                                ]);
-                            }
-                        }
-                    @endphp
-                    <div class="bg-white rounded-2xl sm:rounded-3xl p-5 border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between cursor-pointer"
-                         @click="openModal({{ json_encode([
-                             'id' => $category->id,
-                             'name' => $category->name,
-                             'image' => $category->image_path ? asset($category->image_path) : null,
-                             'description' => $category->description ?? 'Professional ' . strtolower($category->name) . ' services tailored for your garments.',
-                             'services_count' => $allServices->count(),
-                             'services' => $allServices
-                         ]) }})">
-                        
-                        <div class="flex flex-col items-center text-center">
-                            <!-- Category Image / Icon -->
-                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-blue-50/80 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-md flex items-center justify-center border border-blue-100/50">
-                                @if($category->image_path)
-                                    <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
-                                @else
-                                    <i class="fa-solid fa-soap text-2xl text-blue-600"></i>
-                                @endif
-                            </div>
-
-                            <h4 class="text-slate-900 text-sm sm:text-base font-extrabold leading-tight mb-1 group-hover:text-blue-600 transition-colors">{{ $category->name }}</h4>
-                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium mb-3">{{ $allServices->count() }} {{ Str::plural('Service', $allServices->count()) }} Available</p>
-                        </div>
-
-                        <!-- Category Action Button with + Sign -->
-                        <button class="w-full mt-2 bg-slate-50 group-hover:bg-blue-600 text-slate-700 group-hover:text-white border border-slate-200 group-hover:border-blue-600 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm">
-                            <span>View Services</span>
-                            <span class="w-5 h-5 rounded-full bg-blue-600 group-hover:bg-white text-white group-hover:text-blue-600 flex items-center justify-center text-xs font-black transition-colors">+</span>
-                        </button>
-                    </div>
-                @endforeach
-            </div>
-
-            <div class="text-center">
-                <a href="{{ route('customer.login') }}" class="inline-flex items-center gap-2 bg-accent hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-full shadow-lg shadow-blue-200 transition-all text-sm sm:text-base">
-                    <span>View All Services & Book</span>
-                    <span class="w-5 h-5 rounded-full bg-white/20 text-white flex items-center justify-center text-xs font-black">+</span>
-                </a>
-            </div>
-        </div>
-
-        <!-- 🌟 Interactive Popup Modal for Category Services -->
-        <div x-show="isModalOpen" 
-             x-transition:enter="transition ease-out duration-300"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             x-transition:leave="transition ease-in duration-200"
-             x-transition:leave-start="opacity-100"
-             x-transition:leave-end="opacity-0"
-             class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto"
-             style="display: none;"
-             @keydown.escape.window="closeModal()">
-            
-            <div x-show="isModalOpen"
-                 x-transition:enter="transition ease-out duration-300"
-                 x-transition:enter-start="opacity-0 scale-90"
-                 x-transition:enter-end="opacity-100 scale-100"
-                 x-transition:leave="transition ease-in duration-200"
-                 x-transition:leave-start="opacity-100 scale-100"
-                 x-transition:leave-end="opacity-0 scale-90"
-                 @click.away="closeModal()"
-                 class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 relative my-8">
+            <!-- Drill Down Service Selector Window Container -->
+            <div class="bg-white border border-slate-200/80 rounded-3xl shadow-xl max-w-5xl mx-auto overflow-hidden flex flex-col min-h-[520px]">
                 
-                <!-- Modal Header -->
-                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white relative">
-                    <button @click="closeModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
-                        <i class="fa-solid fa-xmark text-lg"></i>
-                    </button>
-
-                    <div class="flex items-center gap-4 pr-8">
-                        <template x-if="activeCategory && activeCategory.image">
-                            <img :src="activeCategory.image" class="w-14 h-14 rounded-2xl object-cover border-2 border-white/20 shadow-md">
-                        </template>
-                        <template x-if="!activeCategory || !activeCategory.image">
-                            <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
-                                <i class="fa-solid fa-soap text-2xl text-blue-300"></i>
-                            </div>
-                        </template>
+                <!-- Navigation Bar / Breadcrumb Header -->
+                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 px-6 py-4 text-white flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <button type="button" x-show="currentViewLevel > 0" @click="goBackLevel()" class="w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors text-sm font-bold">
+                            <i class="fa-solid fa-arrow-left"></i>
+                        </button>
                         <div>
-                            <span class="bg-blue-500/30 text-blue-200 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-400/30">Category</span>
-                            <h3 class="text-2xl font-black tracking-tight text-white mt-1" x-text="activeCategory ? activeCategory.name : ''"></h3>
+                            <span class="bg-blue-500/30 text-blue-200 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-400/30">
+                                <span x-show="currentViewLevel === 0">Categories</span>
+                                <span x-show="currentViewLevel === 1">Subcategories</span>
+                                <span x-show="currentViewLevel === 2">Services</span>
+                            </span>
+                            <h3 class="text-lg sm:text-xl font-extrabold text-white mt-0.5">
+                                <span x-show="currentViewLevel === 0">All Laundry Categories</span>
+                                <span x-show="currentViewLevel === 1" x-text="selectedMainCategory?.name"></span>
+                                <span x-show="currentViewLevel === 2" x-text="selectedSubcategory?.name || selectedMainCategory?.name"></span>
+                            </h3>
                         </div>
+                    </div>
+
+                    <div x-show="cart.length > 0" class="flex items-center gap-2 bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 text-xs font-extrabold">
+                        <i class="fa-solid fa-basket-shopping text-blue-300"></i>
+                        <span x-text="cart.reduce((s, i) => s + i.qty, 0) + ' Items'"></span>
                     </div>
                 </div>
 
-                <!-- Modal Content (Services List) -->
-                <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                    <template x-if="activeCategory && activeCategory.services && activeCategory.services.length > 0">
-                        <div class="space-y-3">
-                            <template x-for="service in activeCategory.services" :key="service.id">
-                                <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                                    <div>
-                                        <h5 class="font-bold text-slate-800 text-sm sm:text-base" x-text="service.name"></h5>
-                                        <template x-if="service.description">
-                                            <p class="text-xs text-slate-500 mt-0.5" x-text="service.description"></p>
-                                        </template>
-                                        <div class="mt-1">
-                                            <span class="text-xs font-black text-blue-600">Rs. <span x-text="service.price"></span></span>
-                                            <span class="text-[10px] font-bold text-slate-400" x-text="service.unit"></span>
+                <!-- Level Views Container -->
+                <div class="p-6 sm:p-8 flex-1 overflow-y-auto custom-scrollbar bg-slate-50/40">
+                    
+                    <!-- Level 0: Main Categories Grid -->
+                    <div x-show="currentViewLevel === 0" x-transition:enter="transition ease-out duration-200">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                            <template x-for="cat in categories" :key="cat.id">
+                                <div @click="selectLevel1(cat)" class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between cursor-pointer">
+                                    <div class="flex flex-col items-center text-center">
+                                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-blue-50/80 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-md flex items-center justify-center border border-blue-100/50">
+                                            <template x-if="cat.image_path">
+                                                <img :src="cat.image_path.startsWith('http') ? cat.image_path : '/' + cat.image_path" class="w-full h-full object-cover" :alt="cat.name">
+                                            </template>
+                                            <template x-if="!cat.image_path">
+                                                <i class="fa-solid fa-soap text-2xl text-blue-600"></i>
+                                            </template>
                                         </div>
+                                        <h4 class="text-slate-900 text-sm sm:text-base font-extrabold leading-tight mb-1 group-hover:text-blue-600 transition-colors" x-text="cat.name"></h4>
+                                        <p class="text-[11px] sm:text-xs text-slate-500 font-medium mb-3" x-text="getServiceCount(cat) + ' Services Available'"></p>
                                     </div>
-                                    <!-- Button with + icon redirecting to login -->
-                                    <a href="{{ route('customer.login') }}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm shrink-0">
-                                        <span>Book Service</span>
-                                        <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-xs font-black">+</span>
-                                    </a>
+                                    <button type="button" class="w-full mt-2 bg-slate-50 group-hover:bg-blue-600 text-slate-700 group-hover:text-white border border-slate-200 group-hover:border-blue-600 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm">
+                                        <span>View Services</span>
+                                        <span class="w-5 h-5 rounded-full bg-blue-600 group-hover:bg-white text-white group-hover:text-blue-600 flex items-center justify-center text-xs font-black transition-colors">+</span>
+                                    </button>
                                 </div>
                             </template>
                         </div>
-                    </template>
+                    </div>
 
-                    <template x-if="!activeCategory || !activeCategory.services || activeCategory.services.length === 0">
-                        <div class="text-center py-8">
-                            <i class="fa-solid fa-shirt text-4xl text-slate-300 mb-3"></i>
-                            <p class="text-slate-500 text-sm font-medium">Standard laundry services available for this category.</p>
+                    <!-- Level 1: Subcategories Grid -->
+                    <div x-show="currentViewLevel === 1" x-transition:enter="transition ease-out duration-200">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">
+                            <template x-for="sub in currentSubcategories" :key="sub.id">
+                                <div @click="selectLevel2(sub)" class="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between cursor-pointer">
+                                    <div class="flex flex-col items-center text-center">
+                                        <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-slate-50 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-md flex items-center justify-center border border-slate-100">
+                                            <template x-if="sub.image_path">
+                                                <img :src="sub.image_path.startsWith('http') ? sub.image_path : '/' + sub.image_path" class="w-full h-full object-cover" :alt="sub.name">
+                                            </template>
+                                            <template x-if="!sub.image_path">
+                                                <i class="fa-solid fa-layer-group text-2xl text-blue-500"></i>
+                                            </template>
+                                        </div>
+                                        <h4 class="text-slate-900 text-sm sm:text-base font-extrabold leading-tight mb-1 group-hover:text-blue-600 transition-colors" x-text="sub.name"></h4>
+                                        <p class="text-[11px] sm:text-xs text-slate-500 font-medium mb-3" x-text="(sub.services ? Object.keys(sub.services).length : 0) + ' Services'"></p>
+                                    </div>
+                                    <button type="button" class="w-full mt-2 bg-slate-50 group-hover:bg-blue-600 text-slate-700 group-hover:text-white border border-slate-200 group-hover:border-blue-600 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm">
+                                        <span>Select Subcategory</span>
+                                        <span class="w-5 h-5 rounded-full bg-blue-600 group-hover:bg-white text-white group-hover:text-blue-600 flex items-center justify-center text-xs font-black transition-colors">+</span>
+                                    </button>
+                                </div>
+                            </template>
                         </div>
-                    </template>
+                    </div>
+
+                    <!-- Level 2: Services Cards Grid -->
+                    <div x-show="currentViewLevel === 2" x-transition:enter="transition ease-out duration-200">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <template x-for="service in currentServices" :key="service.id">
+                                <div class="bg-white border-2 border-slate-100 rounded-2xl p-4 sm:p-5 flex justify-between items-center gap-4 hover:border-blue-200 hover:shadow-lg transition-all">
+                                    <div class="flex items-center gap-3.5">
+                                        <div class="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 font-bold text-xl shadow-sm">
+                                            <i class="fa-solid fa-jug-detergent"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-extrabold text-slate-900 text-sm sm:text-base" x-text="service.name"></h5>
+                                            <p class="text-xs text-slate-500 font-medium mt-0.5 line-clamp-1" x-text="service.description || 'Professional garment care'"></p>
+                                            <div class="mt-1.5 flex items-center gap-2">
+                                                <span class="text-sm font-black text-blue-600">LKR <span x-text="parseFloat(service.base_price).toFixed(2)"></span></span>
+                                                <span class="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full uppercase" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <button type="button" @click="openQtyModal(service)" class="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-4 py-2.5 rounded-xl text-xs transition-all flex items-center gap-2 shadow-md shrink-0">
+                                        <span>Add</span>
+                                        <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-xs font-black">+</span>
+                                    </button>
+                                </div>
+                            </template>
+                            <template x-if="currentServices.length === 0">
+                                <div class="col-span-full py-12 text-center text-slate-400 font-bold">
+                                    No services found in this category.
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quantity Selection Modal -->
+            <div x-show="isQtyModalOpen" style="display:none;" class="fixed inset-0 z-[110] flex items-center justify-center p-4">
+                <div x-show="isQtyModalOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="isQtyModalOpen = false"></div>
+                <div x-show="isQtyModalOpen" x-transition.scale.origin.bottom class="relative bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col overflow-hidden border border-slate-100">
+                    <div class="p-6 text-center">
+                        <h3 class="text-lg font-extrabold text-slate-800 mb-1" x-text="selectedService?.name"></h3>
+                        <p class="text-sm font-bold text-blue-600 mb-6">LKR <span x-text="parseFloat(selectedService?.base_price || 0).toFixed(2)"></span> <span class="text-xs text-slate-400" x-text="selectedService?.price_type === 'per_kg' ? '/ kg' : '/ item'"></span></p>
+                        
+                        <div class="flex items-center justify-center gap-6">
+                            <button type="button" @click="if(serviceQty > 1) serviceQty--" class="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 font-bold transition-colors"><i class="fa-solid fa-minus"></i></button>
+                            <div class="text-2xl font-black text-slate-800 w-12 text-center" x-text="serviceQty"></div>
+                            <button type="button" @click="serviceQty++" class="w-10 h-10 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 font-bold transition-colors"><i class="fa-solid fa-plus"></i></button>
+                        </div>
+                    </div>
+                    <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+                        <button type="button" @click="isQtyModalOpen = false" class="flex-1 py-2.5 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors text-xs">Cancel</button>
+                        <button type="button" @click="confirmAddToCart()" class="flex-1 py-2.5 rounded-xl font-extrabold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-colors text-xs">Add to Cart</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Fixed Bottom Cart Bar -->
+            <div x-show="cart.length > 0" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="translate-y-full opacity-0" x-transition:enter-end="translate-y-0 opacity-100" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+                <!-- Expandable Cart List -->
+                <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
+                    <div class="max-w-4xl mx-auto p-4 space-y-2">
+                        <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Your Cart Items</h4>
+                        <template x-for="(item, index) in cart" :key="item.cart_key">
+                            <div class="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
+                                <div class="flex-1 min-w-0 pr-4">
+                                    <div class="font-bold text-sm text-slate-800 truncate" x-text="item.name"></div>
+                                    <div class="text-xs font-semibold text-blue-600 mt-0.5">LKR <span x-text="item.base_price.toFixed(2)"></span> x <span x-text="item.qty"></span> = LKR <span x-text="(item.base_price * item.qty).toFixed(2)"></span></div>
+                                </div>
+                                <div class="flex items-center gap-3 shrink-0">
+                                    <div class="flex items-center bg-slate-50 rounded-lg p-1 border border-slate-200">
+                                        <button type="button" @click="updateCartQty(index, -1)" class="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-red-500 border border-slate-200"><i class="fa-solid fa-minus text-[10px]"></i></button>
+                                        <span class="w-8 text-center text-xs font-bold text-slate-800" x-text="item.qty"></span>
+                                        <button type="button" @click="updateCartQty(index, 1)" class="w-7 h-7 flex items-center justify-center rounded-md bg-white text-slate-600 shadow-sm hover:text-blue-600 border border-slate-200"><i class="fa-solid fa-plus text-[10px]"></i></button>
+                                    </div>
+                                    <button type="button" @click="removeFromCartByIndex(index)" class="text-red-400 hover:text-red-600 p-2 transition-colors"><i class="fa-solid fa-trash-can"></i></button>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
                 </div>
 
-                <!-- Modal Footer -->
-                <div class="p-5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
-                    <p class="text-xs font-bold text-slate-500">Fast 48-Hour Delivery Available</p>
-                    <a href="{{ route('customer.login') }}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-6 py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md">
-                        <span x-text="`Book Pickup for ${activeCategory ? activeCategory.name : 'Category'}`"></span>
-                        <span class="w-5 h-5 rounded-full bg-white text-blue-600 flex items-center justify-center text-xs font-black">+</span>
-                    </a>
+                <!-- Main Cart Bar -->
+                <div class="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+                    <div class="flex items-center gap-3.5 cursor-pointer" @click="isCartExpanded = !isCartExpanded">
+                        <div class="w-11 h-11 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 flex items-center justify-center relative shadow-sm font-bold">
+                            <i class="fa-solid fa-basket-shopping text-lg"></i>
+                            <span class="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-600 text-white text-[10px] font-black rounded-full flex items-center justify-center shadow-md" x-text="cart.reduce((sum, i) => sum + i.qty, 0)"></span>
+                        </div>
+                        <div>
+                            <div class="text-xs font-bold text-slate-500 flex items-center gap-1">Cart Total <i class="fa-solid text-[10px] ml-1 transition-transform" :class="isCartExpanded ? 'fa-chevron-down' : 'fa-chevron-up'"></i></div>
+                            <div class="text-lg font-black text-slate-900">LKR <span x-text="baseCartTotal.toFixed(2)"></span></div>
+                        </div>
+                    </div>
+                    
+                    <button type="button" @click="checkoutFromHomepage()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 sm:px-8 py-3 rounded-xl font-extrabold transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-sm sm:text-base">
+                        <span>Checkout Now</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
                 </div>
             </div>
         </div>
@@ -507,19 +535,123 @@
 
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('serviceModalHandler', () => ({
-                isModalOpen: false,
-                activeCategory: null,
-                openModal(categoryData) {
-                    this.activeCategory = categoryData;
-                    this.isModalOpen = true;
-                    document.body.style.overflow = 'hidden';
+            Alpine.data('homeServicesHandler', (categoriesData) => ({
+                categories: categoriesData || [],
+                selectedMainCategory: null,
+                selectedSubcategory: null,
+                currentSubcategories: [],
+                currentServices: [],
+                currentViewLevel: 0, // 0: Categories, 1: Subcategories, 2: Services
+                
+                cart: [],
+                isCartExpanded: false,
+                isQtyModalOpen: false,
+                selectedService: null,
+                serviceQty: 1,
+
+                getServiceCount(cat) {
+                    let count = cat.services ? Object.keys(cat.services).length : 0;
+                    if (cat.children) {
+                        let children = Array.isArray(cat.children) ? cat.children : Object.values(cat.children);
+                        children.forEach(child => {
+                            if (child.services) {
+                                count += Object.keys(child.services).length;
+                            }
+                        });
+                    }
+                    return count;
                 },
-                closeModal() {
-                    this.isModalOpen = false;
-                    document.body.style.overflow = 'auto';
+
+                selectLevel1(cat) {
+                    this.selectedMainCategory = cat;
+                    let childrenArray = cat.children ? (Array.isArray(cat.children) ? cat.children : Object.values(cat.children)) : [];
+                    
+                    if (childrenArray.length > 0) {
+                        this.currentSubcategories = childrenArray;
+                        this.currentViewLevel = 1;
+                    } else {
+                        this.currentSubcategories = [];
+                        this.selectedSubcategory = null;
+                        this.currentServices = cat.services ? (Array.isArray(cat.services) ? cat.services : Object.values(cat.services)) : [];
+                        this.currentViewLevel = 2;
+                    }
+                },
+
+                selectLevel2(sub) {
+                    this.selectedSubcategory = sub;
+                    this.currentServices = sub.services ? (Array.isArray(sub.services) ? sub.services : Object.values(sub.services)) : [];
+                    this.currentViewLevel = 2;
+                },
+
+                goBackLevel() {
+                    if (this.currentViewLevel === 2) {
+                        if (this.currentSubcategories.length > 0) {
+                            this.currentViewLevel = 1;
+                            this.selectedSubcategory = null;
+                        } else {
+                            this.currentViewLevel = 0;
+                            this.selectedMainCategory = null;
+                        }
+                    } else if (this.currentViewLevel === 1) {
+                        this.currentViewLevel = 0;
+                        this.selectedMainCategory = null;
+                    }
+                },
+
+                openQtyModal(service) {
+                    this.selectedService = service;
+                    this.serviceQty = 1;
+                    this.isQtyModalOpen = true;
+                },
+
+                confirmAddToCart() {
+                    if (!this.selectedService) return;
+                    
+                    let cartItem = {
+                        id: this.selectedService.id,
+                        service_type_id: this.selectedService.id,
+                        name: this.selectedService.name,
+                        base_price: parseFloat(this.selectedService.base_price),
+                        price_type: this.selectedService.price_type,
+                        qty: this.serviceQty,
+                        turnaround_type_id: null,
+                        selected_extras: [],
+                        cart_key: Date.now() + Math.random()
+                    };
+                    
+                    let existing = this.cart.find(i => i.id === cartItem.id);
+                    if (existing) {
+                        existing.qty += cartItem.qty;
+                    } else {
+                        this.cart.push(cartItem);
+                    }
+                    
+                    this.isQtyModalOpen = false;
+                },
+
+                updateCartQty(index, amount) {
+                    if (this.cart[index].qty + amount > 0) {
+                        this.cart[index].qty += amount;
+                    }
+                },
+
+                removeFromCartByIndex(index) {
+                    this.cart.splice(index, 1);
+                    if (this.cart.length === 0) {
+                        this.isCartExpanded = false;
+                    }
+                },
+
+                get baseCartTotal() {
+                    return this.cart.reduce((total, item) => total + (parseFloat(item.base_price) * item.qty), 0);
+                },
+
+                checkoutFromHomepage() {
+                    if (this.cart.length === 0) return;
+                    localStorage.setItem('customer_booking_cart', JSON.stringify(this.cart));
+                    window.location.href = "{{ route('customer.booking') }}";
                 }
-            }))
+            }));
         });
     </script>
 
