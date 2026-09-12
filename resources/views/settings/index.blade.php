@@ -48,12 +48,7 @@
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     General Settings
                 </button>
-                @if(auth()->user()->role === 'super_admin')
-                    <a href="{{ route('settings.services') }}"
-                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200 text-gray-500 hover:text-gray-700 hover:bg-gray-200/50 flex items-center gap-1.5">
-                        Services & Pricing
-                    </a>
-                @endif
+
                 <button @click="activeTab = 'extras'; localStorage.setItem('settingsActiveTab', 'extras')"
                     :class="activeTab === 'extras' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
                     class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
