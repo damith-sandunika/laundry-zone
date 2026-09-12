@@ -28,7 +28,7 @@ class OrderManagementTest extends TestCase
 
         $this->superAdmin = User::create([
             'name' => 'Super Admin',
-            'email' => 'admin@rapid.com',
+            'email' => 'admin@365laundry.lk',
             'password' => bcrypt('password'),
             'role' => 'super_admin',
             'branch_id' => $this->branch->id,
