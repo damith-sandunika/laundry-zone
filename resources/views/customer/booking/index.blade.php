@@ -940,6 +940,11 @@
                             if (response.data.success) {
                                 this.isAuthenticated = true;
                                 this.authCustomer = response.data.customer;
+                                if (response.data.csrf_token) {
+                                    document.querySelectorAll('input[name="_token"]').forEach(el => el.value = response.data.csrf_token);
+                                    document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', response.data.csrf_token);
+                                    axios.defaults.headers.common['X-CSRF-TOKEN'] = response.data.csrf_token;
+                                }
                                 this.goToStep(3);
                             }
                         } catch (error) {
@@ -957,6 +962,11 @@
                             if (response.data.success) {
                                 this.isAuthenticated = true;
                                 this.authCustomer = response.data.customer;
+                                if (response.data.csrf_token) {
+                                    document.querySelectorAll('input[name="_token"]').forEach(el => el.value = response.data.csrf_token);
+                                    document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', response.data.csrf_token);
+                                    axios.defaults.headers.common['X-CSRF-TOKEN'] = response.data.csrf_token;
+                                }
                                 this.goToStep(3);
                             }
                         } catch (error) {

@@ -8,7 +8,7 @@ class CustomerStoreBookingRequest extends FormRequest
 {
     public function authorize()
     {
-        return auth('customer')->check();
+        return true;
     }
 
     public function rules()

@@ -25,7 +25,7 @@ class AuthController extends Controller
 
         if (Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            return redirect()->route('customer.dashboard');
+            return redirect()->intended(route('customer.dashboard'));
         }
 
         return back()->withErrors([
@@ -57,8 +57,9 @@ class AuthController extends Controller
         ]);
 
         Auth::guard('customer')->login($customer);
+        $request->session()->regenerate();
 
-        return redirect()->route('customer.dashboard');
+        return redirect()->intended(route('customer.dashboard'));
     }
 
     public function logout(Request $request)
@@ -82,7 +83,8 @@ class AuthController extends Controller
             $request->session()->regenerate();
             return response()->json([
                 'success' => true,
-                'customer' => Auth::guard('customer')->user()
+                'customer' => Auth::guard('customer')->user(),
+                'csrf_token' => csrf_token(),
             ]);
         }
 
@@ -116,7 +118,8 @@ class AuthController extends Controller
 
             return response()->json([
                 'success' => true,
-                'customer' => $customer
+                'customer' => $customer,
+                'csrf_token' => csrf_token(),
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
