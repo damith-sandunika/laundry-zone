@@ -347,22 +347,6 @@
                 <div class="w-16 h-1 bg-accent mx-auto rounded-full mt-4"></div>
             </div>
 
-            <!-- Interactive Main Category Tabs / Pills Bar (Fast Switching) -->
-            <div class="mb-6 max-w-6xl mx-auto">
-                <div class="flex items-center justify-start sm:justify-center gap-2 overflow-x-auto pb-2 scrollbar-hide px-2">
-                    <button type="button" @click="goHomeLevel()" class="px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5"
-                            :class="currentViewLevel === 0 ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'">
-                        <i class="fa-solid fa-shapes text-xs"></i> All Categories
-                    </button>
-                    <template x-for="cat in categories" :key="cat.id">
-                        <button type="button" @click="selectLevel1(cat)" class="px-4 py-2 rounded-full text-xs sm:text-sm font-extrabold transition-all cursor-pointer shrink-0 border flex items-center gap-1.5"
-                                :class="selectedMainCategory && selectedMainCategory.id === cat.id ? 'bg-blue-600 text-white border-blue-600 shadow-md scale-105' : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100'">
-                            <span x-text="cat.name"></span>
-                        </button>
-                    </template>
-                </div>
-            </div>
-
             <!-- Sleek Minimal Navigation Header (when drilled down: Back + 2 Category Tabs) -->
             <div x-show="currentViewLevel > 0" x-transition.opacity class="flex items-center justify-center gap-2 sm:gap-3 mb-8 max-w-4xl mx-auto flex-wrap">
                 <!-- Back Button -->
