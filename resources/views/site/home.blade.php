@@ -338,83 +338,190 @@
     </style>
 
     <!-- Services Section -->
-    <section id="services" class="py-10 lg:py-20 bg-white">
+    <section id="services" class="py-12 lg:py-24 bg-slate-50/60 relative" x-data="serviceModalHandler()">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <span class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">What We Offer</span>
-                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-4">Our Services</h2>
-                <div class="w-16 h-1 bg-accent mx-auto rounded-full"></div>
+                <span class="bg-blue-100 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">What We Offer</span>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-3">Our Services</h2>
+                <p class="text-slate-500 max-w-2xl mx-auto text-sm md:text-base font-medium">Select a category below to explore available services, prices, and instant booking options.</p>
+                <div class="w-16 h-1 bg-accent mx-auto rounded-full mt-4"></div>
             </div>
 
-            <!-- Category Cards Slider -->
-            <div class="max-w-5xl mx-auto mb-8 relative px-2 sm:px-10" 
-                 x-data="{ 
-                    timer: null,
-                    scrollNext() { this.$refs.slider.scrollBy({ left: 300, behavior: 'smooth' }) }, 
-                    scrollPrev() { this.$refs.slider.scrollBy({ left: -300, behavior: 'smooth' }) },
-                    startAutoScroll() {
-                        this.timer = setInterval(() => {
-                            let el = this.$refs.slider;
-                            if (!el) return;
-                            if (el.scrollLeft + el.clientWidth >= el.scrollWidth - 5) {
-                                el.scrollTo({ left: 0, behavior: 'smooth' }); // Rewind to start
-                            } else {
-                                el.scrollBy({ left: 160, behavior: 'smooth' });
+            <!-- Main Categories Grid / Cards -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 max-w-6xl mx-auto mb-10">
+                @foreach($categories as $category)
+                    @php
+                        // Collect all services under this main category (direct services + children's services)
+                        $allServices = collect();
+                        foreach($category->services as $s) {
+                            $allServices->push([
+                                'id' => $s->id,
+                                'name' => $s->name,
+                                'price' => number_format($s->base_price, 2),
+                                'unit' => $s->price_type === 'per_kg' ? '/ kg' : ($s->price_type === 'per_piece' ? '/ piece' : ''),
+                                'description' => $s->description ?? ''
+                            ]);
+                        }
+                        foreach($category->children as $child) {
+                            foreach($child->services as $s) {
+                                $allServices->push([
+                                    'id' => $s->id,
+                                    'name' => $child->name . ' - ' . $s->name,
+                                    'price' => number_format($s->base_price, 2),
+                                    'unit' => $s->price_type === 'per_kg' ? '/ kg' : ($s->price_type === 'per_piece' ? '/ piece' : ''),
+                                    'description' => $s->description ?? ''
+                                ]);
                             }
-                        }, 3000);
-                    },
-                    stopAutoScroll() {
-                        clearInterval(this.timer);
-                    }
-                 }"
-                 x-init="startAutoScroll()"
-                 @mouseenter="stopAutoScroll()"
-                 @mouseleave="startAutoScroll()"
-                 @touchstart="stopAutoScroll()"
-                 @touchend="startAutoScroll()">
-                
-                <!-- Prev Button -->
-                <button @click="scrollPrev" class="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
-                    <i class="fa-solid fa-chevron-left"></i>
-                </button>
-                
-                <!-- Slider Container -->
-                <div class="w-full flex justify-center">
-                    <div x-ref="slider" class="flex flex-row gap-3 sm:gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-hide py-3 px-2 max-w-full">
-                        @foreach($categories as $category)
-                            <div class="snap-start shrink-0 w-[130px] sm:w-[150px] h-full">
-                                <a href="{{ route('customer.login') }}" class="bg-white rounded-2xl p-3 sm:p-4 border border-slate-100 shadow-sm hover:shadow-md hover:border-blue-200 hover:-translate-y-1 transition-all group block text-center h-full flex flex-col justify-center items-center">
-                                    <!-- Category Image -->
-                                    <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full overflow-hidden bg-slate-50 mb-2 sm:mb-3 group-hover:scale-105 transition-transform shadow-sm">
-                                        @if($category->image_path)
-                                            <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
-                                        @else
-                                            <div class="w-full h-full flex items-center justify-center">
-                                                <i class="fa-solid fa-image text-xl text-slate-400"></i>
-                                            </div>
-                                        @endif
-                                    </div>
-                                    
-                                    <!-- Title -->
-                                    <h4 class="text-slate-800 text-[11px] sm:text-xs font-bold leading-tight">{{ $category->name }}</h4>
-                                </a>
+                        }
+                    @endphp
+                    <div class="bg-white rounded-2xl sm:rounded-3xl p-5 border border-slate-200/80 shadow-sm hover:shadow-xl hover:border-blue-300 hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between cursor-pointer"
+                         @click="openModal({{ json_encode([
+                             'id' => $category->id,
+                             'name' => $category->name,
+                             'image' => $category->image_path ? asset($category->image_path) : null,
+                             'description' => $category->description ?? 'Professional ' . strtolower($category->name) . ' services tailored for your garments.',
+                             'services_count' => $allServices->count(),
+                             'services' => $allServices
+                         ]) }})">
+                        
+                        <div class="flex flex-col items-center text-center">
+                            <!-- Category Image / Icon -->
+                            <div class="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden bg-blue-50/80 mb-4 group-hover:scale-110 transition-transform duration-300 shadow-md flex items-center justify-center border border-blue-100/50">
+                                @if($category->image_path)
+                                    <img src="{{ asset($category->image_path) }}" class="w-full h-full object-cover" alt="{{ $category->name }}">
+                                @else
+                                    <i class="fa-solid fa-soap text-2xl text-blue-600"></i>
+                                @endif
                             </div>
-                        @endforeach
-                    </div>
-                </div>
 
-                <!-- Next Button -->
-                <button @click="scrollNext" class="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 w-10 h-10 items-center justify-center bg-white border border-slate-200 rounded-full shadow-md text-brand hover:bg-blue-50 hover:text-blue-600 transition-colors z-10">
-                    <i class="fa-solid fa-chevron-right"></i>
-                </button>
+                            <h4 class="text-slate-900 text-sm sm:text-base font-extrabold leading-tight mb-1 group-hover:text-blue-600 transition-colors">{{ $category->name }}</h4>
+                            <p class="text-[11px] sm:text-xs text-slate-500 font-medium mb-3">{{ $allServices->count() }} {{ Str::plural('Service', $allServices->count()) }} Available</p>
+                        </div>
+
+                        <!-- Category Action Button with + Sign -->
+                        <button class="w-full mt-2 bg-slate-50 group-hover:bg-blue-600 text-slate-700 group-hover:text-white border border-slate-200 group-hover:border-blue-600 py-2.5 px-3 rounded-xl font-bold text-xs sm:text-sm transition-all duration-300 flex items-center justify-center gap-2 shadow-sm">
+                            <span>View Services</span>
+                            <span class="w-5 h-5 rounded-full bg-blue-600 group-hover:bg-white text-white group-hover:text-blue-600 flex items-center justify-center text-xs font-black transition-colors">+</span>
+                        </button>
+                    </div>
+                @endforeach
             </div>
-            <div class="text-center mt-8">
-                <a href="{{ route('customer.login') }}" class="inline-flex items-center gap-2 bg-accent hover:bg-blue-700 text-white font-bold py-3 px-8 rounded-full shadow-lg shadow-blue-200 transition-all">
-                    View All Services & Book <i class="fa-solid fa-arrow-right"></i>
+
+            <div class="text-center">
+                <a href="{{ route('customer.login') }}" class="inline-flex items-center gap-2 bg-accent hover:bg-blue-700 text-white font-bold py-3.5 px-8 rounded-full shadow-lg shadow-blue-200 transition-all text-sm sm:text-base">
+                    <span>View All Services & Book</span>
+                    <span class="w-5 h-5 rounded-full bg-white/20 text-white flex items-center justify-center text-xs font-black">+</span>
                 </a>
             </div>
         </div>
+
+        <!-- 🌟 Interactive Popup Modal for Category Services -->
+        <div x-show="isModalOpen" 
+             x-transition:enter="transition ease-out duration-300"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             x-transition:leave="transition ease-in duration-200"
+             x-transition:leave-start="opacity-100"
+             x-transition:leave-end="opacity-0"
+             class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-md overflow-y-auto"
+             style="display: none;"
+             @keydown.escape.window="closeModal()">
+            
+            <div x-show="isModalOpen"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0 scale-90"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-90"
+                 @click.away="closeModal()"
+                 class="bg-white rounded-3xl shadow-2xl max-w-2xl w-full overflow-hidden border border-slate-100 relative my-8">
+                
+                <!-- Modal Header -->
+                <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 p-6 text-white relative">
+                    <button @click="closeModal()" class="absolute top-5 right-5 w-9 h-9 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+
+                    <div class="flex items-center gap-4 pr-8">
+                        <template x-if="activeCategory && activeCategory.image">
+                            <img :src="activeCategory.image" class="w-14 h-14 rounded-2xl object-cover border-2 border-white/20 shadow-md">
+                        </template>
+                        <template x-if="!activeCategory || !activeCategory.image">
+                            <div class="w-14 h-14 rounded-2xl bg-white/10 flex items-center justify-center border border-white/20">
+                                <i class="fa-solid fa-soap text-2xl text-blue-300"></i>
+                            </div>
+                        </template>
+                        <div>
+                            <span class="bg-blue-500/30 text-blue-200 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider border border-blue-400/30">Category</span>
+                            <h3 class="text-2xl font-black tracking-tight text-white mt-1" x-text="activeCategory ? activeCategory.name : ''"></h3>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Modal Content (Services List) -->
+                <div class="p-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                    <template x-if="activeCategory && activeCategory.services && activeCategory.services.length > 0">
+                        <div class="space-y-3">
+                            <template x-for="service in activeCategory.services" :key="service.id">
+                                <div class="p-4 rounded-2xl border border-slate-100 bg-slate-50/50 hover:bg-white hover:border-blue-200 hover:shadow-md transition-all flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                                    <div>
+                                        <h5 class="font-bold text-slate-800 text-sm sm:text-base" x-text="service.name"></h5>
+                                        <template x-if="service.description">
+                                            <p class="text-xs text-slate-500 mt-0.5" x-text="service.description"></p>
+                                        </template>
+                                        <div class="mt-1">
+                                            <span class="text-xs font-black text-blue-600">Rs. <span x-text="service.price"></span></span>
+                                            <span class="text-[10px] font-bold text-slate-400" x-text="service.unit"></span>
+                                        </div>
+                                    </div>
+                                    <!-- Button with + icon redirecting to login -->
+                                    <a href="{{ route('customer.login') }}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl text-xs transition-all flex items-center justify-center gap-2 shadow-sm shrink-0">
+                                        <span>Book Service</span>
+                                        <span class="w-4 h-4 rounded-full bg-white/20 text-white flex items-center justify-center text-xs font-black">+</span>
+                                    </a>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+
+                    <template x-if="!activeCategory || !activeCategory.services || activeCategory.services.length === 0">
+                        <div class="text-center py-8">
+                            <i class="fa-solid fa-shirt text-4xl text-slate-300 mb-3"></i>
+                            <p class="text-slate-500 text-sm font-medium">Standard laundry services available for this category.</p>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Modal Footer -->
+                <div class="p-5 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row justify-between items-center gap-3">
+                    <p class="text-xs font-bold text-slate-500">Fast 48-Hour Delivery Available</p>
+                    <a href="{{ route('customer.login') }}" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-6 py-3 rounded-xl text-sm transition-all flex items-center justify-center gap-2 shadow-md">
+                        <span x-text="`Book Pickup for ${activeCategory ? activeCategory.name : 'Category'}`"></span>
+                        <span class="w-5 h-5 rounded-full bg-white text-blue-600 flex items-center justify-center text-xs font-black">+</span>
+                    </a>
+                </div>
+            </div>
+        </div>
     </section>
+
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('serviceModalHandler', () => ({
+                isModalOpen: false,
+                activeCategory: null,
+                openModal(categoryData) {
+                    this.activeCategory = categoryData;
+                    this.isModalOpen = true;
+                    document.body.style.overflow = 'hidden';
+                },
+                closeModal() {
+                    this.isModalOpen = false;
+                    document.body.style.overflow = 'auto';
+                }
+            }))
+        });
+    </script>
 
     <!-- Promotions Section -->
     <section id="promotions" class="py-16 lg:py-24 bg-slate-50 relative overflow-hidden">

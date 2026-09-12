@@ -24,9 +24,14 @@ class CustomerSiteController extends Controller
                   ->orWhere('is_delivery_enabled', true);
             })
             ->get();
-        $categories = ServiceCategory::with(['services' => function($q) {
-            $q->where('is_visible_on_website', true)->orderBy('order_index');
-        }])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        $categories = ServiceCategory::with([
+            'services' => function($q) {
+                $q->where('is_active', true)->orderBy('order_index');
+            },
+            'children.services' => function($q) {
+                $q->where('is_active', true)->orderBy('order_index');
+            }
+        ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
         $packages = Package::with('services.serviceType')->where('is_active', true)->get();
 
         return view('site.home', compact('branches', 'categories', 'packages'));
