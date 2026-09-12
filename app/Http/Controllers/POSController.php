@@ -37,32 +37,52 @@ class POSController extends Controller
             }
         }
 
-        $services = ServiceType::where(function($q) use ($branchId) {
-            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
-        })->where('is_active', true)->orderBy('order_index')->get();
+        $services = ServiceType::where('is_active', true)
+            ->where(function($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+                }
+            })->orderBy('order_index')->get();
 
-        $categories = ServiceCategory::where(function($q) use ($branchId) {
-            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
-        })->with(['children' => function($q) use ($branchId) {
-            $q->where(function($sq) use ($branchId) {
-                $sq->where('branch_id', $branchId)->orWhereNull('branch_id');
-            })->where('is_active', true)->orderBy('order_index');
-        }])->where('is_active', true)->orderBy('order_index')->get();
+        $categories = ServiceCategory::where('is_active', true)
+            ->whereNull('parent_id')
+            ->where(function($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+                }
+            })->with(['children' => function($q) use ($branchId) {
+                $q->where('is_active', true);
+                if ($branchId) {
+                    $q->where(function($sq) use ($branchId) {
+                        $sq->where('branch_id', $branchId)->orWhereNull('branch_id');
+                    });
+                }
+                $q->orderBy('order_index');
+            }])->orderBy('order_index')->get();
 
         $customers = collect();
         $customerPackages = collect();
 
-        $timeSlots = \App\Models\PickupTimePeriod::where(function($q) use ($branchId) {
-            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
-        })->where('is_active', true)->orderBy('start_time')->get();
+        $timeSlots = \App\Models\PickupTimePeriod::where('is_active', true)
+            ->where(function($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+                }
+            })->orderBy('start_time')->get();
 
-        $extras = \App\Models\Extra::where(function($q) use ($branchId) {
-            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
-        })->where('is_active', true)->get();
+        $extras = \App\Models\Extra::where('is_active', true)
+            ->where(function($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+                }
+            })->get();
 
-        $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId) {
-            $q->where('branch_id', $branchId)->orWhereNull('branch_id');
-        })->where('is_active', true)->get();
+        $turnaroundTypes = \App\Models\TurnaroundType::where('is_active', true)
+            ->where(function($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+                }
+            })->get();
 
         return view('pos.index', compact('services', 'categories', 'customers', 'customerPackages', 'timeSlots', 'extras', 'turnaroundTypes'));
     }

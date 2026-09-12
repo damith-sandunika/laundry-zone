@@ -319,6 +319,100 @@
                 </div>
             </div>
 
+            <!-- Finalize Bill Summary Popup Modal -->
+            <div x-show="isFinalizeBillModalOpen" style="display:none;" class="fixed inset-0 z-[130] flex items-center justify-center p-4">
+                <div x-show="isFinalizeBillModalOpen" x-transition.opacity class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="isFinalizeBillModalOpen = false"></div>
+                <div x-show="isFinalizeBillModalOpen" x-transition.scale.origin.bottom class="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg flex flex-col max-h-[90vh] overflow-hidden border border-slate-100">
+                    
+                    <!-- Modal Header -->
+                    <div class="p-5 border-b border-slate-100 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-black text-lg shadow-md">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                            </div>
+                            <div>
+                                <h3 class="text-base font-extrabold text-white">Finalize Bill & Review</h3>
+                                <p class="text-xs text-slate-300 font-medium">Itemized Breakdown & Order Details</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="isFinalizeBillModalOpen = false" class="w-8 h-8 flex items-center justify-center rounded-xl bg-white/10 text-white hover:bg-white/20 transition-colors">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+
+                    <!-- Modal Body -->
+                    <div class="p-5 overflow-y-auto custom-scrollbar flex-1 space-y-4 text-xs">
+                        
+                        <!-- Customer & Pickup Info Card -->
+                        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
+                            <div class="flex justify-between items-center pb-2 border-b border-slate-200/60">
+                                <span class="font-extrabold text-slate-500 uppercase tracking-wider text-[10px]">Customer Details</span>
+                                <span class="font-black text-slate-800" x-text="authCustomer?.name || 'Valued Customer'"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-slate-500">Contact Phone</span>
+                                <span class="font-bold text-slate-700" x-text="authCustomer?.phone || ''"></span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="font-bold text-slate-500">Pickup Date</span>
+                                <span class="font-bold text-slate-700" x-text="document.getElementById('pickup_date_input')?.value || 'Scheduled'"></span>
+                            </div>
+                        </div>
+
+                        <!-- Itemized Cart Table -->
+                        <div>
+                            <h4 class="font-extrabold text-slate-700 uppercase tracking-wider text-[10px] mb-2 px-1">Selected Services</h4>
+                            <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                <div class="divide-y divide-slate-100">
+                                    <template x-for="(item, idx) in cart" :key="item.cart_key || idx">
+                                        <div class="p-3 flex items-center justify-between gap-3">
+                                            <div class="flex-1 min-w-0">
+                                                <div class="font-extrabold text-slate-800 text-xs truncate" x-text="item.name"></div>
+                                                <div class="text-[10px] font-bold text-slate-400">
+                                                    LKR <span x-text="item.base_price.toFixed(2)"></span> x <span x-text="item.qty"></span> <span x-text="item.price_type === 'per_kg' ? 'kg' : 'items'"></span>
+                                                </div>
+                                            </div>
+                                            <div class="font-black text-blue-600 text-xs shrink-0">
+                                                LKR <span x-text="(item.base_price * item.qty).toFixed(2)"></span>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Summary Breakdown -->
+                        <div class="bg-slate-50 border border-slate-200/80 rounded-2xl p-3.5 space-y-2">
+                            <div class="flex justify-between items-center text-slate-600 font-bold">
+                                <span>Services Total</span>
+                                <span class="font-extrabold text-slate-800">LKR <span x-text="calculatedGrandTotal.toFixed(2)"></span></span>
+                            </div>
+                            <div x-show="estimatedDeliveryFee > 0" class="flex justify-between items-center text-slate-600 font-bold">
+                                <span>Delivery Fee</span>
+                                <span class="font-extrabold text-emerald-600">LKR <span x-text="estimatedDeliveryFee.toFixed(2)"></span></span>
+                            </div>
+                            <div class="pt-2 border-t border-slate-200 flex justify-between items-center text-sm font-black text-slate-900">
+                                <span>Grand Total</span>
+                                <span class="text-blue-600 text-base">LKR <span x-text="totalPrice.toFixed(2)"></span></span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- Modal Footer -->
+                    <div class="p-4 bg-slate-50 border-t border-slate-100 flex gap-3">
+                        <button type="button" @click="isFinalizeBillModalOpen = false" class="flex-1 py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-100 transition-colors text-xs cursor-pointer">
+                            Edit Details
+                        </button>
+                        <button type="button" @click="submitFinalBooking()" :disabled="isPlacingOrder" class="flex-1 py-3 rounded-xl font-extrabold text-white bg-blue-600 hover:bg-blue-700 shadow-md transition-colors text-xs flex items-center justify-center gap-2 cursor-pointer">
+                            <span x-show="!isPlacingOrder">Place Order Now <i class="fa-solid fa-check-circle text-xs"></i></span>
+                            <i x-show="isPlacingOrder" class="fa-solid fa-spinner fa-spin"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
             <!-- STEP 2: Authentication -->
             <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
@@ -706,7 +800,7 @@
                     <button type="button" @click="goToStep(3)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2">
                         <i class="fa-solid fa-arrow-left"></i> Back
                     </button>
-                    <button type="submit" :disabled="isOutOfRange" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-lg">
+                    <button type="button" @click="openFinalizeBillModal()" :disabled="isOutOfRange" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-8 py-4 rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 flex items-center gap-2 text-lg cursor-pointer">
                         Confirm Booking <i class="fa-solid fa-check-circle"></i>
                     </button>
                 </div>
@@ -726,6 +820,29 @@
                     branchPickupTimes: pickupTimePeriods || [],
                     servicesLoading: false,
                     detectedBranchId: null,
+                    isFinalizeBillModalOpen: false,
+                    isPlacingOrder: false,
+
+                    openFinalizeBillModal() {
+                        if (this.totalPrice < this.minLimit) {
+                            alert("Minimum delivery limit is LKR " + this.minLimit.toFixed(2) + ". Please add more items to proceed.");
+                            return;
+                        }
+                        const date = document.getElementById('pickup_date_input')?.value;
+                        const time = document.getElementById('pickup_time_input')?.value;
+                        const addr = document.getElementById('pickup_address')?.value;
+                        
+                        if (!date || !time || !addr) {
+                            alert("Please fill in all pickup details (Date, Time, Address).");
+                            return;
+                        }
+                        this.isFinalizeBillModalOpen = true;
+                    },
+
+                    submitFinalBooking() {
+                        this.isPlacingOrder = true;
+                        document.getElementById('bookingForm').submit();
+                    },
                     
                     formatTime(timeStr) {
                         if (!timeStr) return '';

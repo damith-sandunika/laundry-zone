@@ -49,43 +49,47 @@
                     General Settings
                 </button>
 
-                <button @click="activeTab = 'extras'; localStorage.setItem('settingsActiveTab', 'extras')"
-                    :class="activeTab === 'extras' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
-                    class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
-                    Extras
-                </button>
-                <button
-                    @click="activeTab = 'turnaround_types'; localStorage.setItem('settingsActiveTab', 'turnaround_types')"
-                    :class="activeTab === 'turnaround_types' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
-                    class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
-                    Turnarounds
-                </button>
-                <button @click="activeTab = 'packages'; localStorage.setItem('settingsActiveTab', 'packages')"
-                    :class="activeTab === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
-                    class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200">
-                    Packages
-                </button>
-                <button @click="activeTab = 'delivery'; localStorage.setItem('settingsActiveTab', 'delivery')"
-                    :class="activeTab === 'delivery' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Delivery Settings
-                </button>
-                <button @click="activeTab = 'pickup_times'; localStorage.setItem('settingsActiveTab', 'pickup_times')"
-                    :class="activeTab === 'pickup_times' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Pickup Times
-                </button>
-                <button
-                    @click="activeTab = 'payment_methods'; localStorage.setItem('settingsActiveTab', 'payment_methods')"
-                    :class="activeTab === 'payment_methods' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
-                    class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
-                    Payment Methods
-                </button>
+                @if(auth()->user()->role === 'super_admin')
+                    <button @click="activeTab = 'extras'; localStorage.setItem('settingsActiveTab', 'extras')"
+                        :class="activeTab === 'extras' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
+                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
+                        Extras
+                    </button>
+                    <button
+                        @click="activeTab = 'turnaround_types'; localStorage.setItem('settingsActiveTab', 'turnaround_types')"
+                        :class="activeTab === 'turnaround_types' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
+                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
+                        Turnarounds
+                    </button>
+                    <button @click="activeTab = 'packages'; localStorage.setItem('settingsActiveTab', 'packages')"
+                        :class="activeTab === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
+                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200">
+                        Packages
+                    </button>
+                    <button @click="activeTab = 'delivery'; localStorage.setItem('settingsActiveTab', 'delivery')"
+                        :class="activeTab === 'delivery' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Delivery Settings
+                    </button>
+                    <button @click="activeTab = 'pickup_times'; localStorage.setItem('settingsActiveTab', 'pickup_times')"
+                        :class="activeTab === 'pickup_times' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Pickup Times
+                    </button>
+                    <button
+                        @click="activeTab = 'payment_methods'; localStorage.setItem('settingsActiveTab', 'payment_methods')"
+                        :class="activeTab === 'payment_methods' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
+                        class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
+                        Payment Methods
+                    </button>
+                @endif
+
                 <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')"
                     :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     Stock Locations
                 </button>
+
                 @if(auth()->user()->role === 'super_admin')
                     <button
                         @click="activeTab = 'notifications'; localStorage.setItem('settingsActiveTab', 'notifications')"
@@ -373,6 +377,7 @@
 
 
 
+            @if(auth()->user()->role === 'super_admin')
             <!-- EXTRAS TAB -->
             <div x-show="activeTab === 'extras'" style="display: none;">
                 <div class="flex justify-between items-center mb-4">
@@ -578,6 +583,7 @@
                     @endforelse
                 </div>
             </div>
+            @endif
 
             <!-- CUBBIES (STOCK LOCATIONS) TAB -->
             <div x-show="activeTab === 'cubbies'" style="display: none;">
@@ -649,6 +655,7 @@
                 </div>
             </div>
 
+            @if(auth()->user()->role === 'super_admin')
             <!-- DELIVERY SETTINGS TAB -->
             <div x-show="activeTab === 'delivery'" style="display: none;">
 
@@ -923,6 +930,7 @@
                     </div>
                 </form>
             </div>
+            @endif
 
             <!-- NOTIFICATIONS TAB -->
             @if(auth()->user()->role === 'super_admin')
