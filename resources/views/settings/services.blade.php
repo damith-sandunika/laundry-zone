@@ -56,7 +56,7 @@
                             <!-- Right side: Actions -->
                             <div class="flex gap-2">
                                 <button
-                                    onclick="openEditCategoryModal({{ $category->id }}, '{{ addslashes($category->name) }}', {{ $category->is_active ? 1 : 0 }}, {{ $category->parent_id ?? 'null' }})"
+                                    onclick="openEditCategoryModal({{ $category->id }}, '{{ addslashes($category->name) }}', {{ $category->is_active ? 1 : 0 }}, {{ $category->parent_id ?? 'null' }}, {{ $category->is_visible_on_website ? 1 : 0 }})"
                                     class="text-xs font-semibold text-blue-600 hover:text-blue-800 px-2 py-1 bg-blue-50 rounded">Edit</button>
                                 <form method="POST" action="{{ route('settings.destroyServiceCategory', $category) }}"
                                     onsubmit="return confirm('Are you sure you want to delete this category?')"
@@ -107,7 +107,7 @@
                                                     <!-- Right Side: Actions -->
                                                     <div class="flex gap-2">
                                                         <button
-                                                            onclick="openEditCategoryModal({{ $child->id }}, '{{ addslashes($child->name) }}', {{ $child->is_active ? 1 : 0 }}, {{ $child->parent_id ?? 'null' }})"
+                                                            onclick="openEditCategoryModal({{ $child->id }}, '{{ addslashes($child->name) }}', {{ $child->is_active ? 1 : 0 }}, {{ $child->parent_id ?? 'null' }}, {{ $child->is_visible_on_website ? 1 : 0 }})"
                                                             class="text-[10px] font-semibold text-blue-600 hover:text-blue-800 px-1.5 py-0.5 bg-blue-50 rounded">Edit</button>
                                                         <form method="POST"
                                                             action="{{ route('settings.destroyServiceCategory', $child) }}"
@@ -420,6 +420,10 @@
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category Image (Optional)</label>
                     <input type="file" name="image" accept="image/*" style="width:100%;font-size:13px;color:#64748b;background:#f8fafc;padding:10px;border-radius:8px;border:1px dashed #cbd5e1;cursor:pointer;">
                 </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="is_visible_on_website" id="add-cat-website-visible" value="1" checked style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
+                    <label for="add-cat-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website</label>
+                </div>
                 <div style="display:flex;gap:10px;margin-top:4px;">
                     <button type="button" onclick="document.getElementById('add-category-modal').style.display='none'" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
                     <button type="submit" style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Save Category</button>
@@ -465,6 +469,10 @@
                         <option value="0">Inactive</option>
                     </select>
                 </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <input type="checkbox" name="is_visible_on_website" id="edit-cat-website-visible" value="1" style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
+                    <label for="edit-cat-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website</label>
+                </div>
                 <div style="display:flex;gap:10px;margin-top:4px;">
                     <button type="button" onclick="document.getElementById('edit-category-modal').style.display='none'" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
                     <button type="submit" style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Update Category</button>
@@ -485,11 +493,12 @@
             document.getElementById('edit-service-modal').style.display = 'flex';
         }
 
-        function openEditCategoryModal(id, name, isActive, parentId) {
+        function openEditCategoryModal(id, name, isActive, parentId, isVisible) {
             document.getElementById('edit-category-form').action = `/settings/service-categories/${id}`;
             document.getElementById('edit-cat-name').value = name;
             document.getElementById('edit-cat-active').value = isActive;
             document.getElementById('edit-cat-parent-id').value = parentId || '';
+            document.getElementById('edit-cat-website-visible').checked = isVisible == 1;
             document.getElementById('edit-category-modal').style.display = 'flex';
         }
 

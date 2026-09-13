@@ -28,10 +28,13 @@ class CustomerSiteController extends Controller
             'services' => function($q) {
                 $q->where('is_active', true)->where('is_visible_on_website', true)->orderBy('order_index');
             },
+            'children' => function($q) {
+                $q->where('is_active', true)->where('is_visible_on_website', true)->orderBy('order_index');
+            },
             'children.services' => function($q) {
                 $q->where('is_active', true)->where('is_visible_on_website', true)->orderBy('order_index');
             }
-        ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        ])->whereNull('parent_id')->where('is_active', true)->where('is_visible_on_website', true)->orderBy('order_index')->get();
         $packages = Package::with('services.serviceType')->where('is_active', true)->get();
 
         $turnaroundTypes = \App\Models\TurnaroundType::all();
@@ -82,13 +85,16 @@ class CustomerSiteController extends Controller
             $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
         }
         $categories = \App\Models\ServiceCategory::with([
+            'children' => function($q) {
+                $q->where('is_active', true)->where('is_visible_on_website', true)->orderBy('order_index');
+            },
             'children.services' => function($q) {
                 $q->where('is_visible_on_website', true)->orderBy('order_index');
             },
             'services' => function($q) {
                 $q->where('is_visible_on_website', true)->orderBy('order_index');
             }
-        ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        ])->whereNull('parent_id')->where('is_active', true)->where('is_visible_on_website', true)->orderBy('order_index')->get();
 
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where('is_active', true)->orderBy('start_time')->get();
         $minimumOrderLimit = \App\Models\Setting::get('minimum_delivery_cost', 0);
@@ -126,6 +132,7 @@ class CustomerSiteController extends Controller
         $categories = \App\Models\ServiceCategory::with([
             'children' => function($q) use ($branchId) {
                 $q->where('is_active', true)
+                  ->where('is_visible_on_website', true)
                   ->where(function($sq) use ($branchId) {
                       $sq->whereNull('branch_id')->orWhere('branch_id', $branchId);
                   })
@@ -148,6 +155,7 @@ class CustomerSiteController extends Controller
         ])
             ->whereNull('parent_id')
             ->where('is_active', true)
+            ->where('is_visible_on_website', true)
             ->where(function($q) use ($branchId) {
                 $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
             })

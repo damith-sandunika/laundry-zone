@@ -232,7 +232,7 @@ class SettingsController extends Controller
             'inventory' => 'nullable|array',
         ]);
 
-        $branchId = auth()->user()->role === 'super_admin' ? null : $this->getActiveBranchId();
+        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
         $service = ServiceType::create([
             'branch_id' => $branchId,
             'name' => $request->name,
@@ -285,13 +285,14 @@ class SettingsController extends Controller
             $imagePath = app(\App\Actions\UploadImageAction::class)->execute($request->file('image'), 'categories', 'cat');
         }
 
-        $branchId = auth()->user()->role === 'super_admin' ? null : $this->getActiveBranchId();
+        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
         ServiceCategory::create([
             'branch_id' => $branchId,
             'parent_id' => $request->parent_id,
             'name' => $request->name,
             'is_active' => true,
             'image_path' => $imagePath,
+            'is_visible_on_website' => $request->has('is_visible_on_website'),
         ]);
 
         return redirect()->back()->with('success', 'Service Category created.');
@@ -307,6 +308,7 @@ class SettingsController extends Controller
         ]);
 
         $data = $request->only(['name', 'parent_id', 'is_active']);
+        $data['is_visible_on_website'] = $request->has('is_visible_on_website');
 
         if ($request->hasFile('image')) {
             $data['image_path'] = app(\App\Actions\UploadImageAction::class)->execute($request->file('image'), 'categories', 'cat');
@@ -461,7 +463,7 @@ class SettingsController extends Controller
 
     public function storePackage(Request $request)
     {
-        $branchId = $this->getActiveBranchId();
+        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -588,7 +590,7 @@ class SettingsController extends Controller
             'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
-        $branchId = auth()->user()->role === 'super_admin' ? null : $this->getActiveBranchId();
+        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
         \App\Models\PickupTimePeriod::create([
             'branch_id' => $branchId,
             'label' => $request->label,
@@ -615,7 +617,7 @@ class SettingsController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        $branchId = auth()->user()->role === 'super_admin' ? null : $this->getActiveBranchId();
+        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
 
         \App\Models\Extra::create([
             'branch_id' => $branchId,
@@ -658,7 +660,7 @@ class SettingsController extends Controller
             'is_default' => 'boolean',
         ]);
 
-        $branchId = auth()->user()->role === 'super_admin' ? null : $this->getActiveBranchId();
+        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
 
         if ($request->has('is_default')) {
             \App\Models\TurnaroundType::when($branchId, function($q) use ($branchId) {
