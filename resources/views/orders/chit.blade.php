@@ -136,10 +136,7 @@
         @endforeach
     </div>
 
-    <div class="total-row">
-        <span>TOTAL</span>
-        <span>Rs. {{ number_format($order->total, 2) }}</span>
-    </div>
+
 
     <div class="special-note">
         <div>Special Note :</div>

@@ -94,7 +94,7 @@
                 @endif
 
                 <!-- Drill Down Container -->
-                <div class="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col min-h-[500px]">
+                <div class="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col">
                     
                     <!-- Header / Navigation Bar -->
                     <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
@@ -108,7 +108,7 @@
                         </div>
                     </div>
 
-                    <div class="p-5 flex-1 overflow-y-auto custom-scrollbar">
+                    <div class="p-4 sm:p-5 flex-1">
                         <!-- Level 0: Main Categories Grid -->
                         <div x-show="currentViewLevel === 0">
                             <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
