@@ -428,7 +428,7 @@
                     <div class="grid sm:grid-cols-2 gap-4 mb-6">
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">Pickup Date</label>
-                            <input type="date" name="pickup_date" id="pickup_date_input" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold" min="{{ date('Y-m-d') }}">
+                            <input type="date" name="pickup_date" id="pickup_date_input" x-model="pickupDate" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold" min="{{ date('Y-m-d') }}">
                         </div>
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">Pickup Time</label>
@@ -821,6 +821,7 @@
                     isGlobalCheckoutModalOpen: false,
                     globalTurnaround: '',
                     deliveryDate: '',
+                    pickupDate: new Date().toISOString().split('T')[0],
                     deliveryTimePeriodId: '',
                     globalExtras: {},                    routeLayer: null,
                     step: 1,
@@ -865,8 +866,9 @@
                     isOutOfRange: false,
 
                     initData() {
-                        this.deliveryDate = new Date().toISOString().split('T')[0];
-                        // Try to restore cart and user state from localStorage if not authenticatedkout
+                        let pd = new Date(this.pickupDate);
+                        pd.setDate(pd.getDate() + 2);
+                        this.deliveryDate = pd.toISOString().split('T')[0];
                         const savedHomepageCart = localStorage.getItem('customer_booking_cart');
                         if (savedHomepageCart) {
                             try {
@@ -941,6 +943,14 @@
                         });
                         
                         this.$watch('deliveryPref', () => this.calculateDeliveryFee());
+
+                        this.$watch('pickupDate', value => {
+                            if (value) {
+                                let pd = new Date(value);
+                                pd.setDate(pd.getDate() + 2); // Default to 2 days after pickup
+                                this.deliveryDate = pd.toISOString().split('T')[0];
+                            }
+                        });
                     },
 
                     async goToStep(n) {
