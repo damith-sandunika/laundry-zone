@@ -94,21 +94,27 @@
                 @endif
 
                 <!-- Drill Down Container -->
-                <div class="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col">
+                <div class="flex flex-col">
                     
                     <!-- Header / Navigation Bar -->
-                    <div class="bg-slate-50 px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+                    <div class="flex items-center justify-center mb-6 sm:mb-8">
                         <!-- Breadcrumbs -->
-                        <div class="flex items-center flex-wrap gap-2 text-sm font-semibold text-slate-800">
-                            <button type="button" @click="currentViewLevel = 0" class="hover:text-blue-600 transition-colors">All Categories</button>
-                            <span x-show="currentViewLevel > 0" class="text-slate-400">/</span>
+                        <div class="inline-flex items-center justify-center flex-wrap gap-2 sm:gap-3 text-sm sm:text-base font-bold text-slate-800 bg-white px-5 sm:px-8 py-2.5 sm:py-3.5 rounded-full shadow-sm border border-slate-100">
+                            <button type="button" @click="currentViewLevel = 0" class="hover:text-blue-600 transition-colors flex items-center gap-2">
+                                <i class="fa-solid fa-layer-group text-blue-500"></i> All Categories
+                            </button>
+                            
+                            <span x-show="currentViewLevel > 0" class="text-slate-300"><i class="fa-solid fa-chevron-right text-[10px] sm:text-xs"></i></span>
+                            
                             <button type="button" x-show="currentViewLevel > 0" @click="currentViewLevel = 1" class="hover:text-blue-600 transition-colors" x-text="selectedMainCategory?.name"></button>
-                            <span x-show="currentViewLevel > 1" class="text-slate-400">/</span>
-                            <span x-show="currentViewLevel > 1" class="text-slate-600" x-text="selectedSubcategory?.name || selectedMainCategory?.name"></span>
+                            
+                            <span x-show="currentViewLevel > 1" class="text-slate-300"><i class="fa-solid fa-chevron-right text-[10px] sm:text-xs"></i></span>
+                            
+                            <span x-show="currentViewLevel > 1" class="text-blue-600" x-text="selectedSubcategory?.name || selectedMainCategory?.name"></span>
                         </div>
                     </div>
 
-                    <div class="p-4 sm:p-5 flex-1">
+                    <div class="flex-1">
                         <!-- Level 0: Main Categories Grid -->
                         <div x-show="currentViewLevel === 0">
                             <div class="flex flex-wrap justify-center gap-3 sm:gap-4">
