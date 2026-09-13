@@ -20,6 +20,9 @@
     
     <style>
         .map-container { height: 380px; width: 100%; border-radius: 1rem; z-index: 10; }
+        @media (max-width: 640px) {
+            .map-container { height: 240px; }
+        }
         .step-active { border-color: #2563eb; background-color: #eff6ff; color: #1e3a8a; }
         .step-inactive { border-color: #e2e8f0; background-color: #f8fafc; color: #94a3b8; }
         .step-completed { border-color: #10b981; background-color: #ecfdf5; color: #047857; }
@@ -425,14 +428,14 @@
                     </h3>
                     <p class="text-sm text-slate-500 mb-6 font-medium">When and where should we pick up your laundry?</p>
 
-                    <div class="grid sm:grid-cols-2 gap-4 mb-6">
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Pickup Date</label>
-                            <input type="date" name="pickup_date" id="pickup_date_input" x-model="pickupDate" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold" min="{{ date('Y-m-d') }}">
+                            <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1">Pickup Date</label>
+                            <input type="date" name="pickup_date" id="pickup_date_input" x-model="pickupDate" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold" min="{{ date('Y-m-d') }}">
                         </div>
                         <div>
-                            <label class="block text-sm font-bold text-slate-700 mb-1">Pickup Time</label>
-                            <select name="pickup_time_period_id" id="pickup_time_input" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold">
+                            <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1">Pickup Time</label>
+                            <select name="pickup_time_period_id" id="pickup_time_input" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold">
                                 <option value="">Select a time slot...</option>
                                 <template x-for="period in branchPickupTimes" :key="period.id">
                                     <option :value="period.id" x-text="(period.label || '') + ' (' + formatTime(period.start_time) + ' - ' + formatTime(period.end_time) + ')'"></option>
@@ -541,14 +544,14 @@
                             Requested Delivery Time
                         </h3>
                         <p class="text-sm text-slate-500 mb-6 font-medium">When would you like to receive your clean items back? (Optional)</p>
-                        <div class="grid sm:grid-cols-2 gap-4">
+                        <div class="grid grid-cols-2 gap-3 sm:gap-4">
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-1">Preferred Date</label>
-                                <input type="date" name="delivery_date" x-model="deliveryDate" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold" min="{{ date('Y-m-d') }}">
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1">Preferred Date</label>
+                                <input type="date" name="delivery_date" x-model="deliveryDate" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold" min="{{ date('Y-m-d') }}">
                             </div>
                             <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-1">Preferred Time Slot</label>
-                                <select name="delivery_time_period_id" x-model="deliveryTimePeriodId" class="w-full px-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold">
+                                <label class="block text-xs sm:text-sm font-bold text-slate-700 mb-1">Preferred Time Slot</label>
+                                <select name="delivery_time_period_id" x-model="deliveryTimePeriodId" class="w-full px-3 sm:px-4 py-2 sm:py-3 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-blue-500 font-semibold">
                                     <option value="">Select time slot...</option>
                                     <template x-for="period in branchPickupTimes" :key="period.id">
                                         <option :value="period.id" x-text="formatTime(period.start_time) + ' - ' + formatTime(period.end_time)"></option>
@@ -566,28 +569,28 @@
                         </h3>
                         <p class="text-sm text-slate-500 mb-6 font-medium">How would you like to receive your clean laundry?</p>
 
-                        <div class="grid sm:grid-cols-2 gap-4 mb-6">
-                            <label class="relative cursor-pointer">
+                        <div class="grid grid-cols-2 gap-3 sm:gap-4 mb-6">
+                            <label class="relative cursor-pointer h-full">
                                 <input type="radio" name="delivery_preference" value="deliver_to_address" class="custom-radio sr-only" x-model="deliveryPref">
-                                <div class="p-4 border-2 border-slate-200 rounded-xl bg-slate-50 transition-all flex items-center gap-3">
-                                    <div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 bg-white">
-                                        <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
+                                <div class="p-3 sm:p-4 border-2 border-slate-200 rounded-lg sm:rounded-xl bg-slate-50 transition-all flex flex-col sm:flex-row items-center gap-2 sm:gap-3 h-full">
+                                    <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 bg-white">
+                                        <div class="radio-dot w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full"></div>
                                     </div>
-                                    <div>
-                                        <div class="font-bold text-sm text-slate-800">Deliver to me</div>
-                                        <div class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Rider brings it back</div>
+                                    <div class="text-center sm:text-left">
+                                        <div class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">Deliver to me</div>
+                                        <div class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase mt-0.5 hidden sm:block">Rider brings it back</div>
                                     </div>
                                 </div>
                             </label>
-                            <label class="relative cursor-pointer">
+                            <label class="relative cursor-pointer h-full">
                                 <input type="radio" name="delivery_preference" value="pickup_from_branch" class="custom-radio sr-only" x-model="deliveryPref">
-                                <div class="p-4 border-2 border-slate-200 rounded-xl bg-slate-50 transition-all flex items-center gap-3">
-                                    <div class="w-5 h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 bg-white">
-                                        <div class="radio-dot w-2.5 h-2.5 rounded-full"></div>
+                                <div class="p-3 sm:p-4 border-2 border-slate-200 rounded-lg sm:rounded-xl bg-slate-50 transition-all flex flex-col sm:flex-row items-center gap-2 sm:gap-3 h-full">
+                                    <div class="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-slate-300 flex items-center justify-center shrink-0 bg-white">
+                                        <div class="radio-dot w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full"></div>
                                     </div>
-                                    <div>
-                                        <div class="font-bold text-sm text-slate-800">I will pick up</div>
-                                        <div class="text-[11px] font-bold text-slate-500 uppercase mt-0.5">Collect from branch</div>
+                                    <div class="text-center sm:text-left">
+                                        <div class="font-bold text-xs sm:text-sm text-slate-800 leading-tight">I will pick up</div>
+                                        <div class="text-[10px] sm:text-[11px] font-bold text-slate-500 uppercase mt-0.5 hidden sm:block">Collect from branch</div>
                                     </div>
                                 </div>
                             </label>
