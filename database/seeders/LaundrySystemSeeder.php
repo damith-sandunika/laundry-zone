@@ -10,7 +10,7 @@ use App\Models\Branch;
 use App\Models\ServiceType;
 use App\Models\ServiceCategory;
 
-class RapidLaundromatSeeder extends Seeder
+class LaundrySystemSeeder extends Seeder
 {
     public function run()
     {
