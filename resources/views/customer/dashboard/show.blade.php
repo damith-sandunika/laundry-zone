@@ -245,8 +245,22 @@
                                 
                                 $base_total = ($item->unit_price * $item->quantity) + $turnaround_charge;
                                 
+                                $mainCategoryName = null;
+                                $subCategoryName = null;
+                                if ($item->serviceType && $item->serviceType->category) {
+                                    $cat = $item->serviceType->category;
+                                    if ($cat->parent) {
+                                        $mainCategoryName = $cat->parent->name;
+                                        $subCategoryName = $cat->name;
+                                    } else {
+                                        $mainCategoryName = $cat->name;
+                                    }
+                                }
+
                                 $displayItems->push((object)[
                                     'name' => $item->serviceType->name ?? ($item->item_description ?? 'Service'),
+                                    'main_category' => $mainCategoryName,
+                                    'sub_category' => $subCategoryName,
                                     'quantity' => $item->quantity,
                                     'unit_price' => $item->unit_price,
                                     'base_total' => $base_total,
@@ -302,8 +316,23 @@
                                 $base_total = ($price * $qty) + $ttCharge;
                                 $total_price_with_extras = $base_total + $extrasTotal;
 
+                                $mainCategoryName = null;
+                                $subCategoryName = null;
+                                $service = \App\Models\ServiceType::find($cartItem['id'] ?? null);
+                                if ($service && $service->category) {
+                                    $cat = $service->category;
+                                    if ($cat->parent) {
+                                        $mainCategoryName = $cat->parent->name;
+                                        $subCategoryName = $cat->name;
+                                    } else {
+                                        $mainCategoryName = $cat->name;
+                                    }
+                                }
+
                                 $displayItems->push((object)[
                                     'name' => $cartItem['name'] ?? 'Service',
+                                    'main_category' => $mainCategoryName,
+                                    'sub_category' => $subCategoryName,
                                     'quantity' => $qty,
                                     'unit_price' => $price,
                                     'base_total' => $base_total,
@@ -328,14 +357,21 @@
                                             <i class="fa-solid fa-tshirt"></i>
                                         </div>
                                         <div>
-                                            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                                                {{ $item->name }}
-                                                @if($item->turnaround_name)
-                                                    <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
-                                                        ⚡ {{ $item->turnaround_name }}
+                                            <div class="flex flex-col">
+                                                @if(isset($item->main_category) && $item->main_category)
+                                                    <span class="text-[10px] text-slate-500 font-bold uppercase tracking-wider mb-0.5">
+                                                        {{ $item->main_category }} @if($item->sub_category) <span class="text-slate-300 mx-0.5">/</span> {{ $item->sub_category }} @endif
                                                     </span>
                                                 @endif
-                                            </h4>
+                                                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                                                    {{ $item->name }}
+                                                    @if($item->turnaround_name)
+                                                        <span class="inline-block text-[10px] font-bold px-2 py-0.5 rounded-full bg-orange-100 text-orange-700 border border-orange-200">
+                                                            ⚡ {{ $item->turnaround_name }}
+                                                        </span>
+                                                    @endif
+                                                </h4>
+                                            </div>
                                             <p class="text-xs font-bold text-slate-500 mt-1">Qty: {{ $item->quantity }} &times; LKR {{ number_format($item->unit_price, 2) }}</p>
                                         </div>
                                     </div>
