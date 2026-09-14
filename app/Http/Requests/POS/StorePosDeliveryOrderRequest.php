@@ -21,6 +21,10 @@ class StorePosDeliveryOrderRequest extends FormRequest
             'notes'            => 'nullable|string|max:500',
             'cart'             => 'nullable|array',
             'payment_mode'     => 'nullable|in:pay_now,pay_on_pickup',
+            'payment_method'   => 'nullable|string|in:cash,card,bank',
+            'discount_percentage' => 'nullable|numeric|min:0|max:100',
+            'advance_amount'   => 'nullable|numeric|min:0',
+            'customer_package_id' => 'nullable|integer',
         ];
     }
 }
