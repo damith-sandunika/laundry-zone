@@ -56,10 +56,9 @@ class PayrollCalculator
         }
 
         $unpaidLeaveDays = max($leaveDaysFromModel, $unpaidAttendanceLeaveDays);
-        $totalLeaveDays = $paidLeaveDays + $unpaidLeaveDays;
 
-        // Approved Paid Leaves (Capped by monthly allowed quota)
-        $approvedPaidLeaves = min($totalLeaveDays, $monthlyAllowedLeaves);
+        // Only explicitly marked 'paid_leave' days are paid (capped by monthly allowed quota)
+        $approvedPaidLeaves = min($paidLeaveDays, $monthlyAllowedLeaves);
         $paidLeaveMinutes = $approvedPaidLeaves * $standardHours * 60;
 
         // Working Hours Calculation
