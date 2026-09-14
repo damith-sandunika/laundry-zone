@@ -338,8 +338,8 @@
     </style>
 
     <div id="services">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-10">
-            <div class="text-center mb-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12 mb-2">
+            <div class="text-center mb-4">
                 <span class="bg-blue-100 text-blue-700 text-xs font-black px-4 py-1.5 rounded-full uppercase tracking-widest shadow-sm">What We Offer</span>
                 <h2 class="text-3xl md:text-5xl font-extrabold text-brand mt-4 mb-3">Our Services</h2>
                 <p class="text-slate-500 max-w-2xl mx-auto text-sm md:text-base font-medium">Select a category below to explore services, prices, and build your order.</p>
@@ -363,7 +363,7 @@
     </div>
 
     <!-- Promotions Section -->
-    <section id="promotions" class="py-16 lg:py-24 bg-slate-50 relative overflow-hidden">
+    <section id="promotions" class="pt-4 pb-16 lg:pt-6 lg:pb-24 bg-slate-50 relative overflow-hidden">
         <div class="absolute top-0 right-0 w-96 h-96 bg-blue-200 rounded-full blur-3xl opacity-30 -translate-y-1/2 translate-x-1/2"></div>
         <div class="absolute bottom-0 left-0 w-96 h-96 bg-indigo-200 rounded-full blur-3xl opacity-30 translate-y-1/2 -translate-x-1/2"></div>
         

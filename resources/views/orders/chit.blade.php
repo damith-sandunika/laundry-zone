@@ -118,11 +118,18 @@
     <div class="items">
         @foreach($order->items as $item)
             @php
-                $catName = $item->serviceType && $item->serviceType->category ? $item->serviceType->category->name : 'General';
+                $catTrail = '';
+                if ($item->serviceType && $item->serviceType->category) {
+                    $cat = $item->serviceType->category;
+                    $catTrail = $cat->parent ? $cat->parent->name . ' > ' . $cat->name : $cat->name;
+                }
                 $itemName = $item->serviceType ? $item->serviceType->name : $item->item_description;
             @endphp
+            @if($catTrail)
+                <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; margin-bottom: 1px;">{{ $catTrail }}</div>
+            @endif
             <div class="item-row" style="margin-bottom: 2px;">
-                <span>&bull; {{ $catName }} - {{ $itemName }}</span>
+                <span>&bull; {{ $itemName }}</span>
                 <span>x{{ $item->quantity }}</span>
             </div>
             @if($item->turnaroundType && !$item->turnaroundType->is_default)

@@ -28,21 +28,62 @@
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     </style>
 </head>
-<body class="font-sans antialiased bg-slate-50 text-slate-800 selection:bg-blue-100 selection:text-blue-900" x-data="{ sidebarOpen: false, notifOpen: false, profileOpen: false }">
+<body class="font-sans antialiased bg-slate-50 text-slate-800 selection:bg-blue-100 selection:text-blue-900" x-data="{ sidebarOpen: false, sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true', notifOpen: false, profileOpen: false }" x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
     <div class="flex h-screen overflow-hidden bg-slate-50/50">
+
+        <style>
+            /* Collapsed Sidebar Styles */
+            aside.sidebar-collapsed {
+                width: 5rem !important; /* w-20 */
+            }
+            aside.sidebar-collapsed nav {
+                overflow-x: hidden;
+            }
+            aside.sidebar-collapsed nav a,
+            aside.sidebar-collapsed nav button {
+                padding-left: 0.75rem !important;
+                padding-right: 0.75rem !important;
+                justify-content: center;
+            }
+            aside.sidebar-collapsed nav a svg,
+            aside.sidebar-collapsed nav button svg {
+                margin: 0 !important;
+            }
+            /* Hide the text nodes in the nav items */
+            aside.sidebar-collapsed nav a,
+            aside.sidebar-collapsed nav button {
+                font-size: 0px !important;
+                color: transparent !important;
+                gap: 0 !important;
+                white-space: nowrap;
+            }
+            aside.sidebar-collapsed nav a svg,
+            aside.sidebar-collapsed nav button svg {
+                color: #64748b; /* slate-500 */
+                flex-shrink: 0;
+            }
+            aside.sidebar-collapsed nav a.bg-blue-50 svg,
+            aside.sidebar-collapsed nav button.bg-blue-50 svg {
+                color: #1d4ed8; /* blue-700 */
+            }
+            /* Hide dropdown arrows in collapsed state */
+            aside.sidebar-collapsed nav button svg.transition-transform {
+                display: none !important;
+            }
+        </style>
 
         <!-- Mobile overlay -->
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen=false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" x-cloak></div>
 
-        <!-- â• â• â• â• â• â• â• â• â• â•  SIDEBAR â• â• â• â• â• â• â• â• â• â•  -->
-        <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-50 flex flex-col w-64 transition-transform duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/60 lg:static lg:translate-x-0">
+        <!-- ══════════ SIDEBAR ══════════ -->
+        <aside :class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full', sidebarCollapsed ? 'sidebar-collapsed' : 'w-64']" class="fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/60 lg:static lg:translate-x-0">
             
             <!-- Brand & Logo -->
-            <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50">
-                <div class="w-20 h-20 rounded-[1.25rem] bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 mb-3 ring-4 ring-white transition-transform hover:scale-105 duration-300">
-                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="max-w-[52px] max-h-[52px] object-contain" onerror="this.style.display='none'">
-                </div>
-                <div>
+            <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50 transition-all duration-300" :class="sidebarCollapsed ? 'px-2 py-4' : ''">
+                <button @click="sidebarCollapsed = !sidebarCollapsed" :class="sidebarCollapsed ? 'w-12 h-12 rounded-xl ring-2' : 'w-20 h-20 rounded-[1.25rem] ring-4 mb-3'" class="bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 ring-white transition-all hover:scale-105 duration-300 overflow-hidden flex-shrink-0 cursor-pointer outline-none">
+                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="object-contain transition-all duration-300" :class="sidebarCollapsed ? 'max-w-[32px] max-h-[32px]' : 'max-w-[52px] max-h-[52px]'" onerror="this.style.display='none'">
+                </button>
+                <div x-show="!sidebarCollapsed" x-transition.opacity.duration.300ms class="whitespace-nowrap overflow-hidden">
                     <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
@@ -279,15 +320,15 @@
             </nav>
 
             <!-- Footer -->
-            <div class="p-5 border-t border-slate-100/80 text-center bg-white/40">
+            <div class="p-5 border-t border-slate-100/80 text-center bg-white/40" :class="sidebarCollapsed ? 'px-2' : ''">
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <button type="submit" class="flex items-center justify-center gap-2 w-full p-2.5 rounded-xl bg-red-50/50 border border-red-100 text-red-600 hover:text-red-700 hover:bg-red-100 hover:border-red-200 transition-all duration-200 text-xs font-bold tracking-wide shadow-sm">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                        Sign Out
+                    <button type="submit" :class="sidebarCollapsed ? 'p-3 rounded-full justify-center text-transparent font-[0px] gap-0' : 'p-2.5 rounded-xl gap-2 text-xs'" class="flex items-center justify-center w-full bg-red-50/50 border border-red-100 text-red-600 hover:text-red-700 hover:bg-red-100 hover:border-red-200 transition-all duration-200 font-bold tracking-wide shadow-sm overflow-hidden whitespace-nowrap">
+                        <svg :class="sidebarCollapsed ? 'w-5 h-5 text-red-600 m-0 flex-shrink-0' : 'w-4 h-4 text-red-600'" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                        <span x-show="!sidebarCollapsed" class="ml-1">Sign Out</span>
                     </button>
                 </form>
-                <div class="text-[10px] font-extrabold text-slate-400/80 tracking-widest mt-4 uppercase">Powered by DSRZone</div>
+                <div x-show="!sidebarCollapsed" class="text-[10px] font-extrabold text-slate-400/80 tracking-widest mt-4 uppercase whitespace-nowrap">Powered by DSRZone</div>
             </div>
         </aside>
 

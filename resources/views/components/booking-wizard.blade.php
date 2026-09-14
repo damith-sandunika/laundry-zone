@@ -67,7 +67,7 @@
         @endif
 
 
-        <form action="{{ route('customer.booking.store') }}" method="POST" id="bookingForm" class="mt-10 sm:mt-16 lg:w-3/4 mx-auto pb-10 sm:pb-24" enctype="multipart/form-data">
+        <form action="{{ route('customer.booking.store') }}" method="POST" id="bookingForm" class="mt-10 sm:mt-16 lg:w-3/4 mx-auto pb-4 sm:pb-8" enctype="multipart/form-data">
             @csrf
             <input type="hidden" name="item_description" x-model="formattedCart">
             <input type="hidden" name="cart_json" x-bind:value="JSON.stringify(cart)">
@@ -85,7 +85,7 @@
 
             
             <!-- Step 1: Services (Drill-Down UI) -->
-            <div x-show="step === 1" x-transition.opacity.duration.300ms class="pb-24">
+            <div x-show="step === 1" x-transition.opacity.duration.300ms class="pb-12">
                 @if(!$isHomepage)
                 <div class="mb-6">
                     <h3 class="text-xl font-semibold text-slate-800">Select Services</h3>

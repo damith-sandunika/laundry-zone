@@ -149,10 +149,17 @@
                 @endphp
                 <tr>
                     <td>
-                        {{ $item->serviceType->name ?? $item->item_description }}
-                        @if($item->turnaroundType && !$item->turnaroundType->is_default)
-                            <small style="color:#64748b; margin-left: 5px;">[{{ $item->turnaroundType->name }}]</small>
+                        @if($item->serviceType && $item->serviceType->category)
+                            <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: 800;">
+                                {{ $item->serviceType->category->parent ? $item->serviceType->category->parent->name . ' > ' : '' }}{{ $item->serviceType->category->name }}
+                            </div>
                         @endif
+                        <div style="display: flex; align-items: center; gap: 5px;">
+                            {{ $item->serviceType->name ?? $item->item_description }}
+                            @if($item->turnaroundType && !$item->turnaroundType->is_default)
+                                <small style="color:#64748b;">[{{ $item->turnaroundType->name }}]</small>
+                            @endif
+                        </div>
                     </td>
                     <td class="center">{{ $item->quantity }}</td>
                     <td class="right">Rs.{{ number_format($unit_with_turnaround, 2) }}</td>
