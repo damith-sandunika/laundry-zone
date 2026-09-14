@@ -167,6 +167,15 @@ class HRController extends Controller
             'reason' => 'nullable|string',
         ]);
 
+        $month = \Carbon\Carbon::parse($request->date)->month;
+        $year = \Carbon\Carbon::parse($request->date)->year;
+
+        $payroll = \App\Services\PayrollCalculator::calculate($staff, $month, $year);
+
+        if ($request->amount > $payroll->net_salary) {
+            return back()->with('error', 'Advance amount cannot exceed the currently available payable balance (Rs. ' . number_format($payroll->net_salary, 2) . ').');
+        }
+
         $staff->salaryAdvances()->create([
             'amount' => $request->amount,
             'date' => $request->date,

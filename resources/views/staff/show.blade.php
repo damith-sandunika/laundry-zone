@@ -299,7 +299,7 @@
                         <button @click="advanceModalOpen = true" class="text-[10px] uppercase font-bold text-indigo-600 bg-indigo-50 px-2 py-1 rounded border border-indigo-100 hover:bg-indigo-100">Add New</button>
                     </div>
                     <div class="p-0 divide-y divide-gray-50">
-                        @forelse($staff->salaryAdvances()->latest('date')->get() as $adv)
+                        @forelse($staff->salaryAdvances()->whereMonth('date', $payroll->month)->whereYear('date', $payroll->year)->latest('date')->get() as $adv)
                             <div class="p-4 flex justify-between items-center hover:bg-gray-50/50 transition">
                                 <div>
                                     <p class="text-xs font-bold text-gray-700">{{ \Carbon\Carbon::parse($adv->date)->format('M d, Y') }}</p>
