@@ -90,7 +90,14 @@
             </div>
 
             <!-- Nav Links -->
-            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar">
+            <nav class="flex-1 px-3 py-4 space-y-1 overflow-y-auto custom-scrollbar"
+                 x-init="$watch('sidebarCollapsed', val => { 
+                    document.querySelectorAll('aside nav a, aside nav button').forEach(el => { 
+                        if(val) el.setAttribute('title', el.textContent.trim()); 
+                        else el.removeAttribute('title'); 
+                    }) 
+                 }); 
+                 setTimeout(() => { if(sidebarCollapsed) document.querySelectorAll('aside nav a, aside nav button').forEach(el => el.setAttribute('title', el.textContent.trim())) }, 100);">
                 @php 
                     $role = auth()->user()->role; 
                     $branchType = auth()->user()->branch->type ?? 'branch';
