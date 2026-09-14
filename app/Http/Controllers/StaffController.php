@@ -54,12 +54,10 @@ class StaffController extends Controller
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string|max:255',
             'vehicle_number' => 'nullable|string|max:50',
-            'basic_salary' => 'nullable|numeric|min:0',
             'casual_leaves' => 'nullable|integer|min:0',
             'standard_working_hours' => 'nullable|numeric|min:0',
             'ot_rate_per_hour' => 'nullable|numeric|min:0',
             'hourly_rate' => 'nullable|numeric|min:0',
-            'daily_rate' => 'nullable|numeric|min:0',
         ];
         $this->authorize('create', User::class);
         if (\Illuminate\Support\Facades\Gate::allows('manage-users')) {
@@ -92,12 +90,10 @@ class StaffController extends Controller
             'address' => $request->address,
             'emergency_contact' => $request->emergency_contact,
             'vehicle_number' => $request->vehicle_number,
-            'basic_salary' => $request->basic_salary ?? 0,
             'casual_leaves' => $request->casual_leaves ?? 0,
             'standard_working_hours' => $request->standard_working_hours ?? 8.0,
             'ot_rate_per_hour' => $request->ot_rate_per_hour ?? 0,
             'hourly_rate' => $request->hourly_rate ?? 0,
-            'daily_rate' => $request->daily_rate ?? 0,
         ]);
 
         return redirect()->back()->with('success', 'Staff member added successfully.');
@@ -148,12 +144,10 @@ class StaffController extends Controller
             'address' => 'nullable|string',
             'emergency_contact' => 'nullable|string|max:255',
             'vehicle_number' => 'nullable|string|max:50',
-            'basic_salary' => 'nullable|numeric|min:0',
             'casual_leaves' => 'nullable|integer|min:0',
             'standard_working_hours' => 'nullable|numeric|min:0',
             'ot_rate_per_hour' => 'nullable|numeric|min:0',
             'hourly_rate' => 'nullable|numeric|min:0',
-            'daily_rate' => 'nullable|numeric|min:0',
         ];
         if ($request->filled('password')) {
             $rules['password'] = 'string|min:8|confirmed';
@@ -165,14 +159,12 @@ class StaffController extends Controller
         $request->validate($rules);
 
         $data = $request->only(['name', 'email', 'phone', 'role', 'is_active', 'branch_id']);
-        $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'vehicle_number', 'basic_salary', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour', 'hourly_rate', 'daily_rate']);
+        $profileData = $request->only(['nic', 'dob', 'address', 'emergency_contact', 'vehicle_number', 'casual_leaves', 'standard_working_hours', 'ot_rate_per_hour', 'hourly_rate']);
         
-        $profileData['basic_salary'] = $profileData['basic_salary'] ?? 0;
         $profileData['casual_leaves'] = $profileData['casual_leaves'] ?? 0;
         $profileData['standard_working_hours'] = $profileData['standard_working_hours'] ?? 8.0;
         $profileData['ot_rate_per_hour'] = $profileData['ot_rate_per_hour'] ?? 0;
         $profileData['hourly_rate'] = $profileData['hourly_rate'] ?? 0;
-        $profileData['daily_rate'] = $profileData['daily_rate'] ?? 0;
 
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {

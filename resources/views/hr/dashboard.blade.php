@@ -163,7 +163,7 @@
                                 <div class="flex items-center justify-center gap-1">OT Hrs <span x-show="sortCol === 'ot_hours'" x-text="sortAsc ? '↑' : '↓'"></span></div>
                             </th>
                             <th @click="sortBy('adjusted_basic_salary')" class="p-4 text-right cursor-pointer hover:bg-gray-200 transition text-slate-800">
-                                <div class="flex items-center justify-end gap-1">Adjusted Basic <span x-show="sortCol === 'adjusted_basic_salary'" x-text="sortAsc ? '↑' : '↓'"></span></div>
+                                <div class="flex items-center justify-end gap-1">Regular Pay <span x-show="sortCol === 'adjusted_basic_salary'" x-text="sortAsc ? '↑' : '↓'"></span></div>
                             </th>
                             <th @click="sortBy('ot_amount')" class="p-4 text-right cursor-pointer hover:bg-gray-200 transition text-indigo-600">
                                 <div class="flex items-center justify-end gap-1">OT Pay <span x-show="sortCol === 'ot_amount'" x-text="sortAsc ? '↑' : '↓'"></span></div>

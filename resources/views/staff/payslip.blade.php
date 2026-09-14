@@ -409,19 +409,14 @@
                     <span class="info-value text-green">{{ $payroll->paid_leave_days ?? 0 }} Days</span>
                 </div>
                 <div class="info-row">
-                    <span class="info-label">Unpaid / Excess Leaves:</span>
-                    <span class="info-value {{ $payroll->excess_leaves > 0 ? 'text-red' : 'text-slate-600' }}">{{ $payroll->excess_leaves }} Days</span>
+                    <span class="info-label">Unpaid Leaves:</span>
+                    <span class="info-value {{ ($payroll->leave_days - $payroll->approved_paid_leaves) > 0 ? 'text-red' : 'text-slate-600' }}">{{ max(0, $payroll->leave_days - $payroll->approved_paid_leaves) }} Days</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Total Worked Hours:</span>
-                    <span class="info-value">{{ $payroll->total_worked_hours_formatted }}</span>
+                    <span class="info-value">{{ $payroll->total_regular_hours_formatted }}</span>
                 </div>
-                @if($payroll->short_hours > 0)
-                <div class="info-row">
-                    <span class="info-label">Short Working Hours:</span>
-                    <span class="info-value text-amber">{{ $payroll->short_hours_formatted }}</span>
-                </div>
-                @endif
+
                 @if($payroll->ot_hours > 0)
                 <div class="info-row">
                     <span class="info-label">Overtime Hours:</span>
@@ -442,33 +437,13 @@
                 </tr>
             </thead>
             <tbody>
-                <!-- Basic Salary -->
+                <!-- Regular Pay -->
                 <tr>
-                    <td><strong>Basic Monthly Salary</strong></td>
-                    <td>Monthly Fixed</td>
-                    <td class="text-right font-mono text-green">+ {{ number_format($payroll->basic_salary, 2) }}</td>
+                    <td><strong>Regular Worked Hours Pay</strong></td>
+                    <td>{{ $payroll->total_regular_hours_for_pay_formatted }} @ Rs. {{ number_format($payroll->hourly_rate, 2) }}/hr</td>
+                    <td class="text-right font-mono text-blue-600">+ {{ number_format($payroll->base_pay, 2) }}</td>
                     <td class="text-right font-mono">-</td>
                 </tr>
-
-                <!-- Excess Leaves Deduction -->
-                @if($payroll->excess_leave_deduction > 0)
-                <tr>
-                    <td class="text-red">Excess Unpaid Leaves Deduction</td>
-                    <td>{{ $payroll->excess_leaves }} days @ Rs. {{ number_format($payroll->daily_rate, 2) }}/day</td>
-                    <td class="text-right font-mono">-</td>
-                    <td class="text-right font-mono text-red">- {{ number_format($payroll->excess_leave_deduction, 2) }}</td>
-                </tr>
-                @endif
-
-                <!-- Short Hours Deduction -->
-                @if($payroll->short_hours_deduction > 0)
-                <tr>
-                    <td class="text-amber">Short Hours Deduction</td>
-                    <td>{{ $payroll->short_hours_formatted }} @ Rs. {{ number_format($payroll->hourly_rate, 2) }}/hr</td>
-                    <td class="text-right font-mono">-</td>
-                    <td class="text-right font-mono text-amber">- {{ number_format($payroll->short_hours_deduction, 2) }}</td>
-                </tr>
-                @endif
 
                 <!-- Overtime Pay -->
                 @if($payroll->ot_amount > 0)
@@ -585,7 +560,7 @@
                             <strong>Month Total Hours:</strong>
                         </td>
                         <td class="text-right font-mono" style="color: #1e3a8a; font-size: 12px; padding: 10px 12px;">
-                            <strong>{{ $payroll->total_worked_hours_formatted }}</strong>
+                            <strong>{{ $payroll->total_regular_hours_formatted }}</strong>
                         </td>
                         <td class="text-right font-mono" style="color: #4f46e5; font-size: 12px; padding: 10px 12px;">
                             <strong>+ {{ $payroll->ot_hours_formatted }}</strong>

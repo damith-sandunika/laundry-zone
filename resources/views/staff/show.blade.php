@@ -117,8 +117,8 @@
                         @endif
                     </div>
                     <div>
-                        <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Basic Monthly Salary</p>
-                        <p class="text-lg font-black text-gray-800">Rs. {{ number_format($staff->profile->basic_salary ?? 0, 2) }}</p>
+                        <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Hourly Rate</p>
+                        <p class="text-lg font-black text-gray-800">Rs. {{ number_format($staff->profile->hourly_rate ?? 0, 2) }}</p>
                     </div>
                     <div>
                         <p class="text-[10px] uppercase font-bold text-green-500 mb-1">Net Salary ({{ date('M') }})</p>
@@ -319,22 +319,10 @@
                 <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl border border-green-100 shadow-sm overflow-hidden p-5 mb-6">
                     <h3 class="font-bold text-gray-800 mb-4">Payroll ({{ date('F Y', mktime(0, 0, 0, $payroll->month, 10, $payroll->year)) }})</h3>
                     <div class="space-y-2 mb-4 text-xs">
-                        <div class="flex justify-between">
-                            <span class="text-gray-600 font-medium">Basic Salary:</span>
-                            <span class="font-bold text-gray-800">Rs. {{ number_format($payroll->basic_salary, 2) }}</span>
+                        <div class="flex justify-between text-blue-600">
+                            <span class="font-medium">Regular Pay ({{ $payroll->total_regular_hours_for_pay_formatted }} × Rs. {{ number_format($payroll->hourly_rate, 2) }}/h):</span>
+                            <span class="font-bold">Rs. {{ number_format($payroll->base_pay, 2) }}</span>
                         </div>
-                        @if($payroll->excess_leave_deduction > 0)
-                        <div class="flex justify-between text-rose-600">
-                            <span>Excess Leaves ({{ $payroll->excess_leaves }} d × Rs. {{ number_format($payroll->daily_rate, 2) }}):</span>
-                            <span class="font-bold">- Rs. {{ number_format($payroll->excess_leave_deduction, 2) }}</span>
-                        </div>
-                        @endif
-                        @if($payroll->short_hours_deduction > 0)
-                        <div class="flex justify-between text-amber-600">
-                            <span>Short Hours ({{ $payroll->short_hours_formatted }} × Rs. {{ number_format($payroll->hourly_rate, 2) }}/h):</span>
-                            <span class="font-bold">- Rs. {{ number_format($payroll->short_hours_deduction, 2) }}</span>
-                        </div>
-                        @endif
                         <div class="flex justify-between text-indigo-600">
                             <span>OT ({{ $payroll->ot_hours_formatted }}):</span>
                             <span class="font-bold">+ Rs. {{ number_format($payroll->ot_amount, 2) }}</span>
@@ -548,7 +536,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Date</label>
-                                <input type="date" name="date" required value="{{ now()->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
+                                <input type="date" name="date" required value="{{ \Carbon\Carbon::create($payroll->year, $payroll->month, 1)->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Reason</label>
@@ -580,7 +568,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Date</label>
-                                <input type="date" name="date" required value="{{ now()->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
+                                <input type="date" name="date" required value="{{ \Carbon\Carbon::create($payroll->year, $payroll->month, 1)->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Reason / Description</label>
@@ -612,7 +600,7 @@
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Date</label>
-                                <input type="date" name="date" required value="{{ now()->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
+                                <input type="date" name="date" required value="{{ \Carbon\Carbon::create($payroll->year, $payroll->month, 1)->format('Y-m-d') }}" class="w-full text-sm border-gray-200 rounded-lg">
                             </div>
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Reason / Description</label>

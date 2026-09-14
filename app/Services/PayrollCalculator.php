@@ -15,8 +15,6 @@ class PayrollCalculator
     {
         $profile = $staff->profile;
 
-        $basicSalary = (float) ($profile->basic_salary ?? 0);
-        $dailyRate = (float) ($profile->daily_rate ?? 0);
         $hourlyRate = (float) ($profile->hourly_rate ?? 0);
         $standardHours = (float) ($profile->standard_working_hours ?? 8.0);
         $otRatePerHour = (float) ($profile->ot_rate_per_hour ?? 0);
@@ -60,14 +58,13 @@ class PayrollCalculator
         $unpaidLeaveDays = max($leaveDaysFromModel, $unpaidAttendanceLeaveDays);
         $totalLeaveDays = $paidLeaveDays + $unpaidLeaveDays;
 
-        // Excess Leave Deduction applies only to unpaid leaves exceeding allowed quota
-        $excessLeaves = max(0, $unpaidLeaveDays - $monthlyAllowedLeaves);
-        $excessLeaveDeduction = $excessLeaves * $dailyRate;
+        // Approved Paid Leaves (Capped by monthly allowed quota)
+        $approvedPaidLeaves = min($totalLeaveDays, $monthlyAllowedLeaves);
+        $paidLeaveMinutes = $approvedPaidLeaves * $standardHours * 60;
 
-        // Working Hours & Short Hours Calculation
-        $totalWorkedMinutes = 0;
+        // Working Hours Calculation
+        $totalRegularMinutes = 0;
         $totalOtMinutes = $attendances->sum('ot_minutes');
-        $shortHours = 0;
 
         foreach ($attendances->where('status', 'present') as $att) {
             $dateStr = Carbon::parse($att->date)->format('Y-m-d');
@@ -102,7 +99,6 @@ class PayrollCalculator
                 $workedMinutes = $dayRequiredHours * 60;
             }
 
-            $totalWorkedMinutes += $workedMinutes;
             $dayWorkedHours = $workedMinutes / 60;
 
             if ($isFullyOt) {
@@ -110,22 +106,21 @@ class PayrollCalculator
                     $totalOtMinutes += $workedMinutes;
                 }
             } else {
-                // Short hours deduction if worked less than required hours for this day
-                if ($dayWorkedHours < $dayRequiredHours) {
-                    $shortHours += ($dayRequiredHours - $dayWorkedHours);
-                }
-                // Automatic OT calculation if worked more than required hours for this day and ot_minutes wasn't manually set
-                elseif ($dayWorkedHours > $dayRequiredHours && $att->ot_minutes == 0) {
-                    $extraMinutes = ($dayWorkedHours - $dayRequiredHours) * 60;
-                    $totalOtMinutes += $extraMinutes;
+                if ($dayWorkedHours > $dayRequiredHours) {
+                    $totalRegularMinutes += ($dayRequiredHours * 60);
+                    if ($att->ot_minutes == 0) {
+                        $totalOtMinutes += ($dayWorkedHours - $dayRequiredHours) * 60;
+                    }
+                } else {
+                    $totalRegularMinutes += $workedMinutes;
                 }
             }
         }
 
-        $shortHoursDeduction = $shortHours * $hourlyRate;
-
-        // Total Basic Salary after Leave & Short-hour Deductions
-        $adjustedBasicSalary = max(0, $basicSalary - $excessLeaveDeduction - $shortHoursDeduction);
+        $totalRegularMinutesForPay = $totalRegularMinutes + $paidLeaveMinutes;
+        
+        // Base Pay (Regular Hours + Paid Leave Hours)
+        $basePay = ($totalRegularMinutesForPay / 60) * $hourlyRate;
 
         // OT Salary
         $otAmount = ($totalOtMinutes / 60) * $otRatePerHour;
@@ -145,33 +140,30 @@ class PayrollCalculator
             ->whereYear('date', $year)
             ->sum('amount');
 
-        // Gross Salary / Full Total before deducting Salary Advances
-        $grossSalary = max(0, $adjustedBasicSalary + $otAmount + $allowances - $manualDeductions);
+        // Gross Salary
+        $grossSalary = max(0, $basePay + $otAmount + $allowances - $manualDeductions);
 
-        // Final Net Payable Salary (Payable Balance after Salary Advances)
+        // Net Salary
         $netSalary = max(0, $grossSalary - $advances);
 
         return (object) [
             'month' => $month,
             'year' => $year,
-            'basic_salary' => $basicSalary,
-            'daily_rate' => $dailyRate,
             'hourly_rate' => $hourlyRate,
             'standard_hours' => $standardHours,
+            'ot_rate_per_hour' => $otRatePerHour,
             'monthly_allowed_leaves' => $monthlyAllowedLeaves,
             'present_days' => $presentDays,
-            'paid_leave_days' => $paidLeaveDays,
-            'unpaid_leave_days' => $unpaidLeaveDays,
             'leave_days' => $totalLeaveDays,
-            'excess_leaves' => $excessLeaves,
-            'excess_leave_deduction' => $excessLeaveDeduction,
-            'total_worked_minutes' => $totalWorkedMinutes,
-            'total_worked_hours' => round($totalWorkedMinutes / 60, 2),
-            'total_worked_hours_formatted' => self::formatHoursAndMinutes($totalWorkedMinutes, true),
-            'short_hours' => round($shortHours, 2),
-            'short_hours_formatted' => self::formatHoursAndMinutes($shortHours, false),
-            'short_hours_deduction' => round($shortHoursDeduction, 2),
-            'adjusted_basic_salary' => round($adjustedBasicSalary, 2),
+            'approved_paid_leaves' => $approvedPaidLeaves,
+            'total_regular_minutes' => $totalRegularMinutes,
+            'total_regular_hours' => round($totalRegularMinutes / 60, 2),
+            'total_regular_hours_formatted' => self::formatHoursAndMinutes($totalRegularMinutes, true),
+            'paid_leave_minutes' => $paidLeaveMinutes,
+            'paid_leave_hours_formatted' => self::formatHoursAndMinutes($paidLeaveMinutes, true),
+            'total_regular_minutes_for_pay' => $totalRegularMinutesForPay,
+            'total_regular_hours_for_pay_formatted' => self::formatHoursAndMinutes($totalRegularMinutesForPay, true),
+            'base_pay' => round($basePay, 2),
             'total_ot_minutes' => $totalOtMinutes,
             'ot_hours' => round($totalOtMinutes / 60, 2),
             'ot_hours_formatted' => self::formatHoursAndMinutes($totalOtMinutes, true),

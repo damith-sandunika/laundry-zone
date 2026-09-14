@@ -214,24 +214,11 @@
                     <template x-for="(item, index) in cart" :key="index">
                         <div class="group relative bg-white p-2.5 rounded-[12px] border border-slate-200 flex flex-col gap-1.5 shadow-sm hover:border-blue-200 transition-all">
                             
-                            <!-- Top: Name, Category & Remove -->
-                            <div class="flex items-start justify-between gap-2">
+                            <!-- Top: Name, Category, Qty & Remove -->
+                            <div class="flex items-center justify-between gap-2">
                                 <div class="flex flex-col flex-1 min-w-0">
                                     <span class="text-[9px] font-bold text-slate-400 leading-none uppercase tracking-widest mb-1 truncate" x-text="getCategoryString(item.id)"></span>
-                                    <h4 class="text-[13px] font-black text-slate-800 leading-tight break-words" x-text="item.name"></h4>
-                                </div>
-                                <button @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0 mt-0.5">
-                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                                </button>
-                            </div>
-
-                            <!-- Bottom: Base Price, Qty Editor, Total -->
-                            <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-slate-50 mt-0.5">
-                                <!-- Base Price -->
-                                <div class="flex items-center gap-0.5 bg-slate-50 px-1.5 py-1 rounded border border-slate-100 shrink-0">
-                                    <span class="text-[10px] font-bold text-slate-400">Rs.</span>
-                                    <input type="number" x-model.number="item.base_price" class="w-12 sm:w-14 text-[11px] font-black text-slate-700 bg-transparent border-none focus:ring-0 outline-none p-0 hide-arrows text-center" min="0" step="0.01">
-                                    <span class="text-[9px] font-extrabold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : (item.price_type === 'per_sqft' ? '/SQFT' : '')"></span>
+                                    <h4 class="text-[13px] font-black text-slate-800 leading-tight break-words pr-1" x-text="item.name"></h4>
                                 </div>
                                 
                                 <!-- Qty -->
@@ -241,9 +228,23 @@
                                     <button @click="updateQty(index,1)" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors font-black text-[14px] leading-none">+</button>
                                 </div>
 
+                                <button @click="removeFromCart(index)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
+
+                            <!-- Bottom: Base Price, Total -->
+                            <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-slate-50 mt-0.5">
+                                <!-- Base Price -->
+                                <div class="flex items-center gap-0.5 bg-slate-50 px-1.5 py-1 rounded border border-slate-100 shrink-0">
+                                    <span class="text-[10px] font-bold text-slate-400">Rs.</span>
+                                    <input type="number" x-model.number="item.base_price" class="w-14 sm:w-16 text-[12px] font-black text-slate-700 bg-transparent border-none focus:ring-0 outline-none p-0 hide-arrows text-center" min="0" step="0.01">
+                                    <span class="text-[9px] font-extrabold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : (item.price_type === 'per_sqft' ? '/SQFT' : '')"></span>
+                                </div>
+                                
                                 <!-- Total -->
                                 <div class="text-right shrink-0 min-w-max">
-                                    <span class="text-[13px] font-black text-blue-700 whitespace-nowrap" x-text="'Rs. ' + getItemTotal(item).toFixed(2)"></span>
+                                    <span class="text-[14px] font-black text-blue-700 whitespace-nowrap" x-text="'Rs. ' + getItemTotal(item).toFixed(2)"></span>
                                 </div>
                             </div>
 

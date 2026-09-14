@@ -79,21 +79,13 @@
                     </div>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 bg-gray-50 p-4 rounded-xl border border-gray-100 mb-6">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Basic Salary (Rs.)</label>
-                            <input type="number" step="0.01" name="basic_salary" value="{{ old('basic_salary', $staff->profile->basic_salary ?? 0) }}"
-                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
-                        </div>
+
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Hourly Rate (Rs.)</label>
                             <input type="number" step="0.01" name="hourly_rate" value="{{ old('hourly_rate', $staff->profile->hourly_rate ?? 0) }}"
                                 class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                         </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Daily Rate (Rs.)</label>
-                            <input type="number" step="0.01" name="daily_rate" value="{{ old('daily_rate', $staff->profile->daily_rate ?? 0) }}"
-                                class="w-full text-sm border-gray-200 rounded-lg focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
-                        </div>
+
                         <div>
                             <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Allowed Monthly Leaves (Free)</label>
                             <input type="number" name="casual_leaves" value="{{ old('casual_leaves', $staff->profile->casual_leaves ?? 2) }}"
