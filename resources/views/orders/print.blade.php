@@ -112,9 +112,9 @@
 
 <body>
     <div class="center" style="margin-bottom: 12px;">
-        @if($branch && $branch->logo_path)
-            <img src="{{ asset($branch->logo_path) }}" alt="Logo"
-                style="max-width: {{ $branch->logo_size ?? 140 }}px; height: auto;" onerror="this.style.display='none'">
+        @if($mainBranch && $mainBranch->logo_path)
+            <img src="{{ asset($mainBranch->logo_path) }}" alt="Logo"
+                style="max-width: {{ $mainBranch->logo_size ?? 140 }}px; height: auto;" onerror="this.style.display='none'">
         @endif
     </div>
 
@@ -123,8 +123,8 @@
         </div>
     @endif
 
-    @if($branch && $branch->tagline)
-        <div class="center" style="font-size:12px; margin-bottom:2px;">{{ $branch->tagline }}</div>
+    @if($mainBranch && $mainBranch->tagline)
+        <div class="center" style="font-size:12px; margin-bottom:2px;">{{ $mainBranch->tagline }}</div>
     @endif
     @if($branch && $branch->phone)
         <div class="center" style="font-size:12px;">{{ $branch->phone }}</div>
@@ -133,8 +133,8 @@
         <div class="center" style="font-size:12px;">{{ $branch->address }}</div>
     @endif
 
-    @if($branch && $branch->invoice_header)
-        <div class="center" style="font-size:12px; margin-top:4px; font-style:italic;">{!! nl2br(e($branch->invoice_header)) !!}</div>
+    @if($mainBranch && $mainBranch->invoice_header)
+        <div class="center" style="font-size:12px; margin-top:4px; font-style:italic;">{!! nl2br(e($mainBranch->invoice_header)) !!}</div>
     @endif
 
     <div class="divider"></div>
@@ -231,16 +231,16 @@
 
     <div class="divider"></div>
     
-    @if($branch && $branch->invoice_terms)
+    @if($mainBranch && $mainBranch->invoice_terms)
         <div style="font-size:10px; margin-top:8px; color:#333; text-align:justify;">
             <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
-            {!! nl2br(e($branch->invoice_terms)) !!}
+            {!! nl2br(e($mainBranch->invoice_terms)) !!}
         </div>
         <div class="divider"></div>
     @endif
 
-    @if($branch && $branch->invoice_footer)
-        <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($branch->invoice_footer)) !!}</div>
+    @if($mainBranch && $mainBranch->invoice_footer)
+        <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($mainBranch->invoice_footer)) !!}</div>
     @else
         <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing 365laundry.lk.</div>
         <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please

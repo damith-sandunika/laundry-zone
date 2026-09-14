@@ -93,8 +93,8 @@
         
         <div class="header">
             <div class="logo-section">
-                @if($order->branch && $order->branch->logo_path)
-                    <img src="{{ asset($order->branch->logo_path) }}" alt="Logo" style="max-width: 150px; height: auto; margin-bottom: 12px; display: block;" onerror="this.style.display='none'">
+                @if($mainBranch && $mainBranch->logo_path)
+                    <img src="{{ asset($mainBranch->logo_path) }}" alt="Logo" style="max-width: 150px; height: auto; margin-bottom: 12px; display: block;" onerror="this.style.display='none'">
                 @endif
                 <h1>{{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</h1>
                 <p>{{ $order->branch->name ?? 'Main Branch' }}</p>
@@ -222,8 +222,21 @@
             </div>
         </div>
 
+        <div style="margin-top: 30px; font-size: 11px; color: #64748b; line-height: 1.6;">
+            @if($mainBranch && $mainBranch->invoice_terms)
+                <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; display: block; margin-bottom: 4px;">Terms & Conditions</strong>
+                {!! nl2br(e($mainBranch->invoice_terms)) !!}
+            @endif
+        </div>
+
         <div class="footer">
-            <p>Thank you for your business! 🤍</p>
+            <p>
+                @if($mainBranch && $mainBranch->invoice_footer)
+                    {!! nl2br(e($mainBranch->invoice_footer)) !!}
+                @else
+                    Thank you for your business! 🤍
+                @endif
+            </p>
             @if($order->paid_amount >= $order->total && $order->total > 0)
                 <div class="badge">FULLY PAID</div>
             @elseif($order->total - $order->paid_amount > 0)

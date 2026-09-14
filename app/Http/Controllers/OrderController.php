@@ -287,8 +287,9 @@ class OrderController extends Controller
     {
         $order->load(['customer', 'items.serviceType.category']);
         $branch = Branch::find($order->branch_id);
+        $mainBranch = Branch::orderBy('id')->first();
 
-        return view('orders.print', compact('order', 'branch'));
+        return view('orders.print', compact('order', 'branch', 'mainBranch'));
     }
 
     public function printChit(Order $order)
@@ -301,8 +302,9 @@ class OrderController extends Controller
     public function invoice(Order $order)
     {
         $order->load(['customer', 'items.serviceType.category', 'branch']);
+        $mainBranch = Branch::orderBy('id')->first();
 
-        return view('orders.invoice', compact('order'));
+        return view('orders.invoice', compact('order', 'mainBranch'));
     }
 
     public function updateStatus(\App\Http\Requests\Order\UpdateOrderStatusRequest $request, Order $order, \App\Actions\Order\UpdateOrderStatusAction $action)
