@@ -162,13 +162,13 @@
             <span class="item-name">
                 @if($item->serviceType && $item->serviceType->name !== 'Special Service')
                     @if($item->serviceType->category)
-                        <span style="display: block; font-size: 9px; color: #475569; font-weight: 500; margin-bottom: 1px;">
+                        <div style="font-size: 9px; color: #475569; font-weight: 500; margin-bottom: 1px;">
                             {{ $item->serviceType->category->parent ? $item->serviceType->category->parent->name . ' > ' : '' }}{{ $item->serviceType->category->name }}
-                        </span>
+                        </div>
                     @endif
-                    <span style="display: block; font-size: 13px; font-weight: 800;">{{ $item->serviceType->name }}</span>
+                    <div style="font-size: 13px; font-weight: 800;">{{ $item->serviceType->name }}</div>
                 @else
-                    <span style="display: block; font-size: 13px; font-weight: 800;">{{ $item->item_description }}</span>
+                    <div style="font-size: 13px; font-weight: 800;">{{ $item->item_description }}</div>
                 @endif
             </span>
             <span class="bold">Rs.{{ number_format($item->total_price, 2) }}</span>

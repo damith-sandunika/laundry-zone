@@ -232,9 +232,8 @@ class SettingsController extends Controller
             'inventory' => 'nullable|array',
         ]);
 
-        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
         $service = ServiceType::create([
-            'branch_id' => $branchId,
+            'branch_id' => null,
             'name' => $request->name,
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
@@ -285,9 +284,8 @@ class SettingsController extends Controller
             $imagePath = app(\App\Actions\UploadImageAction::class)->execute($request->file('image'), 'categories', 'cat');
         }
 
-        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
         ServiceCategory::create([
-            'branch_id' => $branchId,
+            'branch_id' => null,
             'parent_id' => $request->parent_id,
             'name' => $request->name,
             'is_active' => true,
@@ -473,7 +471,7 @@ class SettingsController extends Controller
         ]);
 
         $package = Package::create([
-            'branch_id' => $branchId,
+            'branch_id' => null,
             'name' => $request->name,
             'price' => $request->price,
             'payment_type' => $request->payment_type,
@@ -617,10 +615,8 @@ class SettingsController extends Controller
             'price' => 'required|numeric|min:0',
         ]);
 
-        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
-
         \App\Models\Extra::create([
-            'branch_id' => $branchId,
+            'branch_id' => null,
             'name' => $request->name,
             'price_type' => $request->price_type,
             'price' => $request->price,
@@ -660,18 +656,12 @@ class SettingsController extends Controller
             'is_default' => 'boolean',
         ]);
 
-        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
-
         if ($request->has('is_default')) {
-            \App\Models\TurnaroundType::when($branchId, function($q) use ($branchId) {
-                $q->where('branch_id', $branchId);
-            }, function($q) {
-                $q->whereNull('branch_id');
-            })->update(['is_default' => false]);
+            \App\Models\TurnaroundType::query()->update(['is_default' => false]);
         }
 
         \App\Models\TurnaroundType::create([
-            'branch_id' => $branchId,
+            'branch_id' => null,
             'name' => $request->name,
             'markup_type' => $request->markup_type,
             'markup_value' => $request->markup_value,
@@ -692,11 +682,8 @@ class SettingsController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        $branchId = $turnaroundType->branch_id ?? $this->getActiveBranchId();
-
         if ($request->has('is_default') && $request->is_default) {
             \App\Models\TurnaroundType::where('id', '!=', $turnaroundType->id)
-                ->where('branch_id', $branchId)
                 ->update(['is_default' => false]);
         }
 
