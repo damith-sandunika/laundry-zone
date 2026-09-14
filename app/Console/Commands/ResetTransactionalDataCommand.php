@@ -49,6 +49,9 @@ class ResetTransactionalDataCommand extends Command
             }
         }
 
+        // Truncate non-model tables
+        \Illuminate\Support\Facades\DB::table('petty_cash_topups')->truncate();
+
         \Illuminate\Support\Facades\DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         $this->info('Data successfully deleted! Services and other settings were NOT touched.');
