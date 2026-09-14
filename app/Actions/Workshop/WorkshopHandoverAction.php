@@ -19,26 +19,30 @@ class WorkshopHandoverAction
         $order = $dispatch->order;
 
         DB::transaction(function () use ($data, $order, $dispatch, $userId) {
-            $amountPaid = (float) ($data['amount_paid'] ?? 0);
+            $paymentMethod = $data['payment_method'] ?? $order->payment_method;
+            $amountPaid = $paymentMethod === 'credit' ? 0 : (float) ($data['amount_paid'] ?? 0);
+
             if ($amountPaid > 0) {
                 PaymentTransaction::create([
                     'order_id'       => $order->id,
                     'amount'         => $amountPaid,
-                    'payment_method' => $data['payment_method'] ?? 'cash',
+                    'payment_method' => $paymentMethod,
                     'created_by'     => $userId,
                     'status'         => 'completed',
                     'transaction_id' => 'TXN-' . strtoupper(uniqid()),
                 ]);
-                $newPaid = $order->paid_amount + $amountPaid;
-                $order->update([
-                    'paid_amount'    => $newPaid,
-                    'payment_method' => $data['payment_method'] ?? $order->payment_method,
-                    'payment_status' => $newPaid >= $order->total ? 'paid' : 'partial',
-                ]);
-                $order = $order->fresh();
             }
 
-            if ($order->paid_amount < $order->total) {
+            $newPaid = $order->paid_amount + $amountPaid;
+            
+            $order->update([
+                'paid_amount'    => $newPaid,
+                'payment_method' => $paymentMethod,
+                'payment_status' => $paymentMethod === 'credit' ? 'pending' : ($newPaid >= $order->total ? 'paid' : 'partial'),
+            ]);
+            $order = $order->fresh();
+
+            if ($order->paid_amount < $order->total && $paymentMethod !== 'credit') {
                 throw new Exception('Balance due: Rs. ' . number_format($order->total - $order->paid_amount, 2) . '. Collect full payment before handover.');
             }
 

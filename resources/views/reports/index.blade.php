@@ -149,6 +149,9 @@
         <!-- Premium Horizontally Scrollable Tab Header -->
         <div class="p-4 border-b border-slate-100 bg-slate-50 overflow-x-auto scrollbar-none">
             <div class="flex gap-2 w-max bg-slate-200/60 p-1.5 rounded-2xl">
+                <button @click="activeReport = 'credit_orders'" :class="activeReport === 'credit_orders' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
+                    Credit Orders
+                </button>
                 <button @click="activeReport = 'expenses'" :class="activeReport === 'expenses' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
                     Petty Cash Log
                 </button>
@@ -165,7 +168,69 @@
         </div>
 
         <div>
-
+            <!-- CREDIT ORDERS LOG -->
+            <div x-show="activeReport === 'credit_orders'" style="display:none;" x-transition>
+                <div class="p-4 border-b border-slate-100 bg-white flex justify-between items-center">
+                    <h3 class="font-bold text-slate-800">Pending Credit Orders</h3>
+                    <span class="text-xs font-bold text-orange-600 bg-orange-50 px-3 py-1 rounded-full border border-orange-200">
+                        Total Pending: Rs.{{ number_format($totalCredit, 2) }}
+                    </span>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-[10px] md:text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-100">
+                            <tr>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Order Details</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Customer</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Bill Value</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Balance Due</th>
+                                <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($creditOrders as $order)
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-2 py-2 md:px-6 md:py-4">
+                                        <div class="flex items-center gap-2">
+                                            <a href="/orders/view/{{ $order->order_number }}" target="_blank" class="font-bold text-blue-600 hover:underline">{{ $order->order_number }}</a>
+                                            <span class="text-[9px] font-bold text-slate-400">#{{ $order->id }}</span>
+                                        </div>
+                                        <div class="text-[9px] md:text-xs font-semibold text-slate-500 mt-1">{{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y') }}</div>
+                                        @if($order->branch)
+                                            <div class="text-[9px] md:text-xs font-bold text-slate-400 mt-0.5">🏪 {{ $order->branch->name }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4">
+                                        <div class="font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</div>
+                                        <div class="text-[9px] md:text-xs font-semibold text-slate-500 mt-1">{{ $order->customer->phone ?? '' }}</div>
+                                    </td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right">
+                                        <div class="font-bold text-slate-600">Rs.{{ number_format($order->total, 2) }}</div>
+                                        @if($order->paid_amount > 0)
+                                            <div class="text-[9px] md:text-xs font-semibold text-emerald-600 mt-1">Paid: Rs.{{ number_format($order->paid_amount, 2) }}</div>
+                                        @endif
+                                    </td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-right">
+                                        <div class="font-black text-rose-500 text-sm md:text-base">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</div>
+                                    </td>
+                                    <td class="px-2 py-2 md:px-6 md:py-4 text-center">
+                                        <button @click="openCollectModal({{ $order->id }}, '{{ $order->order_number }}', {{ $order->total - $order->paid_amount }})" class="px-3 py-1.5 md:px-4 md:py-2 bg-orange-500 hover:bg-orange-600 text-white text-[10px] md:text-xs font-bold rounded-lg shadow-sm transition-colors">
+                                            Collect Pay
+                                        </button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No pending credit orders found.</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <div class="p-4 border-t border-slate-100 bg-slate-50">
+                    {{ $creditOrders->appends(request()->query())->links() }}
+                </div>
+            </div>
 
             <!-- PETTY CASH LOG -->
             <div x-show="activeReport === 'expenses'" style="display:none;" x-transition>
@@ -430,6 +495,39 @@
             </div>
         </div>
 
+        <!-- Collect Credit Payment Modal -->
+        <div x-cloak x-show="collectModalOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden flex flex-col" @click.away="collectModalOpen = false">
+                <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-orange-50">
+                    <div>
+                        <h3 class="text-sm md:text-base font-black text-orange-600">Collect Credit Payment</h3>
+                        <p class="text-[10px] md:text-sm font-bold text-orange-700 mt-1" x-text="'Order: ' + collectOrderNumber"></p>
+                    </div>
+                    <button @click="collectModalOpen = false" class="w-8 h-8 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 hover:bg-orange-200 transition-colors font-bold">✕</button>
+                </div>
+                <div class="p-5 bg-white">
+                    <form x-bind:action="'/orders/' + collectOrderId + '/credit-payment'" method="POST">
+                        @csrf
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Amount to Collect (Rs)</label>
+                            <input type="number" step="0.01" name="amount" x-model="collectAmount" max="" required class="w-full px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-black text-slate-900 bg-slate-50 focus:bg-white focus:border-orange-500 focus:ring-0">
+                        </div>
+                        <div class="mb-5">
+                            <label class="block text-xs font-bold text-slate-600 uppercase tracking-widest mb-1.5">Payment Method</label>
+                            <select name="payment_method" required class="w-full px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-black text-slate-900 bg-slate-50 focus:bg-white focus:border-orange-500 focus:ring-0">
+                                <option value="cash">💵 Cash</option>
+                                <option value="card">💳 Card</option>
+                                <option value="bank_transfer">🏦 Bank Transfer</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="w-full py-3 bg-orange-500 hover:bg-orange-600 text-white font-black rounded-xl shadow-lg shadow-orange-500/30 transition-transform active:scale-95 text-sm uppercase tracking-wider">
+                            Confirm Collection
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
@@ -537,12 +635,24 @@
 
         function reportData() {
             return {
-                activeReport: 'expenses',
+                activeReport: '{{ request()->has('credit_page') ? 'credit_orders' : 'expenses' }}',
                 expenseCategoryFilter: '',
                 orders: @json($orders->getCollection()),
                 pendingModalOpen: false,
                 selectedServiceName: '',
                 selectedServiceOrders: [],
+                
+                collectModalOpen: false,
+                collectOrderId: null,
+                collectOrderNumber: '',
+                collectAmount: 0,
+
+                openCollectModal(id, number, amount) {
+                    this.collectOrderId = id;
+                    this.collectOrderNumber = number;
+                    this.collectAmount = amount;
+                    this.collectModalOpen = true;
+                },
 
                 openPendingOrders(serviceName) {
                     this.selectedServiceName = serviceName;

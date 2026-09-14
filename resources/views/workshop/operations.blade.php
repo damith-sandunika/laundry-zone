@@ -711,9 +711,10 @@
                                     <option value="cash">💵 Cash</option>
                                     <option value="bank">🏦 Bank Transfer</option>
                                     <option value="card">💳 Card</option>
+                                    <option value="credit">⏳ Credit</option>
                                 </select>
                             </div>
-                            <div>
+                            <div x-show="handoverPaymentMethod !== 'credit'">
                                 <label style="font-size:11px;font-weight:700;color:#64748b;display:block;margin-bottom:4px;">Amount (Rs.)</label>
                                 <input type="number" step="0.01" x-model="handoverAmountPaid" style="width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;" onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#e2e8f0'">
                             </div>

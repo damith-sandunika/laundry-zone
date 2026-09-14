@@ -225,7 +225,7 @@
 
     <div class="center" style="margin: 8px 0;">
         <span class="badge">
-            @if($order->paid_amount >= $order->total) ✓ PAID IN FULL @else 🕒 PAY ON PICKUP @endif
+            @if($order->paid_amount >= $order->total) ✓ PAID IN FULL @elseif($order->payment_method === 'credit') ⏳ CREDIT @else 🕒 PAY ON PICKUP @endif
         </span>
     </div>
 

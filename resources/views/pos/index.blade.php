@@ -416,11 +416,18 @@
                         </button>
                     </div>
 
-                    <!-- Discount -->
-                    <div class="mb-3 px-1">
-                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Discount (%)</label>
-                        <input type="number" x-model.number="discountPercentage" min="0" max="100" step="1"
-                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                    <!-- Discount & Advance Amount -->
+                    <div class="mb-3 px-1 flex gap-3">
+                        <div class="flex-1">
+                            <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Discount (%)</label>
+                            <input type="number" x-model.number="discountPercentage" min="0" max="100" step="1"
+                                class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                        </div>
+                        <div class="flex-1" x-show="paymentMode === 'pay_now'">
+                            <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Advance Amount</label>
+                            <input type="number" x-model="advanceAmount" min="0" step="0.01" :placeholder="'Full: Rs. ' + total.toFixed(2)"
+                                class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                        </div>
                     </div>
 
                     <!-- Total -->
@@ -801,6 +808,7 @@
                 paymentMethod: 'cash',
                 dueDate: '',
                 discountPercentage: 0,
+                advanceAmount: '',
                 specialName: '',
                 specialPrice: 0,
                 
@@ -1106,6 +1114,7 @@
                         payment_method: this.paymentMethod,
                         due_date: this.dueDate,
                         discount_percentage: this.discountPercentage || 0,
+                        advance_amount: this.advanceAmount !== '' ? parseFloat(this.advanceAmount) : null,
                         customer_package_id: typeof packageId === 'number' ? packageId : null
                     };
 

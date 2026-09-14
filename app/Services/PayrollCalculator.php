@@ -153,7 +153,7 @@ class PayrollCalculator
             'ot_rate_per_hour' => $otRatePerHour,
             'monthly_allowed_leaves' => $monthlyAllowedLeaves,
             'present_days' => $presentDays,
-            'leave_days' => $totalLeaveDays,
+            'leave_days' => $paidLeaveDays + $unpaidAttendanceLeaveDays,
             'approved_paid_leaves' => $approvedPaidLeaves,
             'total_regular_minutes' => $totalRegularMinutes,
             'total_regular_hours' => round($totalRegularMinutes / 60, 2),

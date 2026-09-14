@@ -123,7 +123,15 @@ class CreatePosOrderAction
         $discountAmount = $subtotal * ($discountPercentage / 100);
         $total = $subtotal - $discountAmount;
         $paymentMode = $data['payment_mode'] ?? 'pay_on_pickup';
-        $paidAmount = $paymentMode === 'pay_now' ? $total : 0;
+        
+        $paidAmount = 0;
+        if ($paymentMode === 'pay_now') {
+            if (isset($data['advance_amount']) && $data['advance_amount'] !== null) {
+                $paidAmount = min($total, (float) $data['advance_amount']);
+            } else {
+                $paidAmount = $total;
+            }
+        }
 
         return DB::transaction(function () use ($data, $user, $branchId, $subtotal, $discountAmount, $discountPercentage, $total, $paidAmount, $paymentMode, $processedCart, $packageId, $activePackage, $packageDeductions) {
             $customerId = $data['customer_id'] ?? null;

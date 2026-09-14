@@ -139,13 +139,13 @@ class ReportController extends Controller
         $totalDeliveryFees   = $actualTotalDeliveryFees;
 
         // Credit Customers
-        $creditOrdersQuery = Order::with('customer')
+        $creditOrdersQuery = Order::with(['customer', 'branch'])
             ->whereColumn('paid_amount', '<', 'total')
             ->where('payment_method', 'credit');
         if ($branchId) {
             $creditOrdersQuery->where('branch_id', $branchId);
         }
-        $creditOrders = collect(); // Optimized out, not used in view
+        $creditOrders = $creditOrdersQuery->orderBy('created_at', 'desc')->paginate(15, ['*'], 'credit_page');
 
         // 2. Service-wise breakdown (already DB-aggregated, no pagination needed)
         $serviceBreakdown = OrderItem::select(

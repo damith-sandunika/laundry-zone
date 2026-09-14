@@ -14,7 +14,7 @@ class CollectCreditPaymentRequest extends FormRequest
     public function rules()
     {
         return [
-            'payment_method' => 'required|in:cash,card',
+            'payment_method' => 'required|in:cash,card,bank',
             'amount' => 'required|numeric|min:0.01',
         ];
     }

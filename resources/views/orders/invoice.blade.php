@@ -240,7 +240,7 @@
             @if($order->paid_amount >= $order->total && $order->total > 0)
                 <div class="badge">FULLY PAID</div>
             @elseif($order->total - $order->paid_amount > 0)
-                <div class="badge" style="background:#f59e0b;">PAYMENT PENDING</div>
+                <div class="badge" style="background:#f59e0b;">{{ $order->payment_method === 'credit' ? 'CREDIT' : 'PAYMENT PENDING' }}</div>
             @endif
         </div>
     </div>
