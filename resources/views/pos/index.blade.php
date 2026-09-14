@@ -150,7 +150,7 @@
                                 <span class="text-[12px] font-black text-slate-800 leading-tight tracking-tight line-clamp-2 mb-1" x-text="service.name"></span>
                                 <div class="flex items-end justify-center gap-1">
                                     <span class="text-[13px] font-black text-blue-600" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
-                                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest pb-0.5" x-text="service.price_type === 'per_kg' ? '/KG' : '/ITM'"></span>
+                                    <span class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest pb-0.5" x-text="service.price_type === 'per_kg' ? '/KG' : (service.price_type === 'per_sqft' ? '/SQFT' : '/ITM')"></span>
                                 </div>
                             </button>
                         </template>
@@ -255,7 +255,7 @@
                                     <div class="flex items-center gap-1 mt-0.5">
                                         <span class="text-[10.5px] font-bold text-slate-400">Rs.</span>
                                         <input type="number" x-model.number="item.base_price" class="w-16 text-[10.5px] font-bold text-slate-600 bg-transparent border-b border-dashed border-slate-300 focus:border-blue-500 outline-none p-0 hide-arrows" min="0" step="0.01">
-                                        <span class="text-[10.5px] font-bold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : ''"></span>
+                                        <span class="text-[10.5px] font-bold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : (item.price_type === 'per_sqft' ? '/SQFT' : '')"></span>
                                     </div>
                                 </div>
                                 

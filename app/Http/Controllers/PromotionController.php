@@ -9,7 +9,8 @@ class PromotionController extends Controller
     public function index()
     {
         $promotions = \App\Models\Promotion::orderBy('order_sequence')->get();
-        return view('promotions.index', compact('promotions'));
+        $categories = \App\Models\ServiceCategory::where('is_active', 1)->get();
+        return view('promotions.index', compact('promotions', 'categories'));
     }
 
     public function store(Request $request)
@@ -17,6 +18,7 @@ class PromotionController extends Controller
         $request->validate([
             'title' => 'required|string|max:255',
             'image' => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'category_id' => 'nullable|exists:service_categories,id',
         ]);
 
         $path = null;
@@ -42,6 +44,7 @@ class PromotionController extends Controller
 
         \App\Models\Promotion::create([
             'title' => $request->title,
+            'category_id' => $request->category_id,
             'image_path' => $path,
             'order_sequence' => \App\Models\Promotion::max('order_sequence') + 1,
             'is_active' => true,
@@ -52,7 +55,21 @@ class PromotionController extends Controller
 
     public function update(Request $request, \App\Models\Promotion $promotion)
     {
-        $promotion->update(['is_active' => $request->has('is_active')]);
+        if ($request->has('is_active') && !$request->has('title')) {
+            $promotion->update(['is_active' => $request->is_active]);
+            return redirect()->back()->with('success', 'Promotion status updated.');
+        }
+
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'category_id' => 'nullable|exists:service_categories,id',
+        ]);
+
+        $promotion->update([
+            'title' => $request->title,
+            'category_id' => $request->category_id,
+        ]);
+
         return redirect()->back()->with('success', 'Promotion updated.');
     }
 

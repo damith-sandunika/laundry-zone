@@ -54,7 +54,10 @@
                                 </button>
                             </form>
                         </td>
-                        <td class="py-3 px-4 text-right">
+                        <td class="py-3 px-4 text-right flex justify-end gap-2">
+                            <button onclick="openEditModal({{ $promo->id }}, '{{ addslashes($promo->title) }}', '{{ $promo->category_id }}')" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            </button>
                             <form action="{{ route('promotions.destroy', $promo->id) }}" method="POST" onsubmit="return confirm('Delete this promotion?');">
                                 @csrf @method('DELETE')
                                 <button class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg transition-colors">
@@ -86,6 +89,15 @@
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Internal Title (Not shown on site)</label>
                 <input type="text" name="title" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
             </div>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Link to Category (Optional)</label>
+                <select name="category_id" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="">None</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+            </div>
             <div class="mb-6">
                 <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Image</label>
                 <input type="file" name="image" required accept="image/*" class="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
@@ -98,8 +110,45 @@
     </div>
 </div>
 
+<!-- Edit Modal -->
+<div id="edit-modal" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <h3 class="font-bold text-slate-800 text-lg">Edit Promotion</h3>
+            <button onclick="document.getElementById('edit-modal').classList.add('hidden')" class="text-slate-400 hover:text-slate-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+        </div>
+        <form id="edit-form" method="POST" class="p-6">
+            @csrf @method('PUT')
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Internal Title</label>
+                <input type="text" id="edit-title" name="title" required class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+            </div>
+            <div class="mb-4">
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Link to Category (Optional)</label>
+                <select id="edit-category-id" name="category_id" class="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm">
+                    <option value="">None</option>
+                    @foreach($categories as $cat)
+                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button type="button" onclick="document.getElementById('edit-modal').classList.add('hidden')" class="px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm text-sm">Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 <script>
+    function openEditModal(id, title, categoryId) {
+        document.getElementById('edit-form').action = `/promotions/${id}`;
+        document.getElementById('edit-title').value = title;
+        document.getElementById('edit-category-id').value = categoryId || '';
+        document.getElementById('edit-modal').classList.remove('hidden');
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         var el = document.getElementById('sortable-list');
         if(el) {

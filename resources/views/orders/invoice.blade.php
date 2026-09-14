@@ -93,6 +93,9 @@
         
         <div class="header">
             <div class="logo-section">
+                @if($order->branch && $order->branch->logo_path)
+                    <img src="{{ asset($order->branch->logo_path) }}" alt="Logo" style="max-width: 150px; height: auto; margin-bottom: 12px; display: block;" onerror="this.style.display='none'">
+                @endif
                 <h1>{{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</h1>
                 <p>{{ $order->branch->name ?? 'Main Branch' }}</p>
                 <p>{{ $order->branch->phone ?? '011 234 5678' }}</p>

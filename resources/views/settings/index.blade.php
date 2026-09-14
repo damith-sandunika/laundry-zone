@@ -419,7 +419,7 @@
                             <div x-show="!editing">
                                 <h4 class="font-bold text-gray-800 mt-2">{{ $extra->name }}</h4>
                                 <p class="text-xs text-gray-500 mt-1">Rs. {{ number_format($extra->price, 2) }}
-                                    ({{ $extra->price_type == 'per_piece' ? 'Per Piece' : 'Per KG' }})</p>
+                                    ({{ $extra->price_type == 'per_piece' ? 'Per Piece' : ($extra->price_type == 'per_sqft' ? 'Per SqFt' : 'Per KG') }})</p>
                                 @if(is_null($extra->branch_id))
                                     <span class="text-[10px] font-bold px-2 py-0.5 rounded mt-1 inline-block bg-purple-100 text-purple-700 border border-purple-200">🌐 Global</span>
                                 @endif
@@ -440,6 +440,7 @@
                                         class="w-full text-xs border-gray-300 rounded px-2 py-1">
                                         <option value="per_piece">Per Piece</option>
                                         <option value="per_kg">Per KG</option>
+                                        <option value="per_sqft">Per SqFt</option>
                                     </select>
                                     <input type="number" step="0.01" name="price" x-model="newPrice"
                                         class="w-full text-xs border-gray-300 rounded px-2 py-1" required
@@ -1620,6 +1621,7 @@
                         style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
                         <option value="per_piece">Per Piece</option>
                         <option value="per_kg">Per KG</option>
+                        <option value="per_sqft">Per SqFt</option>
                     </select>
                 </div>
                 <div>

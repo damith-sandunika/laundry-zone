@@ -288,7 +288,7 @@
                 @csrf
                 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category</label>
-                    <select name="category_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                    <select id="add-category-id" name="category_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
                         <option value="">Uncategorized</option>
                         @foreach($serviceCategories as $cat)
                             <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -313,6 +313,7 @@
                         <select name="price_type" required style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
                             <option value="per_item">Per Item</option>
                             <option value="per_kg">Per KG</option>
+                            <option value="per_sqft">Per SqFt</option>
                         </select>
                     </div>
                 </div>
@@ -368,6 +369,7 @@
                         <select id="edit-price-type" name="price_type" required style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
                             <option value="per_item">Per Item</option>
                             <option value="per_kg">Per KG</option>
+                            <option value="per_sqft">Per SqFt</option>
                         </select>
                     </div>
                 </div>
@@ -405,7 +407,7 @@
                 @csrf
                 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Parent Category (Optional)</label>
-                    <select name="parent_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
+                    <select id="add-cat-parent-id" name="parent_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
                         <option value="">None (Main Category)</option>
                         @foreach($mainCategories as $cat)
                             <option value="{{ $cat->id }}">{{ $cat->name }}</option>
@@ -481,13 +483,22 @@
         </div>
     </div>
     <script>
+        let editCategorySelect = null;
+        let editCatParentSelect = null;
+
         function openEditServiceModal(id, name, price, priceType, isActive, color, categoryId, isVisible, itemCode) {
             document.getElementById('edit-service-form').action = `/settings/services/${id}`;
             document.getElementById('edit-name').value = name;
             document.getElementById('edit-price').value = price;
             document.getElementById('edit-price-type').value = priceType;
             document.getElementById('edit-active').value = isActive;
-            document.getElementById('edit-category-id').value = categoryId || '';
+            
+            if (editCategorySelect) {
+                editCategorySelect.setValue(categoryId || '');
+            } else {
+                document.getElementById('edit-category-id').value = categoryId || '';
+            }
+            
             document.getElementById('edit-website-visible').checked = isVisible == 1;
             document.getElementById('edit-item-code').value = itemCode || '';
             document.getElementById('edit-service-modal').style.display = 'flex';
@@ -497,7 +508,13 @@
             document.getElementById('edit-category-form').action = `/settings/service-categories/${id}`;
             document.getElementById('edit-cat-name').value = name;
             document.getElementById('edit-cat-active').value = isActive;
-            document.getElementById('edit-cat-parent-id').value = parentId || '';
+            
+            if (editCatParentSelect) {
+                editCatParentSelect.setValue(parentId || '');
+            } else {
+                document.getElementById('edit-cat-parent-id').value = parentId || '';
+            }
+            
             document.getElementById('edit-cat-website-visible').checked = isVisible == 1;
             document.getElementById('edit-category-modal').style.display = 'flex';
         }
@@ -517,9 +534,27 @@
         });
     </script>
 
+    <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+    <style>
+        .ts-control { border-radius: 10px; padding: 10px 14px; border: 1.5px solid #e2e8f0; font-size: 13px; font-weight: 600; box-shadow: none !important; outline: none !important; }
+        .ts-control.focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1) !important; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Tom Select for Searchable Dropdowns
+            const tsConfig = { create: false, placeholder: 'Select Category...' };
+            if(document.getElementById('add-category-id')) new TomSelect('#add-category-id', tsConfig);
+            if(document.getElementById('add-cat-parent-id')) new TomSelect('#add-cat-parent-id', { create: false, placeholder: 'None (Main Category)' });
+            
+            if(document.getElementById('edit-category-id')) {
+                editCategorySelect = new TomSelect('#edit-category-id', tsConfig);
+            }
+            if(document.getElementById('edit-cat-parent-id')) {
+                editCatParentSelect = new TomSelect('#edit-cat-parent-id', { create: false, placeholder: 'None (Main Category)' });
+            }
+
             // Sort Main Categories
             const categoriesSortable = document.getElementById('categories-sortable');
             if (categoriesSortable) {

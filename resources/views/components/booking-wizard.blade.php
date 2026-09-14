@@ -816,6 +816,44 @@
                     currentViewLevel: 0, // 0: Categories, 1: Subcategories, 2: Services
                     
                     init() {
+                        let catId = null;
+                        const urlParams = new URLSearchParams(window.location.search);
+                        catId = urlParams.get('category');
+                        if (!catId) {
+                            let hash = window.location.hash;
+                            if (hash.includes('category=')) {
+                                catId = hash.split('category=')[1].split('&')[0];
+                            }
+                        }
+                        if (catId) {
+                            setTimeout(() => {
+                                for (let cat of Object.values(this.categories)) {
+                                    if (cat.id == catId) {
+                                        this.selectLevel1(cat);
+                                        const servicesHeader = document.getElementById('services');
+                                        if (servicesHeader) {
+                                            const y = servicesHeader.getBoundingClientRect().top + window.scrollY - 80;
+                                            window.scrollTo({top: y, behavior: 'smooth'});
+                                        }
+                                        return;
+                                    }
+                                    if (cat.children && cat.children.length > 0) {
+                                        for (let sub of Object.values(cat.children)) {
+                                            if (sub.id == catId) {
+                                                this.selectLevel1(cat);
+                                                this.selectLevel2(sub);
+                                                const servicesHeader = document.getElementById('services');
+                                                if (servicesHeader) {
+                                                    const y = servicesHeader.getBoundingClientRect().top + window.scrollY - 80;
+                                                    window.scrollTo({top: y, behavior: 'smooth'});
+                                                }
+                                                return;
+                                            }
+                                        }
+                                    }
+                                }
+                            }, 300);
+                        }
                     },
                     
                     // Modal state

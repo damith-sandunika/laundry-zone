@@ -383,7 +383,11 @@
                 <div class="swiper-wrapper">
                     @foreach($promotions as $promo)
                     <div class="swiper-slide">
-                        <a href="{{ route('customer.login') ?? '/login' }}" class="block outline-none">
+                        @if($promo->category_id)
+                            <a href="{{ url('/?category=' . $promo->category_id . '#services') }}" class="block outline-none">
+                        @else
+                            <a href="{{ route('customer.login') }}" class="block outline-none">
+                        @endif
                             <div class="promo-card">
                                 <img src="{{ Str::startsWith($promo->image_path, 'http') ? $promo->image_path : asset('storage/' . $promo->image_path) }}" class="w-full h-auto object-cover rounded-[1.5rem]" alt="Promotion">
                             </div>
@@ -463,6 +467,7 @@
                         effect: "slide", /* Simple clean slide effect */
                         grabCursor: true,
                         centeredSlides: true,
+                        centerInsufficientSlides: true,
                         slidesPerView: "auto",
                         spaceBetween: 30, /* Space between cards */
                         loop: {{ $promotions->count() > 3 ? 'true' : 'false' }},

@@ -228,7 +228,7 @@ class SettingsController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:service_categories,id',
             'base_price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:per_kg,per_item',
+            'price_type' => 'required|in:per_kg,per_item,per_sqft',
             'inventory' => 'nullable|array',
         ]);
 
@@ -254,7 +254,7 @@ class SettingsController extends Controller
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:service_categories,id',
             'base_price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:per_kg,per_item',
+            'price_type' => 'required|in:per_kg,per_item,per_sqft',
             'is_active' => 'boolean',
             'inventory' => 'nullable|array',
         ]);
@@ -613,7 +613,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'price_type' => 'required|in:per_piece,per_kg',
+            'price_type' => 'required|in:per_piece,per_kg,per_sqft',
             'price' => 'required|numeric|min:0',
         ]);
 
@@ -634,7 +634,7 @@ class SettingsController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'price_type' => 'required|in:per_piece,per_kg',
+            'price_type' => 'required|in:per_piece,per_kg,per_sqft',
             'price' => 'required|numeric|min:0',
             'is_active' => 'boolean',
         ]);

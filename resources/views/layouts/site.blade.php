@@ -150,7 +150,7 @@
     </main>
     <footer class="bg-[#0f172a] text-slate-300 py-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-8 border-b border-slate-700 pb-12 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-slate-700 pb-12 mb-8">
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center mb-4">
                         <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="365laundry.lk Logo" class="h-10 w-auto bg-white/10 p-1.5 rounded-xl border border-white/20">
@@ -184,23 +184,12 @@
                     </ul>
                 </div>
 
-                <div>
-                    <h4 class="text-white font-bold mb-5 uppercase tracking-wider text-xs">Our Services</h4>
-                    <ul class="space-y-2.5 text-sm">
-                        @foreach(\App\Models\ServiceCategory::where('is_active', 1)->take(5)->get() as $cat)
-                            <li><a href="{{ url('/#services') }}" class="hover:text-white transition">{{ $cat->name }}</a></li>
-                        @endforeach
-                    </ul>
-                </div>
             </div>
-            <div
-                class="text-center text-sm text-slate-500 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div>
-                    <p>&copy; {{ date('Y') }} 365laundry.lk. All Rights Reserved.</p>
-                    <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com"
-                            target="_blank"
-                            class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>
-                </div>
+            <div class="text-center text-sm text-slate-500">
+                <p>&copy; {{ date('Y') }} 365laundry.lk. All Rights Reserved.</p>
+                <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com"
+                        target="_blank"
+                        class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>
             </div>
         </div>
     </footer>
