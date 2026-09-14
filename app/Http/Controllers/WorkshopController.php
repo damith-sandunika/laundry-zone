@@ -547,7 +547,11 @@ class WorkshopController extends Controller
             ?? null;
 
         $services = \App\Models\ServiceType::where('is_active', true)
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->where(function($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+                }
+            })
             ->get();
 
         $categories = \App\Models\ServiceCategory::with(['children' => function($q) use ($branchId) {
@@ -555,7 +559,11 @@ class WorkshopController extends Controller
         }])
             ->whereNull('parent_id')
             ->where('is_active', true)
-            ->when($branchId, fn($q) => $q->where('branch_id', $branchId))
+            ->where(function($q) use ($branchId) {
+                if ($branchId) {
+                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+                }
+            })
             ->orderBy('order_index')
             ->get();
 
