@@ -407,7 +407,6 @@
                 .promotionsSwiper .swiper-slide {
                     width: 260px; /* Base size */
                     opacity: 0.5;
-                    transform: scale(0.85);
                     transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
                     filter: blur(1.5px);
                 }
@@ -418,7 +417,6 @@
                 }
                 .promotionsSwiper .swiper-slide-active {
                     opacity: 1;
-                    transform: scale(1.15); /* Pop out the active slide */
                     z-index: 20;
                     filter: blur(0px);
                 }
@@ -464,14 +462,21 @@
             <script>
                 document.addEventListener('DOMContentLoaded', function () {
                     new Swiper(".promotionsSwiper", {
-                        effect: "slide", /* Simple clean slide effect */
+                        effect: "coverflow",
                         grabCursor: true,
                         centeredSlides: true,
                         centerInsufficientSlides: true,
                         slidesPerView: "auto",
-                        spaceBetween: 30, /* Space between cards */
-                        loop: {{ $promotions->count() > 3 ? 'true' : 'false' }},
-                        speed: 1000, /* Smooth transition speed */
+                        coverflowEffect: {
+                            rotate: 0,
+                            stretch: 0,
+                            depth: 150,
+                            modifier: 1.5,
+                            slideShadows: false,
+                        },
+                        spaceBetween: 30,
+                        loop: {{ $promotions->count() > 1 ? 'true' : 'false' }},
+                        speed: 1000,
                         autoplay: {
                             delay: 2500,
                             disableOnInteraction: false /* Keeps looping */
