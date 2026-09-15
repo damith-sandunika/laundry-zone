@@ -59,28 +59,41 @@ class WorkshopDispatchDeliveryAction
         } else {
             Expense::create([
                 'branch_id' => $dispatch->workshop_branch_id,
-                'amount' => $data['pickme_cost'],
-                'category' => 'PickMe',
+                'amount'    => (float)($data['pickme_cost'] ?? 0),
+                'category'  => 'PickMe',
                 'description' => 'PickMe Delivery for Order #' . $order->order_number,
                 'expense_date' => now(),
-                'created_by' => $userId,
+                'created_by'   => $userId,
             ]);
 
-            $amountToPay = $order->total - $order->paid_amount;
-            if ($amountToPay > 0) {
-                $paymentMethod = $data['payment_method'] ?? 'cash';
+            $amountToPay   = $order->total - $order->paid_amount;
+            $paymentMethod = $data['payment_method'] ?? 'cash';
+
+            Log::info('Workshop PickMe Dispatch', [
+                'order_id'       => $order->id,
+                'payment_method' => $paymentMethod,
+                'amount_to_pay'  => $amountToPay,
+            ]);
+
+            if ($paymentMethod === 'credit') {
+                $order->update([
+                    'payment_status' => 'pending',
+                    'payment_method' => 'credit',
+                ]);
+            } elseif ($amountToPay > 0) {
                 PaymentTransaction::create([
-                    'order_id'       => $order->id,
-                    'amount'         => $amountToPay,
-                    'payment_method' => $paymentMethod,
-                    'created_by'     => $userId,
+                    'order_id'                => $order->id,
+                    'amount'                  => $amountToPay,
+                    'payment_method'          => $paymentMethod,
+                    'created_by'              => $userId,
                     'collected_from_rider_at' => now(),
-                    'status'         => 'completed',
-                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                    'status'                  => 'completed',
+                    'transaction_id'          => 'TXN-' . strtoupper(uniqid()),
                 ]);
                 $order->update([
-                    'paid_amount' => $order->total,
+                    'paid_amount'    => $order->total,
                     'payment_status' => 'paid',
+                    'payment_method' => $paymentMethod,
                 ]);
             }
 
