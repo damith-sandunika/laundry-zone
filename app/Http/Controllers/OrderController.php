@@ -336,7 +336,7 @@ class OrderController extends Controller
             ]);
 
             if ($request->expectsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Update failed: ' . $e->getMessage()], 500);
+                return response()->json(['success' => false, 'message' => 'Update failed. Please try again.'], 500);
             }
 
             return redirect()->back()->with('error', 'Update failed: ' . $e->getMessage());
@@ -397,10 +397,10 @@ class OrderController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Approve Payment Failed', [
                 'order_id' => $order->id ?? null,
-                'user_id' => auth()->id(),
-                'error' => $e->getMessage()
+                'user_id'  => auth()->id(),
+                'error'    => $e->getMessage()
             ]);
-            abort(403, 'An error occurred while approving payment.');
+            return response()->json(['success' => false, 'message' => 'An error occurred while approving payment.'], 500);
         }
     }
 

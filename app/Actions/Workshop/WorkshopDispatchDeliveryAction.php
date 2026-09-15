@@ -69,12 +69,6 @@ class WorkshopDispatchDeliveryAction
             $amountToPay   = $order->total - $order->paid_amount;
             $paymentMethod = $data['payment_method'] ?? 'cash';
 
-            Log::info('Workshop PickMe Dispatch', [
-                'order_id'       => $order->id,
-                'payment_method' => $paymentMethod,
-                'amount_to_pay'  => $amountToPay,
-            ]);
-
             if ($paymentMethod === 'credit') {
                 $order->update([
                     'payment_status' => 'pending',
