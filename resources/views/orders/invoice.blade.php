@@ -227,11 +227,6 @@
                 <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; display: block; margin-bottom: 4px;">Terms & Conditions</strong>
                 {!! nl2br(e($mainBranch->invoice_terms)) !!}
             @endif
-            <div style="margin-top: 10px;">
-                <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em;">Terms & Conditions:</strong>
-                <br>
-                Please visit <a href="https://365laundry.lk/terms" style="color: #3b82f6; text-decoration: none; font-weight: bold;">365laundry.lk/terms</a> for our complete terms of service.
-            </div>
         </div>
 
         <div class="footer">
@@ -242,6 +237,10 @@
                     Thank you for your business! 🤍
                 @endif
             </p>
+            <div style="margin-top: 12px; font-size: 10px; color: #94a3b8;">
+                <strong style="text-transform: uppercase; letter-spacing: 0.1em; color: #64748b;">Terms & Conditions:</strong> 
+                Please visit <a href="https://365laundry.lk/terms" style="color: #3b82f6; text-decoration: none; font-weight: bold;">365laundry.lk/terms</a>
+            </div>
             @if($order->paid_amount >= $order->total && $order->total > 0)
                 <div class="badge">FULLY PAID</div>
             @elseif($order->total - $order->paid_amount > 0)
