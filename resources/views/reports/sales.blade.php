@@ -108,19 +108,19 @@
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $activity->order->customer->name ?? 'Walk-in' }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($activity->total_qty, 1) }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold uppercase">
-                                @if($activity->is_settlement)
-                                    <span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] md:text-xs shadow-sm flex items-center gap-1 inline-flex border border-blue-200">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
-                                        SETTLED ({{ $activity->payment_method }})
-                                    </span>
-                                @elseif($activity->payment_method === 'credit')
-                                    <span class="px-2.5 py-1 bg-orange-100 text-orange-700 rounded-lg text-[10px] md:text-xs shadow-sm flex items-center gap-1 inline-flex border border-orange-200">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        Credit Payment
-                                    </span>
-                                @else
-                                    <span class="text-slate-900">{{ $activity->payment_method ?? 'None' }}</span>
-                                @endif
+                                @php
+                                    $pm = $activity->payment_method ?? '';
+                                    $labels = ['cash'=>'Cash','card'=>'Card','bank'=>'Bank Transfer','credit'=>'Credit'];
+                                    $label = $labels[$pm] ?? strtoupper($pm) ?: 'None';
+                                    $colors = [
+                                        'cash'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
+                                        'card'   => 'bg-blue-100 text-blue-700 border-blue-200',
+                                        'bank'   => 'bg-purple-100 text-purple-700 border-purple-200',
+                                        'credit' => 'bg-orange-100 text-orange-700 border-orange-200',
+                                    ];
+                                    $color = $colors[$pm] ?? 'bg-slate-100 text-slate-700 border-slate-200';
+                                @endphp
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold border {{ $color }}">{{ $label }}</span>
                             </td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($activity->amount, 2) }}</td>
                         </tr>

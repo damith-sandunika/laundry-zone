@@ -137,17 +137,16 @@
                 <td>{{ $activity->order->customer->name ?? 'Walk-in' }}</td>
                 <td class="text-center">{{ number_format($activity->total_qty, 1) }}</td>
                 <td style="text-transform: uppercase;">
-                    @if($activity->is_settlement)
-                        <span style="background:#dbeafe;color:#1d4ed8;padding:3px 6px;border-radius:4px;font-size:10px;font-weight:bold;border:1px solid #93c5fd;">
-                            SETTLED ({{ strtoupper($activity->payment_method) }})
-                        </span>
-                    @elseif($activity->payment_method === 'credit')
-                        <span style="background:#ffedd5;color:#c2410c;padding:3px 6px;border-radius:4px;font-size:10px;font-weight:bold;border:1px solid #fdba74;">
-                            CREDIT PAYMENT
-                        </span>
-                    @else
-                        {{ $activity->payment_method ?? 'None' }}
-                    @endif
+                    @php
+                        $pm = $activity->payment_method ?? '';
+                        $pdfLabels = ['cash'=>'Cash','card'=>'Card','bank'=>'Bank Transfer','credit'=>'Credit'];
+                        $pdfLabel = $pdfLabels[$pm] ?? strtoupper($pm) ?: 'None';
+                        $pdfColors = ['cash'=>'#d1fae5:#065f46','card'=>'#dbeafe:#1e40af','bank'=>'#f3e8ff:#7e22ce','credit'=>'#ffedd5:#c2410c'];
+                        $pdfBg = explode(':', $pdfColors[$pm] ?? '#f1f5f9:#475569');
+                    @endphp
+                    <span style="background:{{ $pdfBg[0] }};color:{{ $pdfBg[1] }};padding:3px 7px;border-radius:4px;font-size:10px;font-weight:bold;">
+                        {{ $pdfLabel }}
+                    </span>
                 </td>
                 <td class="text-right" style="font-weight: bold; color: #059669;">Rs.{{ number_format($activity->amount, 2) }}</td>
             </tr>
