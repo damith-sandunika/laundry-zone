@@ -564,8 +564,9 @@ class SettingsController extends Controller
             'cost' => 'required|numeric|min:0',
         ]);
 
+        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
         \App\Models\DeliveryRange::create([
-            'branch_id' => \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? null : auth()->user()->branch_id,
+            'branch_id' => $branchId,
             'min_distance_km' => $request->min_distance_km,
             'max_distance_km' => $request->max_distance_km,
             'cost' => $request->cost,

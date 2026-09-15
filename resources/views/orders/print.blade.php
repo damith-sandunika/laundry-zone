@@ -134,7 +134,9 @@
     @endif
 
     @if($mainBranch && $mainBranch->invoice_header)
-        <div class="center" style="font-size:12px; margin-top:4px; font-style:italic;">{!! nl2br(e($mainBranch->invoice_header)) !!}</div>
+        <div class="center" style="font-size:12px; margin-top:4px; font-style:italic;">
+            {!! nl2br(e($mainBranch->invoice_header)) !!}
+        </div>
     @endif
 
     <div class="divider"></div>
@@ -181,10 +183,10 @@
         </div>
         @if($item->extras->count() > 0)
             @foreach($item->extras as $e)
-            <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px;">
-                <span>+ {{ $e->extra->name }} (x{{ $e->quantity }})</span>
-                <span class="bold">Rs.{{ number_format($e->unit_price * $e->quantity, 2) }}</span>
-            </div>
+                <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px;">
+                    <span>+ {{ $e->extra->name }} (x{{ $e->quantity }})</span>
+                    <span class="bold">Rs.{{ number_format($e->unit_price * $e->quantity, 2) }}</span>
+                </div>
             @endforeach
         @endif
         <div style="margin-bottom: 6px;"></div>
@@ -225,12 +227,13 @@
 
     <div class="center" style="margin: 8px 0;">
         <span class="badge">
-            @if($order->paid_amount >= $order->total) ✓ PAID IN FULL @elseif($order->payment_method === 'credit') ⏳ CREDIT @else 🕒 PAY ON PICKUP @endif
+            @if($order->paid_amount >= $order->total) ✓ PAID IN FULL @elseif($order->payment_method === 'credit') ⏳
+            CREDIT @else 🕒 PAY ON PICKUP @endif
         </span>
     </div>
 
     <div class="divider"></div>
-    
+
     @if($mainBranch && $mainBranch->invoice_terms)
         <div style="font-size:10px; margin-top:8px; color:#333; text-align:justify;">
             <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
@@ -239,6 +242,12 @@
         <div class="divider"></div>
     @endif
 
+    <div style="font-size:10px; margin-top:8px; margin-bottom:8px; color:#333; text-align:center;">
+        <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
+        Read our full terms at <br><strong style="font-size:11px;">365laundry.lk/terms</strong>
+    </div>
+    <div class="divider"></div>
+
     @if($mainBranch && $mainBranch->invoice_footer)
         <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($mainBranch->invoice_footer)) !!}</div>
     @else
@@ -246,11 +255,6 @@
         <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
             leave us a Google Review!</div>
     @endif
-    
-    <div style="font-size:10px; margin-top:12px; color:#333; text-align:center;">
-        <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
-        Read our full terms at <br><strong style="font-size:11px;">365laundry.lk/terms</strong>
-    </div>
 
     <div class="center" style="font-size:10px; margin-top:12px; color:#666;">
         Software by DSRZone
@@ -270,4 +274,3 @@
 </body>
 
 </html>
-
