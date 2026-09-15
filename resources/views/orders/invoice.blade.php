@@ -150,7 +150,7 @@
                 <tr>
                     <td>
                         @if($item->serviceType && $item->serviceType->category)
-                            <div style="font-size: 11px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 900;">
+                            <div style="font-size: 13px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 900;">
                                 {{ $item->serviceType->category->parent ? $item->serviceType->category->parent->name . ' > ' : '' }}{{ $item->serviceType->category->name }}
                             </div>
                         @endif
