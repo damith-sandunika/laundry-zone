@@ -53,7 +53,7 @@ class DispatchOrderDeliveryAction
         } else {
             Expense::create([
                 'branch_id' => $branchId,
-                'amount' => $data['pickme_cost'],
+                'amount' => (float)($data['pickme_cost'] ?? 0),
                 'category' => 'PickMe',
                 'description' => 'PickMe Delivery for Order #' . $order->order_number,
                 'expense_date' => now(),

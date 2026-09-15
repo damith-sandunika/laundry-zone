@@ -181,7 +181,7 @@
 
                 async submitDeliveryDispatch() {
                     if (this.deliveryMethod === 'rider' && !this.deliveryRiderId) return alert('Select a rider');
-                    if (this.deliveryMethod === 'pickme_flash' && !this.deliveryPickmeCost) return alert('Enter PickMe cost');
+                    if (this.deliveryMethod === 'pickme_flash' && (this.deliveryPickmeCost === '' || this.deliveryPickmeCost === null)) return alert('Enter PickMe cost (0 is allowed)');
                     this.isDispatchingDelivery = true;
                     try {
                         if (this.deliverOrder.status === 'returned_from_workshop' && this.deliverOrder.workshop_dispatch_id) {

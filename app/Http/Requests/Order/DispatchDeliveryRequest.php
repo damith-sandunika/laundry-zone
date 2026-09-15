@@ -15,8 +15,9 @@ class DispatchDeliveryRequest extends FormRequest
     {
         return [
             'delivery_method' => 'required|in:rider,pickme_flash',
-            'rider_id' => 'required_if:delivery_method,rider|nullable|exists:users,id',
-            'pickme_cost' => 'required_if:delivery_method,pickme_flash|nullable|numeric|min:0',
+            'rider_id'        => 'required_if:delivery_method,rider|nullable|exists:users,id',
+            'pickme_cost'     => 'required_if:delivery_method,pickme_flash|nullable|numeric|min:0',
+            'payment_method'  => 'nullable|in:cash,card,bank_transfer,credit',
         ];
     }
 }
