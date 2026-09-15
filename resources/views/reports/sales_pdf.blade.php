@@ -99,6 +99,10 @@
             <div class="summary-label">Bank Transfer</div>
             <div class="summary-value" style="color: #9333ea;">Rs.{{ number_format($totalBank, 2) }}</div>
         </div>
+        <div class="summary-box" style="border-bottom: 4px solid #ea580c; background:#fff7ed;">
+            <div class="summary-label" style="color:#ea580c;">Credit Issued</div>
+            <div class="summary-value" style="color: #ea580c;">Rs.{{ number_format($totalCredit, 2) }}</div>
+        </div>
         <div class="summary-box highlight">
             <div class="summary-label">Total Sales</div>
             <div class="summary-value" style="color: #0f172a;">Rs.{{ number_format($totalSalesAmount, 2) }}</div>
@@ -122,26 +126,30 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($orders as $index => $order)
+            @forelse($orders as $index => $activity)
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 @if($isSuperAdmin && !$branchId)
-                    <td>{{ $order->branch->name ?? 'Unknown' }}</td>
+                    <td>{{ $activity->order->branch->name ?? 'Unknown' }}</td>
                 @endif
-                <td>{{ $order->created_at->format('Y-m-d') }}</td>
-                <td style="font-weight: bold; color: #1e40af;">{{ $order->order_number }}</td>
-                <td>{{ $order->customer->name ?? 'Walk-in' }}</td>
-                <td class="text-center">{{ number_format($order->total_qty, 1) }}</td>
+                <td>{{ \Carbon\Carbon::parse($activity->date)->format('Y-m-d') }}</td>
+                <td style="font-weight: bold; color: #1e40af;">{{ $activity->order->order_number }}</td>
+                <td>{{ $activity->order->customer->name ?? 'Walk-in' }}</td>
+                <td class="text-center">{{ number_format($activity->total_qty, 1) }}</td>
                 <td style="text-transform: uppercase;">
-                    @if($order->payment_method === 'credit')
+                    @if($activity->is_settlement)
+                        <span style="background:#dbeafe;color:#1d4ed8;padding:3px 6px;border-radius:4px;font-size:10px;font-weight:bold;border:1px solid #93c5fd;">
+                            SETTLED ({{ strtoupper($activity->payment_method) }})
+                        </span>
+                    @elseif($activity->payment_method === 'credit')
                         <span style="background:#ffedd5;color:#c2410c;padding:3px 6px;border-radius:4px;font-size:10px;font-weight:bold;border:1px solid #fdba74;">
                             CREDIT PAYMENT
                         </span>
                     @else
-                        {{ $order->payment_method ?? 'None' }}
+                        {{ $activity->payment_method ?? 'None' }}
                     @endif
                 </td>
-                <td class="text-right" style="font-weight: bold; color: #059669;">Rs.{{ number_format($order->total, 2) }}</td>
+                <td class="text-right" style="font-weight: bold; color: #059669;">Rs.{{ number_format($activity->amount, 2) }}</td>
             </tr>
             @empty
             <tr>

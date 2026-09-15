@@ -50,6 +50,30 @@
     </div>
 
 
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4 md:mb-6">
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">💵 Cash</p>
+            <p class="text-lg md:text-2xl font-black text-emerald-600">Rs.{{ number_format($totalCash, 2) }}</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">💳 Card</p>
+            <p class="text-lg md:text-2xl font-black text-blue-600">Rs.{{ number_format($totalCard, 2) }}</p>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest mb-1">🏦 Bank Transfer</p>
+            <p class="text-lg md:text-2xl font-black text-purple-600">Rs.{{ number_format($totalBank, 2) }}</p>
+        </div>
+        <div class="bg-white border border-orange-200 rounded-2xl p-4 shadow-sm">
+            <p class="text-[9px] md:text-xs font-bold text-orange-500 uppercase tracking-widest mb-1">⏱️ Credit Issued</p>
+            <p class="text-lg md:text-2xl font-black text-orange-600">Rs.{{ number_format($totalCredit, 2) }}</p>
+        </div>
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-sm col-span-2 md:col-span-1">
+            <p class="text-[9px] md:text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">⚡ Total</p>
+            <p class="text-lg md:text-2xl font-black text-white">Rs.{{ number_format($totalSalesAmount, 2) }}</p>
+        </div>
+    </div>
+
     <!-- Data Table -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-6">
         <div class="overflow-x-auto">
@@ -69,31 +93,36 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @forelse($orders as $index => $order)
+                    @forelse($orders as $index => $activity)
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-2 py-2 md:px-6 md:py-4 text-center font-bold text-slate-400">{{ $orders->firstItem() + $index }}</td>
                             @if($isSuperAdmin && !$branchId)
-                                <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->branch->name ?? 'Unknown' }}</td>
+                                <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $activity->order->branch->name ?? 'Unknown' }}</td>
                             @endif
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->created_at->format('Y-m-d') }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ \Carbon\Carbon::parse($activity->date)->format('Y-m-d') }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">
-                                <a href="{{ route('orders.show', $order->order_number) }}" class="text-blue-600 hover:underline">
-                                    {{ $order->order_number }}
+                                <a href="{{ route('orders.show', $activity->order->order_number) }}" class="text-blue-600 hover:underline">
+                                    {{ $activity->order->order_number }}
                                 </a>
                             </td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($order->total_qty, 1) }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $activity->order->customer->name ?? 'Walk-in' }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($activity->total_qty, 1) }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold uppercase">
-                                @if($order->payment_method === 'credit')
+                                @if($activity->is_settlement)
+                                    <span class="px-2.5 py-1 bg-blue-100 text-blue-700 rounded-lg text-[10px] md:text-xs shadow-sm flex items-center gap-1 inline-flex border border-blue-200">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>
+                                        SETTLED ({{ $activity->payment_method }})
+                                    </span>
+                                @elseif($activity->payment_method === 'credit')
                                     <span class="px-2.5 py-1 bg-orange-100 text-orange-700 rounded-lg text-[10px] md:text-xs shadow-sm flex items-center gap-1 inline-flex border border-orange-200">
                                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                         Credit Payment
                                     </span>
                                 @else
-                                    <span class="text-slate-900">{{ $order->payment_method ?? 'None' }}</span>
+                                    <span class="text-slate-900">{{ $activity->payment_method ?? 'None' }}</span>
                                 @endif
                             </td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($order->total, 2) }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($activity->amount, 2) }}</td>
                         </tr>
                     @empty
                         <tr>

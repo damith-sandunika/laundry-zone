@@ -417,30 +417,66 @@ class ReportController extends Controller
 
         $branches = $isSuperAdmin ? Branch::where('is_active', true)->get() : collect();
 
-        $query = Order::with(['customer', 'branch'])
-            ->select('orders.*')
-            ->withSum('items as total_qty', 'quantity')
-            ->where('orders.status', '!=', 'cancelled')
-            ->where(function ($q) {
-                $q->where('orders.paid_amount', '>', 0)
-                  ->orWhere('orders.payment_method', 'credit');
-            })
-            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        // 1. Get all payments in this date range
+        $paymentsQuery = \App\Models\PaymentTransaction::with(['order.customer', 'order.branch', 'order.items'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->where('status', 'completed');
 
         if ($branchId) {
-            $query->where('orders.branch_id', $branchId);
+            $paymentsQuery->whereHas('order', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
         }
-
-        $query->orderBy('orders.total', 'desc');
-
-        $totalCash = (clone $query)->where('payment_method', 'cash')->sum('paid_amount');
-        $totalCard = (clone $query)->where('payment_method', 'card')->sum('paid_amount');
-        $totalBank = (clone $query)->where('payment_method', 'bank')->sum('paid_amount');
-        $totalCredit = (clone $query)->where('payment_method', 'credit')->sum('total');
+        
+        $payments = $paymentsQuery->get()->map(function($txn) {
+            $qty = $txn->order ? $txn->order->items->sum('quantity') : 0;
+            return (object) [
+                'type' => 'payment',
+                'date' => $txn->created_at,
+                'order' => $txn->order,
+                'total_qty' => $qty,
+                'payment_method' => $txn->payment_method,
+                'amount' => $txn->amount,
+                'is_settlement' => $txn->order ? $txn->created_at->startOfDay()->gt($txn->order->created_at->startOfDay()) : false,
+            ];
+        })->filter(fn($item) => $item->order != null);
+        
+        // 2. Get all credit orders in this date range
+        $creditOrdersQuery = \App\Models\Order::with(['customer', 'branch', 'items'])
+            ->where('status', '!=', 'cancelled')
+            ->where('payment_method', 'credit')
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+            
+        if ($branchId) {
+            $creditOrdersQuery->where('branch_id', $branchId);
+        }
+        
+        $creditOrders = $creditOrdersQuery->get()->map(function($order) {
+            $qty = $order->items->sum('quantity');
+            return (object) [
+                'type' => 'credit_sale',
+                'date' => $order->created_at,
+                'order' => $order,
+                'total_qty' => $qty,
+                'payment_method' => 'credit',
+                'amount' => $order->total,
+                'is_settlement' => false,
+            ];
+        });
+        
+        $allActivities = $payments->concat($creditOrders)->sortByDesc('date')->values();
+        
+        $totalCash = $payments->where('payment_method', 'cash')->sum('amount');
+        $totalCard = $payments->where('payment_method', 'card')->sum('amount');
+        $totalBank = $payments->where('payment_method', 'bank')->sum('amount');
+        $totalCredit = $creditOrders->sum('amount');
         $totalSalesAmount = $totalCash + $totalCard + $totalBank + $totalCredit;
 
-        // Efficient pagination keeping only 15 objects in RAM
-        $orders = $query->paginate(15);
+        // Manual Pagination
+        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $perPage = 15;
+        $currentItems = $allActivities->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $orders = new \Illuminate\Pagination\LengthAwarePaginator($currentItems, $allActivities->count(), $perPage, $currentPage, ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]);
 
         return view('reports.sales', compact('orders', 'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'totalCash', 'totalCard', 'totalBank', 'totalCredit', 'totalSalesAmount'));
     }
@@ -454,29 +490,66 @@ class ReportController extends Controller
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
 
-        $query = Order::with(['customer', 'branch'])
-            ->select('orders.*')
-            ->withSum('items as total_qty', 'quantity')
-            ->where('orders.status', '!=', 'cancelled')
-            ->where(function ($q) {
-                $q->where('orders.paid_amount', '>', 0)
-                  ->orWhere('orders.payment_method', 'credit');
-            })
-            ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+        // 1. Get all payments in this date range
+        $paymentsQuery = \App\Models\PaymentTransaction::with(['order.customer', 'order.branch', 'order.items'])
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59'])
+            ->where('status', 'completed');
 
         if ($branchId) {
-            $query->where('orders.branch_id', $branchId);
+            $paymentsQuery->whereHas('order', function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId);
+            });
         }
-
-        $query->orderBy('orders.total', 'desc');
-
-        $totalCash = (clone $query)->where('payment_method', 'cash')->sum('paid_amount');
-        $totalCard = (clone $query)->where('payment_method', 'card')->sum('paid_amount');
-        $totalBank = (clone $query)->where('payment_method', 'bank')->sum('paid_amount');
-        $totalCredit = (clone $query)->where('payment_method', 'credit')->sum('total');
+        
+        $payments = $paymentsQuery->get()->map(function($txn) {
+            $qty = $txn->order ? $txn->order->items->sum('quantity') : 0;
+            return (object) [
+                'type' => 'payment',
+                'date' => $txn->created_at,
+                'order' => $txn->order,
+                'total_qty' => $qty,
+                'payment_method' => $txn->payment_method,
+                'amount' => $txn->amount,
+                'is_settlement' => $txn->order ? $txn->created_at->startOfDay()->gt($txn->order->created_at->startOfDay()) : false,
+            ];
+        })->filter(fn($item) => $item->order != null);
+        
+        // 2. Get all credit orders in this date range
+        $creditOrdersQuery = \App\Models\Order::with(['customer', 'branch', 'items'])
+            ->where('status', '!=', 'cancelled')
+            ->where('payment_method', 'credit')
+            ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
+            
+        if ($branchId) {
+            $creditOrdersQuery->where('branch_id', $branchId);
+        }
+        
+        $creditOrders = $creditOrdersQuery->get()->map(function($order) {
+            $qty = $order->items->sum('quantity');
+            return (object) [
+                'type' => 'credit_sale',
+                'date' => $order->created_at,
+                'order' => $order,
+                'total_qty' => $qty,
+                'payment_method' => 'credit',
+                'amount' => $order->total,
+                'is_settlement' => false,
+            ];
+        });
+        
+        $allActivities = $payments->concat($creditOrders)->sortByDesc('date')->values();
+        
+        $totalCash = $payments->where('payment_method', 'cash')->sum('amount');
+        $totalCard = $payments->where('payment_method', 'card')->sum('amount');
+        $totalBank = $payments->where('payment_method', 'bank')->sum('amount');
+        $totalCredit = $creditOrders->sum('amount');
         $totalSalesAmount = $totalCash + $totalCard + $totalBank + $totalCredit;
 
-        $orders = $query->paginate(500); // Optimized for PDF generation
+        // Manual Pagination for PDF (allow up to 500)
+        $currentPage = \Illuminate\Pagination\Paginator::resolveCurrentPage() ?: 1;
+        $perPage = 500;
+        $currentItems = $allActivities->slice(($currentPage - 1) * $perPage, $perPage)->values();
+        $orders = new \Illuminate\Pagination\LengthAwarePaginator($currentItems, $allActivities->count(), $perPage, $currentPage, ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]);
         $branch = Branch::find($branchId ?? 1);
 
         return view('reports.sales_pdf', compact('orders', 'startDate', 'endDate', 'branch', 'isSuperAdmin', 'branchId', 'totalCash', 'totalCard', 'totalBank', 'totalCredit', 'totalSalesAmount'));
