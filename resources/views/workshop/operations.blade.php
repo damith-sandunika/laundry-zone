@@ -597,14 +597,16 @@
                         <input type="number" x-model="deliveryPickmeCost" placeholder="e.g. 500" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
                         <p style="font-size:11px;color:#64748b;margin-top:6px;font-weight:600;">This will automatically be added as a Workshop Expense.</p>
                         
-                        <div x-show="deliveryDispatch && deliveryDispatch.order && (deliveryDispatch.order.total - (deliveryDispatch.order.paid_amount || 0) > 0)" style="margin-top:12px;">
-                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Balance to Collect: LKR <span x-text="deliveryDispatch && deliveryDispatch.order ? (deliveryDispatch.order.total - (deliveryDispatch.order.paid_amount || 0)).toFixed(2) : '0.00'"></span></label>
-                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Balance Payment Method</label>
+                        <div style="margin-top:12px;">
+                            <div x-show="deliveryDispatch && deliveryDispatch.order && (deliveryDispatch.order.total - (deliveryDispatch.order.paid_amount || 0) > 0)" style="margin-bottom:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;font-weight:700;color:#c2410c;">
+                                ⚠️ Balance to Collect: LKR <span x-text="deliveryDispatch && deliveryDispatch.order ? (deliveryDispatch.order.total - (deliveryDispatch.order.paid_amount || 0)).toFixed(2) : '0.00'"></span>
+                            </div>
+                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Payment Method</label>
                             <select x-model="deliveryPaymentMethod" style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;">
                                 <option value="cash">Cash</option>
                                 <option value="card">Card</option>
                                 <option value="bank_transfer">Bank Transfer</option>
-                                <option value="credit">Credit</option>
+                                <option value="credit">Credit (Pending Payment)</option>
                             </select>
                         </div>
                     </div>
