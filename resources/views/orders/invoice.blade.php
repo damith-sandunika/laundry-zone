@@ -136,10 +136,10 @@
         <table class="items-table">
             <thead>
                 <tr>
-                    <th>Item / Service</th>
-                    <th class="center">Qty</th>
-                    <th class="right">Unit Price</th>
-                    <th class="right">Total</th>
+                    <th style="width: 50%;">Item / Service</th>
+                    <th class="center" style="width: 10%;">Qty</th>
+                    <th class="right" style="width: 20%;">Unit Price</th>
+                    <th class="right" style="width: 20%;">Total</th>
                 </tr>
             </thead>
             <tbody>
@@ -150,7 +150,7 @@
                 <tr>
                     <td>
                         @if($item->serviceType && $item->serviceType->category)
-                            <div style="font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 2px; font-weight: 800;">
+                            <div style="font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 800;">
                                 {{ $item->serviceType->category->parent ? $item->serviceType->category->parent->name . ' > ' : '' }}{{ $item->serviceType->category->name }}
                             </div>
                         @endif
