@@ -63,6 +63,12 @@ class DispatchOrderDeliveryAction
             $amountToPay = $order->total - $order->paid_amount;
             $paymentMethod = $data['payment_method'] ?? 'cash';
             
+            Log::info('PickMe Dispatch', [
+                'order_id'       => $order->id,
+                'amount_to_pay'  => $amountToPay,
+                'payment_method' => $paymentMethod,
+                'data_received'  => $data,
+            ]);
             if ($paymentMethod === 'credit') {
                 // Credit: do NOT collect money. Mark order as credit/pending.
                 $order->update([
