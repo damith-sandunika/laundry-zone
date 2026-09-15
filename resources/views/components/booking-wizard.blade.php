@@ -1242,10 +1242,11 @@
                         map.routeLayer.clearLayers();
                         if(!startLat || !startLng || !endLat || !endLng) return;
                         
-                        axios.get(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`)
-                            .then(res => {
-                                if(res.data && res.data.routes && res.data.routes.length > 0) {
-                                    const route = res.data.routes[0].geometry;
+                        window.fetch(`https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`)
+                            .then(res => res.json())
+                            .then(data => {
+                                if(data && data.routes && data.routes.length > 0) {
+                                    const route = data.routes[0].geometry;
                                     L.geoJSON(route, {
                                         style: { color: '#2563eb', weight: 4, opacity: 0.8, dashArray: '5, 10' }
                                     }).addTo(map.routeLayer);
