@@ -132,7 +132,15 @@
                 <td style="font-weight: bold; color: #1e40af;">{{ $order->order_number }}</td>
                 <td>{{ $order->customer->name ?? 'Walk-in' }}</td>
                 <td class="text-center">{{ number_format($order->total_qty, 1) }}</td>
-                <td style="text-transform: uppercase;">{{ $order->payment_method ?? 'None' }}</td>
+                <td style="text-transform: uppercase;">
+                    @if($order->payment_method === 'credit')
+                        <span style="background:#ffedd5;color:#c2410c;padding:3px 6px;border-radius:4px;font-size:10px;font-weight:bold;border:1px solid #fdba74;">
+                            CREDIT PAYMENT
+                        </span>
+                    @else
+                        {{ $order->payment_method ?? 'None' }}
+                    @endif
+                </td>
                 <td class="text-right" style="font-weight: bold; color: #059669;">Rs.{{ number_format($order->total, 2) }}</td>
             </tr>
             @empty

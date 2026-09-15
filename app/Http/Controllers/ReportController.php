@@ -421,7 +421,10 @@ class ReportController extends Controller
             ->select('orders.*')
             ->withSum('items as total_qty', 'quantity')
             ->where('orders.status', '!=', 'cancelled')
-            ->where('orders.paid_amount', '>', 0)
+            ->where(function ($q) {
+                $q->where('orders.paid_amount', '>', 0)
+                  ->orWhere('orders.payment_method', 'credit');
+            })
             ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
 
         if ($branchId) {
@@ -433,12 +436,13 @@ class ReportController extends Controller
         $totalCash = (clone $query)->where('payment_method', 'cash')->sum('paid_amount');
         $totalCard = (clone $query)->where('payment_method', 'card')->sum('paid_amount');
         $totalBank = (clone $query)->where('payment_method', 'bank')->sum('paid_amount');
-        $totalSalesAmount = $totalCash + $totalCard + $totalBank;
+        $totalCredit = (clone $query)->where('payment_method', 'credit')->sum('total');
+        $totalSalesAmount = $totalCash + $totalCard + $totalBank + $totalCredit;
 
         // Efficient pagination keeping only 15 objects in RAM
         $orders = $query->paginate(15);
 
-        return view('reports.sales', compact('orders', 'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'totalCash', 'totalCard', 'totalBank', 'totalSalesAmount'));
+        return view('reports.sales', compact('orders', 'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'totalCash', 'totalCard', 'totalBank', 'totalCredit', 'totalSalesAmount'));
     }
 
     public function salesReportPdf(Request $request)
@@ -454,7 +458,10 @@ class ReportController extends Controller
             ->select('orders.*')
             ->withSum('items as total_qty', 'quantity')
             ->where('orders.status', '!=', 'cancelled')
-            ->where('orders.paid_amount', '>', 0)
+            ->where(function ($q) {
+                $q->where('orders.paid_amount', '>', 0)
+                  ->orWhere('orders.payment_method', 'credit');
+            })
             ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
 
         if ($branchId) {
@@ -466,12 +473,13 @@ class ReportController extends Controller
         $totalCash = (clone $query)->where('payment_method', 'cash')->sum('paid_amount');
         $totalCard = (clone $query)->where('payment_method', 'card')->sum('paid_amount');
         $totalBank = (clone $query)->where('payment_method', 'bank')->sum('paid_amount');
-        $totalSalesAmount = $totalCash + $totalCard + $totalBank;
+        $totalCredit = (clone $query)->where('payment_method', 'credit')->sum('total');
+        $totalSalesAmount = $totalCash + $totalCard + $totalBank + $totalCredit;
 
         $orders = $query->paginate(500); // Optimized for PDF generation
         $branch = Branch::find($branchId ?? 1);
 
-        return view('reports.sales_pdf', compact('orders', 'startDate', 'endDate', 'branch', 'isSuperAdmin', 'branchId', 'totalCash', 'totalCard', 'totalBank', 'totalSalesAmount'));
+        return view('reports.sales_pdf', compact('orders', 'startDate', 'endDate', 'branch', 'isSuperAdmin', 'branchId', 'totalCash', 'totalCard', 'totalBank', 'totalCredit', 'totalSalesAmount'));
     }
 
     public function serviceReport(Request $request)

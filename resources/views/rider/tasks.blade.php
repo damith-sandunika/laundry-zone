@@ -157,7 +157,7 @@
                     <template x-if="paymentDue > 0">
                         <div style="text-align:left;margin-bottom:24px;">
                             <label style="display:block;font-size:12px;font-weight:800;color:#475569;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em;">Payment Method</label>
-                            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
                                 <!-- Cash Option -->
                                 <div @click="paymentMethod = 'cash'" :style="paymentMethod === 'cash' ? 'border:2px solid #22c55e;background:#f0fdf4;' : 'border:2px solid #e2e8f0;background:white;'" style="border-radius:12px;padding:12px;cursor:pointer;text-align:center;transition:all 0.2s;">
                                     <span style="font-size:24px;display:block;margin-bottom:4px;">💵</span>
@@ -172,6 +172,11 @@
                                 <div @click="paymentMethod = 'bank_transfer'" :style="paymentMethod === 'bank_transfer' ? 'border:2px solid #8b5cf6;background:#f5f3ff;' : 'border:2px solid #e2e8f0;background:white;'" style="border-radius:12px;padding:12px;cursor:pointer;text-align:center;transition:all 0.2s;">
                                     <span style="font-size:24px;display:block;margin-bottom:4px;">🏦</span>
                                     <span style="font-size:12px;font-weight:800;color:#0f172a;">Bank</span>
+                                </div>
+                                <!-- Credit Option -->
+                                <div @click="paymentMethod = 'credit'" :style="paymentMethod === 'credit' ? 'border:2px solid #f97316;background:#fff7ed;' : 'border:2px solid #e2e8f0;background:white;'" style="border-radius:12px;padding:12px;cursor:pointer;text-align:center;transition:all 0.2s;">
+                                    <span style="font-size:24px;display:block;margin-bottom:4px;">⏱️</span>
+                                    <span style="font-size:12px;font-weight:800;color:#0f172a;">Credit</span>
                                 </div>
                             </div>
                         </div>

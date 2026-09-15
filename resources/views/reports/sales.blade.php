@@ -83,7 +83,16 @@
                             </td>
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $order->customer->name ?? 'Walk-in' }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($order->total_qty, 1) }}</td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900 uppercase">{{ $order->payment_method ?? 'None' }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold uppercase">
+                                @if($order->payment_method === 'credit')
+                                    <span class="px-2.5 py-1 bg-orange-100 text-orange-700 rounded-lg text-[10px] md:text-xs shadow-sm flex items-center gap-1 inline-flex border border-orange-200">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        Credit Payment
+                                    </span>
+                                @else
+                                    <span class="text-slate-900">{{ $order->payment_method ?? 'None' }}</span>
+                                @endif
+                            </td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($order->total, 2) }}</td>
                         </tr>
                     @empty

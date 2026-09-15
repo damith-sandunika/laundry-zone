@@ -604,6 +604,7 @@
                                 <option value="cash">Cash</option>
                                 <option value="card">Card</option>
                                 <option value="bank_transfer">Bank Transfer</option>
+                                <option value="credit">Credit</option>
                             </select>
                         </div>
                     </div>
