@@ -238,6 +238,12 @@
         </div>
         <div class="divider"></div>
     @endif
+    
+    <div style="font-size:10px; margin-top:8px; margin-bottom:8px; color:#333; text-align:center;">
+        <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
+        Read our full terms at <br><strong style="font-size:11px;">365laundry.lk/terms</strong>
+    </div>
+    <div class="divider"></div>
 
     @if($mainBranch && $mainBranch->invoice_footer)
         <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($mainBranch->invoice_footer)) !!}</div>
