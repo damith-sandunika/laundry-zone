@@ -63,7 +63,14 @@ class DispatchOrderDeliveryAction
             $amountToPay = $order->total - $order->paid_amount;
             $paymentMethod = $data['payment_method'] ?? 'cash';
             
-            if ($amountToPay > 0 && $paymentMethod !== 'credit') {
+            if ($paymentMethod === 'credit') {
+                // Credit: do NOT collect money. Mark order as credit/pending.
+                $order->update([
+                    'payment_status' => 'pending',
+                    'payment_method' => 'credit',
+                ]);
+            } elseif ($amountToPay > 0) {
+                // Cash/Card/Bank: collect balance and mark as paid.
                 PaymentTransaction::create([
                     'order_id'       => $order->id,
                     'amount'         => $amountToPay,
@@ -74,14 +81,9 @@ class DispatchOrderDeliveryAction
                     'transaction_id' => 'TXN-' . strtoupper(uniqid()),
                 ]);
                 $order->update([
-                    'paid_amount' => $order->total,
+                    'paid_amount'    => $order->total,
                     'payment_status' => 'paid',
                     'payment_method' => $paymentMethod,
-                ]);
-            } else if ($amountToPay > 0 && $paymentMethod === 'credit') {
-                $order->update([
-                    'payment_status' => 'pending',
-                    'payment_method' => 'credit',
                 ]);
             }
 
