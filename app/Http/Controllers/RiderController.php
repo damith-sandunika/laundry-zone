@@ -126,37 +126,27 @@ class RiderController extends Controller
                 // Determine the payment method chosen by the rider to settle the balance
                 $paymentMethod = $request->input('payment_method', 'cash');
                 
-                // Only create a cash PaymentTransaction if the customer pays COD (cash)
-                if ($balance > 0 && $paymentMethod === 'cash') {
+                if ($balance > 0 && in_array($paymentMethod, ['cash', 'card', 'bank_transfer'])) {
+                    $actualMethod = $paymentMethod === 'bank_transfer' ? 'bank' : $paymentMethod;
                     PaymentTransaction::create([
                         'order_id' => $order->id,
                         'amount' => $balance,
-                        'payment_method' => 'cash',
+                        'payment_method' => $actualMethod,
                         'created_by' => auth()->id(),
                         'status' => 'completed',
                         'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                        'collected_from_rider_at' => null // Branch admin needs to collect from rider
+                        'collected_from_rider_at' => $actualMethod === 'cash' ? null : now() // Branch admin needs to collect cash from rider
                     ]);
 
                     $order->paid_amount += $balance;
                     $order->payment_status = 'paid';
-                    // We don't overwrite $order->payment_method because they might have paid advance via bank.
-                    // The transaction itself records the 'cash' method.
                     
-                    // Rider needs to handover this cash to admin
-                    $isWaitingForPayment = true;
-                } elseif ($balance > 0 && $paymentMethod === 'card') {
-                    // If rider collected via a card terminal
-                    PaymentTransaction::create([
-                        'order_id' => $order->id,
-                        'amount' => $balance,
-                        'payment_method' => 'card',
-                        'created_by' => auth()->id(),
-                        'status' => 'completed',
-                        'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                    ]);
-                    $order->paid_amount += $balance;
-                    $order->payment_status = 'paid';
+                    if ($actualMethod === 'cash') {
+                        $isWaitingForPayment = true;
+                    }
+                } elseif ($balance > 0 && $paymentMethod === 'credit') {
+                    $order->payment_status = 'pending';
+                    $order->payment_method = 'credit';
                 }
 
                 $updateData = [
@@ -167,6 +157,9 @@ class RiderController extends Controller
                 if ($balance > 0) {
                     $updateData['paid_amount'] = $order->paid_amount;
                     $updateData['payment_status'] = $order->payment_status;
+                    if ($paymentMethod === 'credit') {
+                        $updateData['payment_method'] = 'credit';
+                    }
                 }
 
                 $order->update($updateData);
