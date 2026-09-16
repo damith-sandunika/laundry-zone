@@ -507,10 +507,10 @@
                                                         <!-- Slips -->
                                                         <template x-for="(receipt, idx) in getReceipts(order)" :key="idx">
                                                             <button @click="openSlipModal(receipt, order)" :style="
-                                                                        receipt.status === 'pending' ? 'border-color:#fbbf24;background:#fffbeb;color:#b45309;' : 
-                                                                        receipt.status === 'rejected' ? 'border-color:#fca5a5;background:#fef2f2;color:#b91c1c;text-decoration:line-through;' : 
-                                                                        'border-color:#c7d2fe;background:white;color:#4f46e5;'
-                                                                    "
+                                                                            receipt.status === 'pending' ? 'border-color:#fbbf24;background:#fffbeb;color:#b45309;' : 
+                                                                            receipt.status === 'rejected' ? 'border-color:#fca5a5;background:#fef2f2;color:#b91c1c;text-decoration:line-through;' : 
+                                                                            'border-color:#c7d2fe;background:white;color:#4f46e5;'
+                                                                        "
                                                                 style="padding:5px 12px;border-width:1.5px;border-style:dashed;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(0,0,0,0.02);transition:all 0.15s;display:flex;align-items:center;gap:6px;"
                                                                 onmouseover="this.style.transform='scale(1.05)'; this.style.borderStyle='solid'"
                                                                 onmouseout="this.style.transform='scale(1)'; this.style.borderStyle='dashed'">
@@ -790,21 +790,33 @@
                         </div>
 
                         <div style="padding:20px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:24px;">
-                            <label style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.05em;">Payment Method</label>
-                            <div x-show="deliverOrder && parseFloat(deliverOrder.total) > parseFloat(deliverOrder.paid_amount)" style="padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;font-weight:700;color:#c2410c;margin-bottom:12px;">
-                                ⚠️ Balance Due: Rs.<span x-text="Math.max(0, parseFloat(deliverOrder?.total || 0) - parseFloat(deliverOrder?.paid_amount || 0)).toFixed(2)"></span>
+                            <label
+                                style="display:block;font-size:12px;font-weight:800;color:#334155;margin-bottom:14px;text-transform:uppercase;letter-spacing:0.05em;">Payment
+                                Method</label>
+                            <div x-show="deliverOrder && parseFloat(deliverOrder.total) > parseFloat(deliverOrder.paid_amount)"
+                                style="padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;font-weight:700;color:#c2410c;margin-bottom:12px;">
+                                ⚠️ Balance Due: Rs.<span
+                                    x-text="Math.max(0, parseFloat(deliverOrder?.total || 0) - parseFloat(deliverOrder?.paid_amount || 0)).toFixed(2)"></span>
                             </div>
                             <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
-                                <button type="button" @click="deliveryPaymentMethod = 'cash'" :style="deliveryPaymentMethod === 'cash' ? 'background:#f0fdf4;color:#15803d;border-color:#16a34a;border-width:3px;box-shadow:0 4px 14px rgba(22,163,74,0.2);' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'" style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
+                                <button type="button" @click="deliveryPaymentMethod = 'cash'"
+                                    :style="deliveryPaymentMethod === 'cash' ? 'background:#f0fdf4;color:#15803d;border-color:#16a34a;border-width:3px;box-shadow:0 4px 14px rgba(22,163,74,0.2);' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'"
+                                    style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
                                     💵 Cash
                                 </button>
-                                <button type="button" @click="deliveryPaymentMethod = 'card'" :style="deliveryPaymentMethod === 'card' ? 'background:#eff6ff;color:#1d4ed8;border-color:#2563eb;border-width:3px;' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'" style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
+                                <button type="button" @click="deliveryPaymentMethod = 'card'"
+                                    :style="deliveryPaymentMethod === 'card' ? 'background:#eff6ff;color:#1d4ed8;border-color:#2563eb;border-width:3px;' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'"
+                                    style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
                                     💳 Card
                                 </button>
-                                <button type="button" @click="deliveryPaymentMethod = 'bank'" :style="deliveryPaymentMethod === 'bank' ? 'background:#f5f3ff;color:#6d28d9;border-color:#7c3aed;border-width:3px;' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'" style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
+                                <button type="button" @click="deliveryPaymentMethod = 'bank'"
+                                    :style="deliveryPaymentMethod === 'bank' ? 'background:#f5f3ff;color:#6d28d9;border-color:#7c3aed;border-width:3px;' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'"
+                                    style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
                                     🏦 Bank
                                 </button>
-                                <button type="button" @click="deliveryPaymentMethod = 'credit'" :style="deliveryPaymentMethod === 'credit' ? 'background:#fff7ed;color:#c2410c;border-color:#f97316;border-width:3px;box-shadow:0 4px 14px rgba(249,115,22,0.2);' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'" style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
+                                <button type="button" @click="deliveryPaymentMethod = 'credit'"
+                                    :style="deliveryPaymentMethod === 'credit' ? 'background:#fff7ed;color:#c2410c;border-color:#f97316;border-width:3px;box-shadow:0 4px 14px rgba(249,115,22,0.2);' : 'background:white;color:#64748b;border-color:#e2e8f0;border-width:2px;'"
+                                    style="padding:12px 4px;font-size:12px;font-weight:800;border-style:solid;border-radius:14px;cursor:pointer;transition:all 0.15s;text-align:center;">
                                     ⏳ Credit
                                 </button>
                             </div>
@@ -1120,9 +1132,12 @@
                         <div style="margin-top:12px;">
                             <div x-show="deliverOrder && (deliverOrder.total - (deliverOrder.paid_amount || 0) > 0)"
                                 style="margin-bottom:8px;padding:8px 12px;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;font-size:12px;font-weight:700;color:#c2410c;">
-                                ⚠️ Balance to Collect: LKR <span x-text="deliverOrder ? (deliverOrder.total - (deliverOrder.paid_amount || 0)).toFixed(2) : '0.00'"></span>
+                                ⚠️ Balance to Collect: LKR <span
+                                    x-text="deliverOrder ? (deliverOrder.total - (deliverOrder.paid_amount || 0)).toFixed(2) : '0.00'"></span>
                             </div>
-                            <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Payment Method</label>
+                            <label
+                                style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Payment
+                                Method</label>
                             <select x-model="deliveryPaymentMethod"
                                 style="width:100%;padding:12px;border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:700;outline:none;">
                                 <option value="cash">Cash</option>
