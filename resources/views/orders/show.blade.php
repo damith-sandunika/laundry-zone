@@ -1,5 +1,48 @@
 <x-app-layout>
     <x-slot name="header">
+        <style>
+            .ord-btn-wrap { position: relative; display: inline-flex; align-items: center; }
+            .ord-btn {
+                display: inline-flex; align-items: center; justify-content: center;
+                width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid;
+                background: white; cursor: pointer; font-size: 16px; line-height: 1;
+                transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+                text-decoration: none; flex-shrink: 0;
+            }
+            .ord-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+            .ord-btn-label {
+                position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%);
+                background: #0f172a; color: white; font-size: 11px; font-weight: 700;
+                padding: 4px 8px; border-radius: 6px; white-space: nowrap; pointer-events: none;
+                opacity: 0; transition: opacity 0.15s; z-index: 50;
+            }
+            .ord-btn-label::after {
+                content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+                border: 4px solid transparent; border-top-color: #0f172a;
+            }
+            .ord-btn-wrap:hover .ord-btn-label { opacity: 1; }
+
+            /* Pay Now - green gradient button (larger, pill) */
+            .ord-btn--pay-full {
+                display: inline-flex; align-items: center; justify-content: center;
+                width: 36px; height: 36px; border-radius: 10px; border: none;
+                background: linear-gradient(135deg,#10b981,#059669); cursor: pointer;
+                font-size: 16px; transition: all 0.15s;
+                box-shadow: 0 4px 10px rgba(16,185,129,0.35);
+            }
+            .ord-btn--pay-full:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.45); }
+
+            /* Individual color accents */
+            .ord-btn--edit  { color:#1d4ed8; border-color:#bfdbfe; }
+            .ord-btn--edit:hover  { background:#eff6ff; border-color:#93c5fd; }
+            .ord-btn--pdf   { color:#dc2626; border-color:#fecaca; }
+            .ord-btn--pdf:hover   { background:#fef2f2; border-color:#fca5a5; }
+            .ord-btn--print { color:#334155; border-color:#e2e8f0; }
+            .ord-btn--print:hover { background:#f8fafc; border-color:#cbd5e1; }
+            .ord-btn--chit  { color:#7c3aed; border-color:#ddd6fe; }
+            .ord-btn--chit:hover  { background:#f5f3ff; border-color:#c4b5fd; }
+        </style>
+
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
             <div>
                 <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
@@ -16,47 +59,58 @@
                     &bull; {{ $order->created_at->format('M d, Y h:i A') }}
                 </p>
             </div>
-            <div style="display:flex;align-items:center;gap:10px;">
+
+            {{-- ── Icon Buttons with Hover Tooltip ── --}}
+            <div style="display:flex;align-items:center;gap:8px;">
+
+                {{-- 💰 Pay Now --}}
                 @if($order->total - $order->paid_amount > 0)
-                    <div x-data="{}" style="display:inline-block;">
-                        <button type="button" @click="$dispatch('open-pay-modal')"
-                            style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:linear-gradient(135deg,#10b981,#059669);color:white;border:none;font-size:13px;font-weight:900;border-radius:10px;cursor:pointer;box-shadow:0 4px 12px rgba(16,185,129,0.3);transition:all 0.15s;"
-                            onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 6px 16px rgba(16,185,129,0.4)'"
-                            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(16,185,129,0.3)'">
-                            💰 Pay Now
+                    <div class="ord-btn-wrap" x-data="{}">
+                        <button type="button" @click="$dispatch('open-pay-modal')" class="ord-btn--pay-full" title="">
+                            💰
                         </button>
+                        <span class="ord-btn-label">Pay Now</span>
                     </div>
                 @endif
-                <a href="{{ route('orders.edit', $order->order_number) }}"
-                    style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#1d4ed8;border:1.5px solid #bfdbfe;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
-                    onmouseover="this.style.background='#eff6ff';this.style.borderColor='#93c5fd'"
-                    onmouseout="this.style.background='white';this.style.borderColor='#bfdbfe'">
-                    ✏️ Edit Order
-                </a>
-                <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank"
-                    style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#dc2626;border:1.5px solid #fecaca;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
-                    onmouseover="this.style.background='#fef2f2';this.style.borderColor='#fca5a5'"
-                    onmouseout="this.style.background='white';this.style.borderColor='#fecaca'">
-                    📄 Download PDF
-                </a>
-                <a href="{{ route('orders.print', $order->order_number) }}" target="_blank"
-                    style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#334155;border:1.5px solid #e2e8f0;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
-                    onmouseover="this.style.background='#f8fafc';this.style.borderColor='#cbd5e1'"
-                    onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0'">
-                    🖨️ Print Bill
-                </a>
-                <a href="{{ route('orders.printChit', $order->id) }}"
-                    target="_blank"
-                    onclick="window.open(this.href,'_blank','width=320,height=480'); return false;"
-                    style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#7c3aed;border:1.5px solid #ddd6fe;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
-                    onmouseover="this.style.background='#f5f3ff';this.style.borderColor='#c4b5fd'"
-                    onmouseout="this.style.background='white';this.style.borderColor='#ddd6fe'"
-                    title="Print Daw Chit">
-                    📋 Print Daw Chit
-                </a>
+
+                {{-- ✏️ Edit Order --}}
+                <div class="ord-btn-wrap">
+                    <a href="{{ route('orders.edit', $order->order_number) }}" class="ord-btn ord-btn--edit" title="">
+                        ✏️
+                    </a>
+                    <span class="ord-btn-label">Edit Order</span>
+                </div>
+
+                {{-- 📄 Download PDF --}}
+                <div class="ord-btn-wrap">
+                    <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank" class="ord-btn ord-btn--pdf" title="">
+                        📄
+                    </a>
+                    <span class="ord-btn-label">Download PDF</span>
+                </div>
+
+                {{-- 🖨️ Print Bill --}}
+                <div class="ord-btn-wrap">
+                    <a href="{{ route('orders.print', $order->order_number) }}" target="_blank" class="ord-btn ord-btn--print" title="">
+                        🖨️
+                    </a>
+                    <span class="ord-btn-label">Print Bill</span>
+                </div>
+
+                {{-- 📋 Print Daw Chit --}}
+                <div class="ord-btn-wrap">
+                    <a href="{{ route('orders.printChit', $order->id) }}"
+                        onclick="window.open(this.href,'_blank','width=320,height=480'); return false;"
+                        class="ord-btn ord-btn--chit" title="">
+                        📋
+                    </a>
+                    <span class="ord-btn-label">Print Daw Chit</span>
+                </div>
+
             </div>
         </div>
     </x-slot>
+
 
     @if(session('success'))
         <div
