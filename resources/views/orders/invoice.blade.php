@@ -113,6 +113,11 @@
                 <p>{{ $order->customer->name ?? 'Walk-in Customer' }}</p>
                 <span>{{ $order->customer->phone ?? 'No Phone' }}</span>
                 <span>{{ $order->customer->email ?? '' }}</span>
+                @if($order->is_delivery_order && $order->delivery_address)
+                    <span>{{ $order->delivery_address }}</span>
+                @elseif($order->customer && $order->customer->address)
+                    <span>{{ $order->customer->address }}</span>
+                @endif
             </div>
             <div class="info-box">
                 <h3>Order Details</h3>

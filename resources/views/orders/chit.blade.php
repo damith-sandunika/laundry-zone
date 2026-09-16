@@ -22,13 +22,13 @@
 
         .text-bold {
             font-weight: 900;
-            font-size: 18px;
+            font-size: 22px;
             margin: 3px 0;
         }
 
         .text-small {
-            font-weight: bold;
-            font-size: 11px;
+            font-weight: 900;
+            font-size: 14px;
             margin: 3px 0;
             text-align: center;
         }
@@ -74,7 +74,10 @@
             margin-top: 15px;
             font-size: 12px;
             font-weight: bold;
-            line-height: 2;
+        }
+        
+        .process-list div {
+            margin-bottom: 15px;
         }
 
         .special-note {
@@ -127,22 +130,29 @@
                 $itemName = $item->serviceType ? $item->serviceType->name : $item->item_description;
                 $total_qty += $item->quantity;
             @endphp
+        <div style="margin-bottom: 8px;">
             @if($catTrail)
-                <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; margin-bottom: 1px;">{{ $catTrail }}</div>
+                <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; margin-bottom: 1px;">&bull; {{ $catTrail }}</div>
+                <div class="item-row" style="margin-bottom: 2px;">
+                    <span style="margin-left: 8px;">{{ $itemName }}</span>
+                    <span>x{{ $item->quantity }}</span>
+                </div>
+            @else
+                <div class="item-row" style="margin-bottom: 2px;">
+                    <span>&bull; {{ $itemName }}</span>
+                    <span>x{{ $item->quantity }}</span>
+                </div>
             @endif
-            <div class="item-row" style="margin-bottom: 2px;">
-                <span>&bull; {{ $itemName }}</span>
-                <span>x{{ $item->quantity }}</span>
-            </div>
             @if($item->turnaroundType && !$item->turnaroundType->is_default)
-                <div style="font-size:10px; margin-left:10px; margin-bottom: 2px;">[{{ $item->turnaroundType->name }}]</div>
+                <div style="font-size:10px; margin-left:12px; margin-bottom: 2px;">[{{ $item->turnaroundType->name }}]</div>
             @endif
             @if($item->extras->count() > 0)
                 @foreach($item->extras as $e)
                 @php $total_qty += $e->quantity; @endphp
-                <div style="font-size:10px; margin-left:10px; margin-bottom: 2px;">+ {{ $e->extra->name }} (x{{ $e->quantity }})</div>
+                <div style="font-size:10px; margin-left:12px; margin-bottom: 2px;">+ {{ $e->extra->name }} (x{{ $e->quantity }})</div>
                 @endforeach
             @endif
+        </div>
         @endforeach
         
         <div class="total-row" style="border-top: 1px dashed #000; margin-top: 8px; padding-top: 8px;">

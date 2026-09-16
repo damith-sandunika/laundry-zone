@@ -285,7 +285,7 @@ class OrderController extends Controller
 
     public function printBill(Order $order)
     {
-        $order->load(['customer', 'items.serviceType.category']);
+        $order->load(['customer', 'items.serviceType.category.parent', 'items.turnaroundType', 'items.extras.extra']);
         $branch = Branch::find($order->branch_id);
         $mainBranch = Branch::orderBy('id')->first();
 
@@ -294,14 +294,14 @@ class OrderController extends Controller
 
     public function printChit(Order $order)
     {
-        $order->load(['customer', 'items.serviceType.category']);
+        $order->load(['customer', 'items.serviceType.category.parent', 'items.turnaroundType', 'items.extras.extra']);
 
         return view('orders.chit', compact('order'));
     }
 
     public function invoice(Order $order)
     {
-        $order->load(['customer', 'items.serviceType.category', 'branch']);
+        $order->load(['customer', 'items.serviceType.category.parent', 'items.turnaroundType', 'items.extras.extra', 'branch']);
         $mainBranch = Branch::orderBy('id')->first();
 
         return view('orders.invoice', compact('order', 'mainBranch'));

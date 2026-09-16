@@ -118,10 +118,95 @@
             opacity: 1;
             transform: translateX(0);
         }
+
+        /* Liquid Gradient Background */
+        .liquid-bg {
+            background: linear-gradient(-45deg, #0f172a, #1e3a8a, #2563eb, #0284c7);
+            background-size: 400% 400%;
+            animation: liquid-gradient 12s ease infinite;
+        }
+        @keyframes liquid-gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Bubble Animations for Loader */
+        .bubbles-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            z-index: 5;
+            overflow: hidden;
+            top: 0;
+            left: 0;
+        }
+        .bubble {
+            position: absolute;
+            bottom: -50px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            box-shadow: inset 0 0 15px rgba(255,255,255,0.2);
+            animation: rise infinite ease-in;
+        }
+        @keyframes rise {
+            0% {
+                bottom: -50px;
+                transform: translateX(0);
+                opacity: 0;
+            }
+            10% { opacity: 1; }
+            90% { opacity: 0.6; }
+            100% {
+                bottom: 110vh;
+                transform: translateX(calc(-100px + 20vw));
+                opacity: 0;
+            }
+        }
+        .animate-pulse-slow {
+            animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        @keyframes pulse-slow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.95; transform: scale(0.98); }
+        }
     </style>
 </head>
 
 <body class="antialiased text-gray-800 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
+
+    <!-- Welcome Loader -->
+    <div id="welcome-loader" class="fixed inset-0 z-[9999] liquid-bg flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700">
+        
+        <!-- Waves at the top -->
+        <div class="absolute top-0 left-0 w-[200%] h-[150px] overflow-hidden opacity-40 pointer-events-none" style="-webkit-mask-image: linear-gradient(to bottom, black 30%, transparent 95%); mask-image: linear-gradient(to bottom, black 30%, transparent 95%);">
+            <div class="wave-layer wave-1"></div>
+            <div class="wave-layer wave-2"></div>
+        </div>
+
+        <!-- Bubbles Background -->
+        <div class="bubbles-container absolute inset-0 pointer-events-none"></div>
+        
+        <!-- Logo & Text -->
+        <div class="relative z-10 flex flex-col items-center animate-pulse-slow">
+            <img src="{{ asset('images/360_laundry_logo.png') }}" alt="365laundry.lk" class="h-24 w-auto mb-6 bg-white/60 p-2 rounded-3xl border border-white/20 backdrop-blur-md shadow-2xl">
+            <h1 class="text-4xl font-black text-white tracking-wider drop-shadow-lg">365laundry<span class="text-blue-300">.lk</span></h1>
+            <p class="text-blue-100 mt-2 font-bold tracking-[0.2em] text-sm uppercase">Premium Care</p>
+        </div>
+
+        <!-- Progress Bar -->
+        <div class="relative z-10 mt-16 w-72">
+            <div class="flex justify-between text-xs font-bold text-white mb-3 uppercase tracking-wider">
+                <span>Loading Experience</span>
+                <span id="loader-percentage" class="text-white">0%</span>
+            </div>
+            <div class="w-full h-2 bg-blue-950/50 rounded-full overflow-hidden shadow-inner">
+                <div id="loader-progress" class="h-full bg-white rounded-full w-0 transition-all duration-300 ease-out relative shadow-[0_0_15px_rgba(255,255,255,0.8)]">
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Navbar -->
     <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300">
@@ -226,6 +311,95 @@
                 section.classList.add('fade-up-enter');
                 observer.observe(section);
             });
+        });
+
+        // Loader Script
+        document.addEventListener('DOMContentLoaded', () => {
+            const loader = document.getElementById('welcome-loader');
+            const progress = document.getElementById('loader-progress');
+            const percentage = document.getElementById('loader-percentage');
+            const bubbleContainer = document.querySelector('.bubbles-container');
+            
+            // Generate Bubbles
+            if (bubbleContainer) {
+                for(let i=0; i<20; i++) {
+                    let bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    let size = Math.random() * 40 + 10;
+                    bubble.style.width = size + 'px';
+                    bubble.style.height = size + 'px';
+                    bubble.style.left = Math.random() * 100 + '%';
+                    bubble.style.animationDuration = (Math.random() * 5 + 4) + 's';
+                    bubble.style.animationDelay = Math.random() * 3 + 's';
+                    bubbleContainer.appendChild(bubble);
+                }
+            }
+
+            // Image loading progress
+            const images = document.querySelectorAll('img');
+            const totalImages = images.length;
+            let imagesLoaded = 0;
+            let currentProgress = 0;
+            let targetProgress = totalImages === 0 ? 100 : 0;
+            
+            // Simulate minimal loading even if fast
+            let simulateInterval = setInterval(() => {
+                if (targetProgress < 90) targetProgress += Math.random() * 10;
+            }, 100);
+
+            function updateUI() {
+                if (currentProgress < targetProgress) {
+                    currentProgress += (targetProgress - currentProgress) * 0.1;
+                    if (targetProgress - currentProgress < 0.5) currentProgress = targetProgress;
+                    
+                    let p = Math.min(Math.round(currentProgress), 100);
+                    if (progress) progress.style.width = p + '%';
+                    if (percentage) percentage.innerText = p + '%';
+                }
+                
+                if (currentProgress < 100) {
+                    requestAnimationFrame(updateUI);
+                } else {
+                    if (loader) {
+                        setTimeout(() => {
+                            loader.style.opacity = '0';
+                            setTimeout(() => loader.remove(), 700);
+                        }, 400); // Small pause at 100%
+                    }
+                }
+            }
+            
+            requestAnimationFrame(updateUI);
+
+            if (totalImages > 0) {
+                images.forEach(img => {
+                    if (img.complete) {
+                        imagesLoaded++;
+                        targetProgress = (imagesLoaded / totalImages) * 100;
+                    } else {
+                        img.addEventListener('load', () => {
+                            imagesLoaded++;
+                            targetProgress = (imagesLoaded / totalImages) * 100;
+                        });
+                        img.addEventListener('error', () => {
+                            imagesLoaded++;
+                            targetProgress = (imagesLoaded / totalImages) * 100;
+                        });
+                    }
+                });
+            }
+
+            // Fallback: forcefully finish loader on window.load
+            window.addEventListener('load', () => {
+                clearInterval(simulateInterval);
+                targetProgress = 100;
+            });
+            
+            // Absolute fallback in case of hanging
+            setTimeout(() => {
+                clearInterval(simulateInterval);
+                targetProgress = 100;
+            }, 5000);
         });
     </script>
 </body>
