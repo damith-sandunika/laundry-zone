@@ -602,20 +602,44 @@
                                                         </button>
                                                     </template>
 
-                                                    <button
-                                                        @click="window.open('/orders/' + order.id + '/chit', '_blank', 'width=300,height=400')"
-                                                        style="padding:5px 10px;background:white;color:#0f172a;border:1.5px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.15s;"
-                                                        onmouseover="this.style.background='#f8fafc'"
-                                                        onmouseout="this.style.background='white'">
-                                                        🖨️
-                                                    </button>
+                                                    {{-- ══ Icon Action Buttons with Tooltip ══ --}}
+                                                    <div style="display:inline-flex;gap:4px;align-items:center;">
 
-                                                    <button @click="openReverse(order.id)"
-                                                        style="padding:5px 7px;background:white;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
-                                                        onmouseover="this.style.background='#fef2f2'"
-                                                        onmouseout="this.style.background='white'" title="Reverse Order">
-                                                        ↩
-                                                    </button>
+                                                        {{-- 📋 Print Daw Chit --}}
+                                                        <div class="ag-tip-wrap">
+                                                            <button @click="window.open('/orders/' + order.id + '/chit', '_blank', 'width=320,height=480')" class="ag-icon-btn ag-icon-btn--chit">
+                                                                <i class="fa-solid fa-scroll"></i>
+                                                            </button>
+                                                            <span class="ag-tip">Print Daw Chit</span>
+                                                        </div>
+
+                                                        {{-- 🖨 Print Bill --}}
+                                                        <div class="ag-tip-wrap">
+                                                            <button @click="window.open('/orders/' + order.id + '/print', '_blank')" class="ag-icon-btn ag-icon-btn--print">
+                                                                <i class="fa-solid fa-print"></i>
+                                                            </button>
+                                                            <span class="ag-tip">Print Bill</span>
+                                                        </div>
+
+                                                        {{-- 💵 Pay Now (unpaid orders only) --}}
+                                                        <template x-if="parseFloat(order.total) > parseFloat(order.paid_amount || 0) && order.payment_status !== 'credit'">
+                                                            <div class="ag-tip-wrap">
+                                                                <button @click="openPaymentModal(order)" class="ag-icon-btn ag-icon-btn--pay">
+                                                                    <i class="fa-solid fa-money-bill-wave"></i>
+                                                                </button>
+                                                                <span class="ag-tip">Pay Now</span>
+                                                            </div>
+                                                        </template>
+
+                                                        {{-- ↩ Reverse --}}
+                                                        <div class="ag-tip-wrap">
+                                                            <button @click="openReverse(order.id)" class="ag-icon-btn ag-icon-btn--reverse">
+                                                                <i class="fa-solid fa-rotate-left"></i>
+                                                            </button>
+                                                            <span class="ag-tip">Reverse</span>
+                                                        </div>
+
+                                                    </div>
                                                 </div>
                                             </template>
                                         </div>

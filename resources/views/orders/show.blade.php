@@ -45,6 +45,15 @@
                     onmouseout="this.style.background='white';this.style.borderColor='#e2e8f0'">
                     🖨️ Print Bill
                 </a>
+                <a href="{{ route('orders.printChit', $order->id) }}"
+                    target="_blank"
+                    onclick="window.open(this.href,'_blank','width=320,height=480'); return false;"
+                    style="display:flex;align-items:center;gap:7px;padding:9px 16px;background:white;color:#7c3aed;border:1.5px solid #ddd6fe;font-size:13px;font-weight:700;border-radius:10px;text-decoration:none;box-shadow:0 1px 4px rgba(0,0,0,0.04);transition:all 0.15s;"
+                    onmouseover="this.style.background='#f5f3ff';this.style.borderColor='#c4b5fd'"
+                    onmouseout="this.style.background='white';this.style.borderColor='#ddd6fe'"
+                    title="Print Daw Chit">
+                    📋 Print Daw Chit
+                </a>
             </div>
         </div>
     </x-slot>
