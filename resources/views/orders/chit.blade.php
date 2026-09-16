@@ -116,6 +116,7 @@
     <div class="date">{{ $order->due_date ? $order->due_date->format('d M Y h:i A') : 'N/A' }}</div>
 
     <div class="items">
+        @php $total_qty = 0; @endphp
         @foreach($order->items as $item)
             @php
                 $catTrail = '';
@@ -124,6 +125,7 @@
                     $catTrail = $cat->parent ? $cat->parent->name . ' > ' . $cat->name : $cat->name;
                 }
                 $itemName = $item->serviceType ? $item->serviceType->name : $item->item_description;
+                $total_qty += $item->quantity;
             @endphp
             @if($catTrail)
                 <div style="font-size: 9px; font-weight: bold; text-transform: uppercase; margin-bottom: 1px;">{{ $catTrail }}</div>
@@ -137,10 +139,16 @@
             @endif
             @if($item->extras->count() > 0)
                 @foreach($item->extras as $e)
+                @php $total_qty += $e->quantity; @endphp
                 <div style="font-size:10px; margin-left:10px; margin-bottom: 2px;">+ {{ $e->extra->name }} (x{{ $e->quantity }})</div>
                 @endforeach
             @endif
         @endforeach
+        
+        <div class="total-row" style="border-top: 1px dashed #000; margin-top: 8px; padding-top: 8px;">
+            <span>Total Qty</span>
+            <span>x{{ fmod($total_qty, 1) == 0 ? (int)$total_qty : number_format($total_qty, 2) }}</span>
+        </div>
     </div>
 
 

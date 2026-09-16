@@ -18,6 +18,7 @@ class StorePosDeliveryOrderRequest extends FormRequest
             'pickup_address'   => 'required|string|max:500',
             'delivery_address' => 'nullable|string|max:500',
             'pickup_date'      => 'required|string',
+            'delivery_date'    => 'nullable|string',
             'notes'            => 'nullable|string|max:500',
             'cart'             => 'nullable|array',
             'payment_mode'     => 'nullable|in:pay_now,pay_on_pickup',

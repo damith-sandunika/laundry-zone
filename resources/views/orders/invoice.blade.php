@@ -117,17 +117,30 @@
             <div class="info-box">
                 <h3>Order Details</h3>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color:#0f172a; font-weight:700;">Date:</span>
+                    <span style="color:#0f172a; font-weight:700;">Order Date:</span>
                     <span style="color:#475569;">{{ $order->created_at->format('M d, Y h:i A') }}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
                     <span style="color:#0f172a; font-weight:700;">Status:</span>
                     <span style="color:#475569; text-transform: capitalize;">{{ str_replace('_', ' ', $order->status) }}</span>
                 </div>
-                @if($order->due_date)
-                <div style="display: flex; justify-content: space-between;">
-                    <span style="color:#0f172a; font-weight:700;">Ready By:</span>
-                    <span style="color:#475569;">{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y') }}</span>
+                @if($order->is_delivery_order && $order->deliveryAppointment)
+                    @if($order->deliveryAppointment->pickup_scheduled_at)
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color:#0f172a; font-weight:700;">Pickup Date:</span>
+                        <span style="color:#475569;">{{ \Carbon\Carbon::parse($order->deliveryAppointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</span>
+                    </div>
+                    @endif
+                    @if($order->deliveryAppointment->delivery_scheduled_at)
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                        <span style="color:#0f172a; font-weight:700;">Delivery Date:</span>
+                        <span style="color:#475569;">{{ \Carbon\Carbon::parse($order->deliveryAppointment->delivery_scheduled_at)->format('M d, Y h:i A') }}</span>
+                    </div>
+                    @endif
+                @elseif($order->due_date)
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color:#0f172a; font-weight:700;">Pickup Date:</span>
+                    <span style="color:#475569;">{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') }}</span>
                 </div>
                 @endif
             </div>
@@ -143,9 +156,11 @@
                 </tr>
             </thead>
             <tbody>
+                @php $total_qty = 0; @endphp
                 @foreach($order->items as $item)
                 @php
                     $unit_with_turnaround = $item->quantity > 0 ? ($item->total_price / $item->quantity) : $item->total_price;
+                    $total_qty += $item->quantity;
                 @endphp
                 <tr>
                     <td>
@@ -167,6 +182,7 @@
                 </tr>
                 @if($item->extras->count() > 0)
                     @foreach($item->extras as $e)
+                    @php $total_qty += $e->quantity; @endphp
                     <tr style="background:#f8fafc;">
                         <td style="padding-left: 30px; font-size:13px; color:#475569;">
                             + {{ $e->extra->name }}
@@ -178,6 +194,11 @@
                     @endforeach
                 @endif
                 @endforeach
+                <tr style="background:white; color:#0f172a; border-top:2px solid #e2e8f0; border-bottom:2px solid #e2e8f0;">
+                    <td style="text-align:right; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; padding:12px 16px;">Total Items / Qty:</td>
+                    <td class="center" style="font-weight:900; font-size:15px; padding:12px 16px; color:#3b82f6;">{{ number_format($total_qty, 2) }}</td>
+                    <td colspan="2"></td>
+                </tr>
             </tbody>
         </table>
 

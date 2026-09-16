@@ -17,6 +17,7 @@ class CreatePosDeliveryOrderAction
 
         return DB::transaction(function () use ($data, $user, $branchId) {
             $pickupDate = date('Y-m-d H:i:s', strtotime($data['pickup_date']));
+            $deliveryDate = !empty($data['delivery_date']) ? date('Y-m-d H:i:s', strtotime($data['delivery_date'])) : null;
             $cart       = $data['cart'] ?? [];
 
             $appointment = DeliveryAppointment::create([
@@ -25,6 +26,7 @@ class CreatePosDeliveryOrderAction
                 'pickup_address'       => $data['pickup_address'],
                 'delivery_address'     => $data['delivery_address'] ?? $data['pickup_address'],
                 'pickup_scheduled_at'  => $pickupDate,
+                'delivery_scheduled_at'=> $deliveryDate,
                 'delivery_preference'  => 'deliver_to_address',
                 'payment_method'       => ($data['payment_mode'] ?? null) === 'pay_now' ? 'cash' : 'cash',
                 'status'               => 'confirmed', // auto-confirmed since staff initiated

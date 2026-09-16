@@ -277,59 +277,39 @@
                 <!-- Cart Items -->
                 <div class="flex-1 overflow-y-auto bg-slate-50/50 p-2 custom-scrollbar">
                     <template x-for="(item, index) in cart" :key="index">
-                        <div
-                            class="bg-white border-b lg:border border-slate-100 lg:rounded-xl p-3 mb-2 flex flex-col gap-2 shadow-sm relative group transition-all">
-
-                            <!-- Top: Base Item Info -->
-                            <div class="flex gap-3 items-center w-full">
-                                <div
-                                    class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
-                                        viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                            d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                                    </svg>
+                        <div class="group relative bg-white p-2.5 rounded-[12px] border border-slate-200 flex flex-col gap-1.5 shadow-sm hover:border-blue-200 transition-all mb-2">
+                            
+                            <!-- Top: Name, Category, Qty & Remove -->
+                            <div class="flex items-start justify-between gap-2">
+                                <div class="flex flex-col flex-1 min-w-0 pt-0.5">
+                                    <span class="text-[9px] font-bold text-slate-400 leading-normal uppercase tracking-widest mb-1 whitespace-normal break-words" x-text="getCategoryString(item.service_type_id)"></span>
+                                    <h4 class="text-[13px] font-black text-slate-800 leading-snug break-words whitespace-normal pr-1" x-text="item.name"></h4>
+                                </div>
+                                
+                                <!-- Qty -->
+                                <div class="flex items-center bg-slate-50 border border-slate-200 rounded p-0.5 shadow-sm shrink-0 mt-0.5">
+                                    <button @click="if(parseFloat(item.qty) > 0.5) item.qty = parseFloat(item.qty) - 0.5" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors font-black text-[14px] leading-none">-</button>
+                                    <input type="number" step="any" x-model.number="item.qty" class="w-10 text-center text-[12px] font-black text-slate-800 bg-transparent border-none outline-none p-0 focus:ring-0 hide-arrows transition-all">
+                                    <button @click="item.qty = parseFloat(item.qty) + 0.5" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors font-black text-[14px] leading-none">+</button>
                                 </div>
 
-                                <div class="flex-1 min-w-0 flex flex-col justify-center">
-                                    <div class="text-[9px] font-bold text-slate-400 leading-none uppercase tracking-widest mb-0.5 truncate"
-                                        x-text="getCategoryString(item.service_type_id)"></div>
-                                    <div class="text-[13px] font-black text-slate-800 leading-tight mb-0.5 line-clamp-2"
-                                        x-text="item.name"></div>
-                                </div>
+                                <button @click="cart.splice(index, 1)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0 mt-0.5">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                </button>
+                            </div>
 
-                                <div class="flex items-center gap-3 shrink-0">
-                                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5">
-                                        <button
-                                            @click="if(parseFloat(item.qty) > 0.5) item.qty = parseFloat(item.qty) - 0.5"
-                                            class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-md transition-colors"><svg
-                                                class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
-                                            </svg></button>
-                                        <input type="number" step="any" x-model.number="item.qty"
-                                            class="w-10 text-center text-[13px] font-black text-slate-800 bg-transparent border-none focus:ring-0 p-0 hide-arrows">
-                                        <button @click="item.qty = parseFloat(item.qty) + 0.5"
-                                            class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-md transition-colors"><svg
-                                                class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M12 4v16m8-8H4" />
-                                            </svg></button>
-                                    </div>
-                                    <div class="flex items-center gap-1 w-[80px]">
-                                        <span class="text-[12px] font-bold text-slate-400">Rs.</span>
-                                        <input type="number" step="any" x-model.number="item.base_price"
-                                            class="w-full text-right text-[14px] font-black text-blue-600 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:ring-0 p-0 hide-arrows">
-                                    </div>
-                                    <button @click="cart.splice(index, 1)"
-                                        class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
-                                            viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                                        </svg>
-                                    </button>
+                            <!-- Middle: Base Price & Total Price -->
+                            <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-slate-50 mt-0.5">
+                                <!-- Base Price (Editable) -->
+                                <div class="flex items-center gap-0.5 bg-slate-50 px-1.5 py-1 rounded border border-slate-100 shrink-0">
+                                    <span class="text-[10px] font-bold text-slate-400">Rs.</span>
+                                    <input type="number" step="any" x-model.number="item.base_price"
+                                        class="w-14 sm:w-16 text-[12px] font-black text-slate-700 bg-transparent border-none focus:ring-0 outline-none p-0 hide-arrows text-center">
+                                </div>
+                                
+                                <!-- Total Price (Display) -->
+                                <div class="text-right shrink-0 min-w-max">
+                                    <span class="text-[14px] font-black text-blue-700 whitespace-nowrap" x-text="'Rs. ' + getItemTotal(item).toFixed(2)"></span>
                                 </div>
                             </div>
 
@@ -341,24 +321,19 @@
                                         <label class="flex items-center gap-1.5 cursor-pointer group">
                                             <input type="checkbox" x-model="showExtras"
                                                 class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
-                                            <span
-                                                class="text-[10px] font-bold text-slate-500 uppercase tracking-wide group-hover:text-blue-600 transition-colors">Extras</span>
+                                            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide group-hover:text-blue-600 transition-colors">Extras</span>
                                             <template x-if="item.selected_extras && item.selected_extras.length > 0">
-                                                <span
-                                                    class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[9px] font-black"
-                                                    x-text="item.selected_extras.length"></span>
+                                                <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[9px] font-black" x-text="item.selected_extras.length"></span>
                                             </template>
                                         </label>
                                         <button x-show="showExtras" @click="addMode = !addMode"
                                             class="text-[9px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 hover:bg-blue-100 transition-colors">
-                                            + Add Extra
+                                            + Add
                                         </button>
                                     </div>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-[13px] font-black text-blue-700 whitespace-nowrap"
-                                            x-text="'Rs. ' + getItemTotal(item).toFixed(2)"></span>
+                                    <div class="flex items-center shrink-0">
                                         <select x-model="item.turnaround_type_id"
-                                            class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate shrink-0">
+                                            class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
                                             <option value="">Standard</option>
                                             @foreach($turnaroundTypes as $tt)
                                                 <option value="{{ $tt->id }}">{{ $tt->name }}
@@ -441,97 +416,80 @@
                 <div
                     class="bg-slate-900 text-white rounded-t-[24px] shadow-[0_-10px_25px_rgba(0,0,0,0.15)] relative z-30 flex flex-col">
 
-                    <div class="p-3">
-                        <div class="grid grid-cols-2 gap-x-3 gap-y-2">
+                    <div class="p-2.5">
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1.5">
 
                             <!-- Subtotal -->
-                            <div class="flex justify-between items-center bg-slate-800/50 p-2 rounded-lg">
+                            <div class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded-md">
                                 <span
-                                    class="text-slate-400 text-[11px] font-bold uppercase tracking-wide">Subtotal</span>
-                                <span class="text-white text-[13px] font-black"
+                                    class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">Subtotal</span>
+                                <span class="text-white text-[12px] font-black"
                                     x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                             </div>
 
                             <!-- Total -->
                             <div
-                                class="flex justify-between items-center bg-blue-900/40 p-2 rounded-lg border border-blue-500/30">
-                                <span class="text-blue-300 text-[11px] font-bold uppercase tracking-wide">Total</span>
-                                <span class="text-blue-400 text-[15px] font-black"
+                                class="flex justify-between items-center bg-blue-900/40 p-1.5 rounded-md border border-blue-500/30">
+                                <span class="text-blue-300 text-[10px] font-bold uppercase tracking-wide">Total</span>
+                                <span class="text-blue-400 text-[14px] font-black"
                                     x-text="'Rs. ' + total.toFixed(2)"></span>
                             </div>
 
                             <!-- Discount -->
-                            <div class="flex justify-between items-center bg-slate-800/50 p-2 rounded-lg group">
-                                <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wide">Discount
+                            <div class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded-md group">
+                                <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">Discount
                                     (%)</span>
                                 <div class="flex items-center">
                                     <input type="number" x-model.number="discountPercent"
-                                        class="w-12 bg-slate-800 border-none rounded text-right text-white text-[13px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
+                                        class="w-10 bg-slate-800 border-none rounded text-right text-white text-[12px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
                                         min="0" max="100">
                                 </div>
                             </div>
 
                             <!-- Advance -->
-                            <div class="flex justify-between items-center bg-slate-800/50 p-2 rounded-lg group">
-                                <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wide">Advance
+                            <div class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded-md group">
+                                <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">Advance
                                     (Rs)</span>
                                 <div class="flex items-center">
                                     <input type="number" x-model.number="requestedAdvance"
-                                        class="w-16 bg-slate-800 border-none rounded text-right text-white text-[13px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
+                                        class="w-14 bg-slate-800 border-none rounded text-right text-white text-[12px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
                                         placeholder="0">
                                 </div>
                             </div>
 
-                            <!-- Delivery Fee -->
-                            <div
-                                class="flex justify-between items-center bg-slate-800/50 p-2 rounded-lg group col-span-2">
-                                <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wide">Delivery Fee
-                                    (Rs)</span>
-                                <div class="flex items-center">
-                                    <input type="number" x-model.number="deliveryFee"
-                                        class="w-20 bg-slate-800 border-none rounded text-right text-white text-[13px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
-                                        placeholder="0">
+                            <!-- Delivery Fee & Save Button Row -->
+                            <div class="col-span-2 grid grid-cols-2 gap-x-2 items-center mt-1">
+                                <!-- Delivery Fee -->
+                                <div
+                                    class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded-md group">
+                                    <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">Delivery Fee
+                                        (Rs)</span>
+                                    <div class="flex items-center">
+                                        <input type="number" x-model.number="deliveryFee"
+                                            class="w-14 bg-slate-800 border-none rounded text-right text-white text-[12px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
+                                            placeholder="0">
+                                    </div>
                                 </div>
-                            </div>
 
+                                <!-- Save & Request Button -->
+                                <button @click="saveOrder('request_payment')" :disabled="cart.length === 0 || isSaving"
+                                    class="w-full py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md font-black text-[12px] tracking-wide transition-all shadow-[0_4px_15px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.6)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-1.5">
+                                    <svg x-show="!isSaving" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"
+                                        viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    <svg x-show="isSaving" class="animate-spin w-3.5 h-3.5" xmlns="http://www.w3.org/2000/svg"
+                                        fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
+                                            stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                        </path>
+                                    </svg>
+                                    Save & Request
+                                </button>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-2 p-3 bg-slate-950/50 rounded-b-[24px]">
-                        <button @click="saveOrder('request_payment')" :disabled="cart.length === 0 || isSaving"
-                            class="py-2.5 bg-white/10 hover:bg-white/20 text-white rounded-xl font-black text-[12px] tracking-wide transition-all disabled:opacity-50 flex items-center justify-center gap-1.5">
-                            <svg x-show="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
-                            </svg>
-                            <svg x-show="isSaving" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg"
-                                fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                            Save & Request
-                        </button>
-
-                        <button @click="saveOrder('start_processing')" :disabled="cart.length === 0 || isSaving"
-                            class="py-2.5 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-black text-[12px] tracking-wide transition-all shadow-[0_4px_15px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.6)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-1.5">
-                            <svg x-show="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>
-                            <svg x-show="isSaving" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg"
-                                fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                    stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor"
-                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                                </path>
-                            </svg>
-                            Save & Process
-                        </button>
                     </div>
                 </div>
 
@@ -553,7 +511,7 @@
 
                 deliveryFee: {{ (float) ($dispatch->order->delivery_fee ?? $order->delivery_fee ?? 0) }},
                 discountPercent: 0,
-                requestedAdvance: null,
+                requestedAdvance: 0,
                 isSaving: false,
                 orderId: {{ $dispatch->order_id ?? $order->id ?? 0 }},
                 orderNumber: '{{ $dispatch->order->order_number ?? $order->order_number ?? '' }}',

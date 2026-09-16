@@ -23,6 +23,16 @@ class OrderCorrectionController extends Controller
             'new_data' => 'required|array',
         ]);
 
+        if (isset($request->new_data['payment_method']) && $request->new_data['payment_method'] !== $order->payment_method) {
+            $paymentTransaction = \App\Models\PaymentTransaction::where('order_id', $order->id)->latest()->first();
+            if ($paymentTransaction && $paymentTransaction->created_at->format('Y-m-d') !== now()->format('Y-m-d')) {
+                return response()->json([
+                    'success' => false, 
+                    'message' => 'Cannot change payment methods of previous days because accounts are already balanced.'
+                ]);
+            }
+        }
+
         if ($order->correctionRequests()->where('status', 'pending')->exists()) {
             return response()->json(['success' => false, 'message' => 'An active correction request already exists for this order.']);
         }
@@ -81,6 +91,9 @@ class OrderCorrectionController extends Controller
 
         if ($isAdmin) {
             // Auto approve if requested by an admin
+            if (!$correction->order_id) {
+                dd('Order ID is null!', $correction, $order);
+            }
             $this->approve($correction);
             
             // The note is added inside approve(), but we can add a specific note that it was auto-approved
@@ -118,34 +131,70 @@ class OrderCorrectionController extends Controller
         }
 
         DB::transaction(function () use ($correction) {
-            $order = $correction->order;
+            $order = $correction->order ?? \App\Models\Order::withoutGlobalScopes()->find($correction->order_id);
             $newData = $correction->new_data;
 
             if ($correction->type === 'payment_change') {
                 $newMethod = $newData['payment_method'];
                 $oldMethod = $order->payment_method;
 
-                $order->update([
-                    'payment_method' => $newMethod,
-                ]);
-
-                // Update payment transactions
-                PaymentTransaction::where('order_id', $order->id)
-                    ->where('payment_method', $oldMethod)
-                    ->update(['payment_method' => $newMethod]);
+                if ($newMethod === 'credit' && $oldMethod !== 'credit') {
+                    PaymentTransaction::where('order_id', $order->id)->delete();
+                    $order->update([
+                        'payment_method' => $newMethod,
+                        'paid_amount' => 0,
+                        'payment_status' => 'unpaid'
+                    ]);
+                } elseif ($oldMethod === 'credit' && $newMethod !== 'credit') {
+                    PaymentTransaction::create([
+                        'order_id' => $order->id,
+                        'amount' => $order->total,
+                        'payment_method' => $newMethod,
+                        'status' => 'completed',
+                        'created_by' => auth()->id() ?? 1,
+                    ]);
+                    $order->update([
+                        'payment_method' => $newMethod,
+                        'paid_amount' => $order->total,
+                        'payment_status' => 'paid'
+                    ]);
+                } else {
+                    $order->update([
+                        'payment_method' => $newMethod,
+                    ]);
+                    PaymentTransaction::where('order_id', $order->id)
+                        ->where('payment_method', $oldMethod)
+                        ->update(['payment_method' => $newMethod]);
+                }
 
             } else if ($correction->type === 'items_change' || $correction->type === 'order_change') {
+                $newMethod = $order->payment_method;
+                $oldMethod = $order->payment_method;
+
                 if ($correction->type === 'order_change' && isset($newData['payment_method'])) {
                     $newMethod = $newData['payment_method'];
                     $oldMethod = $order->payment_method;
 
-                    $order->update([
-                        'payment_method' => $newMethod,
-                    ]);
-
-                    PaymentTransaction::where('order_id', $order->id)
-                        ->where('payment_method', $oldMethod)
-                        ->update(['payment_method' => $newMethod]);
+                    if ($newMethod === 'credit' && $oldMethod !== 'credit') {
+                        PaymentTransaction::where('order_id', $order->id)->delete();
+                        $order->update([
+                            'payment_method' => $newMethod,
+                            'paid_amount' => 0,
+                            'payment_status' => 'unpaid'
+                        ]);
+                    } elseif ($oldMethod === 'credit' && $newMethod !== 'credit') {
+                        // Will create transaction at the end with correct new total
+                        $order->update([
+                            'payment_method' => $newMethod,
+                        ]);
+                    } else {
+                        $order->update([
+                            'payment_method' => $newMethod,
+                        ]);
+                        PaymentTransaction::where('order_id', $order->id)
+                            ->where('payment_method', $oldMethod)
+                            ->update(['payment_method' => $newMethod]);
+                    }
                 }
 
                 // Similar to updateOrder logic
@@ -172,6 +221,22 @@ class OrderCorrectionController extends Controller
                 $discountAmount = $subtotal * ($discountPercentage / 100);
                 $total = $subtotal - $discountAmount + $order->delivery_fee;
                 
+                // If it was changed FROM credit TO another method, we need to apply full payment and create transaction
+                if ($correction->type === 'order_change' && $oldMethod === 'credit' && $newMethod !== 'credit') {
+                    PaymentTransaction::create([
+                        'order_id' => $order->id,
+                        'amount' => $total,
+                        'payment_method' => $newMethod,
+                        'status' => 'completed',
+                        'created_by' => auth()->id() ?? 1,
+                    ]);
+                    $order->paid_amount = $total;
+                } elseif ($newMethod !== 'credit') {
+                    // Update existing transaction amounts to match the new total if not credit
+                    PaymentTransaction::where('order_id', $order->id)->update(['amount' => $total]);
+                    $order->paid_amount = $total;
+                }
+
                 $paymentStatus = $order->paid_amount >= $total ? 'paid' : ($order->paid_amount > 0 ? 'partial' : 'unpaid');
 
                 $order->update([
@@ -198,7 +263,10 @@ class OrderCorrectionController extends Controller
 
         // Notify requester
         if ($correction->requestedBy) {
-            Notification::send([$correction->requestedBy], new SystemAlertNotification("Correction Approved for Order #{$correction->order->order_number}", route('orders.show', $correction->order->order_number), 'success'));
+            $notificationOrder = $correction->order ?? \App\Models\Order::withoutGlobalScopes()->find($correction->order_id);
+            if ($notificationOrder) {
+                Notification::send([$correction->requestedBy], new SystemAlertNotification("Correction Approved for Order #{$notificationOrder->order_number}", route('orders.show', $notificationOrder->order_number), 'success'));
+            }
         }
 
         if (request()->wantsJson()) {

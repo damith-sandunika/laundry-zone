@@ -1,46 +1,128 @@
 <x-app-layout>
     <x-slot name="header">
         <style>
-            .ord-btn-wrap { position: relative; display: inline-flex; align-items: center; }
+            .ord-btn-wrap {
+                position: relative;
+                display: inline-flex;
+                align-items: center;
+            }
+
             .ord-btn {
-                display: inline-flex; align-items: center; justify-content: center;
-                width: 36px; height: 36px; border-radius: 10px; border: 1.5px solid;
-                background: white; cursor: pointer; font-size: 16px; line-height: 1;
-                transition: all 0.15s; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-                text-decoration: none; flex-shrink: 0;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                border: 1.5px solid;
+                background: white;
+                cursor: pointer;
+                font-size: 16px;
+                line-height: 1;
+                transition: all 0.15s;
+                box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+                text-decoration: none;
+                flex-shrink: 0;
             }
-            .ord-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+
+            .ord-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+            }
+
             .ord-btn-label {
-                position: absolute; bottom: calc(100% + 7px); left: 50%; transform: translateX(-50%);
-                background: #0f172a; color: white; font-size: 11px; font-weight: 700;
-                padding: 4px 8px; border-radius: 6px; white-space: nowrap; pointer-events: none;
-                opacity: 0; transition: opacity 0.15s; z-index: 50;
+                position: absolute;
+                bottom: calc(100% + 7px);
+                left: 50%;
+                transform: translateX(-50%);
+                background: #0f172a;
+                color: white;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 4px 8px;
+                border-radius: 6px;
+                white-space: nowrap;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.15s;
+                z-index: 50;
             }
+
             .ord-btn-label::after {
-                content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
-                border: 4px solid transparent; border-top-color: #0f172a;
+                content: '';
+                position: absolute;
+                top: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                border: 4px solid transparent;
+                border-top-color: #0f172a;
             }
-            .ord-btn-wrap:hover .ord-btn-label { opacity: 1; }
+
+            .ord-btn-wrap:hover .ord-btn-label {
+                opacity: 1;
+            }
 
             /* Pay Now - green gradient button (larger, pill) */
             .ord-btn--pay-full {
-                display: inline-flex; align-items: center; justify-content: center;
-                width: 36px; height: 36px; border-radius: 10px; border: none;
-                background: linear-gradient(135deg,#10b981,#059669); cursor: pointer;
-                font-size: 16px; transition: all 0.15s;
-                box-shadow: 0 4px 10px rgba(16,185,129,0.35);
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                width: 36px;
+                height: 36px;
+                border-radius: 10px;
+                border: none;
+                background: linear-gradient(135deg, #10b981, #059669);
+                cursor: pointer;
+                font-size: 16px;
+                transition: all 0.15s;
+                box-shadow: 0 4px 10px rgba(16, 185, 129, 0.35);
             }
-            .ord-btn--pay-full:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.45); }
+
+            .ord-btn--pay-full:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(16, 185, 129, 0.45);
+            }
 
             /* Individual color accents */
-            .ord-btn--edit  { color:#1d4ed8; border-color:#bfdbfe; }
-            .ord-btn--edit:hover  { background:#eff6ff; border-color:#93c5fd; }
-            .ord-btn--pdf   { color:#dc2626; border-color:#fecaca; }
-            .ord-btn--pdf:hover   { background:#fef2f2; border-color:#fca5a5; }
-            .ord-btn--print { color:#334155; border-color:#e2e8f0; }
-            .ord-btn--print:hover { background:#f8fafc; border-color:#cbd5e1; }
-            .ord-btn--chit  { color:#7c3aed; border-color:#ddd6fe; }
-            .ord-btn--chit:hover  { background:#f5f3ff; border-color:#c4b5fd; }
+            .ord-btn--edit {
+                color: #1d4ed8;
+                border-color: #bfdbfe;
+            }
+
+            .ord-btn--edit:hover {
+                background: #eff6ff;
+                border-color: #93c5fd;
+            }
+
+            .ord-btn--pdf {
+                color: #dc2626;
+                border-color: #fecaca;
+            }
+
+            .ord-btn--pdf:hover {
+                background: #fef2f2;
+                border-color: #fca5a5;
+            }
+
+            .ord-btn--print {
+                color: #334155;
+                border-color: #e2e8f0;
+            }
+
+            .ord-btn--print:hover {
+                background: #f8fafc;
+                border-color: #cbd5e1;
+            }
+
+            .ord-btn--chit {
+                color: #7c3aed;
+                border-color: #ddd6fe;
+            }
+
+            .ord-btn--chit:hover {
+                background: #f5f3ff;
+                border-color: #c4b5fd;
+            }
         </style>
 
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
@@ -83,7 +165,8 @@
 
                 {{-- 📄 Download PDF --}}
                 <div class="ord-btn-wrap">
-                    <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank" class="ord-btn ord-btn--pdf" title="">
+                    <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank"
+                        class="ord-btn ord-btn--pdf" title="">
                         📄
                     </a>
                     <span class="ord-btn-label">Download PDF</span>
@@ -91,7 +174,8 @@
 
                 {{-- 🖨️ Print Bill --}}
                 <div class="ord-btn-wrap">
-                    <a href="{{ route('orders.print', $order->order_number) }}" target="_blank" class="ord-btn ord-btn--print" title="">
+                    <a href="{{ route('orders.print', $order->order_number) }}" target="_blank"
+                        class="ord-btn ord-btn--print" title="">
                         🖨️
                     </a>
                     <span class="ord-btn-label">Print Bill</span>
@@ -158,7 +242,7 @@
     ($order->status === 'done' ? 'background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;' :
         ($order->status === 'delivered' ? 'background:#f8fafc;color:#475569;border:1.5px solid #e2e8f0;' :
             'background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;')) }}">
-        
+
         <div style="display:flex;align-items:center;gap:10px;">
             <span>Order Status:</span>
             <span style="font-size:16px;font-weight:900;">{{ $order->status }}</span>
@@ -178,7 +262,7 @@
             </button>
             <script>
                 async function startWashing(dispatchId) {
-                    if(!confirm('Are you sure you want to start washing this order?')) return;
+                    if (!confirm('Are you sure you want to start washing this order?')) return;
                     try {
                         const res = await fetch(`/workshop/dispatches/${dispatchId}/start-processing`, {
                             method: 'POST',
@@ -210,124 +294,156 @@
         <div class="flex flex-col gap-3 mb-6">
             @foreach($order->correctionRequests->sortByDesc('created_at') as $cr)
                 <div class="p-4 rounded-xl flex items-start justify-between gap-4 text-[13px] border-2 shadow-sm
-                    {{ $cr->status === 'pending' ? 'bg-amber-50 text-amber-900 border-amber-200 shadow-amber-100/50' :
-                   ($cr->status === 'approved' ? 'bg-emerald-50 text-emerald-900 border-emerald-200 shadow-emerald-100/50' :
-                       'bg-red-50 text-red-900 border-red-200 shadow-red-100/50') }}">
-                <div class="flex-1 w-full">
-                    <strong class="uppercase text-[11px] tracking-wider">{{ ucfirst($cr->status) }} Correction Request
-                        <span class="opacity-75 font-semibold">({{ str_replace('_', ' ', $cr->type) }})</span></strong><br>
-                    <span class="text-slate-600">Requested by <strong class="text-slate-800">{{ $cr->requestedBy->name ?? 'Unknown' }}</strong> on
-                    {{ $cr->created_at->format('M d, Y h:i A') }}</span><br>
-                    <div class="mt-1.5 p-2.5 bg-white/60 rounded-lg border border-slate-200/50 italic text-slate-700">"{{ $cr->reason }}"</div>
+                            {{ $cr->status === 'pending' ? 'bg-amber-50 text-amber-900 border-amber-200 shadow-amber-100/50' :
+                    ($cr->status === 'approved' ? 'bg-emerald-50 text-emerald-900 border-emerald-200 shadow-emerald-100/50' :
+                        'bg-red-50 text-red-900 border-red-200 shadow-red-100/50') }}">
+                    <div class="flex-1 w-full">
+                        <strong class="uppercase text-[11px] tracking-wider">{{ ucfirst($cr->status) }} Correction Request
+                            <span class="opacity-75 font-semibold">({{ str_replace('_', ' ', $cr->type) }})</span></strong><br>
+                        <span class="text-slate-600">Requested by <strong
+                                class="text-slate-800">{{ $cr->requestedBy->name ?? 'Unknown' }}</strong> on
+                            {{ $cr->created_at->format('M d, Y h:i A') }}</span><br>
+                        <div class="mt-1.5 p-2.5 bg-white/60 rounded-lg border border-slate-200/50 italic text-slate-700">
+                            "{{ $cr->reason }}"</div>
 
-                    @if(is_array($cr->old_data) && is_array($cr->new_data))
-                        @php
-                            $oldTotal = $cr->old_data['total'] ?? $order->total;
-                            $newTotal = $cr->new_data['calculated_total'] ?? $cr->old_data['total'] ?? $order->total;
-                            $oldMethod = $cr->old_data['payment_method'] ?? $order->payment_method;
-                            $newMethod = $cr->new_data['payment_method'] ?? $cr->old_data['payment_method'] ?? $order->payment_method;
-                        @endphp
-                        <div class="mt-3 bg-white/70 backdrop-blur-sm p-3 rounded-xl text-[12px] border border-slate-200/60 shadow-sm w-full space-y-1.5">
-                            @if((isset($cr->old_data['total']) || isset($cr->new_data['calculated_total'])) && $oldTotal != $newTotal)
-                                <div class="flex justify-between items-center border-b border-slate-200/50 pb-1.5">
-                                    <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Total Amount:</strong>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-red-500 line-through font-bold">Rs.{{ number_format($oldTotal, 2) }}</span>
-                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                        <strong class="text-emerald-600 font-black text-[13px]">Rs.{{ number_format($newTotal, 2) }}</strong>
-                                    </div>
-                                </div>
-                            @endif
-                            @if((isset($cr->old_data['payment_method']) || isset($cr->new_data['payment_method'])) && $oldMethod != $newMethod)
-                                <div class="flex justify-between items-center border-b border-slate-200/50 pb-1.5">
-                                    <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Payment Method:</strong>
-                                    <div class="flex items-center gap-2">
-                                        <span class="text-red-500 line-through font-bold">{{ ucfirst($oldMethod) }}</span>
-                                        <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                        <strong class="text-emerald-600 font-black text-[13px]">{{ ucfirst($newMethod) }}</strong>
-                                    </div>
-                                </div>
-                            @endif
-
-                            @if($cr->type === 'items_change' || $cr->type === 'order_change')
-                                @php
-                                    $oldCart = collect($cr->old_data['cart'] ?? []);
-                                    $newCart = collect($cr->new_data['cart'] ?? []);
-                                    $diff = [];
-
-                                    foreach ($newCart as $newItem) {
-                                        $oldItem = $oldCart->firstWhere('service_type_id', $newItem['service_type_id']);
-                                        if (!$oldItem && !isset($newItem['service_type_id'])) {
-                                            $oldItem = $oldCart->firstWhere('name', $newItem['name']);
-                                        }
-
-                                        if (!$oldItem) {
-                                            $diff[] = ['type' => 'added', 'item' => $newItem];
-                                        } elseif ($oldItem['qty'] != $newItem['qty']) {
-                                            $diff[] = ['type' => 'changed', 'item' => $newItem, 'old_qty' => $oldItem['qty']];
-                                        }
-                                    }
-                                    foreach ($oldCart as $oldItem) {
-                                        $newItem = $newCart->firstWhere('service_type_id', $oldItem['service_type_id']);
-                                        if (!$newItem && !isset($oldItem['service_type_id'])) {
-                                            $newItem = $newCart->firstWhere('name', $oldItem['name']);
-                                        }
-                                        if (!$newItem) {
-                                            $diff[] = ['type' => 'removed', 'item' => $oldItem];
-                                        }
-                                    }
-                                @endphp
-
-                                @if(count($diff) > 0)
-                                    <div class="mt-2 text-[11px]">
-                                        <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Cart Updates:</strong>
-                                        <div class="mt-1 space-y-1 bg-white/50 rounded-lg p-2 border border-slate-100">
-                                            @foreach($diff as $change)
-                                                @if($change['type'] === 'added')
-                                                    <div class="flex items-center gap-1.5"><span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Add</span> <span class="font-bold text-slate-800">{{ $change['item']['qty'] ?? 1 }}x {{ $change['item']['name'] ?? 'Service' }}</span>
-                                                        <span class="text-slate-500 ml-auto">(Rs.{{ number_format((float) ($change['item']['base_price'] ?? 0) * (float) ($change['item']['qty'] ?? 1), 2) }})</span>
-                                                    </div>
-                                                @elseif($change['type'] === 'changed')
-                                                    <div class="flex items-center gap-1.5"><span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Mod</span> <span
-                                                            class="text-slate-400 line-through font-bold">{{ $change['old_qty'] }}x</span> <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                                        <span class="font-bold text-slate-800">{{ $change['item']['qty'] }}x {{ $change['item']['name'] ?? 'Service' }}</span></div>
-                                                @elseif($change['type'] === 'removed')
-                                                    <div class="flex items-center gap-1.5"><span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Del</span> <span
-                                                            class="text-red-400 line-through font-bold">{{ $change['item']['qty'] ?? 1 }}x
-                                                            {{ $change['item']['name'] ?? 'Service' }}</span></div>
-                                                @endif
-                                            @endforeach
+                        @if(is_array($cr->old_data) && is_array($cr->new_data))
+                            @php
+                                $oldTotal = $cr->old_data['total'] ?? $order->total;
+                                $newTotal = $cr->new_data['calculated_total'] ?? $cr->old_data['total'] ?? $order->total;
+                                $oldMethod = $cr->old_data['payment_method'] ?? $order->payment_method;
+                                $newMethod = $cr->new_data['payment_method'] ?? $cr->old_data['payment_method'] ?? $order->payment_method;
+                            @endphp
+                            <div
+                                class="mt-3 bg-white/70 backdrop-blur-sm p-3 rounded-xl text-[12px] border border-slate-200/60 shadow-sm w-full space-y-1.5">
+                                @if((isset($cr->old_data['total']) || isset($cr->new_data['calculated_total'])) && $oldTotal != $newTotal)
+                                    <div class="flex justify-between items-center border-b border-slate-200/50 pb-1.5">
+                                        <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Total Amount:</strong>
+                                        <div class="flex items-center gap-2">
+                                            <span
+                                                class="text-red-500 line-through font-bold">Rs.{{ number_format($oldTotal, 2) }}</span>
+                                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3">
+                                                </path>
+                                            </svg>
+                                            <strong
+                                                class="text-emerald-600 font-black text-[13px]">Rs.{{ number_format($newTotal, 2) }}</strong>
                                         </div>
                                     </div>
                                 @endif
-                            @endif
-                        </div>
-                    @endif
-                    @if($cr->status !== 'pending' && $cr->approvedBy)
-                        <div class="mt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
-                            {{ ucfirst($cr->status) }} by <strong class="text-slate-700">{{ $cr->approvedBy->name }}</strong> on
-                            {{ $cr->resolved_at ? $cr->resolved_at->format('M d, Y h:i A') : 'Unknown' }}
+                                @if((isset($cr->old_data['payment_method']) || isset($cr->new_data['payment_method'])) && $oldMethod != $newMethod)
+                                    <div class="flex justify-between items-center border-b border-slate-200/50 pb-1.5">
+                                        <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Payment Method:</strong>
+                                        <div class="flex items-center gap-2">
+                                            <span class="text-red-500 line-through font-bold">{{ ucfirst($oldMethod) }}</span>
+                                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3">
+                                                </path>
+                                            </svg>
+                                            <strong class="text-emerald-600 font-black text-[13px]">{{ ucfirst($newMethod) }}</strong>
+                                        </div>
+                                    </div>
+                                @endif
+
+                                @if($cr->type === 'items_change' || $cr->type === 'order_change')
+                                    @php
+                                        $oldCart = collect($cr->old_data['cart'] ?? []);
+                                        $newCart = collect($cr->new_data['cart'] ?? []);
+                                        $diff = [];
+
+                                        foreach ($newCart as $newItem) {
+                                            $oldItem = $oldCart->firstWhere('service_type_id', $newItem['service_type_id']);
+                                            if (!$oldItem && !isset($newItem['service_type_id'])) {
+                                                $oldItem = $oldCart->firstWhere('name', $newItem['name']);
+                                            }
+
+                                            if (!$oldItem) {
+                                                $diff[] = ['type' => 'added', 'item' => $newItem];
+                                            } elseif ($oldItem['qty'] != $newItem['qty']) {
+                                                $diff[] = ['type' => 'changed', 'item' => $newItem, 'old_qty' => $oldItem['qty']];
+                                            }
+                                        }
+                                        foreach ($oldCart as $oldItem) {
+                                            $newItem = $newCart->firstWhere('service_type_id', $oldItem['service_type_id']);
+                                            if (!$newItem && !isset($oldItem['service_type_id'])) {
+                                                $newItem = $newCart->firstWhere('name', $oldItem['name']);
+                                            }
+                                            if (!$newItem) {
+                                                $diff[] = ['type' => 'removed', 'item' => $oldItem];
+                                            }
+                                        }
+                                    @endphp
+
+                                    @if(count($diff) > 0)
+                                        <div class="mt-2 text-[11px]">
+                                            <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Cart Updates:</strong>
+                                            <div class="mt-1 space-y-1 bg-white/50 rounded-lg p-2 border border-slate-100">
+                                                @foreach($diff as $change)
+                                                    @if($change['type'] === 'added')
+                                                        <div class="flex items-center gap-1.5"><span
+                                                                class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Add</span>
+                                                            <span class="font-bold text-slate-800">{{ $change['item']['qty'] ?? 1 }}x
+                                                                {{ $change['item']['name'] ?? 'Service' }}</span>
+                                                            <span
+                                                                class="text-slate-500 ml-auto">(Rs.{{ number_format((float) ($change['item']['base_price'] ?? 0) * (float) ($change['item']['qty'] ?? 1), 2) }})</span>
+                                                        </div>
+                                                    @elseif($change['type'] === 'changed')
+                                                        <div class="flex items-center gap-1.5"><span
+                                                                class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Mod</span>
+                                                            <span class="text-slate-400 line-through font-bold">{{ $change['old_qty'] }}x</span>
+                                                            <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor"
+                                                                stroke-width="2.5" viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3">
+                                                                </path>
+                                                            </svg>
+                                                            <span class="font-bold text-slate-800">{{ $change['item']['qty'] }}x
+                                                                {{ $change['item']['name'] ?? 'Service' }}</span>
+                                                        </div>
+                                                    @elseif($change['type'] === 'removed')
+                                                        <div class="flex items-center gap-1.5"><span
+                                                                class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Del</span>
+                                                            <span class="text-red-400 line-through font-bold">{{ $change['item']['qty'] ?? 1 }}x
+                                                                {{ $change['item']['name'] ?? 'Service' }}</span></div>
+                                                    @endif
+                                                @endforeach
+                                            </div>
+                                        </div>
+                                    @endif
+                                @endif
+                            </div>
+                        @endif
+                        @if($cr->status !== 'pending' && $cr->approvedBy)
+                            <div class="mt-2 text-[10px] font-bold text-slate-500 uppercase tracking-wide">
+                                {{ ucfirst($cr->status) }} by <strong class="text-slate-700">{{ $cr->approvedBy->name }}</strong> on
+                                {{ $cr->resolved_at ? $cr->resolved_at->format('M d, Y h:i A') : 'Unknown' }}
+                            </div>
+                        @endif
+                    </div>
+
+                    @if($cr->status === 'pending' && in_array(auth()->user()->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']))
+                        <div class="flex flex-col gap-2 shrink-0">
+                            <form action="{{ route('corrections.approve', $cr->id) }}" method="POST"
+                                onsubmit="return confirm('Approve this request? This will permanently alter the order details.')">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] uppercase tracking-wide rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5"><svg
+                                        class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path>
+                                    </svg>Approve</button>
+                            </form>
+                            <form action="{{ route('corrections.reject', $cr->id) }}" method="POST"
+                                onsubmit="return confirm('Reject this request?')">
+                                @csrf
+                                <button type="submit"
+                                    class="w-full px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-black text-[11px] uppercase tracking-wide rounded-lg transition-colors flex items-center justify-center gap-1.5"><svg
+                                        class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>Reject</button>
+                            </form>
                         </div>
                     @endif
                 </div>
-
-                @if($cr->status === 'pending' && in_array(auth()->user()->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']))
-                    <div class="flex flex-col gap-2 shrink-0">
-                        <form action="{{ route('corrections.approve', $cr->id) }}" method="POST"
-                            onsubmit="return confirm('Approve this request? This will permanently alter the order details.')">
-                            @csrf
-                            <button type="submit"
-                                class="w-full px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[11px] uppercase tracking-wide rounded-lg shadow-sm transition-colors flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"></path></svg>Approve</button>
-                        </form>
-                        <form action="{{ route('corrections.reject', $cr->id) }}" method="POST"
-                            onsubmit="return confirm('Reject this request?')">
-                            @csrf
-                            <button type="submit"
-                                class="w-full px-4 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-black text-[11px] uppercase tracking-wide rounded-lg transition-colors flex items-center justify-center gap-1.5"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"></path></svg>Reject</button>
-                        </form>
-                    </div>
-                @endif
-            </div>
             @endforeach
         </div>
     @endif
@@ -528,16 +644,19 @@
                                             <div class="flex items-baseline justify-between gap-2">
                                                 <div
                                                     class="text-[13px] font-black {{ $step['active'] ? 'text-slate-800' : 'text-slate-500' }}">
-                                                    {{ $step['label'] }}</div>
+                                                    {{ $step['label'] }}
+                                                </div>
                                                 @if($step['time'])
                                                     <div
                                                         class="text-[11px] font-bold whitespace-nowrap {{ $step['active'] ? 'text-blue-600' : 'text-slate-400' }}">
-                                                        {{ \Carbon\Carbon::parse($step['time'])->format('d M, H:i') }}</div>
+                                                        {{ \Carbon\Carbon::parse($step['time'])->format('d M, H:i') }}
+                                                    </div>
                                                 @endif
                                             </div>
                                             @if($step['active'] && $step['user'])
                                                 <div class="text-[11px] text-slate-500 font-semibold mt-0.5">By
-                                                    {{ $step['user'] }}</div>
+                                                    {{ $step['user'] }}
+                                                </div>
                                             @endif
                                         </div>
                                     </div>
@@ -560,7 +679,8 @@
                                             style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Order
                                             Date</span>
                                         <p style="font-weight:700;color:#0f172a;margin:0;">
-                                            {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y h:i A') }}</p>
+                                            {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y h:i A') }}
+                                        </p>
                                     </div>
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
                                         <span
@@ -584,20 +704,23 @@
                                             style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Full
                                             Name</span>
                                         <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
-                                            {{ $order->customer->name ?? 'Unknown Customer' }}</p>
+                                            {{ $order->customer->name ?? 'Unknown Customer' }}
+                                        </p>
                                     </div>
                                     <div>
                                         <span
                                             style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Phone</span>
                                         <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
-                                            {{ $order->customer->phone ?? 'N/A' }}</p>
+                                            {{ $order->customer->phone ?? 'N/A' }}
+                                        </p>
                                     </div>
                                     @if(optional($order->customer)->address)
                                         <div>
                                             <span
                                                 style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Address</span>
                                             <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">
-                                                {{ $order->customer->address }}</p>
+                                                {{ $order->customer->address }}
+                                            </p>
                                         </div>
                                     @endif
                                 </div>
@@ -612,21 +735,26 @@
                                     <div style="display:flex;flex-direction:column;gap:8px;font-size:12px;">
                                         <div>
                                             <span
-                                                style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup Address</span>
+                                                style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup
+                                                Address</span>
                                             <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">
-                                                {{ $order->deliveryAppointment->pickup_address ?? 'N/A' }}</p>
+                                                {{ $order->deliveryAppointment->pickup_address ?? 'N/A' }}
+                                            </p>
                                         </div>
                                         @if($order->deliveryAppointment->pickup_scheduled_at)
                                             <div>
                                                 <span
-                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup Scheduled</span>
+                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup
+                                                    Scheduled</span>
                                                 <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
-                                                    {{ \Carbon\Carbon::parse($order->deliveryAppointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</p>
+                                                    {{ \Carbon\Carbon::parse($order->deliveryAppointment->pickup_scheduled_at)->format('M d, Y h:i A') }}
+                                                </p>
                                             </div>
                                         @endif
                                         <div style="margin-top:4px;">
                                             <span
-                                                style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery Preference</span>
+                                                style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery
+                                                Preference</span>
                                             <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
                                                 @if(in_array($order->deliveryAppointment->delivery_preference, ['pickup_from_branch', 'pickup_from_store', 'self_pickup']))
                                                     Customer Pickup from Branch
@@ -638,17 +766,21 @@
                                         @if(!in_array($order->deliveryAppointment->delivery_preference, ['pickup_from_branch', 'pickup_from_store', 'self_pickup']))
                                             <div>
                                                 <span
-                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery Address</span>
+                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery
+                                                    Address</span>
                                                 <p style="font-weight:600;color:#334155;margin:1px 0 0;line-height:1.3;">
-                                                    {{ $order->deliveryAppointment->delivery_address ?: ($order->deliveryAppointment->pickup_address ?? 'N/A') }}</p>
+                                                    {{ $order->deliveryAppointment->delivery_address ?: ($order->deliveryAppointment->pickup_address ?? 'N/A') }}
+                                                </p>
                                             </div>
                                         @endif
                                         @if($order->deliveryAppointment->delivery_scheduled_at)
                                             <div>
                                                 <span
-                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery Scheduled</span>
+                                                    style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery
+                                                    Scheduled</span>
                                                 <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
-                                                    {{ \Carbon\Carbon::parse($order->deliveryAppointment->delivery_scheduled_at)->format('M d, Y h:i A') }}</p>
+                                                    {{ \Carbon\Carbon::parse($order->deliveryAppointment->delivery_scheduled_at)->format('M d, Y h:i A') }}
+                                                </p>
                                             </div>
                                         @endif
                                     </div>
@@ -821,7 +953,8 @@
                                         @endif
                                     </td>
                                     <td style="padding:10px 16px;text-align:center;font-weight:700;color:#334155;">
-                                        {{ $row['qty'] }}</td>
+                                        {{ $row['qty'] }}
+                                    </td>
                                     <td style="padding:10px 16px;text-align:right;font-weight:600;color:#475569;">
                                         Rs.{{ number_format($row['unit_price'], 2) }}</td>
                                     <td style="padding:10px 16px;text-align:right;font-weight:800;color:#0f172a;">
@@ -834,7 +967,8 @@
                                             <span style="color:#94a3b8;font-weight:500;"> for {{ $row['name'] }}</span>
                                         </td>
                                         <td style="padding:6px 16px;text-align:center;font-size:11px;color:#d97706;">
-                                            {{ $row['qty'] }}</td>
+                                            {{ $row['qty'] }}
+                                        </td>
                                         <td style="padding:6px 16px;text-align:right;font-size:11px;color:#d97706;">
                                             Rs.{{ number_format($row['turnaround_charge'] / max(1, $row['qty']), 2) }}</td>
                                         <td
@@ -845,9 +979,11 @@
                                 @foreach($row['extras'] as $e)
                                     <tr style="border-bottom:1px solid #f1f5f9;background:#f8faff;">
                                         <td style="padding:6px 16px 6px 32px;font-weight:600;color:#6366f1;font-size:11px;">+
-                                            {{ $e['name'] }}</td>
+                                            {{ $e['name'] }}
+                                        </td>
                                         <td style="padding:6px 16px;text-align:center;font-size:11px;color:#6366f1;">
-                                            {{ $e['qty'] }}</td>
+                                            {{ $e['qty'] }}
+                                        </td>
                                         <td style="padding:6px 16px;text-align:right;font-size:11px;color:#6366f1;">
                                             Rs.{{ number_format($e['price'], 2) }}</td>
                                         <td
@@ -952,7 +1088,8 @@
                                                 <p style="font-size:11.5px;font-weight:800;color:#0f172a;margin:0;">
                                                     Rs.{{ number_format($tx->amount, 2) }}</p>
                                                 <p style="font-size:10px;color:#64748b;margin:0;font-weight:600;">
-                                                    {{ $tx->created_at->format('M d, h:i A') }}</p>
+                                                    {{ $tx->created_at->format('M d, h:i A') }}
+                                                </p>
                                             </div>
                                         </div>
 
@@ -976,7 +1113,9 @@
                                                 onmouseover="this.style.background='#f1f5f9'"
                                                 onmouseout="this.style.background='white'">View Slip</a>
                                         @else
-                                            <span style="flex:1;text-align:center;padding:6px;background:#f8fafc;color:#94a3b8;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-weight:700;">No Slip (Card)</span>
+                                            <span
+                                                style="flex:1;text-align:center;padding:6px;background:#f8fafc;color:#94a3b8;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-weight:700;">No
+                                                Slip (Card)</span>
                                         @endif
 
                                         @if($tx->status === 'pending')
@@ -1025,19 +1164,30 @@
                                                         </div>
                                                     @else
                                                         <!-- No Image Info -->
-                                                        <div style="padding:24px 20px;text-align:center;background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);border-radius:16px;border:1px solid #e2e8f0;margin-bottom:16px;box-shadow:inset 0 2px 4px rgba(255,255,255,0.7), 0 4px 12px rgba(0,0,0,0.02);position:relative;overflow:hidden;">
+                                                        <div
+                                                            style="padding:24px 20px;text-align:center;background:linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);border-radius:16px;border:1px solid #e2e8f0;margin-bottom:16px;box-shadow:inset 0 2px 4px rgba(255,255,255,0.7), 0 4px 12px rgba(0,0,0,0.02);position:relative;overflow:hidden;">
                                                             <!-- Decorative circles -->
-                                                            <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);border-radius:50%;opacity:0.5;"></div>
-                                                            <div style="position:absolute;bottom:-30px;left:-10px;width:60px;height:60px;background:linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);border-radius:50%;opacity:0.4;"></div>
-                                                            
+                                                            <div
+                                                                style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);border-radius:50%;opacity:0.5;">
+                                                            </div>
+                                                            <div
+                                                                style="position:absolute;bottom:-30px;left:-10px;width:60px;height:60px;background:linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);border-radius:50%;opacity:0.4;">
+                                                            </div>
+
                                                             <div style="position:relative;z-index:1;">
-                                                                <div style="width:56px;height:56px;background:linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 16px rgba(79,70,229,0.25);transform:rotate(-5deg);">
-                                                                    <i class="fa-solid fa-credit-card" style="font-size:24px;color:white;transform:rotate(5deg);"></i>
+                                                                <div
+                                                                    style="width:56px;height:56px;background:linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%);border-radius:16px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;box-shadow:0 8px 16px rgba(79,70,229,0.25);transform:rotate(-5deg);">
+                                                                    <i class="fa-solid fa-credit-card"
+                                                                        style="font-size:24px;color:white;transform:rotate(5deg);"></i>
                                                                 </div>
-                                                                <h4 style="font-size:16px;font-weight:900;color:#0f172a;margin:0 0 6px;letter-spacing:-0.02em;">Online Card Payment</h4>
-                                                                <p style="font-size:12px;color:#64748b;margin:0;line-height:1.5;font-weight:500;padding:0 10px;">
+                                                                <h4
+                                                                    style="font-size:16px;font-weight:900;color:#0f172a;margin:0 0 6px;letter-spacing:-0.02em;">
+                                                                    Online Card Payment</h4>
+                                                                <p
+                                                                    style="font-size:12px;color:#64748b;margin:0;line-height:1.5;font-weight:500;padding:0 10px;">
                                                                     No physical slip was uploaded.<br>
-                                                                    <span style="color:#475569;font-weight:700;">Please verify with your payment gateway.</span>
+                                                                    <span style="color:#475569;font-weight:700;">Please verify with
+                                                                        your payment gateway.</span>
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -1132,7 +1282,8 @@
                                 </div>
                                 <div style="flex:1;">
                                     <p style="font-size:12px;font-weight:800;color:#0f172a;margin:0;">Cubby:
-                                        {{ $oc->cubby->name ?? 'N/A' }}</p>
+                                        {{ $oc->cubby->name ?? 'N/A' }}
+                                    </p>
                                     <p style="font-size:10px;color:#94a3b8;margin:2px 0 0;font-weight:600;">
                                         Assigned: {{ \Carbon\Carbon::parse($oc->assigned_at)->format('M d, h:i A') }}
                                         &bull; Loc: {{ $oc->cubby->branch->name ?? 'Unknown' }}
@@ -1157,186 +1308,213 @@
                             style="font-size:10px;font-weight:800;color:#d97706;text-transform:uppercase;letter-spacing:0.05em;display:block;margin-bottom:2px;">Order
                             Notes</span>
                         <p style="font-size:12px;color:#b45309;margin:0;font-weight:600;line-height:1.4;">
-                            {{ $order->notes }}</p>
+                            {{ $order->notes }}
+                        </p>
                     </div>
                 @endif
             </div>
         </div>
 
-    @if($order->is_delivery_order && $order->deliveryAppointment)
-        <!-- Maps Section -->
-        <div x-data="orderMaps()" style="margin-top:24px;">
-            <h2 class="ph-title" style="margin-bottom:12px; font-size:16px;">Logistics Overview</h2>
-            <div style="display:flex;gap:24px;flex-wrap:wrap;">
-                
-                @if($order->deliveryAppointment->latitude && $order->deliveryAppointment->longitude)
-                <!-- Pickup Map -->
-                <div style="flex:1;min-width:300px;background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-                    <div style="padding:12px 16px;background:#fff7ed;border-bottom:1px solid #ffedd5;display:flex;align-items:center;gap:10px;">
-                        <div style="width:28px;height:28px;background:#ffedd5;color:#ea580c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fa-solid fa-arrow-up"></i></div>
-                        <div>
-                            <div style="font-size:10px;font-weight:900;color:#ea580c;text-transform:uppercase;letter-spacing:0.05em;">Pickup Route</div>
-                            <div style="font-size:12px;font-weight:800;color:#431407;margin-top:2px;">Customer to Branch</div>
-                        </div>
-                    </div>
-                    <div id="pickup-route-badge" style="display:none;padding:8px 14px;background:linear-gradient(135deg,#ea580c,#f97316);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
-                        <i class="fa-solid fa-route" style="margin-right:6px;"></i>
-                        <span id="pickup-route-text">Calculating route...</span>
-                    </div>
-                    <div id="pickup-route-map" style="width:100%;height:300px;background:#f8fafc;z-index:1;"></div>
-                </div>
-                @endif
+        @if($order->is_delivery_order && $order->deliveryAppointment)
+            <!-- Maps Section -->
+            <div x-data="orderMaps()" style="margin-top:24px;">
+                <h2 class="ph-title" style="margin-bottom:12px; font-size:16px;">Logistics Overview</h2>
+                <div style="display:flex;gap:24px;flex-wrap:wrap;">
 
-                @if($order->deliveryAppointment->delivery_lat && $order->deliveryAppointment->delivery_lng)
-                <!-- Delivery Map -->
-                <div style="flex:1;min-width:300px;background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
-                    <div style="padding:12px 16px;background:#f0fdf4;border-bottom:1px solid #dcfce7;display:flex;align-items:center;gap:10px;">
-                        <div style="width:28px;height:28px;background:#dcfce7;color:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;"><i class="fa-solid fa-arrow-down"></i></div>
-                        <div>
-                            <div style="font-size:10px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:0.05em;">Delivery Route</div>
-                            <div style="font-size:12px;font-weight:800;color:#166534;margin-top:2px;">Branch to Customer</div>
+                    @if($order->deliveryAppointment->latitude && $order->deliveryAppointment->longitude)
+                        <!-- Pickup Map -->
+                        <div
+                            style="flex:1;min-width:300px;background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                            <div
+                                style="padding:12px 16px;background:#fff7ed;border-bottom:1px solid #ffedd5;display:flex;align-items:center;gap:10px;">
+                                <div
+                                    style="width:28px;height:28px;background:#ffedd5;color:#ea580c;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;">
+                                    <i class="fa-solid fa-arrow-up"></i></div>
+                                <div>
+                                    <div
+                                        style="font-size:10px;font-weight:900;color:#ea580c;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Pickup Route</div>
+                                    <div style="font-size:12px;font-weight:800;color:#431407;margin-top:2px;">Customer to Branch
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="pickup-route-badge"
+                                style="display:none;padding:8px 14px;background:linear-gradient(135deg,#ea580c,#f97316);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
+                                <i class="fa-solid fa-route" style="margin-right:6px;"></i>
+                                <span id="pickup-route-text">Calculating route...</span>
+                            </div>
+                            <div id="pickup-route-map" style="width:100%;height:300px;background:#f8fafc;z-index:1;"></div>
                         </div>
-                    </div>
-                    <div id="route-distance-badge" style="display:none;padding:8px 14px;background:linear-gradient(135deg,#1d4ed8,#4f46e5);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
-                        <i class="fa-solid fa-route" style="margin-right:6px;"></i>
-                        <span id="route-distance-text">Calculating route...</span>
-                    </div>
-                    <div id="delivery-route-map" style="width:100%;height:300px;background:#f8fafc;z-index:1;"></div>
-                </div>
-                @endif
+                    @endif
 
+                    @if($order->deliveryAppointment->delivery_lat && $order->deliveryAppointment->delivery_lng)
+                        <!-- Delivery Map -->
+                        <div
+                            style="flex:1;min-width:300px;background:white;border-radius:12px;border:1px solid #e2e8f0;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.02);">
+                            <div
+                                style="padding:12px 16px;background:#f0fdf4;border-bottom:1px solid #dcfce7;display:flex;align-items:center;gap:10px;">
+                                <div
+                                    style="width:28px;height:28px;background:#dcfce7;color:#16a34a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;">
+                                    <i class="fa-solid fa-arrow-down"></i></div>
+                                <div>
+                                    <div
+                                        style="font-size:10px;font-weight:900;color:#16a34a;text-transform:uppercase;letter-spacing:0.05em;">
+                                        Delivery Route</div>
+                                    <div style="font-size:12px;font-weight:800;color:#166534;margin-top:2px;">Branch to Customer
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="route-distance-badge"
+                                style="display:none;padding:8px 14px;background:linear-gradient(135deg,#1d4ed8,#4f46e5);font-size:12px;font-weight:800;color:white;text-align:center;letter-spacing:0.03em;">
+                                <i class="fa-solid fa-route" style="margin-right:6px;"></i>
+                                <span id="route-distance-text">Calculating route...</span>
+                            </div>
+                            <div id="delivery-route-map" style="width:100%;height:300px;background:#f8fafc;z-index:1;"></div>
+                        </div>
+                    @endif
+
+                </div>
             </div>
-        </div>
 
-        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-        <script>
-            document.addEventListener('alpine:init', () => {
-                Alpine.data('orderMaps', () => ({
-                    pickupMap: null,
-                    deliveryMap: null,
-                    pLat: {{ $order->deliveryAppointment->latitude ?? 'null' }},
-                    pLng: {{ $order->deliveryAppointment->longitude ?? 'null' }},
-                    dLat: {{ $order->deliveryAppointment->delivery_lat ?? 'null' }},
-                    dLng: {{ $order->deliveryAppointment->delivery_lng ?? 'null' }},
-                    bLat: {{ $order->branch->latitude ?? 'null' }},
-                    bLng: {{ $order->branch->longitude ?? 'null' }},
-                    bName: '{{ addslashes($order->branch->name ?? "Branch") }}',
-                    init() {
-                        setTimeout(() => this.initMaps(), 300);
-                    },
-                    initMaps() {
-                        let branchIcon = L.divIcon({
-                            html: '<div style="background:#0f172a;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-store" style="font-size:12px;"></i></div>',
-                            className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
-                        });
-                        let pickupIcon = L.divIcon({
-                            html: '<div style="background:#ea580c;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-arrow-up" style="font-size:12px;"></i></div>',
-                            className: '', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
-                        });
-                        let customerIcon = L.divIcon({
-                            html: '<div style="background:#16a34a;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-house" style="font-size:12px;"></i></div>',
-                            className: '', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
-                        });
+            <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+            <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+            <script>
+                document.addEventListener('alpine:init', () => {
+                    Alpine.data('orderMaps', () => ({
+                        pickupMap: null,
+                        deliveryMap: null,
+                        pLat: {{ $order->deliveryAppointment->latitude ?? 'null' }},
+                        pLng: {{ $order->deliveryAppointment->longitude ?? 'null' }},
+                        dLat: {{ $order->deliveryAppointment->delivery_lat ?? 'null' }},
+                        dLng: {{ $order->deliveryAppointment->delivery_lng ?? 'null' }},
+                        bLat: {{ $order->branch->latitude ?? 'null' }},
+                        bLng: {{ $order->branch->longitude ?? 'null' }},
+                        bName: '{{ addslashes($order->branch->name ?? "Branch") }}',
+                        init() {
+                            setTimeout(() => this.initMaps(), 300);
+                        },
+                        initMaps() {
+                            let branchIcon = L.divIcon({
+                                html: '<div style="background:#0f172a;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-store" style="font-size:12px;"></i></div>',
+                                className: '', iconSize: [32, 32], iconAnchor: [16, 16], popupAnchor: [0, -16]
+                            });
+                            let pickupIcon = L.divIcon({
+                                html: '<div style="background:#ea580c;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-arrow-up" style="font-size:12px;"></i></div>',
+                                className: '', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+                            });
+                            let customerIcon = L.divIcon({
+                                html: '<div style="background:#16a34a;color:white;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid white;box-shadow:0 4px 6px rgba(0,0,0,0.2);"><i class="fa-solid fa-house" style="font-size:12px;"></i></div>',
+                                className: '', iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32]
+                            });
 
-                        if (this.pLat && this.pLng && document.getElementById('pickup-route-map')) {
-                            this.pickupMap = L.map('pickup-route-map').setView([this.pLat, this.pLng], 13);
-                            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                                attribution: '&copy; OpenStreetMap'
-                            }).addTo(this.pickupMap);
+                            if (this.pLat && this.pLng && document.getElementById('pickup-route-map')) {
+                                this.pickupMap = L.map('pickup-route-map').setView([this.pLat, this.pLng], 13);
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                                    attribution: '&copy; OpenStreetMap'
+                                }).addTo(this.pickupMap);
 
-                            L.marker([this.pLat, this.pLng], {icon: pickupIcon}).bindPopup('<b>Customer Pickup</b>').addTo(this.pickupMap);
+                                L.marker([this.pLat, this.pLng], { icon: pickupIcon }).bindPopup('<b>Customer Pickup</b>').addTo(this.pickupMap);
 
-                            if (this.bLat && this.bLng) {
-                                L.marker([this.bLat, this.bLng], {icon: branchIcon}).bindPopup('<b>' + this.bName + '</b>').addTo(this.pickupMap);
-                                
-                                document.getElementById('pickup-route-badge').style.display = 'block';
-                                fetch(`https://router.project-osrm.org/route/v1/driving/${this.bLng},${this.bLat};${this.pLng},${this.pLat}?overview=full&geometries=geojson`)
-                                    .then(r => r.json())
-                                    .then(data => {
-                                        if (data.routes && data.routes.length > 0) {
-                                            let route = data.routes[0];
-                                            let distKm = (route.distance / 1000).toFixed(1);
-                                            let durationMin = Math.ceil(route.duration / 60);
-                                            let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                                            L.polyline(routeCoords, { color: '#ea580c', weight: 4, opacity: 0.8 }).addTo(this.pickupMap);
-                                            document.getElementById('pickup-route-text').innerHTML = `${this.bName} &rarr; Pickup &nbsp;|&nbsp; ${distKm} km &nbsp;|&nbsp; ~${durationMin} min`;
-                                            this.pickupMap.fitBounds(L.latLngBounds(routeCoords), {padding: [25, 25]});
-                                        }
-                                    }).catch(() => document.getElementById('pickup-route-text').textContent = 'Route unavailable');
+                                if (this.bLat && this.bLng) {
+                                    L.marker([this.bLat, this.bLng], { icon: branchIcon }).bindPopup('<b>' + this.bName + '</b>').addTo(this.pickupMap);
+
+                                    document.getElementById('pickup-route-badge').style.display = 'block';
+                                    fetch(`https://router.project-osrm.org/route/v1/driving/${this.bLng},${this.bLat};${this.pLng},${this.pLat}?overview=full&geometries=geojson`)
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            if (data.routes && data.routes.length > 0) {
+                                                let route = data.routes[0];
+                                                let distKm = (route.distance / 1000).toFixed(1);
+                                                let durationMin = Math.ceil(route.duration / 60);
+                                                let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                                                L.polyline(routeCoords, { color: '#ea580c', weight: 4, opacity: 0.8 }).addTo(this.pickupMap);
+                                                document.getElementById('pickup-route-text').innerHTML = `${this.bName} &rarr; Pickup &nbsp;|&nbsp; ${distKm} km &nbsp;|&nbsp; ~${durationMin} min`;
+                                                this.pickupMap.fitBounds(L.latLngBounds(routeCoords), { padding: [25, 25] });
+                                            }
+                                        }).catch(() => document.getElementById('pickup-route-text').textContent = 'Route unavailable');
+                                }
+                            }
+
+                            if (this.dLat && this.dLng && document.getElementById('delivery-route-map')) {
+                                this.deliveryMap = L.map('delivery-route-map').setView([this.dLat, this.dLng], 13);
+                                L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+                                    attribution: '&copy; OpenStreetMap'
+                                }).addTo(this.deliveryMap);
+
+                                L.marker([this.dLat, this.dLng], { icon: customerIcon }).bindPopup('<b>Customer Delivery</b>').addTo(this.deliveryMap);
+
+                                if (this.bLat && this.bLng) {
+                                    L.marker([this.bLat, this.bLng], { icon: branchIcon }).bindPopup('<b>' + this.bName + '</b>').addTo(this.deliveryMap);
+
+                                    document.getElementById('route-distance-badge').style.display = 'block';
+                                    fetch(`https://router.project-osrm.org/route/v1/driving/${this.bLng},${this.bLat};${this.dLng},${this.dLat}?overview=full&geometries=geojson`)
+                                        .then(r => r.json())
+                                        .then(data => {
+                                            if (data.routes && data.routes.length > 0) {
+                                                let route = data.routes[0];
+                                                let distKm = (route.distance / 1000).toFixed(1);
+                                                let durationMin = Math.ceil(route.duration / 60);
+                                                let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
+                                                L.polyline(routeCoords, { color: '#4f46e5', weight: 4, opacity: 0.8 }).addTo(this.deliveryMap);
+                                                document.getElementById('route-distance-text').innerHTML = `${this.bName} &rarr; Customer &nbsp;|&nbsp; ${distKm} km &nbsp;|&nbsp; ~${durationMin} min`;
+                                                this.deliveryMap.fitBounds(L.latLngBounds(routeCoords), { padding: [25, 25] });
+                                            }
+                                        }).catch(() => document.getElementById('route-distance-text').textContent = 'Route unavailable');
+                                }
                             }
                         }
+                    }));
+                });
+            </script>
+        @endif
 
-                        if (this.dLat && this.dLng && document.getElementById('delivery-route-map')) {
-                            this.deliveryMap = L.map('delivery-route-map').setView([this.dLat, this.dLng], 13);
-                            L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-                                attribution: '&copy; OpenStreetMap'
-                            }).addTo(this.deliveryMap);
+        <!-- Pay Now Modal -->
+        <div x-data="{ openPayModal: false, payAmount: '{{ number_format(max(0, $order->total - $order->paid_amount), 2, '.', '') }}', payMethod: 'cash' }"
+            x-on:open-pay-modal.window="openPayModal = true" x-show="openPayModal" x-cloak
+            class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
 
-                            L.marker([this.dLat, this.dLng], {icon: customerIcon}).bindPopup('<b>Customer Delivery</b>').addTo(this.deliveryMap);
+            <div class="bg-white rounded-[24px] shadow-2xl w-full max-w-sm overflow-hidden"
+                @click.away="openPayModal = false" x-show="openPayModal" x-transition.scale.origin.bottom>
+                <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                    <h3 class="font-black text-lg text-slate-800">Collect Payment</h3>
+                    <button @click="openPayModal = false"
+                        class="text-slate-400 hover:text-red-500 font-bold text-xl leading-none">&times;</button>
+                </div>
 
-                            if (this.bLat && this.bLng) {
-                                L.marker([this.bLat, this.bLng], {icon: branchIcon}).bindPopup('<b>' + this.bName + '</b>').addTo(this.deliveryMap);
-                                
-                                document.getElementById('route-distance-badge').style.display = 'block';
-                                fetch(`https://router.project-osrm.org/route/v1/driving/${this.bLng},${this.bLat};${this.dLng},${this.dLat}?overview=full&geometries=geojson`)
-                                    .then(r => r.json())
-                                    .then(data => {
-                                        if (data.routes && data.routes.length > 0) {
-                                            let route = data.routes[0];
-                                            let distKm = (route.distance / 1000).toFixed(1);
-                                            let durationMin = Math.ceil(route.duration / 60);
-                                            let routeCoords = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                                            L.polyline(routeCoords, { color: '#4f46e5', weight: 4, opacity: 0.8 }).addTo(this.deliveryMap);
-                                            document.getElementById('route-distance-text').innerHTML = `${this.bName} &rarr; Customer &nbsp;|&nbsp; ${distKm} km &nbsp;|&nbsp; ~${durationMin} min`;
-                                            this.deliveryMap.fitBounds(L.latLngBounds(routeCoords), {padding: [25, 25]});
-                                        }
-                                    }).catch(() => document.getElementById('route-distance-text').textContent = 'Route unavailable');
-                            }
-                        }
-                    }
-                }));
-            });
-        </script>
-    @endif
+                <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST"
+                    class="p-5 flex flex-col gap-4">
+                    @csrf
 
-    <!-- Pay Now Modal -->
-    <div x-data="{ openPayModal: false, payAmount: '{{ number_format(max(0, $order->total - $order->paid_amount), 2, '.', '') }}', payMethod: 'cash' }" 
-         x-on:open-pay-modal.window="openPayModal = true" 
-         x-show="openPayModal" x-cloak 
-         class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-        
-        <div class="bg-white rounded-[24px] shadow-2xl w-full max-w-sm overflow-hidden" @click.away="openPayModal = false" x-show="openPayModal" x-transition.scale.origin.bottom>
-            <div class="px-5 py-4 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
-                <h3 class="font-black text-lg text-slate-800">Collect Payment</h3>
-                <button @click="openPayModal = false" class="text-slate-400 hover:text-red-500 font-bold text-xl leading-none">&times;</button>
+                    <div>
+                        <label
+                            class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Amount
+                            (Rs.)</label>
+                        <input type="number" name="amount" x-model="payAmount" step="0.01" min="0.01" required
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl px-4 py-3 text-[15px] font-black text-slate-800 outline-none transition-all">
+                        <p class="text-[10px] font-bold text-slate-400 mt-1">Balance Due:
+                            Rs.{{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</p>
+                    </div>
+
+                    <div>
+                        <label
+                            class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Payment
+                            Method</label>
+                        <select name="payment_method" x-model="payMethod" required
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all cursor-pointer">
+                            <option value="cash">💵 Cash</option>
+                            <option value="card">💳 Card</option>
+                            <option value="bank">🏦 Bank Transfer</option>
+                        </select>
+                    </div>
+
+                    <div class="flex gap-2 mt-2">
+                        <button type="button" @click="openPayModal = false"
+                            class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl transition-colors hover:bg-slate-200 text-[13px]">Cancel</button>
+                        <button type="submit"
+                            class="flex-1 py-3 bg-emerald-500 text-white font-black rounded-xl transition-all hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/30 text-[13px]">Confirm
+                            Payment</button>
+                    </div>
+                </form>
             </div>
-            
-            <form action="{{ route('orders.collectCreditPayment', $order->id) }}" method="POST" class="p-5 flex flex-col gap-4">
-                @csrf
-                
-                <div>
-                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Amount (Rs.)</label>
-                    <input type="number" name="amount" x-model="payAmount" step="0.01" min="0.01" required
-                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl px-4 py-3 text-[15px] font-black text-slate-800 outline-none transition-all">
-                    <p class="text-[10px] font-bold text-slate-400 mt-1">Balance Due: Rs.{{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</p>
-                </div>
-
-                <div>
-                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Payment Method</label>
-                    <select name="payment_method" x-model="payMethod" required
-                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all cursor-pointer">
-                        <option value="cash">💵 Cash</option>
-                        <option value="card">💳 Card</option>
-                        <option value="bank">🏦 Bank Transfer</option>
-                    </select>
-                </div>
-
-                <div class="flex gap-2 mt-2">
-                    <button type="button" @click="openPayModal = false" class="flex-1 py-3 bg-slate-100 text-slate-600 font-bold rounded-xl transition-colors hover:bg-slate-200 text-[13px]">Cancel</button>
-                    <button type="submit" class="flex-1 py-3 bg-emerald-500 text-white font-black rounded-xl transition-all hover:bg-emerald-600 hover:shadow-lg hover:shadow-emerald-500/30 text-[13px]">Confirm Payment</button>
-                </div>
-            </form>
         </div>
-    </div>
 </x-app-layout>

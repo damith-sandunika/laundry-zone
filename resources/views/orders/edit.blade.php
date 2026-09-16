@@ -281,9 +281,9 @@
                             class="bg-white border-b lg:border border-slate-100 lg:rounded-xl p-3 mb-2 flex flex-col gap-2 shadow-sm relative group transition-all">
 
                             <!-- Top: Base Item Info -->
-                            <div class="flex gap-3 items-center w-full">
+                            <div class="flex gap-3 items-start w-full">
                                 <div
-                                    class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0">
+                                    class="w-10 h-10 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-center text-slate-400 shrink-0 mt-1">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2"
                                         viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round"
@@ -291,37 +291,41 @@
                                     </svg>
                                 </div>
 
-                                <div class="flex-1 min-w-0 flex flex-col justify-center">
-                                    <div class="text-[9px] font-bold text-slate-400 leading-none uppercase tracking-widest mb-0.5 truncate"
+                                <div class="flex-1 min-w-0 flex flex-col justify-center pt-1">
+                                    <div class="text-[9px] font-bold text-slate-400 leading-normal uppercase tracking-widest mb-1"
                                         x-text="getCategoryString(item.service_type_id)"></div>
-                                    <div class="text-[13px] font-black text-slate-800 leading-tight mb-0.5 line-clamp-2"
+                                    <div class="text-[13px] font-black text-slate-800 leading-snug mb-1 whitespace-normal break-words"
                                         x-text="item.name"></div>
                                 </div>
 
-                                <div class="flex items-center gap-3 shrink-0">
-                                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5">
-                                        <button
-                                            @click="if(parseFloat(item.qty) > 0.5) item.qty = parseFloat(item.qty) - 0.5"
-                                            class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-md transition-colors"><svg
-                                                class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
-                                            </svg></button>
-                                        <input type="number" step="any" x-model.number="item.qty"
-                                            class="w-10 text-center text-[13px] font-black text-slate-800 bg-transparent border-none focus:ring-0 p-0 hide-arrows">
-                                        <button @click="item.qty = parseFloat(item.qty) + 0.5"
-                                            class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-md transition-colors"><svg
-                                                class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M12 4v16m8-8H4" />
-                                            </svg></button>
+                                <div class="flex items-start gap-2 shrink-0 pt-1">
+                                    <!-- Qty and Price Stacked -->
+                                    <div class="flex flex-col items-end gap-2">
+                                        <div class="flex items-center bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+                                            <button
+                                                @click="if(parseFloat(item.qty) > 0.5) item.qty = parseFloat(item.qty) - 0.5"
+                                                class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-md transition-colors"><svg
+                                                    class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" d="M20 12H4" />
+                                                </svg></button>
+                                            <input type="number" step="any" x-model.number="item.qty"
+                                                class="w-10 text-center text-[13px] font-black text-slate-800 bg-transparent border-none focus:ring-0 p-0 hide-arrows">
+                                            <button @click="item.qty = parseFloat(item.qty) + 0.5"
+                                                class="w-7 h-7 flex items-center justify-center text-slate-500 hover:text-slate-800 hover:bg-white rounded-md transition-colors"><svg
+                                                    class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="3"
+                                                    viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        d="M12 4v16m8-8H4" />
+                                                </svg></button>
+                                        </div>
+                                        <div class="flex items-center justify-end gap-1 w-full max-w-[80px]">
+                                            <span class="text-[12px] font-bold text-slate-400">Rs.</span>
+                                            <input type="number" step="any" x-model.number="item.base_price"
+                                                class="w-full text-right text-[14px] font-black text-blue-600 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:ring-0 p-0 hide-arrows">
+                                        </div>
                                     </div>
-                                    <div class="flex items-center gap-1 w-[80px]">
-                                        <span class="text-[12px] font-bold text-slate-400">Rs.</span>
-                                        <input type="number" step="any" x-model.number="item.base_price"
-                                            class="w-full text-right text-[14px] font-black text-blue-600 bg-transparent border-b border-transparent hover:border-slate-300 focus:border-blue-500 focus:ring-0 p-0 hide-arrows">
-                                    </div>
+
                                     <button @click="cart.splice(index, 1)"
                                         class="w-8 h-8 flex items-center justify-center text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
@@ -495,7 +499,8 @@
                                 <select x-model="paymentMethod" class="bg-slate-900 border border-slate-700 rounded-lg text-white text-[11px] font-bold py-1 px-1.5 focus:ring-1 focus:ring-blue-500 w-full outline-none h-[28px]">
                                     <option value="cash">Cash</option>
                                     <option value="card">Card</option>
-                                    <option value="online">Online</option>
+                                    <option value="bank">Bank</option>
+                                    <option value="credit">Credit</option>
                                 </select>
                             </div>
 
