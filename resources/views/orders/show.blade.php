@@ -146,7 +146,7 @@
             <div style="display:flex;align-items:center;gap:8px;">
 
                 {{-- 💰 Pay Now --}}
-                @if($order->total - $order->paid_amount > 0)
+                @if(!in_array($order->status, ['delivered', 'completed']) && $order->total - $order->paid_amount > 0)
                     <div class="ord-btn-wrap" x-data="{}">
                         <button type="button" @click="$dispatch('open-pay-modal')" class="ord-btn--pay-full" title="">
                             💰
@@ -156,12 +156,14 @@
                 @endif
 
                 {{-- ✏️ Edit Order --}}
+                @if(!in_array($order->status, ['delivered', 'completed']))
                 <div class="ord-btn-wrap">
                     <a href="{{ route('orders.edit', $order->order_number) }}" class="ord-btn ord-btn--edit" title="">
                         ✏️
                     </a>
                     <span class="ord-btn-label">Edit Order</span>
                 </div>
+                @endif
 
                 {{-- 📄 Download PDF --}}
                 <div class="ord-btn-wrap">
@@ -378,33 +380,58 @@
                                     @if(count($diff) > 0)
                                         <div class="mt-2 text-[11px]">
                                             <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Cart Updates:</strong>
-                                            <div class="mt-1 space-y-1 bg-white/50 rounded-lg p-2 border border-slate-100">
+                                            <div class="mt-1 space-y-1.5 bg-white/50 rounded-lg p-2 border border-slate-100">
                                                 @foreach($diff as $change)
+                                                    @php
+                                                        $stId = $change['item']['service_type_id'] ?? null;
+                                                        $stInfo = $stId && isset($serviceTypesMap[$stId]) ? $serviceTypesMap[$stId] : null;
+                                                        $itemName = $stInfo ? $stInfo['name'] : ($change['item']['name'] ?? 'Service');
+                                                        $catName = $stInfo['category'] ?? null;
+                                                        $subCatName = $stInfo['subcategory'] ?? null;
+                                                    @endphp
                                                     @if($change['type'] === 'added')
-                                                        <div class="flex items-center gap-1.5"><span
-                                                                class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Add</span>
-                                                            <span class="font-bold text-slate-800">{{ $change['item']['qty'] ?? 1 }}x
-                                                                {{ $change['item']['name'] ?? 'Service' }}</span>
-                                                            <span
-                                                                class="text-slate-500 ml-auto">(Rs.{{ number_format((float) ($change['item']['base_price'] ?? 0) * (float) ($change['item']['qty'] ?? 1), 2) }})</span>
+                                                        <div class="flex items-start gap-1.5">
+                                                            <span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Add</span>
+                                                            <div class="flex-1">
+                                                                @if($catName)
+                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                        {{ $catName }}{{ $subCatName ? ' › ' . $subCatName : '' }}
+                                                                    </div>
+                                                                @endif
+                                                                <div class="flex items-center justify-between">
+                                                                    <span class="font-bold text-slate-800">{{ $change['item']['qty'] ?? 1 }}x {{ $itemName }}</span>
+                                                                    <span class="text-slate-500">(Rs.{{ number_format((float) ($change['item']['base_price'] ?? 0) * (float) ($change['item']['qty'] ?? 1), 2) }})</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     @elseif($change['type'] === 'changed')
-                                                        <div class="flex items-center gap-1.5"><span
-                                                                class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Mod</span>
-                                                            <span class="text-slate-400 line-through font-bold">{{ $change['old_qty'] }}x</span>
-                                                            <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor"
-                                                                stroke-width="2.5" viewBox="0 0 24 24">
-                                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3">
-                                                                </path>
-                                                            </svg>
-                                                            <span class="font-bold text-slate-800">{{ $change['item']['qty'] }}x
-                                                                {{ $change['item']['name'] ?? 'Service' }}</span>
+                                                        <div class="flex items-start gap-1.5">
+                                                            <span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Mod</span>
+                                                            <div class="flex-1">
+                                                                @if($catName)
+                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                        {{ $catName }}{{ $subCatName ? ' › ' . $subCatName : '' }}
+                                                                    </div>
+                                                                @endif
+                                                                <div class="flex items-center gap-1.5">
+                                                                    <span class="text-slate-400 line-through font-bold">{{ $change['old_qty'] }}x</span>
+                                                                    <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                                                    <span class="font-bold text-slate-800">{{ $change['item']['qty'] }}x {{ $itemName }}</span>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     @elseif($change['type'] === 'removed')
-                                                        <div class="flex items-center gap-1.5"><span
-                                                                class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase">Del</span>
-                                                            <span class="text-red-400 line-through font-bold">{{ $change['item']['qty'] ?? 1 }}x
-                                                                {{ $change['item']['name'] ?? 'Service' }}</span></div>
+                                                        <div class="flex items-start gap-1.5">
+                                                            <span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Del</span>
+                                                            <div class="flex-1">
+                                                                @if($catName)
+                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
+                                                                        {{ $catName }}{{ $subCatName ? ' › ' . $subCatName : '' }}
+                                                                    </div>
+                                                                @endif
+                                                                <span class="text-red-400 line-through font-bold">{{ $change['item']['qty'] ?? 1 }}x {{ $itemName }}</span>
+                                                            </div>
+                                                        </div>
                                                     @endif
                                                 @endforeach
                                             </div>

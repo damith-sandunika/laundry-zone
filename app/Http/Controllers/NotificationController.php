@@ -135,14 +135,20 @@ class NotificationController extends Controller
             }
 
             // 5a. Pending Correction Requests
-            $pendingCorrectionsQuery = \App\Models\OrderCorrectionRequest::with('order')->where('status', 'pending');
+            $pendingCorrectionsQuery = \App\Models\OrderCorrectionRequest::with('order')
+                ->where('status', 'pending')
+                ->has('order');
+            
             if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
                 $pendingCorrectionsQuery->whereHas('order', function ($q) use ($user) {
                     $q->where('branch_id', $user->branch_id);
                 });
             }
             $pendingCorrections = $pendingCorrectionsQuery->limit(50)->get()->map(function($cr) {
-                return ['number' => $cr->order->order_number . ' (' . str_replace('_', ' ', $cr->type) . ')', 'url' => route('orders.show', $cr->order->order_number)];
+                return [
+                    'number' => ($cr->order->order_number ?? 'Unknown') . ' (' . str_replace('_', ' ', $cr->type) . ')', 
+                    'url' => $cr->order ? route('orders.show', $cr->order->order_number) : '#'
+                ];
             })->toArray();
 
             if (count($pendingCorrections) > 0) {

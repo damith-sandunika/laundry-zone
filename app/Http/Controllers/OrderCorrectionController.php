@@ -217,10 +217,16 @@ class OrderCorrectionController extends Controller
                     ]);
                 }
 
-                $discountPercentage = $order->customer ? $order->customer->default_discount : 0;
+                $discountPercentage = isset($newData['discount_percentage']) ? (float) $newData['discount_percentage'] : ($order->customer ? $order->customer->default_discount : 0);
                 $discountAmount = $subtotal * ($discountPercentage / 100);
-                $total = $subtotal - $discountAmount + $order->delivery_fee;
+                $deliveryFee = isset($newData['delivery_fee']) ? (float) $newData['delivery_fee'] : $order->delivery_fee;
+                $total = $subtotal - $discountAmount + $deliveryFee;
                 
+                // Recalculate paid_amount from actual completed transactions (do NOT blindly override)
+                $actualPaidAmount = PaymentTransaction::where('order_id', $order->id)
+                    ->where('status', 'completed')
+                    ->sum('amount');
+
                 // If it was changed FROM credit TO another method, we need to apply full payment and create transaction
                 if ($correction->type === 'order_change' && $oldMethod === 'credit' && $newMethod !== 'credit') {
                     PaymentTransaction::create([
@@ -230,19 +236,21 @@ class OrderCorrectionController extends Controller
                         'status' => 'completed',
                         'created_by' => auth()->id() ?? 1,
                     ]);
-                    $order->paid_amount = $total;
-                } elseif ($newMethod !== 'credit') {
-                    // Update existing transaction amounts to match the new total if not credit
-                    PaymentTransaction::where('order_id', $order->id)->update(['amount' => $total]);
-                    $order->paid_amount = $total;
+                    $actualPaidAmount = $total;
                 }
+                // For non-credit methods: preserve real transactions, don't force-update amounts
+                // This ensures that if someone already paid Rs.800 and the order is now Rs.1000,
+                // the balance shows Rs.200 due — not pretend they paid the new total.
 
-                $paymentStatus = $order->paid_amount >= $total ? 'paid' : ($order->paid_amount > 0 ? 'partial' : 'unpaid');
+                $paymentStatus = $actualPaidAmount >= $total ? 'paid' : ($actualPaidAmount > 0 ? 'partial' : 'unpaid');
 
                 $order->update([
                     'subtotal' => $subtotal,
                     'discount' => $discountAmount,
+                    'delivery_fee' => $deliveryFee,
+                    'discount_percentage' => $discountPercentage,
                     'total' => $total,
+                    'paid_amount' => $actualPaidAmount,
                     'payment_status' => $paymentStatus,
                 ]);
             }

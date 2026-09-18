@@ -85,11 +85,50 @@ class CustomerController extends Controller
 
     public function show(Customer $customer)
     {
-        $customer->load(['orders.items.serviceType', 'orders' => fn ($q) => $q->latest()]);
+        $customer->load([
+            'orders' => fn($q) => $q->latest(),
+            'orders.items.serviceType',
+        ]);
         $totalSpend = $customer->orders->sum('total');
         $totalOrders = $customer->orders->count();
 
-        return view('customers.show', compact('customer', 'totalSpend', 'totalOrders'));
+        // Build monthly sales report grouped by year-month descending
+        $monthlySales = $customer->orders
+            ->groupBy(fn($o) => $o->created_at->format('Y-m'))
+            ->sortKeysDesc()
+            ->map(function ($orders, $yearMonth) {
+                $totalQty = $orders->sum(fn($o) => $o->items->sum('quantity'));
+                return [
+                    'label'       => \Carbon\Carbon::parse($yearMonth . '-01')->format('F Y'),
+                    'year_month'  => $yearMonth,
+                    'order_count' => $orders->count(),
+                    'total_qty'   => $totalQty,
+                    'total_bill'  => $orders->sum('total'),
+                    'orders'      => $orders->sortByDesc('created_at')->values(),
+                ];
+            })->values();
+
+        return view('customers.show', compact('customer', 'totalSpend', 'totalOrders', 'monthlySales'));
+    }
+
+    public function salesReportPdf(Customer $customer, \Illuminate\Http\Request $request)
+    {
+        $yearMonth = $request->input('month'); // e.g. "2026-09"
+
+        $query = $customer->orders()->with('items.serviceType')->latest();
+        if ($yearMonth) {
+            [$y, $m] = explode('-', $yearMonth);
+            $query->whereYear('created_at', $y)->whereMonth('created_at', $m);
+        }
+        $orders = $query->get();
+
+        $label     = $yearMonth ? \Carbon\Carbon::parse($yearMonth . '-01')->format('F Y') : 'All Time';
+        $totalQty  = $orders->sum(fn($o) => $o->items->sum('quantity'));
+        $totalBill = $orders->sum('total');
+
+        return view('customers.sales_report_pdf', compact(
+            'customer', 'orders', 'label', 'totalQty', 'totalBill'
+        ));
     }
 
     public function edit(Customer $customer)

@@ -12,6 +12,37 @@
     </x-slot>
 
     <div class="max-w-5xl mx-auto">
+        
+        <!-- Alerts -->
+        @if(session('success'))
+            <div class="mb-6 p-4 rounded-xl bg-green-50 border border-green-200 text-green-700 flex items-center gap-3 shadow-sm">
+                <i class="fa-solid fa-circle-check text-green-500 text-xl"></i>
+                <div>
+                    <h4 class="font-bold">Success!</h4>
+                    <p class="text-sm">{{ session('success') }}</p>
+                </div>
+            </div>
+        @endif
+
+        @if(session('error') || $errors->any())
+            <div class="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 flex items-start gap-3 shadow-sm">
+                <i class="fa-solid fa-triangle-exclamation text-red-500 text-xl mt-0.5"></i>
+                <div>
+                    <h4 class="font-bold">Whoops! Something went wrong.</h4>
+                    @if(session('error'))
+                        <p class="text-sm mt-1">{{ session('error') }}</p>
+                    @endif
+                    @if($errors->any())
+                        <ul class="text-sm list-disc list-inside mt-1 space-y-0.5">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                </div>
+            </div>
+        @endif
+
         <form action="{{ route('staff.store') }}" method="POST">
             @csrf
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">

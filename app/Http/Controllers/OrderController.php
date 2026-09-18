@@ -280,7 +280,28 @@ class OrderController extends Controller
             }
         ])->orderBy('name')->get();
 
-        return view('orders.show', compact('order', 'cubbies', 'pickmeCost', 'categories'));
+        // Build a map of service_type_id => [name, category, subcategory] for use in correction request display
+        $allServiceTypes = \App\Models\ServiceType::with(['category.parent'])->get();
+        $serviceTypesMap = $allServiceTypes->mapWithKeys(function ($st) {
+            $catName = null;
+            $subCatName = null;
+            if ($st->category) {
+                if ($st->category->parent) {
+                    // This category is a sub-category
+                    $catName = $st->category->parent->name;
+                    $subCatName = $st->category->name;
+                } else {
+                    $catName = $st->category->name;
+                }
+            }
+            return [$st->id => [
+                'name' => $st->name,
+                'category' => $catName,
+                'subcategory' => $subCatName,
+            ]];
+        })->toArray();
+
+        return view('orders.show', compact('order', 'cubbies', 'pickmeCost', 'categories', 'serviceTypesMap'));
     }
 
     public function printBill(Order $order)

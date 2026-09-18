@@ -122,6 +122,7 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('/customers/pos', [CustomerController::class, 'store'])->name('customers.store.pos');
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+    Route::get('/customers/{customer}/sales-report/pdf', [CustomerController::class, 'salesReportPdf'])->name('customers.salesReport.pdf');
     Route::resource('customers', CustomerController::class);
 
     Route::post('/orders/{order:id}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
