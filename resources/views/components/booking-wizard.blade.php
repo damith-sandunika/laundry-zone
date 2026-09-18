@@ -766,9 +766,40 @@
                         this.submitFinalBooking();
                     },
 
-                    submitFinalBooking() {
+                    async submitFinalBooking() {
                         this.isPlacingOrder = true;
-                        document.getElementById('bookingForm').submit();
+                        
+                        const form = document.getElementById('bookingForm');
+                        const formData = new FormData(form);
+                        
+                        try {
+                            const response = await axios.post(form.action, formData, {
+                                headers: {
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'Accept': 'application/json'
+                                }
+                            });
+                            
+                            if (response.data && response.data.redirect) {
+                                window.location.href = response.data.redirect;
+                            } else {
+                                window.location.href = '/'; 
+                            }
+                        } catch (error) {
+                            this.isPlacingOrder = false;
+                            
+                            if (error.response && error.response.status === 422) {
+                                const errors = error.response.data.errors;
+                                let errorMessage = "Please check the following details:\n\n";
+                                for (let key in errors) {
+                                    errorMessage += "• " + errors[key][0] + "\n";
+                                }
+                                alert(errorMessage);
+                            } else {
+                                alert("An error occurred while placing the order. Please try again.");
+                                console.error(error);
+                            }
+                        }
                     },
                     
                     formatTime(timeStr) {

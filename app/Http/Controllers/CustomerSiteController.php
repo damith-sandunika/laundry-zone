@@ -195,9 +195,21 @@ class CustomerSiteController extends Controller
 
         try {
             $appointment = $action->execute($request->validated(), auth('customer')->user());
+            
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true, 
+                    'redirect' => route('customer.booking.success', $appointment->order_number)
+                ]);
+            }
             return redirect()->route('customer.booking.success', $appointment->order_number);
         } catch (\Exception $e) {
             \Log::error('Customer Booking Failed: ' . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'message' => 'Booking failed: ' . $e->getMessage()
+                ], 500);
+            }
             return redirect()->back()->withErrors(['error' => 'Booking failed: ' . $e->getMessage()])->withInput();
         }
     }
