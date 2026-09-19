@@ -154,6 +154,8 @@
                     @endif
                     @if($item->turnaroundType && !$item->turnaroundType->is_default)
                         <div style="font-size:0.65em; margin-left:12px; margin-bottom: 2px;">[{{ $item->turnaroundType->name }}]</div>
+                    @elseif((float)$item->custom_turnaround_percentage > 0)
+                        <div style="font-size:0.65em; margin-left:12px; margin-bottom: 2px;">[Express ({{ (float)$item->custom_turnaround_percentage }}%)]</div>
                     @endif
                     @if($item->extras->count() > 0)
                         @foreach($item->extras as $e)

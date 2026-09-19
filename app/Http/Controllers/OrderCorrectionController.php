@@ -23,13 +23,25 @@ class OrderCorrectionController extends Controller
             'new_data' => 'required|array',
         ]);
 
-        if (isset($request->new_data['payment_method']) && $request->new_data['payment_method'] !== $order->payment_method) {
-            $paymentTransaction = \App\Models\PaymentTransaction::where('order_id', $order->id)->latest()->first();
-            if ($paymentTransaction && $paymentTransaction->created_at->format('Y-m-d') !== now()->format('Y-m-d')) {
-                return response()->json([
-                    'success' => false, 
-                    'message' => 'Cannot change payment methods of previous days because accounts are already balanced.'
-                ]);
+        if (isset($request->new_data['payment_method'])) {
+            $transactionId = $request->new_data['transaction_id'] ?? null;
+            if ($transactionId) {
+                $paymentTransaction = \App\Models\PaymentTransaction::find($transactionId);
+                // Only allow changes to same-day transactions (or handle it properly)
+                if ($paymentTransaction && $paymentTransaction->payment_method !== $request->new_data['payment_method'] && $paymentTransaction->created_at->format('Y-m-d') !== now()->format('Y-m-d')) {
+                    return response()->json([
+                        'success' => false, 
+                        'message' => 'Cannot change payment methods of previous days because accounts are already balanced.'
+                    ]);
+                }
+            } else if ($request->new_data['payment_method'] !== $order->payment_method) {
+                $paymentTransaction = \App\Models\PaymentTransaction::where('order_id', $order->id)->latest()->first();
+                if ($paymentTransaction && $paymentTransaction->created_at->format('Y-m-d') !== now()->format('Y-m-d')) {
+                    return response()->json([
+                        'success' => false, 
+                        'message' => 'Cannot change payment methods of previous days because accounts are already balanced.'
+                    ]);
+                }
             }
         }
 
@@ -45,16 +57,22 @@ class OrderCorrectionController extends Controller
                 'paid_amount' => $order->paid_amount,
             ];
         } else if ($request->type === 'items_change') {
+            $order->load('items.extras');
             $oldData = [
                 'subtotal' => $order->subtotal,
                 'total' => $order->total,
+                'delivery_fee' => $order->delivery_fee,
+                'discount_percentage' => $order->discount,
                 'items' => $order->items->toArray(),
             ];
         } else if ($request->type === 'order_change') {
+            $order->load('items.extras');
             $oldData = [
                 'payment_method' => $order->payment_method,
                 'subtotal' => $order->subtotal,
                 'total' => $order->total,
+                'delivery_fee' => $order->delivery_fee,
+                'discount_percentage' => $order->discount,
                 'items' => $order->items->toArray(),
             ];
         }
@@ -66,7 +84,44 @@ class OrderCorrectionController extends Controller
                 foreach ($newData['cart'] as $item) {
                     $qty = (float) ($item['qty'] ?? 1);
                     $basePrice = (float) ($item['base_price'] ?? 0);
-                    $subtotal += $qty * $basePrice;
+                    
+                    $turnaroundTypeId = !empty($item['turnaround_type_id']) ? $item['turnaround_type_id'] : null;
+                    $customTurnaroundPercent = null;
+                    if ($turnaroundTypeId === 'custom') {
+                        $turnaroundTypeId = null;
+                        $customTurnaroundPercent = isset($item['custom_turnaround_percentage']) ? (float) $item['custom_turnaround_percentage'] : null;
+                    }
+
+                    $itemSubtotalBeforeTurnaround = ($qty * $basePrice);
+                    $turnaroundCharge = 0;
+                    
+                    if ($customTurnaroundPercent !== null) {
+                        $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($customTurnaroundPercent / 100);
+                    } else if ($turnaroundTypeId) {
+                        $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
+                        if ($tt) {
+                            if ($tt->markup_type === 'percentage') {
+                                $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($tt->markup_value / 100);
+                            } else {
+                                $turnaroundCharge = $tt->markup_value * $qty;
+                            }
+                        }
+                    }
+
+                    $itemTotal = $itemSubtotalBeforeTurnaround + $turnaroundCharge;
+                    $selectedExtras = $item['selected_extras'] ?? [];
+                    
+                    if (is_array($selectedExtras) && count($selectedExtras) > 0) {
+                        foreach ($selectedExtras as $selEx) {
+                            $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
+                            $extraQty = is_array($selEx) && isset($selEx['qty']) ? (float)$selEx['qty'] : 1;
+                            $extra = \App\Models\Extra::find($extraId);
+                            if ($extra) {
+                                $itemTotal += ($extraQty * $extra->price);
+                            }
+                        }
+                    }
+                    $subtotal += $itemTotal;
                 }
             }
             $discountPercentage = isset($newData['discount_percentage']) ? (float) $newData['discount_percentage'] : ($order->customer ? $order->customer->default_discount : 0);
@@ -104,7 +159,7 @@ class OrderCorrectionController extends Controller
                 'note' => "Correction auto-applied by Admin ({$request->type}): " . $request->reason,
             ]);
 
-            return response()->json(['success' => true, 'message' => 'Correction applied successfully.']);
+            return response()->json(['success' => true, 'message' => 'Order updated successfully.']);
         }
 
         OrderStatusHistory::create([
@@ -136,35 +191,57 @@ class OrderCorrectionController extends Controller
 
             if ($correction->type === 'payment_change') {
                 $newMethod = $newData['payment_method'];
-                $oldMethod = $order->payment_method;
+                $transactionId = $newData['transaction_id'] ?? null;
 
-                if ($newMethod === 'credit' && $oldMethod !== 'credit') {
-                    PaymentTransaction::where('order_id', $order->id)->delete();
-                    $order->update([
-                        'payment_method' => $newMethod,
-                        'paid_amount' => 0,
-                        'payment_status' => 'unpaid'
-                    ]);
-                } elseif ($oldMethod === 'credit' && $newMethod !== 'credit') {
-                    PaymentTransaction::create([
-                        'order_id' => $order->id,
-                        'amount' => $order->total,
-                        'payment_method' => $newMethod,
-                        'status' => 'completed',
-                        'created_by' => auth()->id() ?? 1,
-                    ]);
-                    $order->update([
-                        'payment_method' => $newMethod,
-                        'paid_amount' => $order->total,
-                        'payment_status' => 'paid'
-                    ]);
+                if ($transactionId) {
+                    $tx = PaymentTransaction::find($transactionId);
+                    if ($tx) {
+                        $oldMethod = $tx->payment_method;
+                        if ($newMethod === 'credit' && $oldMethod !== 'credit') {
+                            $tx->delete();
+                            if ($order->paymentTransactions()->count() === 0) {
+                                $order->update([
+                                    'payment_method' => 'credit',
+                                    'paid_amount' => 0,
+                                    'payment_status' => 'unpaid'
+                                ]);
+                            }
+                        } else {
+                            $tx->update(['payment_method' => $newMethod]);
+                            $order->update(['payment_method' => $newMethod]);
+                        }
+                    }
                 } else {
-                    $order->update([
-                        'payment_method' => $newMethod,
-                    ]);
-                    PaymentTransaction::where('order_id', $order->id)
-                        ->where('payment_method', $oldMethod)
-                        ->update(['payment_method' => $newMethod]);
+                    $oldMethod = $order->payment_method;
+
+                    if ($newMethod === 'credit' && $oldMethod !== 'credit') {
+                        PaymentTransaction::where('order_id', $order->id)->delete();
+                        $order->update([
+                            'payment_method' => $newMethod,
+                            'paid_amount' => 0,
+                            'payment_status' => 'unpaid'
+                        ]);
+                    } elseif ($oldMethod === 'credit' && $newMethod !== 'credit') {
+                        PaymentTransaction::create([
+                            'order_id' => $order->id,
+                            'amount' => $order->total,
+                            'payment_method' => $newMethod,
+                            'status' => 'completed',
+                            'created_by' => auth()->id() ?? 1,
+                        ]);
+                        $order->update([
+                            'payment_method' => $newMethod,
+                            'paid_amount' => $order->total,
+                            'payment_status' => 'paid'
+                        ]);
+                    } else {
+                        $order->update([
+                            'payment_method' => $newMethod,
+                        ]);
+                        PaymentTransaction::where('order_id', $order->id)
+                            ->where('payment_method', $oldMethod)
+                            ->update(['payment_method' => $newMethod]);
+                    }
                 }
 
             } else if ($correction->type === 'items_change' || $correction->type === 'order_change') {
@@ -204,17 +281,76 @@ class OrderCorrectionController extends Controller
                 foreach ($newData['cart'] as $item) {
                     $qty = (float) ($item['qty'] ?? 1);
                     $basePrice = (float) ($item['base_price'] ?? 0);
-                    $itemTotal = $qty * $basePrice;
+                    
+                    $turnaroundTypeId = !empty($item['turnaround_type_id']) ? $item['turnaround_type_id'] : null;
+                    $customTurnaroundPercent = null;
+                    if ($turnaroundTypeId === 'custom') {
+                        $turnaroundTypeId = null;
+                        $customTurnaroundPercent = isset($item['custom_turnaround_percentage']) ? (float) $item['custom_turnaround_percentage'] : null;
+                    }
+
+                    $itemSubtotalBeforeTurnaround = ($qty * $basePrice);
+                    $turnaroundCharge = 0;
+                    
+                    if ($customTurnaroundPercent !== null) {
+                        $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($customTurnaroundPercent / 100);
+                    } else if ($turnaroundTypeId) {
+                        $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
+                        if ($tt) {
+                            if ($tt->markup_type === 'percentage') {
+                                $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($tt->markup_value / 100);
+                            } else {
+                                $turnaroundCharge = $tt->markup_value * $qty;
+                            }
+                        }
+                    }
+
+                    $itemTotal = $itemSubtotalBeforeTurnaround + $turnaroundCharge;
+                    $selectedExtras = $item['selected_extras'] ?? [];
+                    
+                    if (is_array($selectedExtras) && count($selectedExtras) > 0) {
+                        foreach ($selectedExtras as $selEx) {
+                            $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
+                            $extraQty = is_array($selEx) && isset($selEx['qty']) ? (float)$selEx['qty'] : 1;
+                            
+                            $extra = \App\Models\Extra::find($extraId);
+                            if ($extra) {
+                                $itemTotal += ($extraQty * $extra->price);
+                            }
+                        }
+                    }
+
                     $subtotal += $itemTotal;
 
-                    OrderItem::create([
+                    $orderItem = OrderItem::create([
                         'order_id' => $order->id,
                         'service_type_id' => $item['service_type_id'] ?? null,
                         'item_description' => isset($item['service_type_id']) ? null : ($item['name'] ?? 'Custom Service'),
                         'quantity' => $qty,
                         'unit_price' => $basePrice,
                         'total_price' => $itemTotal,
+                        'turnaround_type_id' => $turnaroundTypeId,
+                        'custom_turnaround_percentage' => $customTurnaroundPercent,
+                        'turnaround_extra_charge' => $turnaroundCharge,
                     ]);
+
+                    if (is_array($selectedExtras) && count($selectedExtras) > 0) {
+                        foreach ($selectedExtras as $ex) {
+                            $extraId = is_array($ex) ? ($ex['id'] ?? $ex) : $ex;
+                            $extraQty = is_array($ex) && isset($ex['qty']) ? (float)$ex['qty'] : 1;
+                            
+                            $extra = \App\Models\Extra::find($extraId);
+                            if ($extra) {
+                                \App\Models\OrderItemExtra::create([
+                                    'order_item_id' => $orderItem->id,
+                                    'extra_id' => $extraId,
+                                    'quantity' => $extraQty,
+                                    'unit_price' => $extra->price,
+                                    'total_price' => $extra->price * $extraQty
+                                ]);
+                            }
+                        }
+                    }
                 }
 
                 $discountPercentage = isset($newData['discount_percentage']) ? (float) $newData['discount_percentage'] : ($order->customer ? $order->customer->default_discount : 0);
@@ -248,7 +384,6 @@ class OrderCorrectionController extends Controller
                     'subtotal' => $subtotal,
                     'discount' => $discountAmount,
                     'delivery_fee' => $deliveryFee,
-                    'discount_percentage' => $discountPercentage,
                     'total' => $total,
                     'paid_amount' => $actualPaidAmount,
                     'payment_status' => $paymentStatus,

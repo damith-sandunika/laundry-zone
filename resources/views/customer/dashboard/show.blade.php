@@ -267,7 +267,7 @@
                                     'extras' => $extrasArr,
                                     'extras_total' => $extrasTotal,
                                     'total_price' => $item->total_price + $extrasTotal,
-                                    'turnaround_name' => ($item->turnaroundType && !$item->turnaroundType->is_default) ? $item->turnaroundType->name : null,
+                                    'turnaround_name' => ($item->turnaroundType && !$item->turnaroundType->is_default) ? $item->turnaroundType->name : ((float)$item->custom_turnaround_percentage > 0 ? 'Express ('.(float)$item->custom_turnaround_percentage.'%)' : null),
                                     'turnaround_charge' => $turnaround_charge > 0 ? $turnaround_charge : 0,
                                 ]);
                             }

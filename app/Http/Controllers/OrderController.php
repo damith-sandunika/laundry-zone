@@ -48,7 +48,7 @@ class OrderController extends Controller
 
     public function edit(Order $order)
     {
-        $order->load('items.serviceType', 'customer');
+        $order->load('items.serviceType', 'items.extras.extra', 'customer');
         $services = \App\Models\ServiceType::where('is_active', true)->get();
 
         $categories = \App\Models\ServiceCategory::with([
@@ -63,6 +63,17 @@ class OrderController extends Controller
                 'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
                 'base_price' => $item->unit_price,
                 'qty' => $item->quantity,
+                'turnaround_type_id' => (float)$item->custom_turnaround_percentage > 0 ? 'custom' : $item->turnaround_type_id,
+                'custom_turnaround_percentage' => $item->custom_turnaround_percentage,
+                'selected_extras' => $item->extras->map(function ($extra) {
+                    return [
+                        'id' => $extra->extra_id,
+                        'name' => $extra->extra ? $extra->extra->name : 'Extra',
+                        'price' => $extra->unit_price,
+                        'qty' => $extra->quantity,
+                        'total' => $extra->total_price,
+                    ];
+                })->toArray(),
             ];
         })->toArray();
 

@@ -173,14 +173,22 @@
                     <div style="font-size: 13px; font-weight: 800;">{{ $item->item_description }}</div>
                 @endif
             </span>
-            <span class="bold">Rs.{{ number_format($item->total_price, 2) }}</span>
+            <span class="bold">Rs.{{ number_format($item->unit_price * max(1, $item->quantity), 2) }}</span>
         </div>
         <div style="font-size: 11px; margin-bottom: 2px; color:#475569;">
-            {{ $item->quantity }} x Rs.{{ number_format($unit_with_turnaround, 2) }}
+            {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
             @if($item->turnaroundType && !$item->turnaroundType->is_default)
                 ({{ $item->turnaroundType->name }})
+            @elseif((float)$item->custom_turnaround_percentage > 0)
+                (Express ({{ (float)$item->custom_turnaround_percentage }}%))
             @endif
         </div>
+        @if($item->turnaround_extra_charge > 0)
+            <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px; color:#d97706;">
+                <span>⚡ Express Surcharge</span>
+                <span class="bold">+Rs.{{ number_format($item->turnaround_extra_charge, 2) }}</span>
+            </div>
+        @endif
         @if($item->extras->count() > 0)
             @foreach($item->extras as $e)
                 <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px;">

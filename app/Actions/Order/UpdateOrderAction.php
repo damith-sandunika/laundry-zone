@@ -31,10 +31,17 @@ class UpdateOrderAction
                 $itemSubtotalBeforeTurnaround = $qty * $basePrice;
 
                 // Turnaround Charge
-                $turnaroundTypeId = $item['turnaround_type_id'] ?? null;
+                $turnaroundTypeId = !empty($item['turnaround_type_id']) ? $item['turnaround_type_id'] : null;
+                $customTurnaroundPercent = null;
+                if ($turnaroundTypeId === 'custom') {
+                    $turnaroundTypeId = null;
+                    $customTurnaroundPercent = isset($item['custom_turnaround_percentage']) ? (float) $item['custom_turnaround_percentage'] : null;
+                }
                 $turnaroundCharge = 0;
                 
-                if ($turnaroundTypeId) {
+                if ($customTurnaroundPercent !== null) {
+                    $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($customTurnaroundPercent / 100);
+                } else if ($turnaroundTypeId) {
                     $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
                     if ($tt) {
                         if ($tt->markup_type === 'percentage') {
@@ -57,6 +64,8 @@ class UpdateOrderAction
                     'unit_price' => $basePrice,
                     'total_price' => $itemSubtotal,
                     'turnaround_type_id' => $turnaroundTypeId,
+                    'custom_turnaround_percentage' => $customTurnaroundPercent,
+                    'turnaround_extra_charge' => $turnaroundCharge,
                     'selected_extras' => $selectedExtras,
                 ];
                 
@@ -114,6 +123,8 @@ class UpdateOrderAction
                     'unit_price' => $item['unit_price'],
                     'total_price' => $item['total_price'],
                     'turnaround_type_id' => $item['turnaround_type_id'],
+                    'custom_turnaround_percentage' => $item['custom_turnaround_percentage'] ?? null,
+                    'turnaround_extra_charge' => $item['turnaround_extra_charge'] ?? 0,
                 ]);
                 
                 $selectedExtras = $item['selected_extras'];

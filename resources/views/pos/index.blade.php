@@ -261,12 +261,19 @@
                                             + Add Extra
                                         </button>
                                     </div>
-                                    <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate shrink-0">
-                                        <option value="">Standard</option>
-                                        @foreach($turnaroundTypes as $tt)
-                                            <option value="{{ $tt->id }}">{{ $tt->name }} ({{ $tt->markup_type == 'percentage' ? $tt->markup_value.'%' : 'Rs. '.$tt->markup_value }})</option>
-                                        @endforeach
-                                    </select>
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
+                                            <option value="">Standard</option>
+                                            @foreach($turnaroundTypes as $tt)
+                                                <option value="{{ $tt->id }}">{{ $tt->name }} ({{ $tt->markup_type == 'percentage' ? $tt->markup_value.'%' : 'Rs. '.$tt->markup_value }})</option>
+                                            @endforeach
+                                            <option value="custom">Express (%)</option>
+                                        </select>
+                                        <div x-show="item.turnaround_type_id === 'custom'" class="flex items-center gap-0.5">
+                                            <input type="number" x-model.number="item.custom_turnaround_percentage" class="w-12 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-md p-1 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 hide-arrows text-center" placeholder="0">
+                                            <span class="text-[10px] font-bold text-slate-400">%</span>
+                                        </div>
+                                    </div>
                                 </div>
                                 
                                 <div x-show="showExtras" class="flex flex-col gap-1.5">
@@ -1024,6 +1031,7 @@
                             qty: 1,
                             base_price: defaultPrice,
                             turnaround_type_id: defaultTt ? defaultTt.id : null,
+                            custom_turnaround_percentage: null,
                             turnaround_multiplier: defaultTt ? defaultTt.multiplier : 1,
                             is_special: false,
                             selected_extras: []
@@ -1059,7 +1067,9 @@
                     let base = parseFloat(item.base_price || 0) * (parseFloat(item.qty) || 0);
                     
                     let turnaroundCharge = 0;
-                    if (item.turnaround_type_id) {
+                    if (item.turnaround_type_id === 'custom') {
+                        turnaroundCharge = base * (parseFloat(item.custom_turnaround_percentage || 0) / 100);
+                    } else if (item.turnaround_type_id) {
                         let tt = this.allTurnaroundTypes.find(t => t.id == item.turnaround_type_id);
                         if (tt) {
                             if (tt.markup_type === 'percentage') {
@@ -1218,6 +1228,8 @@
                 deliveryAddress: '',
                 pickupDateOnly: '',
                 pickupTimeSlot: '',
+                deliveryDateOnly: '',
+                deliveryTimeSlot: '',
                 notes: '',
 
                 formatTime(timeStr) {

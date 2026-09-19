@@ -77,172 +77,99 @@
         <div class="flex flex-col lg:flex-row gap-3 lg:gap-4 h-full overflow-hidden">
 
             <!-- ===================== Left: Services ===================== -->
-            <div
-                class="flex-1 lg:flex-[1.2] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
-
+            <div class="flex-1 lg:flex-[1.2] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
+                
                 <!-- Background Decoration -->
-                <div
-                    class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-full blur-3xl -mr-32 -mt-32 pointer-events-none"></div>
+
+                <!-- Main Category Filters (Wrapped) -->
+                <div class="border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 relative p-3">
+                    <div class="flex flex-wrap gap-2">
+                        <template x-for="cat in filteredCategories" :key="cat.id">
+                            <button @click="activeCategory = cat.id; activeSubcategory = null" 
+                                :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                                class="px-3 py-1.5 text-[12px] font-bold rounded-lg transition-all flex items-center gap-1 justify-center">
+                                <span x-text="cat.name"></span>
+                            </button>
+                        </template>
+                        <button @click="activeCategory = 'uncategorized'; activeSubcategory = null" 
+                            :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
+                            class="px-3 py-1.5 text-[12px] font-bold rounded-lg transition-all">
+                            Uncategorized
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Search bar & Category Filters Container -->
-                <div x-data="{ searchExpanded: false }"
-                    class="border-b border-slate-100 bg-white/50 backdrop-blur-sm z-10 relative flex items-start gap-2 p-3">
+                <!-- Services Grid grouped by Subcategory -->
+                <div class="flex-1 overflow-y-auto p-4 custom-scrollbar z-10 flex flex-col gap-6">
+                    
+                    <template x-if="activeCategoryData && activeCategoryData.children && activeCategoryData.children.length > 0">
+                        <div class="flex flex-col gap-6">
+                            
+                            <!-- Loop through all subcategories -->
+                            <template x-for="sub in activeCategoryData.children" :key="sub.id">
+                                <div class="flex flex-col md:flex-row gap-3 sm:gap-4 bg-slate-50/50 rounded-[16px] p-3 sm:p-4 border border-slate-100">
+                                    
+                                    <!-- Subcategory Name (Left Side) -->
+                                    <div class="flex flex-col items-start justify-center p-1 sm:p-2 shrink-0 w-full md:w-[100px]">
+                                        <span class="text-[11px] sm:text-[12px] font-black text-black uppercase tracking-widest break-words whitespace-normal leading-tight w-full" x-text="sub.name"></span>
+                                    </div>
 
-                    <!-- Search Bar Icon (Collapsible) -->
-                    <div class="relative shrink-0 mt-0.5"
-                        :class="searchExpanded ? 'w-full max-w-sm absolute top-2 left-2 z-50 bg-white rounded-xl shadow-lg' : ''">
-                        <button @click="searchExpanded = true" x-show="!searchExpanded"
-                            class="w-9 h-9 rounded-full bg-slate-100 hover:bg-blue-50 text-slate-500 hover:text-blue-600 flex items-center justify-center transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </button>
-                        <div x-show="searchExpanded" x-cloak
-                            class="w-full relative flex items-center transition-all animate-fade-in">
-                            <input type="text" x-model="searchQuery" x-ref="searchInput"
-                                placeholder="Search services..."
-                                class="w-full pl-10 pr-10 py-2 bg-slate-50 hover:bg-white border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[12px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
-                            <svg class="absolute left-3.5 w-4 h-4 text-slate-400" fill="none" stroke="currentColor"
-                                stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                            <button @click="searchExpanded = false; searchQuery = ''"
-                                class="absolute right-3.5 text-slate-400 hover:text-slate-600 transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Category Filters (2 rows with horizontal scroll) -->
-                    <div class="flex-1 min-w-0 relative group" x-data="{
-                        hasOverflow: false,
-                        checkOverflow() {
-                            this.$nextTick(() => {
-                                if (this.$refs.catScroll) {
-                                    this.hasOverflow = this.$refs.catScroll.scrollWidth > this.$refs.catScroll.clientWidth;
-                                }
-                            });
-                        },
-                        init() {
-                            this.checkOverflow();
-                            // If you have search filtering that alters width, it'll trigger resize or you can call checkOverflow
-                        },
-                        scrollCatLeft() { $refs.catScroll.scrollBy({ left: -200, behavior: 'smooth' }); },
-                        scrollCatRight() { $refs.catScroll.scrollBy({ left: 200, behavior: 'smooth' }); }
-                    }" @resize.window="checkOverflow()">
-                        <!-- Left Arrow -->
-                        <button x-show="hasOverflow" x-transition @click="scrollCatLeft()"
-                            class="absolute -left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </button>
-
-                        <!-- Right Arrow -->
-                        <button x-show="hasOverflow" x-transition @click="scrollCatRight()"
-                            class="absolute -right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-600 hover:text-blue-600 hover:border-blue-300 flex items-center justify-center z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                        </button>
-
-                        <div class="flex flex-col min-w-0 gap-1.5 pb-1">
-                            <!-- Bottom Layer: Parent Categories View (2 Rows) -->
-                            <div class="relative w-full">
-                                <div x-ref="catScroll" class="overflow-x-auto scrollbar-none custom-scrollbar-hide">
-                                    <div class="grid grid-rows-2 grid-flow-col gap-1.5 w-max">
-                                        <template x-for="cat in filteredCategories" :key="cat.id">
-                                            <button
-                                                @click="activeCategory = cat.id; activeSubcategory = (cat.children && cat.children.length > 0) ? cat.children[0].id : null"
-                                                :class="activeCategory === cat.id ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
-                                                class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[70px] flex items-center gap-1 justify-center">
-                                                <span x-text="cat.name"></span>
-                                                <template x-if="cat.children && cat.children.length > 0">
-                                                    <svg class="w-3 h-3 opacity-60 shrink-0" fill="none"
-                                                        stroke="currentColor" stroke-width="3" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round"
-                                                            d="M19 9l-7 7-7-7" />
-                                                    </svg>
-                                                </template>
+                                    <!-- Services List (Right Side) -->
+                                    <div class="flex flex-wrap gap-2 lg:gap-2.5 flex-1 items-start">
+                                        <template x-for="service in services.filter(s => s.category_id === sub.id)" :key="service.id">
+                                            <!-- SMALL Service Card -->
+                                            <button @click="addToCart(service)"
+                                                class="flex flex-row items-center justify-between px-3 py-2 sm:px-3 sm:py-2.5 rounded-[12px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md transition-all hover:-translate-y-0.5 group shrink-0 w-[calc(50%-0.3rem)] sm:w-auto sm:min-w-[140px]"
+                                                :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
+                                                <div class="flex flex-col items-start mr-3">
+                                                    <span class="text-[11px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
+                                                    <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : 'Per Item')"></span>
+                                                </div>
+                                                <span class="text-[13px] font-black text-blue-700 shrink-0" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
                                             </button>
                                         </template>
-                                        <button @click="activeCategory = 'uncategorized'; activeSubcategory = null"
-                                            :class="activeCategory === 'uncategorized' ? 'bg-blue-600 text-white shadow-sm ring-1 ring-blue-700' : 'bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:border-slate-300'"
-                                            class="px-2.5 py-1 text-[11px] font-bold rounded-lg transition-all whitespace-nowrap min-w-[70px]">
-                                            Uncategorized
-                                        </button>
+                                        <div x-show="services.filter(s => s.category_id === sub.id).length === 0" class="w-full text-[11px] font-bold text-slate-400 py-2">
+                                            No services found in this category.
+                                        </div>
                                     </div>
+
                                 </div>
-                            </div>
+                            </template>
 
-                            <!-- Distinct 3rd Row: Subcategories -->
-                            <template
-                                x-if="activeCategoryData && activeCategoryData.children && activeCategoryData.children.length > 0">
-                                <div
-                                    class="overflow-x-auto custom-scrollbar mt-1 pt-1.5 border-t border-slate-200/60 pb-1">
-                                    <div class="flex items-center gap-2 w-max pl-1 pr-2">
+                        </div>
+                    </template>
 
-                                        <template x-for="sub in activeCategoryData.children" :key="sub.id">
-                                            <button @click="activeSubcategory = sub.id"
-                                                :class="activeSubcategory === sub.id ? 'bg-indigo-600 text-white shadow-sm ring-1 ring-indigo-700' : 'bg-indigo-50 border border-indigo-200 text-indigo-700 hover:bg-indigo-100'"
-                                                class="px-3 py-0.5 text-[10px] font-bold rounded-md transition-all whitespace-nowrap min-w-[60px]"
-                                                x-text="sub.name">
-                                            </button>
-                                        </template>
+                    <!-- Main Category Services / Uncategorized -->
+                    <div class="flex flex-col gap-3">
+                        <template x-if="activeCategoryData && activeCategoryData.children && activeCategoryData.children.length > 0 && services.filter(s => s.category_id === activeCategory).length > 0">
+                            <h3 class="text-[13px] font-black text-slate-700 tracking-wider uppercase border-b-2 border-slate-100 pb-1.5 mt-2">Other Services</h3>
+                        </template>
+                        <div class="flex flex-wrap gap-2 lg:gap-3">
+                            <template x-for="service in (activeCategory === 'uncategorized' ? services.filter(s => s.category_id === null) : services.filter(s => s.category_id === activeCategory))" :key="service.id">
+                                <button @click="addToCart(service)"
+                                    class="flex flex-row items-center justify-between px-3 py-2 sm:px-3 sm:py-2.5 rounded-[12px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md transition-all hover:-translate-y-0.5 group shrink-0 w-[calc(50%-0.3rem)] sm:w-auto sm:min-w-[140px]"
+                                    :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
+                                    <div class="flex flex-col items-start mr-3">
+                                        <span class="text-[11px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
+                                        <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : 'Per Item')"></span>
                                     </div>
+                                    <span class="text-[12px] font-black text-blue-600 shrink-0" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
+                                </button>
+                            </template>
+                            
+                            <template x-if="!(activeCategoryData && activeCategoryData.children && activeCategoryData.children.length > 0)">
+                                <div x-show="(activeCategory === 'uncategorized' ? services.filter(s => s.category_id === null) : services.filter(s => s.category_id === activeCategory)).length === 0" class="col-span-full py-12 flex flex-col items-center justify-center text-center opacity-70">
+                                    <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
+                                        <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                                    </div>
+                                    <p class="text-sm font-bold text-slate-500">No services found</p>
                                 </div>
                             </template>
                         </div>
                     </div>
                 </div>
-
-                <!-- Services Grid -->
-                <div class="flex-1 overflow-y-auto p-4 custom-scrollbar z-10">
-                    <div class="grid grid-cols-4 sm:grid-cols-6 xl:grid-cols-6 gap-2 lg:gap-3 auto-rows-max">
-
-
-                        <!-- Service Cards -->
-                        <template x-for="service in filteredServices" :key="service.id">
-                            <button @click="addToCart(service)"
-                                class="col-span-2 sm:col-span-1 xl:col-span-1 flex flex-col p-3 rounded-[14px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-[0_8px_16px_rgba(0,0,0,0.06)] hover:-translate-y-0.5 transition-all duration-300 text-left group overflow-hidden relative justify-center items-center text-center"
-                                :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
-
-                                <span
-                                    class="text-[12px] font-black text-slate-800 leading-tight tracking-tight line-clamp-2 mb-1"
-                                    x-text="service.name"></span>
-                                <div class="flex items-end justify-center gap-1">
-                                    <span class="text-[13px] font-black text-blue-600"
-                                        x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
-                                    <span
-                                        class="text-[9px] font-extrabold text-slate-400 uppercase tracking-widest pb-0.5"
-                                        x-text="service.price_type === 'per_kg' ? '/KG' : '/ITM'"></span>
-                                </div>
-                            </button>
-                        </template>
-
-                        <!-- Empty State -->
-                        <div x-show="filteredServices.length === 0"
-                            class="col-span-full py-16 flex flex-col items-center justify-center text-center opacity-70">
-                            <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-3">
-                                <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" stroke-width="2"
-                                    viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                </svg>
-                            </div>
-                            <p class="text-sm font-bold text-slate-500">No services found</p>
-                        </div>
-                    </div>
-                </div>
             </div>
-
 
             <!-- ===================== Right: Order Panel ===================== -->
             <div
@@ -274,82 +201,89 @@
                     @endif
                 </div>
 
-                <!-- Cart Items -->
-                <div class="flex-1 overflow-y-auto bg-slate-50/50 p-2 custom-scrollbar">
+                <!-- Cart Items (Scrollable) -->
+                <div class="flex-1 overflow-y-auto p-4 bg-slate-50/50 flex flex-col gap-3 custom-scrollbar">
+                    <template x-if="cart.length === 0">
+                        <div class="flex-1 flex flex-col items-center justify-center opacity-60">
+                            <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+                                <svg class="w-10 h-10 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                </svg>
+                            </div>
+                            <p class="text-[13px] font-black text-slate-500">Cart is empty</p>
+                            <p class="text-[11px] font-semibold text-slate-400 mt-1">Add items from the left to begin</p>
+                        </div>
+                    </template>
                     <template x-for="(item, index) in cart" :key="index">
-                        <div class="group relative bg-white p-2.5 rounded-[12px] border border-slate-200 flex flex-col gap-1.5 shadow-sm hover:border-blue-200 transition-all mb-2">
+                        <div class="group relative bg-white p-2.5 rounded-[12px] border border-slate-200 flex flex-col gap-1.5 shadow-sm hover:border-blue-200 transition-all">
                             
                             <!-- Top: Name, Category, Qty & Remove -->
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex flex-col flex-1 min-w-0 pt-0.5">
-                                    <span class="text-[9px] font-bold text-slate-400 leading-normal uppercase tracking-widest mb-1 whitespace-normal break-words" x-text="getCategoryString(item.service_type_id)"></span>
+                                    <span class="text-[9px] font-bold text-slate-400 leading-normal uppercase tracking-widest mb-1 whitespace-normal break-words" x-text="getCategoryString(item.service_type_id || item.id)"></span>
                                     <h4 class="text-[13px] font-black text-slate-800 leading-snug break-words whitespace-normal pr-1" x-text="item.name"></h4>
                                 </div>
                                 
                                 <!-- Qty -->
-                                <div class="flex items-center bg-slate-50 border border-slate-200 rounded p-0.5 shadow-sm shrink-0 mt-0.5">
-                                    <button @click="if(parseFloat(item.qty) > 0.5) item.qty = parseFloat(item.qty) - 0.5" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors font-black text-[14px] leading-none">-</button>
-                                    <input type="number" step="any" x-model.number="item.qty" class="w-10 text-center text-[12px] font-black text-slate-800 bg-transparent border-none outline-none p-0 focus:ring-0 hide-arrows transition-all">
+                                <div class="flex items-center bg-slate-50 border border-slate-200 rounded p-0.5 shadow-sm shrink-0">
+                                    <button @click="if(item.qty > 0.5) item.qty = parseFloat(item.qty) - 0.5" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors font-black text-[14px] leading-none">-</button>
+                                    <input type="number" x-model="item.qty" :style="'width: ' + Math.max(44, String(item.qty || '').length * 8 + 24) + 'px;'" class="text-center text-[12px] font-black text-slate-800 bg-transparent border-none outline-none p-0 focus:ring-0 hide-arrows transition-all" min="0.01" step="any">
                                     <button @click="item.qty = parseFloat(item.qty) + 0.5" class="w-6 h-6 flex items-center justify-center text-slate-500 hover:text-blue-600 hover:bg-blue-100 rounded transition-colors font-black text-[14px] leading-none">+</button>
                                 </div>
 
-                                <button @click="cart.splice(index, 1)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0 mt-0.5">
+                                <button @click="cart.splice(index, 1)" class="text-slate-300 hover:text-red-500 transition-colors shrink-0">
                                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
 
-                            <!-- Middle: Base Price & Total Price -->
+                            <!-- Bottom: Base Price, Total -->
                             <div class="flex items-center justify-between gap-1 pt-1.5 border-t border-slate-50 mt-0.5">
-                                <!-- Base Price (Editable) -->
+                                <!-- Base Price -->
                                 <div class="flex items-center gap-0.5 bg-slate-50 px-1.5 py-1 rounded border border-slate-100 shrink-0">
                                     <span class="text-[10px] font-bold text-slate-400">Rs.</span>
-                                    <input type="number" step="any" x-model.number="item.base_price"
-                                        class="w-14 sm:w-16 text-[12px] font-black text-slate-700 bg-transparent border-none focus:ring-0 outline-none p-0 hide-arrows text-center">
+                                    <input type="number" x-model.number="item.base_price" class="w-14 sm:w-16 text-[12px] font-black text-slate-700 bg-transparent border-none focus:ring-0 outline-none p-0 hide-arrows text-center" min="0" step="0.01">
+                                    <span class="text-[9px] font-extrabold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : (item.price_type === 'per_sqft' ? '/SQFT' : '')"></span>
                                 </div>
                                 
-                                <!-- Total Price (Display) -->
+                                <!-- Total -->
                                 <div class="text-right shrink-0 min-w-max">
                                     <span class="text-[14px] font-black text-blue-700 whitespace-nowrap" x-text="'Rs. ' + getItemTotal(item).toFixed(2)"></span>
                                 </div>
                             </div>
 
                             <!-- Bottom: Extras & Turnaround Type -->
-                            <div class="pt-2 border-t border-slate-100 flex flex-col gap-2"
-                                x-data="{ showExtras: (item.selected_extras && item.selected_extras.length > 0), addMode: false }">
+                            <div class="pt-2 border-t border-slate-100 flex flex-col gap-2" x-data="{ showExtras: false, addMode: false }">
                                 <div class="flex items-center justify-between gap-2">
                                     <div class="flex items-center gap-2">
                                         <label class="flex items-center gap-1.5 cursor-pointer group">
-                                            <input type="checkbox" x-model="showExtras"
-                                                class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
+                                            <input type="checkbox" x-model="showExtras" class="w-3.5 h-3.5 text-blue-600 rounded border-slate-300 focus:ring-blue-500 cursor-pointer">
                                             <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wide group-hover:text-blue-600 transition-colors">Extras</span>
-                                            <template x-if="item.selected_extras && item.selected_extras.length > 0">
-                                                <span class="bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full text-[9px] font-black" x-text="item.selected_extras.length"></span>
-                                            </template>
                                         </label>
-                                        <button x-show="showExtras" @click="addMode = !addMode"
-                                            class="text-[9px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 hover:bg-blue-100 transition-colors">
-                                            + Add
+                                        
+                                        <button x-show="showExtras" @click="addMode = !addMode" class="text-[9px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 hover:bg-blue-100 transition-colors">
+                                            + Add Extra
                                         </button>
                                     </div>
-                                    <div class="flex items-center shrink-0">
-                                        <select x-model="item.turnaround_type_id"
-                                            class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
+                                    <div class="flex items-center gap-1 shrink-0">
+                                        <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
                                             <option value="">Standard</option>
                                             @foreach($turnaroundTypes as $tt)
-                                                <option value="{{ $tt->id }}">{{ $tt->name }}
-                                                    ({{ $tt->markup_type == 'percentage' ? $tt->markup_value . '%' : 'Rs. ' . $tt->markup_value }})
-                                                </option>
+                                                <option value="{{ $tt->id }}">{{ $tt->name }} ({{ $tt->markup_type == 'percentage' ? $tt->markup_value.'%' : 'Rs. '.$tt->markup_value }})</option>
                                             @endforeach
+                                            <option value="custom">Express (%)</option>
                                         </select>
+                                        <div x-show="item.turnaround_type_id === 'custom'" class="flex items-center gap-0.5">
+                                            <input type="number" x-model.number="item.custom_turnaround_percentage" class="w-12 text-[10px] font-bold text-slate-700 bg-white border border-slate-200 rounded-md p-1 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 hide-arrows text-center" placeholder="0">
+                                            <span class="text-[10px] font-bold text-slate-400">%</span>
+                                        </div>
                                     </div>
                                 </div>
+                                
                                 <div x-show="showExtras" class="flex flex-col gap-1.5">
-                                    <div x-show="addMode"
-                                        class="bg-slate-50 p-1.5 rounded-lg border border-slate-200 shadow-inner">
+                                    <div x-show="addMode" class="bg-slate-50 p-1.5 rounded-lg border border-slate-200 shadow-inner">
                                         <select @change="
                                             if($event.target.value) {
                                                 let exId = parseInt($event.target.value);
-                                                if(!item.selected_extras) item.selected_extras = [];
                                                 let existing = item.selected_extras.find(e => e.id === exId);
                                                 if(existing) {
                                                     existing.qty++;
@@ -359,34 +293,24 @@
                                                 $event.target.value = '';
                                                 addMode = false;
                                             }
-                                        "
-                                            class="text-[11px] font-bold text-slate-700 bg-white border border-slate-200 rounded-md p-1.5 outline-none w-full shadow-sm focus:border-blue-400">
+                                        " class="text-[11px] font-bold text-slate-700 bg-white border border-slate-200 rounded-md p-1.5 outline-none w-full shadow-sm focus:border-blue-400">
                                             <option value="">-- Select Extra --</option>
                                             <template x-for="extra in allExtras" :key="extra.id">
-                                                <option :value="extra.id"
-                                                    x-text="extra.name + ' (+Rs.' + extra.price + ')'"></option>
+                                                <option :value="extra.id" x-text="extra.name + ' (+Rs.' + extra.price + ')'"></option>
                                             </template>
                                         </select>
                                     </div>
-                                    <div x-show="item.selected_extras && item.selected_extras.length > 0"
-                                        class="flex flex-col gap-1.5">
+
+                                    <div x-show="item.selected_extras && item.selected_extras.length > 0" class="flex flex-col gap-1.5">
                                         <template x-for="(selEx, idx) in item.selected_extras" :key="idx">
-                                            <div
-                                                class="flex items-center justify-between bg-white border border-slate-200 rounded-md p-1.5 shadow-sm">
-                                                <span class="text-[10px] font-bold text-slate-700"
-                                                    x-text="allExtras.find(e => e.id === selEx.id)?.name"></span>
+                                            <div class="flex items-center justify-between bg-white border border-slate-200 rounded-md p-1.5 shadow-sm">
+                                                <span class="text-[10px] font-bold text-slate-700" x-text="allExtras.find(e => e.id === selEx.id)?.name"></span>
                                                 <div class="flex items-center gap-2">
-                                                    <span class="text-[10px] text-blue-600 font-bold"
-                                                        x-text="'Rs.' + (allExtras.find(e => e.id === selEx.id)?.price * selEx.qty).toFixed(2)"></span>
-                                                    <div
-                                                        class="flex items-center bg-slate-50 border border-slate-200 rounded px-1">
-                                                        <button
-                                                            @click="if(selEx.qty > 1) selEx.qty = parseFloat(selEx.qty) - 1; else item.selected_extras.splice(idx, 1);"
-                                                            class="text-slate-500 hover:text-blue-600 font-black px-1.5 py-0.5 text-[10px]">-</button>
-                                                        <span class="text-[10px] font-black w-3 text-center"
-                                                            x-text="selEx.qty"></span>
-                                                        <button @click="selEx.qty = parseFloat(selEx.qty) + 1"
-                                                            class="text-slate-500 hover:text-blue-600 font-black px-1.5 py-0.5 text-[10px]">+</button>
+                                                    <span class="text-[10px] text-blue-600 font-bold" x-text="'Rs.' + (allExtras.find(e => e.id === selEx.id)?.price * selEx.qty).toFixed(2)"></span>
+                                                    <div class="flex items-center bg-slate-50 border border-slate-200 rounded px-1">
+                                                        <button @click="if(selEx.qty > 1) selEx.qty--; else item.selected_extras.splice(idx, 1);" class="text-slate-500 hover:text-blue-600 font-black px-1.5 py-0.5 text-[10px]">-</button>
+                                                        <span class="text-[10px] font-black w-3 text-center" x-text="selEx.qty"></span>
+                                                        <button @click="selEx.qty++" class="text-slate-500 hover:text-blue-600 font-black px-1.5 py-0.5 text-[10px]">+</button>
                                                     </div>
                                                 </div>
                                             </div>
@@ -396,20 +320,6 @@
                             </div>
                         </div>
                     </template>
-
-                    <!-- Empty Cart -->
-                    <div x-show="cart.length === 0"
-                        class="h-full flex flex-col items-center justify-center text-center opacity-60">
-                        <div class="w-20 h-20 bg-white rounded-full shadow-sm flex items-center justify-center mb-4">
-                            <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" stroke-width="1.5"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                            </svg>
-                        </div>
-                        <p class="text-[15px] font-black text-slate-400">Cart is empty</p>
-                        <p class="text-[12px] font-bold text-slate-400 mt-1">Select services to add.</p>
-                    </div>
                 </div>
 
                 <!-- Dark Checkout Summary Bar -->
@@ -609,6 +519,7 @@
                             base_price: service.base_price,
                             qty: 1,
                             turnaround_type_id: defaultTtId,
+                            custom_turnaround_percentage: null,
                             selected_extras: []
                         });
                     }
@@ -632,7 +543,9 @@
                 getItemTotal(item) {
                     let base = parseFloat(item.base_price || 0) * parseFloat(item.qty || 1);
                     let turnaroundCharge = 0;
-                    if (item.turnaround_type_id) {
+                    if (item.turnaround_type_id === 'custom') {
+                        turnaroundCharge = base * (parseFloat(item.custom_turnaround_percentage || 0) / 100);
+                    } else if (item.turnaround_type_id) {
                         let tt = this.allTurnaroundTypes.find(t => t.id == item.turnaround_type_id);
                         if (tt) {
                             if (tt.markup_type === 'percentage') {

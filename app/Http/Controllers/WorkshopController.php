@@ -592,8 +592,9 @@ class WorkshopController extends Controller
                 'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
                 'base_price' => $item->unit_price,
                 'qty' => $item->quantity,
-                'is_special' => $item->turnaround_type_id ? true : false,
-                'turnaround_type_id' => $item->turnaround_type_id ? (int)$item->turnaround_type_id : null,
+                'is_special' => $item->turnaround_type_id || ((float)$item->custom_turnaround_percentage > 0) ? true : false,
+                'turnaround_type_id' => (float)$item->custom_turnaround_percentage > 0 ? 'custom' : ($item->turnaround_type_id ? (int)$item->turnaround_type_id : null),
+                'custom_turnaround_percentage' => $item->custom_turnaround_percentage,
                 'turnaround_extra_charge' => 0,
                 'selected_extras' => $selectedExtras,
             ];
@@ -611,7 +612,8 @@ class WorkshopController extends Controller
                         'base_price' => $service['base_price'] ?? $service['unit_price'] ?? 0,
                         'qty' => $i['quantity'] ?? $i['qty'] ?? 1,
                         'is_special' => $i['is_special'] ?? false,
-                        'turnaround_type_id' => !empty($i['turnaround_type_id']) ? (int)$i['turnaround_type_id'] : null,
+                        'turnaround_type_id' => !empty($i['custom_turnaround_percentage']) ? 'custom' : (!empty($i['turnaround_type_id']) ? (int)$i['turnaround_type_id'] : null),
+                        'custom_turnaround_percentage' => $i['custom_turnaround_percentage'] ?? null,
                         'turnaround_extra_charge' => $i['turnaround_extra_charge'] ?? 0,
                         'selected_extras' => $i['selected_extras'] ?? [],
                     ];

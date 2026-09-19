@@ -292,9 +292,9 @@
         @endif
     </div>
 
-    @if($order->correctionRequests->count() > 0)
+    @if($order->correctionRequests->whereIn('type', ['items_change', 'order_change'])->count() > 0)
         <div class="flex flex-col gap-3 mb-6">
-            @foreach($order->correctionRequests->sortByDesc('created_at') as $cr)
+            @foreach($order->correctionRequests->whereIn('type', ['items_change', 'order_change'])->sortByDesc('created_at') as $cr)
                 <div class="p-4 rounded-xl flex items-start justify-between gap-4 text-[13px] border-2 shadow-sm
                             {{ $cr->status === 'pending' ? 'bg-amber-50 text-amber-900 border-amber-200 shadow-amber-100/50' :
                     ($cr->status === 'approved' ? 'bg-emerald-50 text-emerald-900 border-emerald-200 shadow-emerald-100/50' :
@@ -333,107 +333,207 @@
                                         </div>
                                     </div>
                                 @endif
-                                @if((isset($cr->old_data['payment_method']) || isset($cr->new_data['payment_method'])) && $oldMethod != $newMethod)
-                                    <div class="flex justify-between items-center border-b border-slate-200/50 pb-1.5">
-                                        <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Payment Method:</strong>
-                                        <div class="flex items-center gap-2">
-                                            <span class="text-red-500 line-through font-bold">{{ ucfirst($oldMethod) }}</span>
-                                            <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3">
-                                                </path>
-                                            </svg>
-                                            <strong class="text-emerald-600 font-black text-[13px]">{{ ucfirst($newMethod) }}</strong>
-                                        </div>
-                                    </div>
-                                @endif
 
                                 @if($cr->type === 'items_change' || $cr->type === 'order_change')
                                     @php
-                                        $oldCart = collect($cr->old_data['cart'] ?? []);
-                                        $newCart = collect($cr->new_data['cart'] ?? []);
+                                        $oldItems = is_array($cr->old_data) ? ($cr->old_data['items'] ?? $cr->old_data['cart'] ?? []) : [];
+                                        $newItems = is_array($cr->new_data) ? ($cr->new_data['cart'] ?? $cr->new_data['items'] ?? []) : [];
+                                        
                                         $diff = [];
-
-                                        foreach ($newCart as $newItem) {
-                                            $oldItem = $oldCart->firstWhere('service_type_id', $newItem['service_type_id']);
-                                            if (!$oldItem && !isset($newItem['service_type_id'])) {
-                                                $oldItem = $oldCart->firstWhere('name', $newItem['name']);
+                                        $oldColl = collect($oldItems);
+                                        $newColl = collect($newItems);
+                                        
+                                        // Find Added and Modified
+                                        foreach ($newColl as $newI) {
+                                            $stId = $newI['service_type_id'] ?? null;
+                                            $name = $newI['name'] ?? null;
+                                            
+                                            $oldI = null;
+                                            if ($stId) {
+                                                $oldI = $oldColl->firstWhere('service_type_id', $stId);
+                                            } else {
+                                                $oldI = $oldColl->first(function($i) use ($name) {
+                                                    return ($i['item_description'] ?? $i['name'] ?? null) === $name;
+                                                });
                                             }
-
-                                            if (!$oldItem) {
-                                                $diff[] = ['type' => 'added', 'item' => $newItem];
-                                            } elseif ($oldItem['qty'] != $newItem['qty']) {
-                                                $diff[] = ['type' => 'changed', 'item' => $newItem, 'old_qty' => $oldItem['qty']];
+                                            
+                                            $newQty = $newI['qty'] ?? $newI['quantity'] ?? 1;
+                                            
+                                            if (!$oldI) {
+                                                $diff[] = ['type' => 'added', 'item' => $newI];
+                                            } else {
+                                                $oldQty = $oldI['quantity'] ?? $oldI['qty'] ?? 1;
+                                                
+                                                // Check for turnaround changes
+                                                $oldTtId = $oldI['turnaround_type_id'] ?? null;
+                                                $newTtId = $newI['turnaround_type_id'] ?? null;
+                                                if ($oldTtId === 'custom') $oldTtId = null;
+                                                if ($newTtId === 'custom') $newTtId = null;
+                                                
+                                                $oldTtCustom = (float)($oldI['custom_turnaround_percentage'] ?? 0);
+                                                $newTtCustom = (float)($newI['custom_turnaround_percentage'] ?? 0);
+                                                $ttChanged = ($oldTtId != $newTtId) || ($oldTtCustom != $newTtCustom);
+                                                
+                                                $oldExtras = $oldI['selected_extras'] ?? $oldI['extras'] ?? [];
+                                                $newExtras = $newI['selected_extras'] ?? $newI['extras'] ?? [];
+                                                
+                                                $oldExMap = [];
+                                                foreach ($oldExtras as $ex) {
+                                                    $id = $ex['extra_id'] ?? $ex['id'] ?? null;
+                                                    if ($id) $oldExMap[$id] = (float)($ex['quantity'] ?? $ex['qty'] ?? 1);
+                                                }
+                                                $newExMap = [];
+                                                foreach ($newExtras as $ex) {
+                                                    $id = $ex['extra_id'] ?? $ex['id'] ?? null;
+                                                    if ($id) $newExMap[$id] = (float)($ex['quantity'] ?? $ex['qty'] ?? 1);
+                                                }
+                                                
+                                                $extrasChanged = false;
+                                                if (count($oldExMap) != count($newExMap)) {
+                                                    $extrasChanged = true;
+                                                } else {
+                                                    foreach ($oldExMap as $id => $qty) {
+                                                        if (!isset($newExMap[$id]) || $newExMap[$id] != $qty) {
+                                                            $extrasChanged = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                if ($oldQty != $newQty || $ttChanged || $extrasChanged) {
+                                                    $diff[] = [
+                                                        'type' => 'changed', 
+                                                        'item' => $newI, 
+                                                        'old_qty' => $oldQty, 
+                                                        'tt_changed' => $ttChanged, 
+                                                        'extras_changed' => $extrasChanged,
+                                                        'new_tt_id' => $newTtId,
+                                                        'new_tt_custom' => $newTtCustom
+                                                    ];
+                                                }
                                             }
                                         }
-                                        foreach ($oldCart as $oldItem) {
-                                            $newItem = $newCart->firstWhere('service_type_id', $oldItem['service_type_id']);
-                                            if (!$newItem && !isset($oldItem['service_type_id'])) {
-                                                $newItem = $newCart->firstWhere('name', $oldItem['name']);
+                                        
+                                        // Find Removed
+                                        foreach ($oldColl as $oldI) {
+                                            $stId = $oldI['service_type_id'] ?? null;
+                                            $name = $oldI['item_description'] ?? $oldI['name'] ?? null;
+                                            
+                                            $newI = null;
+                                            if ($stId) {
+                                                $newI = $newColl->firstWhere('service_type_id', $stId);
+                                            } else {
+                                                $newI = $newColl->first(function($i) use ($name) {
+                                                    return ($i['name'] ?? null) === $name;
+                                                });
                                             }
-                                            if (!$newItem) {
-                                                $diff[] = ['type' => 'removed', 'item' => $oldItem];
+                                            
+                                            if (!$newI) {
+                                                $diff[] = ['type' => 'removed', 'item' => $oldI];
                                             }
                                         }
+                                        
+                                        $oldFee = $cr->old_data['delivery_fee'] ?? null;
+                                        $newFee = $cr->new_data['delivery_fee'] ?? null;
+                                        $oldDisc = $cr->old_data['discount_percentage'] ?? null;
+                                        $newDisc = $cr->new_data['discount_percentage'] ?? null;
                                     @endphp
-
-                                    @if(count($diff) > 0)
+                                    
+                                    @if(count($diff) > 0 || ($oldFee !== null && $newFee !== null && $oldFee != $newFee) || ($oldDisc !== null && $newDisc !== null && $oldDisc != $newDisc))
                                         <div class="mt-2 text-[11px]">
-                                            <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Cart Updates:</strong>
+                                            <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Updates:</strong>
                                             <div class="mt-1 space-y-1.5 bg-white/50 rounded-lg p-2 border border-slate-100">
                                                 @foreach($diff as $change)
                                                     @php
-                                                        $stId = $change['item']['service_type_id'] ?? null;
+                                                        $item = $change['item'];
+                                                        $stId = $item['service_type_id'] ?? null;
                                                         $stInfo = $stId && isset($serviceTypesMap[$stId]) ? $serviceTypesMap[$stId] : null;
-                                                        $itemName = $stInfo ? $stInfo['name'] : ($change['item']['name'] ?? 'Service');
+                                                        $itemName = $stInfo ? $stInfo['name'] : ($item['item_description'] ?? $item['name'] ?? 'Service');
                                                         $catName = $stInfo['category'] ?? null;
                                                         $subCatName = $stInfo['subcategory'] ?? null;
+                                                        $catStr = $catName ? ($catName . ($subCatName ? ' › ' . $subCatName : '')) : null;
                                                     @endphp
-                                                    @if($change['type'] === 'added')
-                                                        <div class="flex items-start gap-1.5">
+                                                    <div class="flex items-start gap-1.5">
+                                                        @if($change['type'] === 'added')
                                                             <span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Add</span>
                                                             <div class="flex-1">
-                                                                @if($catName)
-                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
-                                                                        {{ $catName }}{{ $subCatName ? ' › ' . $subCatName : '' }}
-                                                                    </div>
+                                                                @if($catStr)
+                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{{ $catStr }}</div>
                                                                 @endif
-                                                                <div class="flex items-center justify-between">
-                                                                    <span class="font-bold text-slate-800">{{ $change['item']['qty'] ?? 1 }}x {{ $itemName }}</span>
-                                                                    <span class="text-slate-500">(Rs.{{ number_format((float) ($change['item']['base_price'] ?? 0) * (float) ($change['item']['qty'] ?? 1), 2) }})</span>
-                                                                </div>
+                                                                <div class="font-bold text-slate-800">{{ (float)($item['qty'] ?? $item['quantity'] ?? 1) }}x {{ $itemName }}</div>
                                                             </div>
-                                                        </div>
-                                                    @elseif($change['type'] === 'changed')
-                                                        <div class="flex items-start gap-1.5">
-                                                            <span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Mod</span>
-                                                            <div class="flex-1">
-                                                                @if($catName)
-                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
-                                                                        {{ $catName }}{{ $subCatName ? ' › ' . $subCatName : '' }}
-                                                                    </div>
-                                                                @endif
-                                                                <div class="flex items-center gap-1.5">
-                                                                    <span class="text-slate-400 line-through font-bold">{{ $change['old_qty'] }}x</span>
-                                                                    <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                                                                    <span class="font-bold text-slate-800">{{ $change['item']['qty'] }}x {{ $itemName }}</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    @elseif($change['type'] === 'removed')
-                                                        <div class="flex items-start gap-1.5">
+                                                        @elseif($change['type'] === 'removed')
                                                             <span class="bg-red-100 text-red-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Del</span>
                                                             <div class="flex-1">
-                                                                @if($catName)
-                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">
-                                                                        {{ $catName }}{{ $subCatName ? ' › ' . $subCatName : '' }}
-                                                                    </div>
+                                                                @if($catStr)
+                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{{ $catStr }}</div>
                                                                 @endif
-                                                                <span class="text-red-400 line-through font-bold">{{ $change['item']['qty'] ?? 1 }}x {{ $itemName }}</span>
+                                                                <div class="font-bold text-slate-400 line-through">{{ (float)($item['quantity'] ?? $item['qty'] ?? 1) }}x {{ $itemName }}</div>
                                                             </div>
-                                                        </div>
-                                                    @endif
+                                                        @elseif($change['type'] === 'changed')
+                                                            <span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Mod</span>
+                                                            <div class="flex-1">
+                                                                @if($catStr)
+                                                                    <div class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">{{ $catStr }}</div>
+                                                                @endif
+                                                                @php $newQty = (float)($item['qty'] ?? $item['quantity'] ?? 1); @endphp
+                                                                <div class="flex items-center gap-1.5">
+                                                                    @if((float)$change['old_qty'] != $newQty)
+                                                                    <span class="text-slate-400 line-through font-bold">{{ (float)$change['old_qty'] }}x</span>
+                                                                    <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                                                    @endif
+                                                                    <span class="font-bold text-slate-800">{{ $newQty }}x {{ $itemName }}</span>
+                                                                </div>
+                                                                @if(!empty($change['tt_changed']) || !empty($change['extras_changed']))
+                                                                @php
+                                                                    $ttDesc = 'Turnaround changed';
+                                                                    if (!empty($change['tt_changed'])) {
+                                                                        if (!empty($change['new_tt_custom'])) {
+                                                                            $ttDesc = 'Express (' . (float)$change['new_tt_custom'] . '%)';
+                                                                        } elseif (!empty($change['new_tt_id'])) {
+                                                                            $tt = \App\Models\TurnaroundType::find($change['new_tt_id']);
+                                                                            if ($tt) {
+                                                                                $ttDesc = 'Turnaround: ' . $tt->name;
+                                                                            }
+                                                                        } else {
+                                                                            $ttDesc = 'Turnaround removed';
+                                                                        }
+                                                                    }
+                                                                @endphp
+                                                                <div class="text-[9px] font-semibold text-amber-600 mt-0.5">
+                                                                    {{ implode(' • ', array_filter([
+                                                                        !empty($change['tt_changed']) ? $ttDesc : null,
+                                                                        !empty($change['extras_changed']) ? 'Extras changed' : null
+                                                                    ])) }}
+                                                                </div>
+                                                                @endif
+                                                            </div>
+                                                        @endif
+                                                    </div>
                                                 @endforeach
+                                                
+                                                @if($oldFee !== null && $newFee !== null && $oldFee != $newFee)
+                                                    <div class="flex items-start gap-1.5 {{ count($diff) > 0 ? 'mt-1 border-t border-slate-200/50 pt-1' : '' }}">
+                                                        <span class="bg-blue-100 text-blue-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Fee</span>
+                                                        <div class="flex-1 flex items-center gap-1.5">
+                                                            <span class="text-slate-500 font-bold text-[10px]">Delivery Fee:</span>
+                                                            <span class="text-slate-400 line-through font-bold">Rs.{{ number_format($oldFee, 2) }}</span>
+                                                            <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                                            <span class="font-bold text-slate-800">Rs.{{ number_format($newFee, 2) }}</span>
+                                                        </div>
+                                                    </div>
+                                                @endif
+                                                @if($oldDisc !== null && $newDisc !== null && $oldDisc != $newDisc)
+                                                    <div class="flex items-start gap-1.5 {{ count($diff) > 0 || ($oldFee !== null && $newFee !== null && $oldFee != $newFee) ? 'mt-1 border-t border-slate-200/50 pt-1' : '' }}">
+                                                        <span class="bg-purple-100 text-purple-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Disc</span>
+                                                        <div class="flex-1 flex items-center gap-1.5">
+                                                            <span class="text-slate-500 font-bold text-[10px]">Discount:</span>
+                                                            <span class="text-slate-400 line-through font-bold">{{ $oldDisc }}%</span>
+                                                            <svg class="w-2.5 h-2.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                                                            <span class="font-bold text-slate-800">{{ $newDisc }}%</span>
+                                                        </div>
+                                                    </div>
+                                                @endif
                                             </div>
                                         </div>
                                     @endif
@@ -903,15 +1003,22 @@
                                 if ($order->items->count() > 0) {
                                     foreach ($order->items as $item) {
                                         $unitWithTurnaround = $item->quantity > 0 ? ($item->total_price / $item->quantity) : $item->total_price;
+                                        $stId = $item->service_type_id;
+                                        $stInfo = $stId && isset($serviceTypesMap[$stId]) ? $serviceTypesMap[$stId] : null;
+                                        $catName = $stInfo ? $stInfo['category'] : null;
+                                        $subCatName = $stInfo ? $stInfo['subcategory'] : null;
+                                        $catStr = $catName ? ($catName . ($subCatName ? ' › ' . $subCatName : '')) : null;
+
                                         $adminDisplayRows->push([
                                             'type' => 'item',
-                                            'name' => $item->serviceType ? ($item->serviceType->category ? $item->serviceType->category->name . ' - ' : '') . $item->serviceType->name : $item->item_description,
-                                            'turnaround_name' => ($item->turnaroundType && !$item->turnaroundType->is_default) ? $item->turnaroundType->name : null,
+                                            'category_name' => $catStr,
+                                            'name' => $item->serviceType ? $item->serviceType->name : $item->item_description,
+                                            'turnaround_name' => ($item->turnaroundType && !$item->turnaroundType->is_default) ? $item->turnaroundType->name : ((float)$item->custom_turnaround_percentage > 0 ? 'Express ('.(float)$item->custom_turnaround_percentage.'%)' : null),
                                             'extras' => $item->extras->map(fn($e) => ['name' => optional($e->extra)->name, 'qty' => $e->quantity, 'price' => $e->unit_price]),
                                             'qty' => $item->quantity,
-                                            'unit_price' => $unitWithTurnaround,
-                                            'total_price' => $item->total_price,
-                                            'turnaround_charge' => 0,
+                                            'unit_price' => $item->unit_price,
+                                            'total_price' => $item->unit_price * max(1, $item->quantity),
+                                            'turnaround_charge' => $item->turnaround_extra_charge ?? 0,
                                         ]);
                                     }
                                 } elseif ($order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
@@ -953,15 +1060,22 @@
 
                                         $calcSub += $lineTotal + $ttCharge + array_sum(array_column($extras, 'price'));
 
+                                        $stId = $ci['service_type_id'] ?? $ci['id'] ?? null;
+                                        $stInfo = $stId && isset($serviceTypesMap[$stId]) ? $serviceTypesMap[$stId] : null;
+                                        $catName = $stInfo ? $stInfo['category'] : null;
+                                        $subCatName = $stInfo ? $stInfo['subcategory'] : null;
+                                        $catStr = $catName ? ($catName . ($subCatName ? ' › ' . $subCatName : '')) : null;
+
                                         $adminDisplayRows->push([
                                             'type' => 'item',
-                                            'name' => $svcName,
+                                            'category_name' => $catStr,
+                                            'name' => $ci['name'] ?? ($svc ? $svc->name : 'Service'),
                                             'turnaround_name' => $ttName,
                                             'extras' => collect($extras),
                                             'qty' => $qty,
-                                            'unit_price' => $qty > 0 ? (($lineTotal + $ttCharge) / $qty) : ($lineTotal + $ttCharge),
-                                            'total_price' => $lineTotal + $ttCharge,
-                                            'turnaround_charge' => 0,
+                                            'unit_price' => $price,
+                                            'total_price' => $lineTotal,
+                                            'turnaround_charge' => $ttCharge,
                                         ]);
                                     }
                                     $cartSubtotal = $calcSub;
@@ -971,13 +1085,20 @@
                             @forelse($adminDisplayRows as $row)
                                 <tr style="border-bottom:1px solid #f1f5f9;">
                                     <td style="padding:10px 16px;font-weight:700;color:#0f172a;">
-                                        {{ $row['name'] }}
-                                        @if($row['turnaround_name'])
-                                            <span
-                                                style="display:inline-block;margin-left:6px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:4px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;">
-                                                ⚡ {{ $row['turnaround_name'] }}
-                                            </span>
+                                        @if(isset($row['category_name']) && $row['category_name'])
+                                            <div style="font-size:9px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:2px;">
+                                                {{ $row['category_name'] }}
+                                            </div>
                                         @endif
+                                        <div style="display:flex;align-items:center;gap:6px;">
+                                            {{ $row['name'] }}
+                                            @if($row['turnaround_name'])
+                                                <span
+                                                    style="display:inline-block;font-size:9px;font-weight:800;padding:1px 6px;border-radius:4px;background:#fff7ed;color:#ea580c;border:1px solid #fed7aa;white-space:nowrap;">
+                                                    ⚡ {{ $row['turnaround_name'] }}
+                                                </span>
+                                            @endif
+                                        </div>
                                     </td>
                                     <td style="padding:10px 16px;text-align:center;font-weight:700;color:#334155;">
                                         {{ $row['qty'] }}
@@ -1086,9 +1207,8 @@
             </div>
 
             <!-- ======= PAYMENT SLIPS ======= -->
-            <div class="w-full flex flex-col gap-4 mt-2">
+            <div class="max-w-sm flex flex-col gap-4 mt-4">
 
-                <!-- Storage Location / Cubby -->
                 @php
                     $paymentTxs = \App\Models\PaymentTransaction::where('order_id', $order->id)
                         ->orderBy('created_at', 'desc')
@@ -1096,14 +1216,12 @@
                 @endphp
 
                 @if($paymentTxs->count() > 0)
-                    <div
-                        style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
-                        <h3
-                            style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">
+                    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
+                        <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">
                             Payment Slips</h3>
                         <div style="display:flex;flex-direction:column;gap:10px;">
                             @foreach($paymentTxs as $index => $tx)
-                                <div x-data="{ openReviewModal: false }"
+                                <div x-data="{ openReviewModal: false, openPaymentEditModal: false, editReason: '', newPaymentMethod: '{{ strtolower($tx->payment_method ?? 'cash') }}', isUpdating: false, updatePaymentMethod() { this.isUpdating = true; fetch('{{ route('orders.corrections.store', $order->id) }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ type: 'payment_change', reason: this.editReason, new_data: { payment_method: this.newPaymentMethod, transaction_id: {{ $tx->id }} } }) }).then(r => r.json()).then(res => { if (res.success) { window.location.reload(); } else { alert(res.message || 'Error occurred'); this.isUpdating = false; } }).catch(err => { alert('Error occurred'); this.isUpdating = false; }); } }"
                                     style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
                                     <div style="display:flex;align-items:center;justify-content:space-between;">
                                         <div style="display:flex;align-items:center;gap:8px;">
@@ -1112,9 +1230,25 @@
                                                 <i class="fa-solid fa-file-invoice"></i>
                                             </div>
                                             <div>
-                                                <p style="font-size:11.5px;font-weight:800;color:#0f172a;margin:0;">
-                                                    Rs.{{ number_format($tx->amount, 2) }}</p>
-                                                <p style="font-size:10px;color:#64748b;margin:0;font-weight:600;">
+                                                <div style="display:flex;align-items:center;gap:8px;">
+                                                    <p style="font-size:11.5px;font-weight:800;color:#0f172a;margin:0;">
+                                                        Rs.{{ number_format($tx->amount, 2) }}
+                                                    </p>
+                                                    @php
+                                                        $pm = strtolower($tx->payment_method ?? 'unknown');
+                                                        $pmLabels = ['cash'=>'Cash', 'card'=>'Card', 'bank'=>'Bank Transfer', 'credit'=>'Credit', 'online'=>'Online'];
+                                                        $pmLabel = $pmLabels[$pm] ?? ucfirst($pm);
+                                                        $pmColors = ['cash'=>'#d1fae5:#065f46', 'card'=>'#dbeafe:#1e40af', 'bank'=>'#f3e8ff:#7e22ce', 'credit'=>'#ffedd5:#c2410c', 'online'=>'#e0e7ff:#3730a3'];
+                                                        $pmBg = explode(':', $pmColors[$pm] ?? '#f1f5f9:#475569');
+                                                    @endphp
+                                                    <span style="background:{{ $pmBg[0] }};color:{{ $pmBg[1] }};font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.02em;">
+                                                        {{ $pmLabel }}
+                                                    </span>
+                                                    <button type="button" @click="openPaymentEditModal = true" style="color:#3b82f6;font-size:10px;font-weight:700;cursor:pointer;border:none;background:none;padding:2px;outline:none;text-decoration:underline;" title="Change Payment Method">
+                                                        Edit
+                                                    </button>
+                                                </div>
+                                                <p style="font-size:10px;color:#64748b;margin:3px 0 0;font-weight:600;">
                                                     {{ $tx->created_at->format('M d, h:i A') }}
                                                 </p>
                                             </div>
@@ -1132,6 +1266,7 @@
                                         @endif
                                     </div>
 
+                                    @if($tx->receipt_path || $tx->status === 'pending')
                                     <div style="display:flex;gap:6px;margin-top:4px;">
                                         @if($tx->receipt_path)
                                             <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
@@ -1139,10 +1274,6 @@
                                                 style="flex:1;text-align:center;padding:6px;background:white;color:#334155;border:1px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:700;text-decoration:none;transition:all 0.15s;"
                                                 onmouseover="this.style.background='#f1f5f9'"
                                                 onmouseout="this.style.background='white'">View Slip</a>
-                                        @else
-                                            <span
-                                                style="flex:1;text-align:center;padding:6px;background:#f8fafc;color:#94a3b8;border:1px solid #e2e8f0;border-radius:6px;font-size:11px;font-weight:700;">No
-                                                Slip (Card)</span>
                                         @endif
 
                                         @if($tx->status === 'pending')
@@ -1150,6 +1281,7 @@
                                                 style="flex:1;padding:6px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">Review</button>
                                         @endif
                                     </div>
+                                    @endif
 
                                     @if($tx->status === 'rejected')
                                         <div
@@ -1159,6 +1291,42 @@
                                             {{ $tx->reject_reason }}
                                         </div>
                                     @endif
+
+                                    <!-- Change Payment Method Modal -->
+                                    <div x-show="openPaymentEditModal" style="display:none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                                        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openPaymentEditModal = false"></div>
+                                        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm flex flex-col overflow-hidden">
+                                            <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                                                <h3 class="text-sm font-bold text-slate-800">Change Payment Method</h3>
+                                                <button type="button" @click="openPaymentEditModal = false" class="text-slate-400 hover:text-slate-600">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </div>
+                                            <div class="p-4 space-y-4">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1">New Payment Method</label>
+                                                    <select x-model="newPaymentMethod" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold outline-none">
+                                                        <option value="cash">Cash</option>
+                                                        <option value="card">Card</option>
+                                                        <option value="bank">Bank Transfer</option>
+                                                        <option value="credit">Credit</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1">Reason for Change <span class="text-red-500">*</span></label>
+                                                    <input type="text" x-model="editReason" placeholder="Customer requested, Mistake, etc." class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium outline-none">
+                                                </div>
+                                            </div>
+                                            <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+                                                <button type="button" @click="openPaymentEditModal = false" class="flex-1 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                                                <button type="button" @click="updatePaymentMethod()" :disabled="!editReason || isUpdating" class="flex-1 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm flex items-center justify-center gap-2 transition-colors">
+                                                    <span x-show="!isUpdating">Submit Request</span>
+                                                    <i x-show="isUpdating" class="fa-solid fa-spinner fa-spin"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- End Change Payment Method Modal -->
 
                                     <!-- Review Modal -->
                                     <template x-teleport="body">
@@ -1288,6 +1456,58 @@
                                             </div>
                                         </div>
                                     </template>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
+                @if($order->correctionRequests->where('type', 'payment_change')->count() > 0)
+                    <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
+                        <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">
+                            Payment Edit History</h3>
+                        <div style="display:flex;flex-direction:column;gap:10px;">
+                            @foreach($order->correctionRequests->where('type', 'payment_change')->sortByDesc('created_at') as $cr)
+                                <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;font-size:12px;display:flex;flex-direction:column;gap:6px;
+                                    {{ $cr->status === 'pending' ? 'border-left:4px solid #f59e0b;' : ($cr->status === 'approved' ? 'border-left:4px solid #10b981;' : 'border-left:4px solid #ef4444;') }}">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                                        <strong style="font-size:10px;text-transform:uppercase;letter-spacing:0.05em;color:#475569;">
+                                            {{ ucfirst($cr->status) }} Request
+                                        </strong>
+                                        <span style="font-size:10px;color:#64748b;font-weight:600;">{{ $cr->created_at->format('M d, h:i A') }}</span>
+                                    </div>
+                                    @php
+                                        $oldMethod = $cr->old_data['payment_method'] ?? 'unknown';
+                                        $newMethod = $cr->new_data['payment_method'] ?? 'unknown';
+                                    @endphp
+                                    <div style="display:flex;align-items:center;gap:8px;">
+                                        <span style="text-decoration:line-through;color:#ef4444;font-weight:700;">{{ ucfirst($oldMethod) }}</span>
+                                        <i class="fa-solid fa-arrow-right" style="color:#94a3b8;font-size:10px;"></i>
+                                        <span style="color:#10b981;font-weight:800;">{{ ucfirst($newMethod) }}</span>
+                                    </div>
+                                    @if($cr->reason)
+                                        <div style="background:white;padding:6px 8px;border-radius:6px;border:1px solid #e2e8f0;color:#334155;font-style:italic;font-size:11px;">
+                                            "{{ $cr->reason }}"
+                                        </div>
+                                    @endif
+                                    <div style="font-size:10px;color:#64748b;margin-top:2px;">
+                                        By <strong>{{ $cr->requestedBy->name ?? 'Unknown' }}</strong>
+                                        @if($cr->status !== 'pending' && $cr->approvedBy)
+                                            &bull; {{ ucfirst($cr->status) }} by <strong>{{ $cr->approvedBy->name }}</strong>
+                                        @endif
+                                    </div>
+                                    @if($cr->status === 'pending' && in_array(auth()->user()->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']))
+                                        <div style="display:flex;gap:6px;margin-top:6px;">
+                                            <form action="{{ route('corrections.approve', $cr->id) }}" method="POST" style="flex:1;" onsubmit="return confirm('Approve payment change?')">
+                                                @csrf
+                                                <button type="submit" style="width:100%;padding:6px;background:#10b981;color:white;border:none;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;">Approve</button>
+                                            </form>
+                                            <form action="{{ route('corrections.reject', $cr->id) }}" method="POST" style="flex:1;" onsubmit="return confirm('Reject payment change?')">
+                                                @csrf
+                                                <button type="submit" style="width:100%;padding:6px;background:#fee2e2;color:#ef4444;border:none;border-radius:6px;font-size:10px;font-weight:800;cursor:pointer;">Reject</button>
+                                            </form>
+                                        </div>
+                                    @endif
                                 </div>
                             @endforeach
                         </div>
