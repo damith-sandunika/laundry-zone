@@ -14,10 +14,7 @@
                         </span>
                         <span class="text-[10px] sm:text-xs font-bold text-green-700 tracking-wide uppercase whitespace-nowrap">Shift Active</span>
                     </div>
-                    <a href="{{ route('workshop.operations') }}" class="flex items-center justify-center gap-1.5 px-3 sm:px-5 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-[11px] sm:text-[13px] font-extrabold rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 hover:-translate-y-0.5 transition-all duration-300 h-9 sm:h-10 flex-1 sm:flex-none whitespace-nowrap">
-                        <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                        Manage Items
-                    </a>
+
                     <div x-data="{ showCloseShiftModal: false }">
                         <button @click="showCloseShiftModal = true" class="flex items-center justify-center w-full px-3 sm:px-5 py-2 bg-white text-slate-600 text-[11px] sm:text-[13px] font-bold border border-slate-200 rounded-xl hover:bg-slate-50 hover:text-slate-800 transition-colors h-9 sm:h-10 shadow-sm whitespace-nowrap">
                             Close Shift
@@ -237,10 +234,7 @@
                                 <span :class="orderTab === 'next' ? 'bg-white/20 text-white' : 'bg-white text-slate-600 shadow-sm'" class="px-1.5 py-0.5 rounded text-[9px] font-black">{{ $nextCount }}</span>
                             </button>
                         </div>
-                        <a href="{{ route('workshop.operations') }}" class="hidden md:flex items-center gap-2 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors whitespace-nowrap shrink-0">
-                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-                            Manage Items
-                        </a>
+
                     </div>
                 </div>
                 <div class="overflow-x-auto overflow-y-auto max-h-[400px] custom-scrollbar relative">
