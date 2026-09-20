@@ -11,9 +11,9 @@ return new class extends Migration
     public function up(): void
     {
         if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card', 'credit', 'bank') NULL DEFAULT 'cash'");
-            DB::statement("ALTER TABLE payment_transactions MODIFY COLUMN payment_method ENUM('cash', 'card', 'bank') NOT NULL");
-            DB::statement("ALTER TABLE package_payments MODIFY COLUMN payment_method ENUM('cash', 'card', 'bank') NOT NULL");
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card', 'credit', 'bank') NULL DEFAULT 'cash'"); }
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE payment_transactions MODIFY COLUMN payment_method ENUM('cash', 'card', 'bank') NOT NULL"); }
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE package_payments MODIFY COLUMN payment_method ENUM('cash', 'card', 'bank') NOT NULL"); }
         }
     }
 
@@ -23,9 +23,10 @@ return new class extends Migration
     public function down(): void
     {
         if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card', 'credit') NULL DEFAULT 'cash'");
-            DB::statement("ALTER TABLE payment_transactions MODIFY COLUMN payment_method ENUM('cash', 'card') NOT NULL");
-            DB::statement("ALTER TABLE package_payments MODIFY COLUMN payment_method ENUM('cash', 'card') NOT NULL");
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card', 'credit') NULL DEFAULT 'cash'"); }
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE payment_transactions MODIFY COLUMN payment_method ENUM('cash', 'card') NOT NULL"); }
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE package_payments MODIFY COLUMN payment_method ENUM('cash', 'card') NOT NULL"); }
         }
     }
 };
+

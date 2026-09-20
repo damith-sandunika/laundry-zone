@@ -12,8 +12,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        DB::statement("ALTER TABLE service_types MODIFY price_type ENUM('per_item', 'per_kg', 'per_sqft') DEFAULT 'per_item'");
-        DB::statement("ALTER TABLE extras MODIFY price_type ENUM('per_piece', 'per_kg', 'per_sqft') DEFAULT 'per_piece'");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE service_types MODIFY price_type ENUM('per_item', 'per_kg', 'per_sqft') DEFAULT 'per_item'"); }
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE extras MODIFY price_type ENUM('per_piece', 'per_kg', 'per_sqft') DEFAULT 'per_piece'"); }
     }
 
     /**
@@ -21,7 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        DB::statement("ALTER TABLE service_types MODIFY price_type ENUM('per_item', 'per_kg') DEFAULT 'per_item'");
-        DB::statement("ALTER TABLE extras MODIFY price_type ENUM('per_piece', 'per_kg') DEFAULT 'per_piece'");
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE service_types MODIFY price_type ENUM('per_item', 'per_kg') DEFAULT 'per_item'"); }
+        if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE extras MODIFY price_type ENUM('per_piece', 'per_kg') DEFAULT 'per_piece'"); }
     }
 };
+

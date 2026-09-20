@@ -65,9 +65,21 @@ class PaymentController extends Controller
                 \Illuminate\Support\Facades\DB::transaction(function () use ($orderId, $payhereAmount) {
                     $order = Order::find($orderId);
                     if ($order && !$order->payment_approved) {
+                        $paid = $order->paid_amount + $payhereAmount;
+                        $paymentStatus = $paid >= $order->total ? 'paid' : ($paid > 0 ? 'partial' : 'unpaid');
+
+                        \App\Models\PaymentTransaction::create([
+                            'order_id'       => $order->id,
+                            'amount'         => $payhereAmount,
+                            'payment_method' => 'bank',
+                            'status'         => 'completed',
+                            'transaction_id' => 'PAYHERE-' . $orderId,
+                        ]);
+
                         $order->update([
                             'payment_approved' => true,
-                            'paid_amount'      => $order->paid_amount + $payhereAmount,
+                            'paid_amount'      => $paid,
+                            'payment_status'   => $paymentStatus,
                         ]);
 
                         // Notify Admins

@@ -85,7 +85,7 @@ class WorkshopDispatchDeliveryAction
                     'transaction_id'          => 'TXN-' . strtoupper(uniqid()),
                 ]);
                 $order->update([
-                    'paid_amount'    => $order->total,
+                    'paid_amount'    => $order->paid_amount + $amountToPay,
                     'payment_status' => 'paid',
                     'payment_method' => $paymentMethod,
                 ]);

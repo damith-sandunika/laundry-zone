@@ -44,6 +44,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'sms/callback',
             'payment/webhook',
+            ...(env('APP_ENV') === 'testing' ? ['*'] : []),
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

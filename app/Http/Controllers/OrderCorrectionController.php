@@ -199,16 +199,8 @@ class OrderCorrectionController extends Controller
                         $oldMethod = $tx->payment_method;
                         if ($newMethod === 'credit' && $oldMethod !== 'credit') {
                             $tx->delete();
-                            if ($order->paymentTransactions()->count() === 0) {
-                                $order->update([
-                                    'payment_method' => 'credit',
-                                    'paid_amount' => 0,
-                                    'payment_status' => 'unpaid'
-                                ]);
-                            }
                         } else {
                             $tx->update(['payment_method' => $newMethod]);
-                            $order->update(['payment_method' => $newMethod]);
                         }
                     }
                 } else {
@@ -216,11 +208,6 @@ class OrderCorrectionController extends Controller
 
                     if ($newMethod === 'credit' && $oldMethod !== 'credit') {
                         PaymentTransaction::where('order_id', $order->id)->delete();
-                        $order->update([
-                            'payment_method' => $newMethod,
-                            'paid_amount' => 0,
-                            'payment_status' => 'unpaid'
-                        ]);
                     } elseif ($oldMethod === 'credit' && $newMethod !== 'credit') {
                         PaymentTransaction::create([
                             'order_id' => $order->id,
@@ -229,21 +216,21 @@ class OrderCorrectionController extends Controller
                             'status' => 'completed',
                             'created_by' => auth()->id() ?? 1,
                         ]);
-                        $order->update([
-                            'payment_method' => $newMethod,
-                            'paid_amount' => $order->total,
-                            'payment_status' => 'paid'
-                        ]);
                     } else {
-                        $order->update([
-                            'payment_method' => $newMethod,
-                        ]);
                         PaymentTransaction::where('order_id', $order->id)
                             ->where('payment_method', $oldMethod)
                             ->update(['payment_method' => $newMethod]);
                     }
                 }
 
+                $actualPaidAmount = PaymentTransaction::where('order_id', $order->id)->where('status', 'completed')->sum('amount');
+                $paymentStatus = $actualPaidAmount >= $order->total ? 'paid' : ($actualPaidAmount > 0 ? 'partial' : ($newMethod === 'credit' ? 'pending' : 'unpaid'));
+                
+                $order->update([
+                    'payment_method' => $newMethod,
+                    'paid_amount' => $actualPaidAmount,
+                    'payment_status' => $paymentStatus,
+                ]);
             } else if ($correction->type === 'items_change' || $correction->type === 'order_change') {
                 $newMethod = $order->payment_method;
                 $oldMethod = $order->payment_method;

@@ -95,7 +95,9 @@ class BulkUpdateOrderStatusAction
                             ]);
                         }
                         $order->payment_status = 'paid';
-                        $order->paid_amount = $order->total;
+                        if ($amountToPay > 0) {
+                            $order->paid_amount += $amountToPay;
+                        }
                     }
 
                     $orderCubby = $order->cubbies()->whereNull('released_at')->first();

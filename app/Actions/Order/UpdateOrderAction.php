@@ -93,10 +93,11 @@ class UpdateOrderAction
             $deliveryFee = isset($data['delivery_fee']) ? (float)$data['delivery_fee'] : $order->delivery_fee;
             $total = $subtotal - $discountAmount + $deliveryFee;
 
-            $paidAmount = $order->paid_amount;
-            if ($paidAmount > $total) {
-                $paidAmount = $total;
-            }
+            $paidAmount = \App\Models\PaymentTransaction::where('order_id', $order->id)
+                ->where('status', 'completed')
+                ->sum('amount');
+
+            $paymentStatus = $paidAmount >= $total ? 'paid' : ($paidAmount > 0 ? 'partial' : ($order->payment_method === 'credit' ? 'pending' : 'unpaid'));
 
             $order->update([
                 'subtotal' => $subtotal,
@@ -104,6 +105,7 @@ class UpdateOrderAction
                 'delivery_fee' => $deliveryFee,
                 'total' => $total,
                 'paid_amount' => $paidAmount,
+                'payment_status' => $paymentStatus,
                 'requested_advance' => $data['requested_advance'] ?? $order->requested_advance,
             ]);
 

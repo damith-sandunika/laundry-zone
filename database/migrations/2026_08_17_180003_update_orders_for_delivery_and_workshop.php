@@ -11,7 +11,7 @@ return new class extends Migration
     {
         // Update orders status enum to include workshop & delivery statuses
         if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
                 'received',
                 'processing',
                 'washing',
@@ -24,7 +24,7 @@ return new class extends Migration
                 'out_for_delivery',
                 'delivered',
                 'cancelled'
-            ) DEFAULT 'received'");
+            ) DEFAULT 'received'"); }
         }
 
         // Add delivery-related columns to orders
@@ -46,9 +46,10 @@ return new class extends Migration
         });
 
         if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM(
                 'received','processing','washing','drying','folding','done','delivered','cancelled'
-            ) DEFAULT 'received'");
+            ) DEFAULT 'received'"); }
         }
     }
 };
+

@@ -71,7 +71,9 @@ class UpdateOrderStatusAction
                         ]);
                     }
                     $order->payment_status = 'paid';
-                    $order->paid_amount     = $order->total;
+                    if ($amountToPay > 0) {
+                        $order->paid_amount += $amountToPay;
+                    }
                 }
 
                 $orderCubby = $order->cubbies()->whereNull('released_at')->first();
@@ -101,7 +103,9 @@ class UpdateOrderStatusAction
                         'status'                  => 'completed',
                         'transaction_id'          => 'TXN-' . strtoupper(uniqid()),
                     ]);
-                    $order->paid_amount    = $order->total;
+                    if ($amountToPay > 0) {
+                        $order->paid_amount += $amountToPay;
+                    }
                     $order->payment_status = 'paid';
                 } else {
                     PaymentTransaction::where('order_id', $order->id)

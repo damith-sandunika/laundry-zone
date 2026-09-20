@@ -13,8 +13,12 @@ class ReverseOrderAction
     {
         DB::transaction(function () use ($order, $userId) {
             $order->status = 'received';
-            $order->payment_status = 'pending';
+            $order->payment_status = 'unpaid';
             $order->paid_amount = 0;
+            $order->payment_method = null;
+
+            // Delete all payment transactions for this order since it's being fully reversed
+            \App\Models\PaymentTransaction::where('order_id', $order->id)->delete();
 
             $orderCubby = $order->cubbies()->whereNull('released_at')->first();
             if ($orderCubby) {

@@ -447,7 +447,7 @@ class OrderController extends Controller
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage()
             ]);
-            abort(403, 'An error occurred while rejecting payment.');
+            return response()->json(['success' => false, 'message' => 'An error occurred while rejecting payment.'], 500);
         }
     }
 

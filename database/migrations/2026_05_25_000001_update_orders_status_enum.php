@@ -12,7 +12,7 @@ return new class extends Migration
 
         // 2. Update the ENUM column to use new status values
         if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','done','delivered','cancelled') NOT NULL DEFAULT 'received'");
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','done','delivered','cancelled') NOT NULL DEFAULT 'received'"); }
         }
     }
 
@@ -20,9 +20,10 @@ return new class extends Migration
     {
         // Restore old enum values
         if (DB::getDriverName() !== 'sqlite') {
-            DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','washing','drying','ready','delivered','cancelled') NOT NULL DEFAULT 'received'");
+            if (DB::getDriverName() !== 'sqlite') { DB::statement("ALTER TABLE orders MODIFY COLUMN status ENUM('received','washing','drying','ready','delivered','cancelled') NOT NULL DEFAULT 'received'"); }
         }
         // Convert 'done' back to 'ready'
         DB::statement("UPDATE orders SET status = 'ready' WHERE status = 'done'");
     }
 };
+

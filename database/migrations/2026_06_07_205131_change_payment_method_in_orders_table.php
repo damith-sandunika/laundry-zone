@@ -10,7 +10,7 @@ return new class extends Migration
     public function up(): void
     {
         if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
-            \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card', 'credit') NULL DEFAULT 'cash'");
+            if (DB::getDriverName() !== 'sqlite') { \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card', 'credit') NULL DEFAULT 'cash'"); }
         }
     }
 
@@ -20,7 +20,9 @@ return new class extends Migration
     public function down(): void
     {
         if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
-            \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card') NULL DEFAULT 'cash'");
+            if (DB::getDriverName() !== 'sqlite') { \Illuminate\Support\Facades\DB::statement("ALTER TABLE orders MODIFY COLUMN payment_method ENUM('cash', 'card') NULL DEFAULT 'cash'"); }
         }
     }
 };
+
+
