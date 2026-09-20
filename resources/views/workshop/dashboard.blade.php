@@ -222,16 +222,19 @@
                         }
                     @endphp
                     
-                    <div class="flex items-center gap-3 w-full md:w-auto">
-                        <div class="flex bg-slate-200/50 p-1 rounded-xl flex-1 md:flex-none overflow-x-auto custom-scrollbar">
-                            <button @click="orderTab = 'today'" :class="orderTab === 'today' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 md:px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap">
-                                Today <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-[10px] font-black">{{ $todayCount }}</span>
+                    <div class="flex items-center gap-2 w-full md:w-auto">
+                        <div class="flex gap-2 flex-1 md:flex-none overflow-x-auto custom-scrollbar pb-1 md:pb-0">
+                            <button @click="orderTab = 'today'" :class="orderTab === 'today' ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'" class="px-4 py-2 text-xs font-black rounded-xl transition-all flex items-center gap-2 whitespace-nowrap">
+                                Today
+                                <span :class="orderTab === 'today' ? 'bg-white/20 text-white' : 'bg-white text-slate-600 shadow-sm'" class="px-2 py-0.5 rounded-md text-[10px] font-black">{{ $todayCount }}</span>
                             </button>
-                            <button @click="orderTab = 'tomorrow'" :class="orderTab === 'tomorrow' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 md:px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap">
-                                Tomorrow <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-[10px] font-black">{{ $tomorrowCount }}</span>
+                            <button @click="orderTab = 'tomorrow'" :class="orderTab === 'tomorrow' ? 'bg-indigo-600 text-white shadow-md shadow-indigo-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'" class="px-4 py-2 text-xs font-black rounded-xl transition-all flex items-center gap-2 whitespace-nowrap">
+                                Tomorrow
+                                <span :class="orderTab === 'tomorrow' ? 'bg-white/20 text-white' : 'bg-white text-slate-600 shadow-sm'" class="px-2 py-0.5 rounded-md text-[10px] font-black">{{ $tomorrowCount }}</span>
                             </button>
-                            <button @click="orderTab = 'next'" :class="orderTab === 'next' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 md:px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap">
-                                Next <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-[10px] font-black">{{ $nextCount }}</span>
+                            <button @click="orderTab = 'next'" :class="orderTab === 'next' ? 'bg-violet-600 text-white shadow-md shadow-violet-500/30' : 'bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-800'" class="px-4 py-2 text-xs font-black rounded-xl transition-all flex items-center gap-2 whitespace-nowrap">
+                                Next
+                                <span :class="orderTab === 'next' ? 'bg-white/20 text-white' : 'bg-white text-slate-600 shadow-sm'" class="px-2 py-0.5 rounded-md text-[10px] font-black">{{ $nextCount }}</span>
                             </button>
                         </div>
                         <a href="{{ route('workshop.operations') }}" class="hidden md:flex items-center gap-2 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors whitespace-nowrap shrink-0">
@@ -241,14 +244,14 @@
                     </div>
                 </div>
                 <div class="overflow-x-auto overflow-y-auto max-h-[400px] custom-scrollbar relative">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse table-fixed">
                         <thead class="sticky top-0 z-10">
                             <tr class="bg-slate-50 border-b border-slate-100">
-                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Order</th>
-                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Customer</th>
-                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest whitespace-nowrap">Due Date</th>
-                                <th class="px-6 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-center whitespace-nowrap">Status</th>
-                                <th class="px-6 py-3.5 text-right"></th>
+                                <th class="px-3 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-[20%]">Order</th>
+                                <th class="px-3 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-[30%]">Customer</th>
+                                <th class="px-3 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest w-[25%]">Due Date</th>
+                                <th class="px-3 py-3.5 text-[10px] font-extrabold text-slate-400 uppercase tracking-widest text-center w-[15%]">Status</th>
+                                <th class="px-3 py-3.5 text-right w-[10%]"></th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50/50">
@@ -257,35 +260,45 @@
                                     $sc = ['received' => ['text-slate-600', 'bg-slate-100'], 'washing' => ['text-blue-700', 'bg-blue-50'], 'drying' => ['text-violet-700', 'bg-violet-50'], 'ready' => ['text-emerald-700', 'bg-emerald-50'], 'delivered' => ['text-teal-700', 'bg-teal-50'], 'cancelled' => ['text-red-700', 'bg-red-50']];
                                     $c = $sc[$order->status] ?? ['text-slate-600', 'bg-slate-100'];
                                     
-                                    $dueDate = ($order->order && $order->order->due_date) ? \Carbon\Carbon::parse($order->order->due_date)->startOfDay() : null;
+                                    $dueDate = ($order->order && $order->order->due_date) ? \Carbon\Carbon::parse($order->order->due_date) : null;
                                     $rowTab = 'next';
-                                    if ($dueDate && $dueDate->lessThanOrEqualTo(today())) $rowTab = 'today';
-                                    elseif ($dueDate && $dueDate->isTomorrow()) $rowTab = 'tomorrow';
+                                    if ($dueDate && $dueDate->startOfDay()->lessThanOrEqualTo(today())) $rowTab = 'today';
+                                    elseif ($dueDate && $dueDate->startOfDay()->isTomorrow()) $rowTab = 'tomorrow';
+                                    
+                                    $isOverdue = $dueDate && $dueDate->isPast();
                                 @endphp
-                                <tr x-show="orderTab === '{{ $rowTab }}'" class="hover:bg-slate-50/50 transition-colors group">
-                                    <td class="px-6 py-4 whitespace-nowrap">
-                                        <a href="{{ route('orders.show', $order->order->order_number) }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order->order_number ?? 'N/A' }}</a>
+                                <tr x-show="orderTab === '{{ $rowTab }}'" class="hover:bg-slate-50/50 transition-colors group {{ $isOverdue ? 'bg-red-50/30' : '' }}">
+                                    <td class="px-3 py-4 truncate">
+                                        <a href="{{ route('orders.show', $order->order->order_number ?? '') }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order->order_number ?? 'N/A' }}</a>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-[13px] font-bold text-slate-700">
+                                    <td class="px-3 py-4 text-[13px] font-bold text-slate-700 break-words">
                                         {{ $order->order->customer->name ?? 'N/A' }}
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap">
+                                    <td class="px-3 py-4 truncate">
                                         @if($order->order && $order->order->due_date)
-                                            <div class="text-[12px] font-bold text-slate-800">{{ \Carbon\Carbon::parse($order->order->due_date)->format('M d, Y') }}</div>
-                                            <div class="text-[11px] font-semibold text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($order->order->due_date)->format('h:i A') }}</div>
-
+                                            <div class="flex items-center gap-2">
+                                                <div>
+                                                    <div class="text-[12px] font-bold {{ $isOverdue ? 'text-red-600' : 'text-slate-800' }}">{{ \Carbon\Carbon::parse($order->order->due_date)->format('M d, Y') }}</div>
+                                                    <div class="text-[11px] font-semibold {{ $isOverdue ? 'text-red-500' : 'text-slate-400' }} mt-0.5">{{ \Carbon\Carbon::parse($order->order->due_date)->format('h:i A') }}</div>
+                                                </div>
+                                                @if($isOverdue)
+                                                    <span class="flex items-center justify-center w-6 h-6 rounded-full bg-red-100 animate-pulse text-red-600" title="Overdue">
+                                                        <i class="fa-solid fa-clock text-[10px]"></i>
+                                                    </span>
+                                                @endif
+                                            </div>
                                         @else
                                             <span class="text-[12px] font-semibold text-slate-400">N/A</span>
                                         @endif
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                        <span class="inline-flex px-2.5 py-1 rounded-md text-[10px] font-black uppercase tracking-widest {{ $c[0] }} {{ $c[1] }}">{{ $order->status }}</span>
+                                    <td class="px-3 py-4 text-center">
+                                        <span class="inline-block px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-widest {{ $c[0] }} {{ $c[1] }} truncate max-w-full">{{ $order->status }}</span>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-right">
+                                    <td class="px-3 py-4 text-right">
                                         @if($order->order && $order->order->receipt_path)
-                                            <a href="{{ \Illuminate\Support\Str::startsWith($order->order->receipt_path, 'http') ? $order->order->receipt_path : asset('storage/' . $order->order->receipt_path) }}" target="_blank" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 rounded-lg text-[11px] font-bold transition-all mr-1">View Invoice</a>
+                                            <a href="{{ \Illuminate\Support\Str::startsWith($order->order->receipt_path, 'http') ? $order->order->receipt_path : asset('storage/' . $order->order->receipt_path) }}" target="_blank" class="inline-block px-2 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-green-700 hover:border-green-200 hover:bg-green-50 rounded-lg text-[10px] font-bold transition-all mb-1 lg:mb-0 lg:mr-1">Invoice</a>
                                         @endif
-                                        <a href="{{ route('orders.show', $order->order->order_number) }}" class="inline-block px-3 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[11px] font-bold transition-all">View</a>
+                                        <a href="{{ route('orders.show', $order->order->order_number ?? '') }}" class="inline-block px-2 py-1.5 bg-white border border-slate-200 text-slate-600 hover:text-blue-700 hover:border-blue-200 hover:bg-blue-50 rounded-lg text-[10px] font-bold transition-all">View</a>
                                     </td>
                                 </tr>
                             @empty
