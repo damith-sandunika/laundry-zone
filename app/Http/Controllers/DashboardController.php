@@ -92,7 +92,6 @@ class DashboardController extends Controller
         $recentOrders = (clone $activeOrders)->with('customer')
             ->orderByRaw('due_date IS NULL') // Put null due dates at the end
             ->orderBy('due_date', 'asc')
-            ->take(50)
             ->get();
 
         // Low stock items

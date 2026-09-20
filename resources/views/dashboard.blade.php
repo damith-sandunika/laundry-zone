@@ -241,16 +241,44 @@
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
 
             {{-- Recent Orders --}}
-            <div class="bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden animate-slide-up" style="animation-delay: 200ms;">
-                <div class="px-6 py-5 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4 bg-slate-50/50">
+            <div class="bg-white/70 backdrop-blur-md rounded-3xl border border-slate-200/60 shadow-sm overflow-hidden animate-slide-up" style="animation-delay: 200ms;" x-data="{ orderTab: 'today' }">
+                <div class="px-6 py-5 border-b border-slate-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-slate-50/50">
                     <div>
                         <h3 class="text-base font-black text-slate-900 tracking-tight">Recent Orders</h3>
                         <p class="text-[12px] font-semibold text-slate-500">Currently processing</p>
                     </div>
-                    <a href="{{ route('pos.index') }}" class="flex items-center gap-2 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors">
-                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
-                        New Order
-                    </a>
+                    
+                    @php
+                        $todayCount = 0;
+                        $tomorrowCount = 0;
+                        $nextCount = 0;
+                        foreach($recentOrders as $order) {
+                            $dueDate = $order->due_date ? \Carbon\Carbon::parse($order->due_date)->startOfDay() : null;
+                            if (!$dueDate) { $nextCount++; continue; }
+                            
+                            if ($dueDate->lessThanOrEqualTo(today())) $todayCount++;
+                            elseif ($dueDate->isTomorrow()) $tomorrowCount++;
+                            else $nextCount++;
+                        }
+                    @endphp
+                    
+                    <div class="flex items-center gap-3 w-full md:w-auto">
+                        <div class="flex bg-slate-200/50 p-1 rounded-xl flex-1 md:flex-none overflow-x-auto custom-scrollbar">
+                            <button @click="orderTab = 'today'" :class="orderTab === 'today' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 md:px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap">
+                                Today <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-[10px] font-black">{{ $todayCount }}</span>
+                            </button>
+                            <button @click="orderTab = 'tomorrow'" :class="orderTab === 'tomorrow' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 md:px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap">
+                                Tomorrow <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-[10px] font-black">{{ $tomorrowCount }}</span>
+                            </button>
+                            <button @click="orderTab = 'next'" :class="orderTab === 'next' ? 'bg-white text-slate-800 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 md:px-4 py-1.5 text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap">
+                                Next <span class="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded-md text-[10px] font-black">{{ $nextCount }}</span>
+                            </button>
+                        </div>
+                        <a href="{{ route('pos.index') }}" class="hidden md:flex items-center gap-2 px-3.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold rounded-xl transition-colors whitespace-nowrap shrink-0">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
+                            New Order
+                        </a>
+                    </div>
                 </div>
                 <div class="overflow-x-auto overflow-y-auto max-h-[400px] custom-scrollbar relative">
                     <table class="w-full text-left border-collapse">
@@ -268,8 +296,13 @@
                                 @php
                                     $sc = ['received' => ['text-slate-600', 'bg-slate-100'], 'washing' => ['text-blue-700', 'bg-blue-50'], 'drying' => ['text-violet-700', 'bg-violet-50'], 'ready' => ['text-emerald-700', 'bg-emerald-50'], 'delivered' => ['text-teal-700', 'bg-teal-50'], 'cancelled' => ['text-red-700', 'bg-red-50']];
                                     $c = $sc[$order->status] ?? ['text-slate-600', 'bg-slate-100'];
+                                    
+                                    $dueDate = $order->due_date ? \Carbon\Carbon::parse($order->due_date)->startOfDay() : null;
+                                    $rowTab = 'next';
+                                    if ($dueDate && $dueDate->lessThanOrEqualTo(today())) $rowTab = 'today';
+                                    elseif ($dueDate && $dueDate->isTomorrow()) $rowTab = 'tomorrow';
                                 @endphp
-                                <tr class="hover:bg-slate-50/50 transition-colors group">
+                                <tr x-show="orderTab === '{{ $rowTab }}'" class="hover:bg-slate-50/50 transition-colors group">
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <a href="{{ route('orders.show', $order->order_number) }}" class="text-[13px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order_number }}</a>
                                     </td>

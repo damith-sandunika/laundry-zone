@@ -213,6 +213,13 @@
                 }
             } catch(e) {}
             applySize();
+            
+            // Auto-print if requested via URL
+            if (window.location.search.includes('auto_print=1')) {
+                setTimeout(function() {
+                    window.print();
+                }, 500);
+            }
         };
     </script>
 </body>

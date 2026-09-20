@@ -314,7 +314,6 @@ class WorkshopController extends Controller
             ->whereIn('workshop_dispatches.status', ['dispatched_to_workshop', 'received_at_workshop', 'processing'])
             ->orderByRaw('orders.due_date IS NULL')
             ->orderBy('orders.due_date', 'asc')
-            ->take(50)
             ->get();
 
         // Low stock items

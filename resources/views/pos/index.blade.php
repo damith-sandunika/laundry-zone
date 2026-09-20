@@ -437,6 +437,21 @@
                         </div>
                     </div>
 
+                    <!-- Print Size Setting -->
+                    <div class="mb-3 px-1">
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Print Size (Chit)</label>
+                        <select onchange="let s = JSON.parse(localStorage.getItem('chit_print_settings') || '{}'); s.width = this.value; localStorage.setItem('chit_print_settings', JSON.stringify(s))"
+                            x-init="$el.value = JSON.parse(localStorage.getItem('chit_print_settings') || '{}').width || '80mm'"
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                            <option value="58mm">58mm (Narrow)</option>
+                            <option value="72mm">72mm</option>
+                            <option value="80mm">80mm (Wide)</option>
+                            <option value="100mm">100mm</option>
+                            <option value="148mm">A6 (148mm)</option>
+                            <option value="210mm">A5 (210mm)</option>
+                        </select>
+                    </div>
+
                     <!-- Total -->
                     <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
                         <span class="text-[13px] font-black text-blue-900 uppercase tracking-widest">Final Total</span>
@@ -606,7 +621,7 @@
                 </div>
 
                 <div class="flex flex-col gap-3">
-                    <button @click="printReceipt(orderNum)"
+                    <button @click="printReceipt(orderId)"
                         class="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-[14px] font-black rounded-xl shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2">
                         <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
                         Print Thermal Bill
@@ -1187,7 +1202,7 @@
                                     cart: data.cart
                                 }
                             }));
-                            printOrderChit(data.order_number);
+                            printOrderChit(data.order_id);
                             this.cart = [];
                             this.selectedCustomer = null;
                             this.paymentMode = 'pay_on_pickup';
@@ -1320,23 +1335,18 @@
         // The save-customer-btn listener is mostly handled by Alpine now, but we keep this just in case or we can rely fully on alpine
         // Wait, the new customer modal Alpine scope already handles it. So we can remove the vanilla JS listener to prevent duplication.
 
-        function printSilent(url) {
-            let iframe = document.getElementById('print-iframe');
-            if (!iframe) {
-                iframe = document.createElement('iframe');
-                iframe.id = 'print-iframe';
-                iframe.style.display = 'none';
-                document.body.appendChild(iframe);
-            }
-            iframe.src = url;
+        function printPopup(url) {
+            // Open in a new popup window to avoid browser iframe printing restrictions
+            // and to allow the user to see the chit/receipt control panel.
+            window.open(url, 'PrintWindow', 'width=800,height=800,top=100,left=100');
         }
 
         function printOrderChit(orderId) {
-            printSilent('/orders/' + orderId + '/chit');
+            printPopup('/orders/' + orderId + '/chit?auto_print=1');
         }
 
         function printReceipt(orderId) {
-            printSilent('/orders/' + orderId + '/print');
+            printPopup('/orders/' + orderId + '/print?auto_print=1');
         }
     </script>
 </x-app-layout>
