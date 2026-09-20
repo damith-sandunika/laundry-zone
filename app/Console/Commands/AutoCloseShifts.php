@@ -48,15 +48,24 @@ class AutoCloseShifts extends Command
         foreach ($openSessions as $session) {
             $branchId = $session->branch_id;
 
-            $salesCollected = Order::where('branch_id', $branchId)
+            $cashCollected = \App\Models\PaymentTransaction::whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
                 ->where('created_at', '>=', $session->opened_at)
+                ->where('payment_method', 'cash')
+                ->sum('amount');
+                
+            $directCashOrders = Order::where('branch_id', $branchId)
+                ->where('created_at', '>=', $session->opened_at)
+                ->where('payment_method', 'cash')
+                ->whereDoesntHave('paymentTransactions')
                 ->sum('paid_amount');
+                
+            $cashCollected += $directCashOrders;
 
-            $expensesLogged = Expense::where('branch_id', $branchId)
+            $bankDepositsLogged = \App\Models\BankDeposit::where('branch_id', $branchId)
                 ->where('created_at', '>=', $session->opened_at)
                 ->sum('amount');
 
-            $finalCash = $session->opening_cash + $salesCollected - $expensesLogged;
+            $finalCash = $session->opening_cash + $cashCollected - $bankDepositsLogged;
 
             $session->update([
                 'closing_cash' => $finalCash,
@@ -65,8 +74,13 @@ class AutoCloseShifts extends Command
                 'closed_by' => null, // Auto closed
             ]);
 
-
-
+            \App\Models\BranchLog::create([
+                'branch_id' => $branchId,
+                'user_id' => null,
+                'action' => 'shift_closed',
+                'description' => 'Shift auto-closed by system. Final Cash: Rs. ' . number_format($finalCash, 2),
+            ]);
+        }
         $this->info(count($openSessions).' shifts auto-closed.');
     }
 }
