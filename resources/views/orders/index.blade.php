@@ -394,7 +394,7 @@
                                 Order Date</th>
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">
-                                Pickup Date</th>
+                                Delivery Date</th>
                             <th
                                 style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">
                                 Status</th>

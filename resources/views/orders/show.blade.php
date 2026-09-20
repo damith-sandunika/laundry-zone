@@ -811,7 +811,7 @@
                                     </div>
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
                                         <span
-                                            style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup
+                                            style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Delivery
                                             Date</span>
                                         <p style="font-weight:700;color:#0f172a;margin:0;">
                                             {{ $order->due_date ? \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') : 'Not specified' }}
