@@ -75,7 +75,7 @@
                 </div>
 
                 <div class="space-y-1.5">
-                    <label class="block text-[11px] font-black text-slate-600 uppercase tracking-widest">Preferred Pickup Date *</label>
+                    <label class="block text-[11px] font-black text-slate-600 uppercase tracking-widest">Preferred Pickup Scheduled Date *</label>
                     <input type="date" name="preferred_date" value="{{ old('preferred_date') }}" min="{{ date('Y-m-d') }}" required class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-semibold text-slate-900 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 focus:bg-white outline-none transition-all placeholder:text-slate-400">
                 </div>
 

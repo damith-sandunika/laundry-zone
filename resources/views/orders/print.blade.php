@@ -146,8 +146,7 @@
     <div class="row" style="font-size: 12px;"><span>Date:</span><span
             class="bold">{{ $order->created_at->format('d M Y h:i A') }}</span></div>
     @if($order->due_date)
-        <div class="row" style="font-size: 12px;"><span>Pickup Date:</span><span
-                class="bold">{{ \Carbon\Carbon::parse($order->due_date)->format('d M Y h:i A') }}</span></div>
+        <div class="row" style="font-size: 12px;"><span>Delivery Date:</span><span>{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') }}</span></div>
     @endif
     <div class="row" style="font-size: 12px;"><span>Customer:</span><span
             class="bold">{{ $order->customer->title ? $order->customer->title . ' ' : '' }}{{ $order->customer->name }}</span>

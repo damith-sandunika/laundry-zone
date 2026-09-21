@@ -365,9 +365,9 @@
 
                 <div class="p-6 space-y-6 overflow-y-auto max-h-[75vh] custom-scrollbar">
                     
-                    <!-- Pickup Date -->
+                    <!-- Delivery Date -->
                     <div>
-                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Estimated Pickup Date</label>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Estimated Delivery Date</label>
                         <div class="flex gap-2">
                             <input type="datetime-local" id="due-date-input" x-model="dueDate"
                                 class="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
@@ -437,20 +437,7 @@
                         </div>
                     </div>
 
-                    <!-- Print Size Setting -->
-                    <div class="mb-3 px-1">
-                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Print Size (Chit)</label>
-                        <select onchange="let s = JSON.parse(localStorage.getItem('chit_print_settings') || '{}'); s.width = this.value; localStorage.setItem('chit_print_settings', JSON.stringify(s))"
-                            x-init="$el.value = JSON.parse(localStorage.getItem('chit_print_settings') || '{}').width || '80mm'"
-                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
-                            <option value="58mm">58mm (Narrow)</option>
-                            <option value="72mm">72mm</option>
-                            <option value="80mm">80mm (Wide)</option>
-                            <option value="100mm">100mm</option>
-                            <option value="148mm">A6 (148mm)</option>
-                            <option value="210mm">A5 (210mm)</option>
-                        </select>
-                    </div>
+
 
                     <!-- Total -->
                     <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
@@ -609,7 +596,7 @@
                         <span class="font-black text-emerald-600 text-[15px]" x-text="'Rs. ' + total"></span>
                     </div>
                     <div class="flex justify-between items-center pb-2 border-b border-slate-200/60" x-show="dueDate">
-                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Pickup Date:</span>
+                        <span class="text-[10px] font-extrabold text-slate-400 uppercase tracking-widest">Delivery Date:</span>
                         <span class="font-black text-orange-600 text-[13px]"
                             x-text="dueDate ? new Date(dueDate).toLocaleDateString('en-US', {day:'2-digit', month:'short', year:'numeric'}) : ''"></span>
                     </div>
@@ -674,7 +661,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Estimated Pickup Date</label>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Estimated Delivery Date</label>
                         <input type="datetime-local" x-model="dueDate" class="w-full bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
                     </div>
 
@@ -779,7 +766,7 @@
                         <div class="grid grid-cols-2 gap-4">
                             <!-- Pickup Date & Time -->
                             <div>
-                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Pickup Date <span class="text-red-500">*</span></label>
+                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Pickup Scheduled Date <span class="text-red-500">*</span></label>
                                 <input type="date" x-model="pickupDateOnly"
                                     class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-black text-slate-800 outline-none transition-all cursor-pointer">
                                 <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 mt-3">Pickup Time Slot <span class="text-red-500">*</span></label>

@@ -76,7 +76,7 @@
         </div>
 
         <div class="form-group">
-            <label>Preferred Pickup Date & Time *</label>
+            <label>Pickup Scheduled Date & Time *</label>
             <input type="datetime-local" name="pickup_scheduled_at" value="{{ old('pickup_scheduled_at') }}"
                    min="{{ now()->addHours(2)->format('Y-m-d\TH:i') }}" required>
         </div>
