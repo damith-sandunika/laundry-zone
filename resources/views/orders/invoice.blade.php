@@ -132,7 +132,7 @@
                 @if($order->is_delivery_order && $order->deliveryAppointment)
                     @if($order->deliveryAppointment->pickup_scheduled_at)
                     <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                        <span style="color:#0f172a; font-weight:700;">Delivery Date:</span>
+                        <span style="color:#0f172a; font-weight:700;">Pickup Scheduled Date:</span>
                         <span style="color:#475569;">{{ \Carbon\Carbon::parse($order->deliveryAppointment->pickup_scheduled_at)->format('M d, Y h:i A') }}</span>
                     </div>
                     @endif

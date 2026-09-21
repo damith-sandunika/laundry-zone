@@ -143,7 +143,7 @@
 
     <div class="row" style="font-size: 12px;"><span>Bill No:</span><span class="bold">{{ $order->order_number }}</span>
     </div>
-    <div class="row" style="font-size: 12px;"><span>Date:</span><span
+    <div class="row" style="font-size: 12px;"><span>Order Create Date:</span><span
             class="bold">{{ $order->created_at->format('d M Y h:i A') }}</span></div>
     @if($order->due_date)
         <div class="row" style="font-size: 12px;"><span>Delivery Date:</span><span>{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') }}</span></div>
