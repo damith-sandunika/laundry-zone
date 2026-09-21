@@ -36,6 +36,23 @@
             aside.sidebar-collapsed {
                 width: 5rem !important; /* w-20 */
             }
+            aside.sidebar-collapsed .sidebar-header {
+                padding: 1rem 0.5rem !important;
+            }
+            aside.sidebar-collapsed .sidebar-logo-btn {
+                width: 3rem !important;
+                height: 3rem !important;
+                border-radius: 0.75rem !important;
+                margin-bottom: 0 !important;
+                box-shadow: 0 0 0 2px #fff !important;
+            }
+            aside.sidebar-collapsed .sidebar-logo-img {
+                max-width: 32px !important;
+                max-height: 32px !important;
+            }
+            aside.sidebar-collapsed .sidebar-brand-text {
+                display: none !important;
+            }
             aside.sidebar-collapsed nav {
                 overflow-x: hidden;
             }
@@ -76,14 +93,15 @@
         <div x-show="sidebarOpen" x-transition.opacity @click="sidebarOpen=false" class="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm lg:hidden" x-cloak></div>
 
         <!-- ══════════ SIDEBAR ══════════ -->
-        <aside :class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full', sidebarCollapsed ? 'sidebar-collapsed' : 'w-64']" class="fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/60 lg:static lg:translate-x-0">
+        <aside id="main-sidebar" :class="[sidebarOpen ? 'translate-x-0' : '-translate-x-full', sidebarCollapsed ? 'sidebar-collapsed' : 'w-64']" class="fixed inset-y-0 left-0 z-50 flex flex-col transition-all duration-300 ease-in-out bg-white/80 backdrop-blur-xl border-r border-slate-200/60 lg:static lg:translate-x-0">
+            <script>if(localStorage.getItem('sidebarCollapsed') === 'true') document.getElementById('main-sidebar').classList.add('sidebar-collapsed');</script>
             
             <!-- Brand & Logo -->
-            <div class="flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50 transition-all duration-300" :class="sidebarCollapsed ? 'px-2 py-4' : ''">
-                <button @click="sidebarCollapsed = !sidebarCollapsed" :class="sidebarCollapsed ? 'w-12 h-12 rounded-xl ring-2' : 'w-20 h-20 rounded-[1.25rem] ring-4 mb-3'" class="bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 ring-white transition-all hover:scale-105 duration-300 overflow-hidden flex-shrink-0 cursor-pointer outline-none">
-                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="object-contain transition-all duration-300" :class="sidebarCollapsed ? 'max-w-[32px] max-h-[32px]' : 'max-w-[52px] max-h-[52px]'" onerror="this.style.display='none'">
+            <div class="sidebar-header flex flex-col items-center text-center p-6 border-b border-slate-100/80 bg-slate-50/50 transition-all duration-300" :class="sidebarCollapsed ? 'px-2 py-4' : ''">
+                <button @click="sidebarCollapsed = !sidebarCollapsed" :class="sidebarCollapsed ? 'w-12 h-12 rounded-xl ring-2 mb-0' : 'w-20 h-20 rounded-[1.25rem] ring-4 mb-3'" class="sidebar-logo-btn bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 ring-white transition-all hover:scale-105 duration-300 overflow-hidden flex-shrink-0 cursor-pointer outline-none">
+                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo" class="sidebar-logo-img object-contain transition-all duration-300" :class="sidebarCollapsed ? 'max-w-[32px] max-h-[32px]' : 'max-w-[52px] max-h-[52px]'" onerror="this.style.display='none'">
                 </button>
-                <div x-show="!sidebarCollapsed" x-transition.opacity.duration.300ms class="whitespace-nowrap overflow-hidden">
+                <div x-show="!sidebarCollapsed" x-transition.opacity.duration.300ms class="sidebar-brand-text whitespace-nowrap overflow-hidden">
                     <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">{{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management System</div>
                 </div>
