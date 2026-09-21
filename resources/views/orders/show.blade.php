@@ -804,7 +804,7 @@
                                     <div style="display:flex;justify-content:space-between;align-items:center;">
                                         <span
                                             style="font-size:11px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Order
-                                            Date</span>
+                                            Create Date</span>
                                         <p style="font-weight:700;color:#0f172a;margin:0;">
                                             {{ \Carbon\Carbon::parse($order->created_at)->format('M d, Y h:i A') }}
                                         </p>
@@ -872,7 +872,7 @@
                                             <div>
                                                 <span
                                                     style="font-size:10px;color:#94a3b8;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;">Pickup
-                                                    Scheduled</span>
+                                                    Scheduled Date</span>
                                                 <p style="font-weight:700;color:#0f172a;margin:1px 0 0;">
                                                     {{ \Carbon\Carbon::parse($order->deliveryAppointment->pickup_scheduled_at)->format('M d, Y h:i A') }}
                                                 </p>
