@@ -68,7 +68,9 @@ class CustomerSiteController extends Controller
             $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
         }
 
-        return view('site.home', compact('branches', 'categories', 'packages', 'turnaroundTypes', 'extras', 'pickupTimePeriods', 'minimumOrderLimit', 'shopLat', 'shopLng', 'deliveryRanges', 'workshops', 'paymentMethods'));
+        $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
+
+        return view('site.home', compact('branches', 'categories', 'packages', 'turnaroundTypes', 'extras', 'pickupTimePeriods', 'minimumOrderLimit', 'shopLat', 'shopLng', 'deliveryRanges', 'workshops', 'paymentMethods', 'isCentralized'));
     }
 
     public function booking()

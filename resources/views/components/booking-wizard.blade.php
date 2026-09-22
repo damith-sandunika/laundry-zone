@@ -1600,7 +1600,7 @@
                         });
                         
                         this.isGlobalCheckoutModalOpen = false;
-                        this.goToStep(this.viewOrder.indexOf('delivery') + 1);
+                        this.goToStep(this.viewOrder.indexOf('services') + 2);
                     },
                 }
             }

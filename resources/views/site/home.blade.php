@@ -359,6 +359,7 @@
             :pickupTimePeriods="$pickupTimePeriods"
             :paymentMethods="$paymentMethods"
             :isHomepage="true"
+            :isCentralized="$isCentralized"
         />
     </div>
 
