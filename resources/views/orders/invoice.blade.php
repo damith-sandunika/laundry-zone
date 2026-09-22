@@ -162,6 +162,11 @@
             </thead>
             <tbody>
                 @php $total_qty = 0; @endphp
+                @php
+                    $showMain = request('show_main', 'true') === 'true';
+                    $showSub = request('show_sub', 'true') === 'true';
+                    $showService = request('show_service', 'true') === 'true';
+                @endphp
                 @foreach($order->items as $item)
                 @php
                     $total_qty += $item->quantity;
@@ -169,12 +174,22 @@
                 <tr>
                     <td>
                         @if($item->serviceType && $item->serviceType->category)
+                            @if($showMain || $showSub)
                             <div style="font-size: 13px; color: #0f172a; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; font-weight: 900;">
-                                {{ $item->serviceType->category->parent ? $item->serviceType->category->parent->name . ' > ' : '' }}{{ $item->serviceType->category->name }}
+                                @if($showMain && $item->serviceType->category->parent)
+                                    {{ $item->serviceType->category->parent->name }}
+                                    @if($showSub) > @endif
+                                @endif
+                                @if($showSub)
+                                    {{ $item->serviceType->category->name }}
+                                @endif
                             </div>
+                            @endif
                         @endif
                         <div style="display: flex; align-items: center; gap: 5px;">
-                            {{ $item->serviceType->name ?? $item->item_description }}
+                            @if($showService)
+                                {{ $item->serviceType->name ?? $item->item_description }}
+                            @endif
                             @if($item->turnaroundType && !$item->turnaroundType->is_default)
                                 <small style="color:#64748b;">[{{ $item->turnaroundType->name }}]</small>
                             @elseif((float)$item->custom_turnaround_percentage > 0)

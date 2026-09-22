@@ -165,13 +165,40 @@
                 </div>
                 @endif
 
-                {{-- 📄 Download PDF --}}
-                <div class="ord-btn-wrap">
-                    <a href="{{ route('orders.invoice', $order->order_number) }}" target="_blank"
-                        class="ord-btn ord-btn--pdf" title="">
+                {{-- 🖨 Download PDF / Print Invoice Modal --}}
+                <div class="ord-btn-wrap" x-data="{ openPrintModal: false, showMain: true, showSub: true, showService: true }">
+                    <button type="button" @click="openPrintModal = true" class="ord-btn ord-btn--pdf" title="Print Invoice Options">
                         📄
-                    </a>
+                    </button>
                     <span class="ord-btn-label">Download PDF</span>
+
+                    {{-- Alpine Modal --}}
+                    <div x-show="openPrintModal" class="fixed inset-0 flex items-center justify-center overflow-y-auto text-left" style="display: none; margin: 0; padding: 0; z-index: 99999;">
+                        <div class="fixed inset-0 bg-black bg-opacity-60 transition-opacity" @click="openPrintModal = false"></div>
+                        <div class="relative bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all" style="z-index: 999999;">
+                            <h3 class="text-lg font-bold text-gray-900 mb-4 border-b pb-2">Invoice Print Settings</h3>
+                            <div class="space-y-3 mb-6">
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" x-model="showMain" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                    <span class="text-gray-700 font-medium">Print Main Category</span>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" x-model="showSub" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                    <span class="text-gray-700 font-medium">Print Sub Category</span>
+                                </label>
+                                <label class="flex items-center space-x-3 cursor-pointer">
+                                    <input type="checkbox" x-model="showService" class="form-checkbox h-5 w-5 text-blue-600 rounded">
+                                    <span class="text-gray-700 font-medium">Print Service Name</span>
+                                </label>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" @click="openPrintModal = false" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-semibold transition">Cancel</button>
+                                <button type="button" @click="window.open(`{{ route('orders.invoice', $order->order_number) }}?show_main=${showMain}&show_sub=${showSub}&show_service=${showService}`, '_blank'); openPrintModal = false" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold shadow-md transition flex items-center gap-2" style="color: white; outline: none; border: none;">
+                                    Print Now
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {{-- 🖨️ Print Bill --}}
