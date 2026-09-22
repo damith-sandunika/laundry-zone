@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Customer Login - {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/laundry_main_logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -15,7 +15,7 @@
         <!-- Logo -->
         <div class="text-center mb-8">
             <a href="{{ route('home') }}" class="inline-block">
-                <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="Logo" class="h-12 w-auto">
+                <img src="{{ asset('images/laundry_site_logo.png') }}" alt="Logo" class="h-12 w-auto">
             </a>
             <p class="text-slate-500 mt-2 text-sm">Welcome back! Please login to your account.</p>
         </div>

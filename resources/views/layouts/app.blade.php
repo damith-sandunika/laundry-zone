@@ -9,7 +9,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/laundry_main_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap"
         rel="stylesheet" />
@@ -178,7 +178,7 @@
                 <button @click="sidebarCollapsed = !sidebarCollapsed"
                     :class="sidebarCollapsed ? 'w-12 h-12 rounded-xl ring-2 mb-0' : 'w-20 h-20 rounded-[1.25rem] ring-4 mb-3'"
                     class="sidebar-logo-btn w-20 h-20 rounded-[1.25rem] ring-4 mb-3 bg-white flex items-center justify-center shadow-xl shadow-blue-500/10 ring-white transition-all hover:scale-105 duration-300 overflow-hidden flex-shrink-0 cursor-pointer outline-none">
-                    <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Admin Logo"
+                    <img src="{{ asset('images/laundry_main_logo.png') }}" alt="Admin Logo"
                         class="sidebar-logo-img max-w-[52px] max-h-[52px] object-contain transition-all duration-300"
                         :class="sidebarCollapsed ? 'max-w-[32px] max-h-[32px]' : 'max-w-[52px] max-h-[52px]'"
                         onerror="this.style.display='none'">

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Customer Dashboard - {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</title>
-    <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
+    <link rel="icon" type="image/png" href="{{ asset('images/laundry_main_logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -24,7 +24,7 @@
         <div class="flex justify-between h-20 items-center">
             <!-- Logo + Brand Name -->
             <a href="{{ route('home') }}" class="flex items-center gap-2">
-                <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}" class="h-10">
+                <img src="{{ asset('images/laundry_site_logo.png') }}" alt="{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}" class="h-10">
             </a>
             
             <!-- Desktop Menu -->

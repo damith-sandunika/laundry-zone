@@ -12,7 +12,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-                <img src="{{ asset('images/1.png') }}" alt="Our Team" class="rounded-2xl shadow-lg w-full object-cover h-[400px]">
+                <img src="{{ asset('images/laundry_slider_desktop_1.png') }}" alt="Our Team" class="rounded-2xl shadow-lg w-full object-cover h-[400px]">
             </div>
             <div>
                 <h2 class="text-3xl font-black text-slate-800 mb-6">Our Story</h2>

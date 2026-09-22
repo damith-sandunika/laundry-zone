@@ -16,23 +16,23 @@
         <!-- Animated Backgrounds (NO SHADES) -->
         <div class="absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out"
             :class="slide === 1 ? 'opacity-100' : 'opacity-0'">
-            <img src="{{ asset('images/1.png') }}" alt="Laundry Slide 1"
+            <img src="{{ asset('images/laundry_slider_desktop_1.png') }}" alt="Laundry Slide 1"
                 class="hidden lg:block w-full h-full object-cover object-top lg:object-[80%_top]">
-            <img src="{{ asset('images/m.1.png') }}" alt="Laundry Slide 1 Mobile"
+            <img src="{{ asset('images/laundry_slider_mobile_1.png') }}" alt="Laundry Slide 1 Mobile"
                 class="block lg:hidden w-full h-full object-cover object-top">
         </div>
         <div class="absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out"
             :class="slide === 2 ? 'opacity-100' : 'opacity-0'">
-            <img src="{{ asset('images/2.png') }}" alt="Laundry Slide 2"
+            <img src="{{ asset('images/laundry_slider_desktop_2.png') }}" alt="Laundry Slide 2"
                 class="hidden lg:block w-full h-full object-cover object-top lg:object-[20%_top]">
-            <img src="{{ asset('images/m.2.png') }}" alt="Laundry Slide 2 Mobile"
+            <img src="{{ asset('images/laundry_slider_mobile_2.png') }}" alt="Laundry Slide 2 Mobile"
                 class="block lg:hidden w-full h-full object-cover object-top">
         </div>
         <div class="absolute inset-0 z-0 transition-opacity duration-1000 ease-in-out"
             :class="slide === 3 ? 'opacity-100' : 'opacity-0'">
-            <img src="{{ asset('images/3.png') }}" alt="Laundry Slide 3"
+            <img src="{{ asset('images/laundry_slider_desktop_3.png') }}" alt="Laundry Slide 3"
                 class="hidden lg:block w-full h-full object-cover object-top lg:object-[80%_top]">
-            <img src="{{ asset('images/m.3.png') }}" alt="Laundry Slide 3 Mobile"
+            <img src="{{ asset('images/laundry_slider_mobile_3.png') }}" alt="Laundry Slide 3 Mobile"
                 class="block lg:hidden w-full h-full object-cover object-top">
         </div>
 
@@ -749,7 +749,7 @@
                     <div class="relative w-full max-w-[280px] sm:max-w-sm -mb-28 lg:-my-32">
                         <!-- Decorative glow behind image -->
                         <div class="absolute inset-0 bg-blue-400 rounded-full filter blur-3xl opacity-30 transform scale-90 pointer-events-none"></div>
-                        <img src="{{ asset('images/laundry_app_mockup_new.png') }}" alt="Laundry App Mockup" class="relative z-30 w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500" style="mix-blend-mode: multiply;">
+                        <img src="{{ asset('images/laundry_app_mockup.png') }}" alt="Laundry App Mockup" class="relative z-30 w-full h-auto drop-shadow-2xl hover:-translate-y-2 transition-transform duration-500" style="mix-blend-mode: multiply;">
                     </div>
                 </div>
             </div>
