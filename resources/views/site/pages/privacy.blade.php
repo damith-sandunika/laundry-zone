@@ -13,7 +13,7 @@
         <div class="prose prose-slate prose-blue max-w-none">
             
             <p class="text-slate-600 mb-8 leading-relaxed text-lg">
-                At 365laundry.lk, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data.
+                At {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}, we are committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy outlines how we collect, use, and safeguard your data.
             </p>
 
             <h2 class="text-2xl font-bold text-slate-800 mb-4 mt-8">1. Information We Collect</h2>
@@ -56,7 +56,7 @@
                 <h3 class="text-lg font-bold text-slate-800 mb-2">Contact Us</h3>
                 <p class="text-slate-600">
                     If you have any questions about this Privacy Policy, please contact us at:<br>
-                    <strong>Email:</strong> privacy@365laundry.lk<br>
+                    <strong>Email:</strong> privacy@{{ parse_url(config('app.url'), PHP_URL_HOST) ?? 'laundryzone.lk' }}<br>
                     <strong>Phone:</strong> +94 77 123 4567
                 </p>
             </div>

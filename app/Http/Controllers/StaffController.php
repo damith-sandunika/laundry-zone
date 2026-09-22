@@ -74,7 +74,7 @@ class StaffController extends Controller
             $role = 'staff';
         }
 
-        $user = User::create([
+        $userData = [
             'name' => $request->name,
             'email' => $request->email,
             'phone' => $request->phone,
@@ -82,7 +82,13 @@ class StaffController extends Controller
             'branch_id' => $branchId,
             'password' => bcrypt($request->password),
             'is_active' => true,
-        ]);
+        ];
+
+        if (\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
+            $userData['can_manage_global_config'] = $request->has('can_manage_global_config');
+        }
+
+        $user = User::create($userData);
 
         $user->profile()->create([
             'nic' => $request->nic,
@@ -169,6 +175,10 @@ class StaffController extends Controller
         // Only super_admin can set role to admin
         if (isset($data['role']) && $data['role'] === 'admin' && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             unset($data['role']); // Keep existing role
+        }
+
+        if (\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
+            $data['can_manage_global_config'] = $request->has('can_manage_global_config');
         }
 
         if ($request->filled('password')) {

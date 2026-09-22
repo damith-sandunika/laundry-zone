@@ -49,13 +49,30 @@ class OrderController extends Controller
     public function edit(Order $order)
     {
         $order->load('items.serviceType', 'items.extras.extra', 'customer');
-        $services = \App\Models\ServiceType::where('is_active', true)->get();
+        $branchId = $this->getActiveBranchId();
+        $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
+
+        $services = \App\Models\ServiceType::where('is_active', true)
+            ->where(function($q) use ($branchId, $isCentralized) {
+                if (!$isCentralized && $branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+            })->get();
 
         $categories = \App\Models\ServiceCategory::with([
-            'children' => function ($q) {
-                $q->where('is_active', true)->orderBy('order_index');
+            'children' => function ($q) use ($branchId, $isCentralized) {
+                $q->where('is_active', true);
+                if (!$isCentralized && $branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+                $q->orderBy('order_index');
             }
-        ])->whereNull('parent_id')->where('is_active', true)->orderBy('order_index')->get();
+        ])->whereNull('parent_id')->where('is_active', true)
+        ->where(function($q) use ($branchId, $isCentralized) {
+            if (!$isCentralized && $branchId) {
+                $q->where('branch_id', $branchId);
+            }
+        })->orderBy('order_index')->get();
 
         $cartItems = $order->items->map(function ($item) {
             return [
@@ -96,8 +113,18 @@ class OrderController extends Controller
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
         $dispatch = (object) ['order' => $order, 'order_id' => $order->id];
 
-        $turnaroundTypes = \App\Models\TurnaroundType::all();
-        $systemExtras = \App\Models\Extra::where('is_active', true)->get();
+        $turnaroundTypes = \App\Models\TurnaroundType::where('is_active', true)
+            ->where(function($q) use ($branchId, $isCentralized) {
+                if (!$isCentralized && $branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+            })->get();
+        $systemExtras = \App\Models\Extra::where('is_active', true)
+            ->where(function($q) use ($branchId, $isCentralized) {
+                if (!$isCentralized && $branchId) {
+                    $q->where('branch_id', $branchId);
+                }
+            })->get();
 
         return view('orders.edit', compact('order', 'dispatch', 'services', 'categories', 'cartItems', 'minimumDeliveryCost', 'turnaroundTypes', 'systemExtras'));
     }

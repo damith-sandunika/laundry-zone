@@ -96,14 +96,14 @@
                 @if($mainBranch && $mainBranch->logo_path)
                     <img src="{{ asset($mainBranch->logo_path) }}" alt="Logo" style="max-width: 150px; height: auto; margin-bottom: 12px; display: block;" onerror="this.style.display='none'">
                 @endif
-                <h1>{{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</h1>
+                <h1>{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</h1>
                 <p>{{ $order->branch->name ?? 'Main Branch' }}</p>
                 <p>{{ $order->branch->phone ?? '011 234 5678' }}</p>
                 <p>{{ $order->branch->address ?? 'Colombo, Sri Lanka' }}</p>
             </div>
             <div class="invoice-title">
                 <h2>INVOICE</h2>
-                <p>#{{ $order->order_number }}</p>
+                <p style="color: #000000; font-weight: 900; font-size: 16px;">Invoice Number: #{{ $order->order_number }}</p>
             </div>
         </div>
 
@@ -276,7 +276,7 @@
             </p>
             <div style="margin-top: 12px; font-size: 10px; color: #94a3b8;">
                 <strong style="text-transform: uppercase; letter-spacing: 0.1em; color: #64748b;">Terms & Conditions:</strong> 
-                Please visit <a href="https://365laundry.lk/terms" style="color: #3b82f6; text-decoration: none; font-weight: bold;">365laundry.lk/terms</a>
+                Please visit <a href="{{ url('/terms') }}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</a>
             </div>
             @if($order->paid_amount >= $order->total && $order->total > 0)
                 <div class="badge">FULLY PAID</div>

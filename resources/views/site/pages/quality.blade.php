@@ -4,7 +4,7 @@
 <div class="bg-blue-50 py-16 lg:py-24">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <h1 class="text-4xl lg:text-5xl font-black text-brand mb-4">Quality Guarantee</h1>
-        <p class="text-lg text-slate-600 max-w-2xl mx-auto">We don't just wash clothes; we care for them. Experience the 365laundry.lk standard of excellence.</p>
+        <p class="text-lg text-slate-600 max-w-2xl mx-auto">We don't just wash clothes; we care for them. Experience the {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} standard of excellence.</p>
     </div>
 </div>
 
@@ -15,7 +15,7 @@
             <div class="order-2 md:order-1">
                 <h2 class="text-3xl font-black text-slate-800 mb-6">Our Promise to You</h2>
                 <p class="text-slate-600 text-lg leading-relaxed mb-6">
-                    At 365laundry.lk, quality isn't just a buzzword—it's the foundation of everything we do. We understand that your clothes are an investment, and we treat them with the utmost respect.
+                    At {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}, quality isn't just a buzzword—it's the foundation of everything we do. We understand that your clothes are an investment, and we treat them with the utmost respect.
                 </p>
                 <p class="text-slate-600 text-lg leading-relaxed">
                     If you are ever unsatisfied with the cleaning quality of an item, simply let us know within 24 hours of delivery. We will gladly re-clean the item for you completely free of charge. No questions asked.

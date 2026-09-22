@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Booking Successful - 365laundry.lk</title>
+    <title>Booking Successful - {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -21,7 +21,7 @@
     </div>
 
     <div class="p-8">
-        <p class="text-slate-600 mb-6">Thank you for choosing 365laundry.lk. Your pickup request has been received and is pending confirmation.</p>
+        <p class="text-slate-600 mb-6">Thank you for choosing {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}. Your pickup request has been received and is pending confirmation.</p>
         
         <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-6">
             <div class="text-sm text-slate-500 mb-1">Booking Reference</div>

@@ -1,7 +1,7 @@
 {
-    "name": "365laundry.lk",
-    "short_name": "365laundry",
-    "description": "365laundry.lk Management System",
+    "name": "Laundry Zone",
+    "short_name": "Laundry Zone",
+    "description": "Laundry Zone Management System",
     "start_url": "/stafflogin",
     "display": "standalone",
     "background_color": "#ffffff",

@@ -24,5 +24,6 @@
         :shopLng="$shopLng"
         :pickupTimePeriods="$pickupTimePeriods"
         :paymentMethods="$paymentMethods"
+        :isCentralized="$isCentralized"
     />
 </x-customer-layout>

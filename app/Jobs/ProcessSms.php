@@ -33,7 +33,7 @@ class ProcessSms implements ShouldQueue
         try {
             $apiUrl   = env('SMS_API_URL');
             $apiToken = env('SMS_API_TOKEN');
-            $mask     = env('SMS_MASK', '365laundry');
+            $mask     = env('SMS_MASK', \App\Models\Setting::get('company_name', 'Laundry Zone'));
 
             if (!$apiUrl || !$apiToken) {
                 throw new \Exception('SMS API credentials not configured.');

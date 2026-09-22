@@ -10,6 +10,7 @@
     'pickupTimePeriods',
     'paymentMethods',
     'isHomepage' => false,
+    'isCentralized' => true,
 ])
 
 
@@ -41,7 +42,7 @@
         .leaflet-tile-pane { filter: saturate(1.1) brightness(1.02); }
     </style>
 
-    <div id="booking-wizard-container" x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }}, {{ Js::from($deliveryRanges) }}, {{ Js::from($workshops) }}, {{ Js::from($turnaroundTypes) }}, {{ Js::from($extras) }}, {{ $shopLat }}, {{ $shopLng }}, {{ Js::from($pickupTimePeriods) }})" x-init="initData()">
+    <div id="booking-wizard-container" x-data="bookingWizard({{ Js::from($categories) }}, {{ auth('customer')->check() ? 'true' : 'false' }}, {{ Js::from(auth('customer')->user()) }}, {{ $minimumOrderLimit }}, {{ Js::from($deliveryRanges) }}, {{ Js::from($workshops) }}, {{ Js::from($turnaroundTypes) }}, {{ Js::from($extras) }}, {{ $shopLat }}, {{ $shopLng }}, {{ Js::from($pickupTimePeriods) }}, {{ $isCentralized ? 'true' : 'false' }}, {{ $isHomepage ? 'true' : 'false' }})" x-init="initData()">
         
         @if(!$isHomepage)
         <!-- Wizard Progress Bar -->
@@ -59,7 +60,7 @@
                         </div>
                         <span class="text-[11px] font-extrabold mt-2 uppercase tracking-wider absolute top-14 w-32 text-center" 
                               :class="step === i ? 'text-blue-700' : 'text-slate-400'"
-                              x-text="['Services', 'Account', 'Pickup', 'Delivery & Pay'][i-1]"></span>
+                              x-text="viewLabels[i-1]"></span>
                     </div>
                 </template>
             </div>
@@ -84,8 +85,8 @@
             @endif
 
             
-            <!-- Step 1: Services (Drill-Down UI) -->
-            <div x-show="step === 1" x-transition.opacity.duration.300ms class="pb-12">
+            <!-- Step 1/3: Services (Drill-Down UI) -->
+            <div x-show="currentView === 'services'" x-transition.opacity.duration.300ms class="pb-12">
                 @if(!$isHomepage)
                 <div class="mb-6">
                     <h3 class="text-xl font-semibold text-slate-800">Select Services</h3>
@@ -194,7 +195,7 @@
                 </div>
             </div>
             <!-- Fixed Bottom Cart Bar -->
-            <div x-show="step === 1 && cart.length > 0" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
+            <div x-show="currentView === 'services' && cart.length > 0" x-transition.opacity style="display:none;" class="fixed bottom-0 left-0 w-full z-40 bg-white border-t border-slate-200 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]">
                 
                 <!-- Expandable Cart List -->
                 <div x-show="isCartExpanded" class="bg-slate-50 border-b border-slate-200 max-h-[40vh] overflow-y-auto custom-scrollbar">
@@ -234,7 +235,7 @@
                     </div>
                     
                     <div class="flex items-center gap-3">
-                        <button type="button" @click="goToStep(2)" class="hidden sm:flex text-slate-500 hover:text-slate-800 font-medium items-center gap-2 px-4 py-2 border border-transparent hover:border-slate-200 rounded-md transition-all">
+                        <button type="button" @click="goToStep(step - 1)" x-show="step > 1" class="hidden sm:flex text-slate-500 hover:text-slate-800 font-medium items-center gap-2 px-4 py-2 border border-transparent hover:border-slate-200 rounded-md transition-all">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
                         <button type="button" @click="openGlobalCheckoutModal()" :disabled="cart.length === 0" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 sm:px-8 py-2.5 rounded-md font-semibold transition-colors shadow-sm flex items-center gap-2">
@@ -331,8 +332,8 @@
 
 
 
-            <!-- STEP 2: Authentication -->
-            <div x-show="step === 2" style="display:none;" x-transition.opacity.duration.300ms>
+            <!-- STEP: Authentication -->
+            <div x-show="currentView === 'account'" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 sm:p-8">
                     
                     <!-- If already logged in, show account info instead of form -->
@@ -418,15 +419,18 @@
                 </div>
                 
                 <div class="flex justify-between items-center mt-6">
+                    <button type="button" x-show="step > 1" @click="goToStep(step - 1)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-arrow-left"></i> Back
+                    </button>
                     <!-- Only show next if authenticated -->
-                    <button type="button" x-show="isAuthenticated" @click="goToStep(3)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 mt-4 ml-auto">
+                    <button type="button" x-show="isAuthenticated" @click="goToStep(step + 1)" class="bg-slate-900 hover:bg-slate-800 text-white px-8 py-3.5 rounded-xl font-bold transition-all shadow-md flex items-center gap-2 mt-4 ml-auto">
                         Next Step <i class="fa-solid fa-arrow-right"></i>
                     </button>
                 </div>
             </div>
 
-            <!-- STEP 3: Pickup Details -->
-            <div x-show="step === 3" style="display:none;" x-transition.opacity.duration.300ms>
+            <!-- STEP: Pickup Details -->
+            <div x-show="currentView === 'pickup'" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="bg-white rounded-lg sm:rounded-xl shadow-sm border border-slate-200 p-4 sm:p-6 lg:p-8">
                     <h3 class="text-lg sm:text-xl font-bold text-slate-800 mb-2 flex items-center gap-3">
                         <span class="bg-amber-50 text-amber-500 w-8 h-8 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl flex items-center justify-center"><i class="fa-solid fa-truck-pickup"></i></span>
@@ -526,19 +530,19 @@
 
                 <div class="flex justify-between items-center mt-6">
                     <div class="flex items-center justify-between w-full">
-                        <button type="button" @click="goToStep(2)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2 text-sm sm:text-base">
+                        <button type="button" @click="goToStep(step - 1)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2 text-sm sm:text-base">
                             <i class="fa-solid fa-arrow-left"></i> Back
                         </button>
-                        <button type="button" @click="goToStep(4)" :disabled="isOutOfRange || servicesLoading" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2.5 sm:px-8 sm:py-3.5 rounded-lg sm:rounded-xl font-bold transition-all shadow-md flex items-center gap-2 text-sm sm:text-base">
-                            <span x-show="!servicesLoading">Next: Delivery & Pay <i class="fa-solid fa-arrow-right"></i></span>
+                        <button type="button" @click="goToStep(step + 1)" :disabled="isOutOfRange || servicesLoading" class="bg-slate-900 hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed text-white px-5 py-2.5 sm:px-8 sm:py-3.5 rounded-lg sm:rounded-xl font-bold transition-all shadow-md flex items-center gap-2 text-sm sm:text-base">
+                            <span x-show="!servicesLoading">Next <i class="fa-solid fa-arrow-right"></i></span>
                             <span x-show="servicesLoading"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading Services...</span>
                         </button>
                     </div>
                 </div>
             </div>
 
-            <!-- STEP 4: Delivery & Payment -->
-            <div x-show="step === 4" style="display:none;" x-transition.opacity.duration.300ms>
+            <!-- STEP: Delivery & Payment -->
+            <div x-show="currentView === 'delivery'" style="display:none;" x-transition.opacity.duration.300ms>
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 relative">
                     <!-- Left Column: Delivery Details -->
                     <div class="space-y-6 sm:space-y-8">
@@ -724,8 +728,8 @@
                 </div>
 
                 <div class="mt-6 sm:mt-10 flex flex-col-reverse sm:flex-row justify-between items-center gap-4 border-t border-slate-200 pt-6 sm:pt-8">
-                    <button type="button" @click="goToStep(3)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2 text-sm sm:text-base">
-                        <i class="fa-solid fa-arrow-left"></i> Back to Pickup
+                    <button type="button" @click="goToStep(step - 1)" class="text-slate-500 hover:text-slate-800 font-bold flex items-center gap-2 px-4 py-2 text-sm sm:text-base">
+                        <i class="fa-solid fa-arrow-left"></i> Back
                     </button>
                     <button type="button" @click="submitBooking()" :disabled="isOutOfRange || isPlacingOrder" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white px-6 py-3 sm:px-8 sm:py-4 rounded-lg sm:rounded-xl font-bold transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 text-base sm:text-lg cursor-pointer min-w-[200px] w-full sm:w-auto">
                         <span x-show="!isPlacingOrder">Confirm Booking <i class="fa-solid fa-check-circle"></i></span>
@@ -738,7 +742,7 @@
 
 
         <script>
-            function bookingWizard(categories, isLoggedIn, user, minOrderLimit, deliveryRanges, workshops, turnaroundTypes, extras, shopLat, shopLng, pickupTimePeriods) {
+            function bookingWizard(categories, isLoggedIn, user, minOrderLimit, deliveryRanges, workshops, turnaroundTypes, extras, shopLat, shopLng, pickupTimePeriods, isCentralized, isHomepage) {
                 return {
                     categories: categories,
                     turnaroundTypes: turnaroundTypes,
@@ -749,6 +753,26 @@
                     servicesLoading: false,
                     detectedBranchId: null,
                     isPlacingOrder: false,
+                    isCentralized: isCentralized,
+                    isHomepage: isHomepage,
+                    
+                    get viewOrder() {
+                        if (this.isCentralized || this.isHomepage) {
+                            return ['services', 'account', 'pickup', 'delivery'];
+                        }
+                        return ['account', 'pickup', 'services', 'delivery'];
+                    },
+                    
+                    get viewLabels() {
+                        if (this.isCentralized || this.isHomepage) {
+                            return ['Services', 'Account', 'Pickup', 'Delivery & Pay'];
+                        }
+                        return ['Account', 'Pickup', 'Services', 'Delivery & Pay'];
+                    },
+                    
+                    get currentView() {
+                        return this.viewOrder[this.step - 1];
+                    },
 
                     submitBooking() {
                         if (this.totalPrice < this.minLimit) {
@@ -969,21 +993,27 @@
                                     }
 
                                     // Auto-advance step: if not logged in -> step 2 (Account), if logged in -> step 3 (Pickup)
+                                    // Wait, if decentralized, Account is step 1, Pickup is step 2.
                                     if (!this.isAuthenticated) {
-                                        this.step = 2;
-                                        this.highestStepReached = 2;
+                                        this.step = this.viewOrder.indexOf('account') + 1;
+                                        this.highestStepReached = this.step;
                                     } else {
-                                        this.step = 3;
-                                        this.highestStepReached = 3;
+                                        this.step = this.viewOrder.indexOf('pickup') + 1;
+                                        this.highestStepReached = this.step;
                                     }
                                 }
                             } catch(e) {
                                 console.error('Error parsing customer_booking_cart from localStorage', e);
                             }
                         }
+                        
+                        // If decentralized, fetch services for the initial default nearest workshop
+                        if (!this.isCentralized && !this.isHomepage && this.nearestWorkshop) {
+                            this.fetchBranchServices(this.nearestWorkshop.id);
+                        }
 
-                        // Check if we are starting on step 3
-                        if (this.step === 3) {
+                        // Check if we are starting on pickup
+                        if (this.currentView === 'pickup') {
                             setTimeout(() => {
                                 if (this.pickupMap) {
                                     this.pickupMap.invalidateSize();
@@ -996,8 +1026,8 @@
                         this.$watch('step', value => {
                             window.scrollTo({ top: 0, behavior: 'smooth' });
                             
-                            // Initialize pickup map on step 3 if not already done
-                            if (value === 3) {
+                            // Initialize pickup map on pickup view if not already done
+                            if (this.currentView === 'pickup') {
                                 setTimeout(() => {
                                     if (this.pickupMap) {
                                         this.pickupMap.invalidateSize();
@@ -1007,17 +1037,25 @@
                                 }, 500);
                             }
                             
-                            // Initialize delivery map on step 4 if not same as pickup
-                            if (value === 4 && !this.sameAsPickup && this.deliveryPref === 'deliver_to_address') {
+                            // Initialize delivery map on delivery view if not same as pickup
+                            if (this.currentView === 'delivery' && !this.sameAsPickup && this.deliveryPref === 'deliver_to_address') {
                                 setTimeout(() => { if (this.deliveryMap) this.deliveryMap.invalidateSize(); this.initDeliveryMap(); }, 500);
                             }
                         });
 
                         this.$watch('sameAsPickup', value => {
-                            if (!value && this.step === 4) {
+                            if (!value && this.currentView === 'delivery') {
                                 setTimeout(() => { if (this.deliveryMap) this.deliveryMap.invalidateSize(); this.initDeliveryMap(); }, 500);
                             }
                             this.calculateDeliveryFee();
+                        });
+                        
+                        this.$watch('nearestWorkshop', value => {
+                            if (value && value.id) {
+                                if (!this.isCentralized && !this.isHomepage) {
+                                    this.fetchBranchServices(value.id);
+                                }
+                            }
                         });
                         
                         this.$watch('deliveryPref', () => this.calculateDeliveryFee());
@@ -1032,39 +1070,46 @@
                     },
 
                     async goToStep(n) {
+                        const targetView = this.viewOrder[n - 1];
+                        
                         if (n > this.highestStepReached + 1) {
-                            // Allow skipping step 2 if already authenticated
-                            if (!(n === 3 && this.highestStepReached === 1 && this.isAuthenticated)) {
+                            // Allow skipping account if already authenticated
+                            if (!(targetView === 'pickup' && this.viewOrder[this.highestStepReached - 1] === 'services' && this.isAuthenticated)) {
                                 return;
                             }
                         }
-                        // Validation: Step 1 (Services) -> Must have items in cart to proceed
-                        if (n > 1 && this.cart.length === 0) {
+                        
+                        // Validation: If leaving services, must have items in cart
+                        if (this.viewOrder[this.step - 1] === 'services' && n > this.step && this.cart.length === 0) {
                             alert("Please select at least one service before proceeding.");
-                            this.step = 1;
+                            this.step = this.viewOrder.indexOf('services') + 1;
                             return;
                         }
 
-                        // Validation: Must be authenticated to proceed to Step 3 (Pickup) or Step 4 (Delivery)
-                        if (n >= 3 && !this.isAuthenticated) {
+                        // Validation: Must be authenticated to proceed to Pickup or Delivery (or Services if decentralized)
+                        if (['pickup', 'delivery'].includes(targetView) && !this.isAuthenticated) {
                             alert("Please login or register first to continue your booking.");
-                            this.step = 2;
+                            this.step = this.viewOrder.indexOf('account') + 1;
                             return;
                         }
 
-                        // Validation logic before moving to step 4
-                        if (n === 4) { // Going to Delivery & Pay (Step 4)
+                        // Validation logic before moving to Delivery & Pay
+                        if (targetView === 'delivery') {
                             if (this.totalPrice < this.minLimit) {
                                 alert("Minimum delivery limit is LKR " + this.minLimit.toFixed(2) + ". Please add more items to proceed.");
                                 return;
                             }
-                            const date = document.getElementById('pickup_date_input')?.value;
-                            const time = document.getElementById('pickup_time_input')?.value;
-                            const addr = document.getElementById('pickup_address')?.value;
                             
-                            if (!date || !time || !addr) {
-                                alert("Please fill in all pickup details (Date, Time, Address).");
-                                return;
+                            if (this.viewOrder.indexOf('pickup') < n - 1) {
+                                const date = document.getElementById('pickup_date_input')?.value;
+                                const time = document.getElementById('pickup_time_input')?.value;
+                                const addr = document.getElementById('pickup_address')?.value;
+                                
+                                if (!date || !time || !addr) {
+                                    alert("Please fill in all pickup details (Date, Time, Address).");
+                                    this.step = this.viewOrder.indexOf('pickup') + 1;
+                                    return;
+                                }
                             }
                         }
 
@@ -1097,7 +1142,7 @@
                                     document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', response.data.csrf_token);
                                     axios.defaults.headers.common['X-CSRF-TOKEN'] = response.data.csrf_token;
                                 }
-                                this.goToStep(3);
+                                this.goToStep(this.viewOrder.indexOf('pickup') + 1);
                             }
                         } catch (error) {
                             this.authError = error.response?.data?.message || 'Login failed. Please check your credentials.';
@@ -1119,7 +1164,7 @@
                                     document.querySelector('meta[name="csrf-token"]')?.setAttribute('content', response.data.csrf_token);
                                     axios.defaults.headers.common['X-CSRF-TOKEN'] = response.data.csrf_token;
                                 }
-                                this.goToStep(3);
+                                this.goToStep(this.viewOrder.indexOf('pickup') + 1);
                             }
                         } catch (error) {
                             this.authError = error.response?.data?.message || 'Registration failed. Please check the form.';
@@ -1555,7 +1600,7 @@
                         });
                         
                         this.isGlobalCheckoutModalOpen = false;
-                        this.goToStep(2);
+                        this.goToStep(this.viewOrder.indexOf('delivery') + 1);
                     },
                 }
             }

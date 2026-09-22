@@ -62,7 +62,7 @@
                 <i class="fa-solid fa-chevron-down text-slate-400 transition-transform duration-300" :class="activeAccordion === 5 ? 'rotate-180' : ''"></i>
             </button>
             <div x-show="activeAccordion === 5" x-collapse class="px-6 pb-5 text-slate-600 bg-white">
-                For your first order, you can put your clothes in any disposable bag (like a garbage bag or shopping bag). When we return your clean clothes, we will provide a reusable 365laundry.lk bag for future pickups!
+                For your first order, you can put your clothes in any disposable bag (like a garbage bag or shopping bag). When we return your clean clothes, we will provide a reusable {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} bag for future pickups!
             </div>
         </div>
 

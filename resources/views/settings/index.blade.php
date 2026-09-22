@@ -1,4 +1,10 @@
 <x-app-layout>
+@php
+    $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
+    $isGlobalManager = auth()->user()->canManageGlobalConfig();
+    $isSuperAdmin = auth()->user()->role === 'super_admin';
+    $canManageConfig = ($isCentralized && $isGlobalManager) || (!$isCentralized && !$isSuperAdmin);
+@endphp
     <x-slot name="header">
         <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
@@ -49,7 +55,7 @@
                     General Settings
                 </button>
 
-                @if(in_array(auth()->user()->role, ['super_admin', 'workshop_admin']))
+                @if($canManageConfig)
                     <button @click="activeTab = 'extras'; localStorage.setItem('settingsActiveTab', 'extras')"
                         :class="activeTab === 'extras' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
                         class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
@@ -84,13 +90,15 @@
                     </button>
                 @endif
 
+                @if(auth()->user()->role !== 'super_admin')
                 <button @click="activeTab = 'cubbies'; localStorage.setItem('settingsActiveTab', 'cubbies')"
                     :class="activeTab === 'cubbies' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
                     class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
                     Stock Locations
                 </button>
+                @endif
 
-                @if(in_array(auth()->user()->role, ['super_admin', 'workshop_admin']))
+                @if(auth()->user()->role === 'super_admin')
                     <button
                         @click="activeTab = 'notifications'; localStorage.setItem('settingsActiveTab', 'notifications')"
                         :class="activeTab === 'notifications' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
@@ -116,74 +124,85 @@
                     class="flex flex-col lg:flex-row gap-6">
                     <div class="flex-1 space-y-4 max-w-xl">
                         @csrf
-                        @if(in_array(auth()->user()->role, ['super_admin', 'workshop_admin']))
+                        @if(auth()->user()->role === 'super_admin')
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Company Name (Global
                                     for all Bills)</label>
                                 <input type="text" name="company_name" x-model="formCompanyName"
                                     class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
                             </div>
-                        @endif
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">
-                                Branch Name
-                            </label>
-                            <input type="text" name="name" x-model="formName"
-                                class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Address</label>
-                            <input type="text" name="address" x-model="formAddress"
-                                class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Latitude</label>
-                                <input type="text" name="latitude"
-                                    value="{{ old('latitude', optional($branch)->latitude) }}"
-                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label
-                                    class="block text-xs font-semibold text-gray-700 uppercase mb-1">Longitude</label>
-                                <input type="text" name="longitude"
-                                    value="{{ old('longitude', optional($branch)->longitude) }}"
-                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Telephone
-                                    Number</label>
-                                <input type="text" name="phone" x-model="formPhone"
-                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">WhatsApp
-                                    Number</label>
-                                <input type="text" name="whatsapp_number"
-                                    value="{{ optional($branch)->whatsapp_number ?? '' }}"
-                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
-                            </div>
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tagline (Will appear
-                                on print bills)</label>
-                            <input type="text" name="tagline" x-model="formTagline"
-                                class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
-                        </div>
-
-                        @if(in_array(auth()->user()->role, ['super_admin', 'workshop_admin']))
                             <div class="pt-2">
                                 <label class="block text-xs font-bold text-gray-800 uppercase mb-1">Global Auto-Close
                                     Time</label>
                                 <p class="text-[11px] text-gray-500 mb-2">All branches will be automatically closed and
                                     their daily shift reports will be generated at this time.</p>
+                                @php
+                                    $globalCloseTime = \App\Models\Branch::first()?->auto_close_time;
+                                @endphp
                                 <input type="time" name="auto_close_time"
-                                    value="{{ optional($branch)->auto_close_time ? \Carbon\Carbon::parse($branch->auto_close_time)->format('H:i') : '' }}"
+                                    value="{{ $globalCloseTime ? \Carbon\Carbon::parse($globalCloseTime)->format('H:i') : '' }}"
                                     class="w-48 text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500 font-mono">
                             </div>
-                        @endif
+
+                            <div class="pt-4 mt-4 border-t border-gray-100">
+                                <label class="flex items-center gap-2 cursor-pointer w-max">
+                                    <input type="checkbox" name="centralized_management" value="1" {{ \App\Models\Setting::get('centralized_management', '1') == '1' ? 'checked' : '' }} class="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                    <span class="text-sm font-semibold text-gray-700">Centralized Configuration Management</span>
+                                </label>
+                                <p class="text-[11px] text-gray-500 mt-1 pl-6">
+                                    If enabled, Super Admin manages Services, Packages, Extras, etc., for ALL branches. <br>
+                                    If disabled, Branch Admins manage their own configurations locally.
+                                </p>
+                            </div>
+                        @else
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">
+                                    Branch Name
+                                </label>
+                                <input type="text" name="name" x-model="formName"
+                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Address</label>
+                                <input type="text" name="address" x-model="formAddress"
+                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Latitude</label>
+                                    <input type="text" name="latitude"
+                                        value="{{ old('latitude', optional($branch)->latitude) }}"
+                                        class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label
+                                        class="block text-xs font-semibold text-gray-700 uppercase mb-1">Longitude</label>
+                                    <input type="text" name="longitude"
+                                        value="{{ old('longitude', optional($branch)->longitude) }}"
+                                        class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Telephone
+                                        Number</label>
+                                    <input type="text" name="phone" x-model="formPhone"
+                                        class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">WhatsApp
+                                        Number</label>
+                                    <input type="text" name="whatsapp_number"
+                                        value="{{ optional($branch)->whatsapp_number ?? '' }}"
+                                        class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Tagline (Will appear
+                                    on print bills)</label>
+                                <input type="text" name="tagline" x-model="formTagline"
+                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500">
+                            </div>
 
                         <div x-data="{ 
                         dragOver: false, 
@@ -248,12 +267,14 @@
                                     thermal bill.</p>
                             </div>
                         </div>
+                        @endif
                         <button type="submit"
                             class="px-6 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition-colors shadow-sm">
                             Save Settings
                         </button>
                     </div>
 
+                    @if(auth()->user()->role !== 'super_admin')
                     <!-- Thermal Bill Preview -->
                     <div class="flex-1 max-w-sm">
                         <h4 class="text-xs font-bold text-gray-700 uppercase mb-3">Live Thermal Bill Preview</h4>
@@ -357,7 +378,7 @@
                             <div style="border-top: 1.5px dashed #000; margin: 8px 0;"></div>
 
                             <div style="text-align: center; font-weight: 800; font-size: 12px; margin-top: 8px;">
-                                Thank you for choosing 365laundry.lk.
+                                Thank you for choosing {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}.
                             </div>
                             <div style="text-align: center; font-size: 10px; margin-top: 3px; color: #333;">
                                 If you are happy with our service, please leave us a Google Review!
@@ -372,12 +393,13 @@
                             </div>
                         </div>
                     </div>
+                    @endif
                 </form>
             </div>
 
 
 
-            @if(in_array(auth()->user()->role, ['super_admin', 'workshop_admin']))
+            @if($canManageConfig)
             <!-- EXTRAS TAB -->
             <div x-show="activeTab === 'extras'" style="display: none;">
                 <div class="flex justify-between items-center mb-4">
@@ -466,7 +488,9 @@
                     @endforelse
                 </div>
             </div>
+            @endif
 
+            @if($canManageConfig)
             <!-- TURNAROUND TYPES TAB -->
             <div x-show="activeTab === 'turnaround_types'" style="display: none;">
                 <div class="flex justify-between items-center mb-4">
@@ -586,6 +610,7 @@
             </div>
             @endif
 
+            @if(auth()->user()->role !== 'super_admin')
             <!-- CUBBIES (STOCK LOCATIONS) TAB -->
             <div x-show="activeTab === 'cubbies'" style="display: none;">
                 <div class="flex justify-between items-center mb-4">
@@ -656,7 +681,9 @@
                 </div>
             </div>
 
-            @if(in_array(auth()->user()->role, ['super_admin', 'workshop_admin']))
+            @endif
+
+            @if($canManageConfig)
             <!-- DELIVERY SETTINGS TAB -->
             <div x-show="activeTab === 'delivery'" style="display: none;">
 
@@ -736,7 +763,9 @@
                     </table>
                 </div>
             </div>
+            @endif
 
+            @if($canManageConfig)
             <!-- PICKUP TIMES TAB -->
             <div x-show="activeTab === 'pickup_times'" style="display: none;">
                 <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
@@ -789,7 +818,9 @@
                     </table>
                 </div>
             </div>
+            @endif
 
+            @if($canManageConfig)
             <!-- PAYMENT METHODS TAB -->
             <div x-show="activeTab === 'payment_methods'" style="display: none;">
                 <form action="{{ route('settings.payment-methods.update') }}" method="POST">
@@ -882,7 +913,7 @@
                                     <input type="text" name="bank_account_name"
                                         value="{{ old('bank_account_name', $bankDetails['bank_account_name']) }}"
                                         class="w-full rounded-xl border-slate-200 bg-slate-50 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold"
-                                        placeholder="e.g. 365 Laundry">
+                                        placeholder="e.g. Laundry Zone">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1">Account Number</label>
@@ -934,7 +965,7 @@
             @endif
 
             <!-- NOTIFICATIONS TAB -->
-            @if(in_array(auth()->user()->role, ['super_admin', 'workshop_admin']))
+            @if(auth()->user()->role === 'super_admin')
                 <div x-show="activeTab === 'notifications'" style="display: none;">
                     <form action="{{ route('settings.notifications.update') }}" method="POST">
                         @csrf
@@ -1021,6 +1052,7 @@
             @endif
 
 
+            @if($canManageConfig)
             <!-- PACKAGES TAB -->
             <div x-show="activeTab === 'packages'" style="display: none;" x-data="{ packageModalOpen: false }">
                 <div class="flex justify-between items-center mb-4">
@@ -1309,9 +1341,9 @@
                         </div>
                     </div>
                 </div>
-
+                </div>
             </div>
-
+            @endif
 
         </div>
 

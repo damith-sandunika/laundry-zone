@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ config('app.name', '365laundry.lk') }} — Sign In</title>
+    <title>{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} — Sign In</title>
     <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -29,7 +29,7 @@
                 <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg">
                     <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Logo" class="max-w-[36px] max-h-[36px] object-contain" onerror="this.style.display='none'">
                 </div>
-                <span class="text-white font-black text-lg tracking-tight">365laundry.lk</span>
+                <span class="text-white font-black text-lg tracking-tight">{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</span>
             </div>
 
             <!-- Middle: Hero -->
@@ -75,7 +75,7 @@
                 <div class="w-24 h-24 rounded-[1.5rem] bg-slate-800 flex items-center justify-center shadow-2xl shadow-blue-900/20 mb-4 ring-8 ring-slate-900">
                     <img src="{{ asset('images/360_laundry_logo.png') }}" alt="Logo" class="max-w-[64px] max-h-[64px] object-contain" onerror="this.style.display='none'">
                 </div>
-                <h1 class="font-black text-3xl text-white tracking-tight">365laundry.lk</h1>
+                <h1 class="font-black text-3xl text-white tracking-tight">{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</h1>
                 <p class="text-[11px] font-extrabold text-blue-400 uppercase tracking-widest mt-1.5">Management System</p>
             </div>
 
@@ -104,7 +104,7 @@
             {{ $slot }}
 
             <p class="text-center text-slate-400 text-xs font-bold mt-10">
-                &copy; {{ date('Y') }} 365laundry.lk &middot; Powered by DSRZone
+                &copy; {{ date('Y') }} {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} &middot; Powered by DSRZone
             </p>
         </div>
     </div>

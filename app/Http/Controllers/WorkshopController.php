@@ -545,39 +545,43 @@ class WorkshopController extends Controller
             ?? $order->branch_id
             ?? null;
 
+        $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
+
         $services = \App\Models\ServiceType::where('is_active', true)
-            ->where(function($q) use ($branchId) {
-                if ($branchId) {
-                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            ->where(function($q) use ($branchId, $isCentralized) {
+                if (!$isCentralized && $branchId) {
+                    $q->where('branch_id', $branchId);
                 }
             })
             ->get();
 
-        $categories = \App\Models\ServiceCategory::with(['children' => function($q) use ($branchId) {
-            $q->where('is_active', true)->orderBy('order_index');
+        $categories = \App\Models\ServiceCategory::with(['children' => function($q) use ($branchId, $isCentralized) {
+            $q->where('is_active', true);
+            if (!$isCentralized && $branchId) {
+                $q->where('branch_id', $branchId);
+            }
+            $q->orderBy('order_index');
         }])
             ->whereNull('parent_id')
             ->where('is_active', true)
-            ->where(function($q) use ($branchId) {
-                if ($branchId) {
-                    $q->where('branch_id', $branchId)->orWhereNull('branch_id');
+            ->where(function($q) use ($branchId, $isCentralized) {
+                if (!$isCentralized && $branchId) {
+                    $q->where('branch_id', $branchId);
                 }
             })
             ->orderBy('order_index')
             ->get();
 
-        $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId) {
-            $q->whereNull('branch_id');
-            if ($branchId) {
-                $q->orWhere('branch_id', $branchId);
+        $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId, $isCentralized) {
+            if (!$isCentralized && $branchId) {
+                $q->where('branch_id', $branchId);
             }
         })->get();
 
         $systemExtras = \App\Models\Extra::where('is_active', true)
-            ->where(function($q) use ($branchId) {
-                $q->whereNull('branch_id');
-                if ($branchId) {
-                    $q->orWhere('branch_id', $branchId);
+            ->where(function($q) use ($branchId, $isCentralized) {
+                if (!$isCentralized && $branchId) {
+                    $q->where('branch_id', $branchId);
                 }
             })
             ->get();

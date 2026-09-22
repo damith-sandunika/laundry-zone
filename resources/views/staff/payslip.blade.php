@@ -336,7 +336,7 @@
         <!-- Header -->
         <div class="header">
             <div>
-                <div class="company-title">{{ config('app.name', '365 Laundry') }}</div>
+                <div class="company-title">{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
                 <div class="company-sub">Payroll & Salary Statement</div>
             </div>
             <div class="payslip-badge">
@@ -584,7 +584,7 @@
         </div>
 
         <div class="footer-watermark">
-            Computer Generated Document — Verified by 365laundry.lk HR & Payroll System
+            Computer Generated Document — Verified by {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} HR & Payroll System
         </div>
     </div>
 

@@ -8,7 +8,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ config('app.name', '365laundry.lk') }}</title>
+    <title>{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap"
@@ -186,7 +186,7 @@
                 <div x-show="!sidebarCollapsed" x-transition.opacity.duration.300ms
                     class="whitespace-nowrap overflow-hidden">
                     <div class="text-xl font-black text-slate-900 tracking-tight leading-tight">
-                        {{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</div>
+                        {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
                     <div class="text-[10px] font-extrabold text-blue-600 uppercase tracking-widest mt-1">Management
                         System</div>
                 </div>
@@ -202,8 +202,12 @@
                  }); 
                  setTimeout(() => { if(sidebarCollapsed) document.querySelectorAll('aside nav a, aside nav button').forEach(el => el.setAttribute('title', el.textContent.trim())) }, 100);">
                 @php 
-                                        $role = auth()->user()->role;
+                    $role = auth()->user()->role;
                     $branchType = auth()->user()->branch->type ?? 'branch';
+                    $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
+                    $isGlobalManager = auth()->user()->canManageGlobalConfig();
+                    $isSuperAdmin = $role === 'super_admin';
+                    $canManageConfig = ($isCentralized && $isGlobalManager) || (!$isCentralized && !$isSuperAdmin);
                 @endphp
 
                 {{-- Dashboard: All roles --}}
@@ -367,6 +371,7 @@
                                 Report</a>
                         </div>
                     </div>
+                    @if($canManageConfig)
                     <a href="{{ route('settings.services') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.services') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -376,6 +381,7 @@
                         </svg>
                         Services & Pricing
                     </a>
+                    @endif
                     <a href="{{ route('settings.index') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.index') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -515,6 +521,7 @@
                             </div>
                         </div>
 
+                        @if($canManageConfig)
                         <a href="{{ route('settings.services') }}"
                             class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.services') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                             <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -524,6 +531,7 @@
                             </svg>
                             Services & Pricing
                         </a>
+                        @endif
                         <a href="{{ route('settings.index') }}"
                             class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.index') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                             <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -702,7 +710,7 @@
                             @else
                                 <div
                                     class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
-                                    {{ \App\Models\Setting::get('company_name', '365laundry.lk') }}</div>
+                                    {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
                             @endif
 
 

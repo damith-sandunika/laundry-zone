@@ -29,7 +29,7 @@ class LaundrySystemSeeder extends Seeder
         // Create Super Admin
         User::create([
             'name' => 'Main Admin',
-            'email' => 'admin@365laundry.lk',
+            'email' => 'admin@laundryzone.lk',
             'phone' => '0770000000',
             'password' => Hash::make('admin123'),
             'role' => 'super_admin',
@@ -38,9 +38,9 @@ class LaundrySystemSeeder extends Seeder
         ]);
 
         // Create Branch Admins
-        User::create(['name' => 'Colombo Manager', 'email' => 'colombo@365laundry.lk', 'phone' => '0770000001', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b1->id, 'is_active' => true]);
-        User::create(['name' => 'Nugegoda Manager', 'email' => 'nugegoda@365laundry.lk', 'phone' => '0770000002', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b2->id, 'is_active' => true]);
-        User::create(['name' => 'Malabe Manager', 'email' => 'malabe@365laundry.lk', 'phone' => '0770000003', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b3->id, 'is_active' => true]);
+        User::create(['name' => 'Colombo Manager', 'email' => 'colombo@laundryzone.lk', 'phone' => '0770000001', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b1->id, 'is_active' => true]);
+        User::create(['name' => 'Nugegoda Manager', 'email' => 'nugegoda@laundryzone.lk', 'phone' => '0770000002', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b2->id, 'is_active' => true]);
+        User::create(['name' => 'Malabe Manager', 'email' => 'malabe@laundryzone.lk', 'phone' => '0770000003', 'password' => Hash::make('password'), 'role' => 'admin', 'branch_id' => $b3->id, 'is_active' => true]);
 
         // Create Service Categories
         $cat1 = ServiceCategory::create(['name' => 'Wash & Fold', 'is_active' => true]);

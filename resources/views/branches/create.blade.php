@@ -114,7 +114,7 @@
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-xs font-bold text-gray-700 mb-1">Invoice Header</label>
-                                        <textarea name="invoice_header" rows="2" class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 bg-gray-50 p-2" placeholder="e.g. Welcome to 365 Laundry!">{{ old('invoice_header') }}</textarea>
+                                        <textarea name="invoice_header" rows="2" class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 bg-gray-50 p-2" placeholder="e.g. Welcome to Laundry Zone!">{{ old('invoice_header') }}</textarea>
                                     </div>
                                     <div>
                                         <label class="block text-xs font-bold text-gray-700 mb-1">Invoice Footer</label>

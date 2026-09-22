@@ -82,7 +82,7 @@
     </div>
 
     <div class="header">
-        <h1>365 Laundry — HR Monthly Performance & Payroll Summary</h1>
+        <h1>{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} - HR Monthly Performance & Payroll Summary</h1>
         <p>Period: <strong>{{ date('F Y', mktime(0, 0, 0, $month, 10, $year)) }}</strong> | Branch: <strong>{{ $currentBranch ? $currentBranch->name : 'All Branches' }}</strong></p>
     </div>
 

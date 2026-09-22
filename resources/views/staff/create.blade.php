@@ -152,6 +152,26 @@
                                 </select>
                             </div>
 
+                            @if(\Illuminate\Support\Facades\Gate::allows('is-super-admin') && \App\Models\Setting::get('centralized_management', '1') == '1')
+                            <div class="p-4 bg-blue-50/50 rounded-xl border border-blue-100 mt-4">
+                                <label class="flex items-center cursor-pointer">
+                                    <div class="relative">
+                                        <input type="checkbox" name="can_manage_global_config" value="1" class="sr-only" {{ old('can_manage_global_config') ? 'checked' : '' }}>
+                                        <div class="w-10 h-6 bg-gray-200 rounded-full shadow-inner transition-colors"></div>
+                                        <div class="dot absolute w-4 h-4 bg-white rounded-full shadow left-1 top-1 transition-transform"></div>
+                                    </div>
+                                    <div class="ml-3">
+                                        <span class="block text-sm font-bold text-gray-800">Global Configuration Manager</span>
+                                        <span class="block text-xs text-gray-500 mt-0.5">Allow this user to manage central settings (Services, Packages, Extras) globally.</span>
+                                    </div>
+                                </label>
+                                <style>
+                                    input:checked ~ .dot { transform: translateX(100%); background-color: #2563eb; }
+                                    input:checked ~ .w-10 { background-color: #bfdbfe; }
+                                </style>
+                            </div>
+                            @endif
+
                             @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
                             <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Assign to Branch</label>

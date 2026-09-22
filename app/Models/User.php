@@ -30,7 +30,13 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_active' => 'boolean',
+            'can_manage_global_config' => 'boolean',
         ];
+    }
+
+    public function canManageGlobalConfig()
+    {
+        return $this->role === 'super_admin' || $this->can_manage_global_config;
     }
 
     public function orders()

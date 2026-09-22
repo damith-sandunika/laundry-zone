@@ -20,13 +20,13 @@ return new class extends Migration
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
                 'description' => 'Sent when a walk-in POS order is handed over to the customer.',
-                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - 365laundry.lk',
+                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed and settled. Thank you for your business! - ' . \App\Models\Setting::get('company_name', 'Laundry Zone'),
             ],
             [
                 'type' => 'delivery_completed',
                 'name' => 'Delivery Order Completed',
                 'description' => 'Sent when a delivery order is successfully delivered to the customer.',
-                'message' => 'Hi {customer_name}, your delivery order #{order_id} is completed. Thank you for using 365laundry.lk!',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} is completed. Thank you for using ' . \App\Models\Setting::get('company_name', 'Laundry Zone') . '!',
             ],
             [
                 'type' => 'collection_order_placed',
@@ -44,7 +44,7 @@ return new class extends Migration
                 'type' => 'collection_order_completed',
                 'name' => 'Collection Order Completed',
                 'description' => 'Sent when a collection branch order is finally handed over to the customer.',
-                'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing 365laundry.lk!',
+                'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing ' . \App\Models\Setting::get('company_name', 'Laundry Zone') . '!',
             ]
         ];
 

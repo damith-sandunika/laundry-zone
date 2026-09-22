@@ -15,7 +15,7 @@ class SmsTemplateController extends Controller
             SmsTemplate::create([
                 'type' => 'rider_assigned',
                 'name' => 'Delivery Rider Assigned',
-                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - 365laundry.lk',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - ' . \App\Models\Setting::get('company_name', 'Laundry Zone'),
                 'is_active' => true,
             ]);
         }
@@ -62,12 +62,12 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'pos_walkin_ready',
                 'name' => 'Walk-in Order Ready',
-                'message' => 'Hi {customer_name}, great news! Your order #{order_id} is washed and ready to be picked up. Thank you! - 365 Laundry',
+                'message' => 'Hi {customer_name}, great news! Your order #{order_id} is washed and ready to be picked up. Thank you! - ' . \App\Models\Setting::get('company_name', 'Laundry Zone') . '',
             ],
             [
                 'type' => 'pos_walkin_completed',
                 'name' => 'Walk-in Order Completed',
-                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed. Total: {total}. Payment: {payment_status}. Thank you! - 365 Laundry',
+                'message' => 'Hi {customer_name}, your order #{order_id} is fully completed. Total: {total}. Payment: {payment_status}. Thank you! - ' . \App\Models\Setting::get('company_name', 'Laundry Zone') . '',
             ],
             [
                 'type' => 'collection_order_placed',
@@ -82,7 +82,7 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'collection_order_completed',
                 'name' => 'Collection Order Completed',
-                'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing 365 Laundry!',
+                'message' => 'Hi {customer_name}, your order #{order_id} is completed and settled. Thank you for choosing ' . \App\Models\Setting::get('company_name', 'Laundry Zone') . '!',
             ],
             [
                 'type' => 'delivery_order_confirmed',
@@ -102,7 +102,7 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'delivery_completed',
                 'name' => 'Delivery Order Completed',
-                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been successfully delivered. Thank you for using 365 Laundry! Track your order here: {tracking_link}',
+                'message' => 'Hi {customer_name}, your delivery order #{order_id} has been successfully delivered. Thank you for using ' . \App\Models\Setting::get('company_name', 'Laundry Zone') . '! Track your order here: {tracking_link}',
             ],
             [
                 'type' => 'bill_finalized',
@@ -117,7 +117,7 @@ class SmsTemplateController extends Controller
             [
                 'type' => 'rider_assigned',
                 'name' => 'Delivery Rider Assigned',
-                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - 365laundry.lk',
+                'message' => 'Hi {customer_name}, your order #{order_id} has been assigned to our rider {rider_name} (Phone: {rider_phone}, Vehicle: {rider_vehicle_number}). - ' . \App\Models\Setting::get('company_name', 'Laundry Zone'),
             ],
         ];
 

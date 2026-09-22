@@ -15,6 +15,17 @@ use Illuminate\Support\Facades\Http;
 
 class SettingsController extends Controller
 {
+    protected function authorizeConfigManagement()
+    {
+        $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
+        $isGlobalManager = auth()->user()->canManageGlobalConfig();
+        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $canManage = ($isCentralized && $isGlobalManager) || (!$isCentralized && !$isSuperAdmin);
+        
+        if (!$canManage) {
+            abort(403, 'Unauthorized config management mode.');
+        }
+    }
     public function servicesIndex()
     {
         $services = ServiceType::all();
@@ -25,23 +36,25 @@ class SettingsController extends Controller
 
     public function servicesManager()
     {
-        $branchId = $this->getActiveBranchId();
-        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $this->authorizeConfigManagement();
 
-        $serviceCategories = ServiceCategory::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $branchId = $this->getActiveBranchId();
+        $isGlobalMode = \App\Models\Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
+
+        $serviceCategories = ServiceCategory::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
-            ->with(['children.services' => function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+            ->with(['children.services' => function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->where(function($sq) use ($branchId) {
                         $sq->whereNull('branch_id')->orWhere('branch_id', $branchId);
                     });
                 }
                 $q->orderBy('order_index');
-            }, 'services' => function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+            }, 'services' => function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->where(function($sq) use ($branchId) {
                         $sq->whereNull('branch_id')->orWhere('branch_id', $branchId);
                     });
@@ -50,8 +63,8 @@ class SettingsController extends Controller
             }])->orderBy('order_index')->get();
 
         $mainCategories = $serviceCategories->whereNull('parent_id');
-        $services = ServiceType::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $services = ServiceType::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
@@ -64,22 +77,22 @@ class SettingsController extends Controller
     {
         $branchId = $this->getActiveBranchId();
         $branch = Branch::find($branchId);
-        $isSuperAdmin = auth()->user()->role === 'super_admin';
+        $isGlobalMode = \App\Models\Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
         
-        $serviceCategories = ServiceCategory::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $serviceCategories = ServiceCategory::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
-            ->with(['children.services' => function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+            ->with(['children.services' => function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->where(function($sq) use ($branchId) {
                         $sq->whereNull('branch_id')->orWhere('branch_id', $branchId);
                     });
                 }
                 $q->orderBy('order_index');
-            }, 'services' => function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+            }, 'services' => function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->where(function($sq) use ($branchId) {
                         $sq->whereNull('branch_id')->orWhere('branch_id', $branchId);
                     });
@@ -89,22 +102,22 @@ class SettingsController extends Controller
 
         $mainCategories = $serviceCategories->whereNull('parent_id');
 
-        $services = ServiceType::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $services = ServiceType::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
             ->with(['inventoryItems', 'category'])->orderBy('order_index')->get();
 
-        $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $turnaroundTypes = \App\Models\TurnaroundType::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
             ->orderBy('is_default', 'desc')->orderBy('name')->get();
         
-        $extras = \App\Models\Extra::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $extras = \App\Models\Extra::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
@@ -112,14 +125,14 @@ class SettingsController extends Controller
 
         $cubbies = Cubby::where('branch_id', $branchId)->get();
         $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
-        $packages = Package::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $packages = Package::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
             ->with('services.serviceType')->get();
-        $deliveryRanges = \App\Models\DeliveryRange::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $deliveryRanges = \App\Models\DeliveryRange::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })->get();
@@ -130,8 +143,8 @@ class SettingsController extends Controller
         if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
             $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
         }
-        $pickupTimePeriods = \App\Models\PickupTimePeriod::where(function($q) use ($branchId, $isSuperAdmin) {
-                if (!$isSuperAdmin) {
+        $pickupTimePeriods = \App\Models\PickupTimePeriod::where(function($q) use ($branchId, $isGlobalMode) {
+                if (!$isGlobalMode) {
                     $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
                 }
             })
@@ -171,38 +184,48 @@ class SettingsController extends Controller
 
     public function updateGeneral(Request $request)
     {
-        $branchId = $this->getActiveBranchId();
-        $branch = Branch::find($branchId);
+        $user = auth()->user();
+        $isSuperAdmin = $user->role === 'super_admin';
 
-        $request->validate([
-            'name' => 'nullable|string|max:255',
-            'address' => 'nullable|string|max:255',
-            'latitude' => 'nullable|numeric',
-            'longitude' => 'nullable|numeric',
-            'phone' => 'nullable|string|max:50',
-            'whatsapp_number' => 'nullable|string|max:50',
-            'tagline' => 'nullable|string|max:255',
-            'logo_size' => 'nullable|integer|min:20|max:300',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
-            'auto_close_time' => 'nullable|date_format:H:i',
-        ]);
+        if ($isSuperAdmin) {
+            $request->validate([
+                'company_name' => 'nullable|string|max:255',
+                'auto_close_time' => 'nullable|date_format:H:i',
+                'centralized_management' => 'nullable|boolean',
+            ]);
+            
+            \App\Models\Setting::set('centralized_management', $request->has('centralized_management') ? '1' : '0');
 
-        $data = $request->only(['name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'auto_close_time']);
-
-        if ($request->hasFile('logo')) {
-            $data['logo_path'] = app(\App\Actions\UploadImageAction::class)->execute($request->file('logo'), 'logos', 'logo');
-        }
-
-        if ($branch) {
-            $branch->update($data);
-        }
-
-        if (\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             if ($request->has('company_name')) {
                 \App\Models\Setting::set('company_name', $request->company_name);
             }
             if ($request->has('auto_close_time')) {
                 Branch::query()->update(['auto_close_time' => $request->auto_close_time]);
+            }
+        } else {
+            $branchId = $this->getActiveBranchId();
+            $branch = Branch::find($branchId);
+
+            $request->validate([
+                'name' => 'nullable|string|max:255',
+                'address' => 'nullable|string|max:255',
+                'latitude' => 'nullable|numeric',
+                'longitude' => 'nullable|numeric',
+                'phone' => 'nullable|string|max:50',
+                'whatsapp_number' => 'nullable|string|max:50',
+                'tagline' => 'nullable|string|max:255',
+                'logo_size' => 'nullable|integer|min:20|max:300',
+                'logo' => 'nullable|image|mimes:jpeg,png,jpg|max:5120',
+            ]);
+
+            $data = $request->only(['name', 'address', 'latitude', 'longitude', 'phone', 'whatsapp_number', 'tagline', 'logo_size']);
+
+            if ($request->hasFile('logo')) {
+                $data['logo_path'] = app(\App\Actions\UploadImageAction::class)->execute($request->file('logo'), 'logos', 'logo');
+            }
+
+            if ($branch) {
+                $branch->update($data);
             }
         }
 
@@ -224,6 +247,8 @@ class SettingsController extends Controller
 
     public function storeService(Request $request)
     {
+        $this->authorizeConfigManagement();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:service_categories,id',
@@ -232,8 +257,10 @@ class SettingsController extends Controller
             'inventory' => 'nullable|array',
         ]);
 
+        $branchId = \App\Models\Setting::get('centralized_management', '1') == '1' ? null : $this->getActiveBranchId();
+
         $service = ServiceType::create([
-            'branch_id' => null,
+            'branch_id' => $branchId,
             'name' => $request->name,
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
@@ -249,6 +276,8 @@ class SettingsController extends Controller
 
     public function updateService(Request $request, ServiceType $service)
     {
+        $this->authorizeConfigManagement();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'category_id' => 'nullable|exists:service_categories,id',
@@ -266,6 +295,8 @@ class SettingsController extends Controller
 
     public function destroyService(ServiceType $service)
     {
+        $this->authorizeConfigManagement();
+
         $service->delete();
 
         return redirect()->back()->with('success', 'Service deleted.');
@@ -273,6 +304,8 @@ class SettingsController extends Controller
 
     public function storeServiceCategory(Request $request)
     {
+        $this->authorizeConfigManagement();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:service_categories,id',
@@ -284,8 +317,10 @@ class SettingsController extends Controller
             $imagePath = app(\App\Actions\UploadImageAction::class)->execute($request->file('image'), 'categories', 'cat');
         }
 
+        $branchId = \App\Models\Setting::get('centralized_management', '1') == '1' ? null : $this->getActiveBranchId();
+
         ServiceCategory::create([
-            'branch_id' => null,
+            'branch_id' => $branchId,
             'parent_id' => $request->parent_id,
             'name' => $request->name,
             'is_active' => true,
@@ -298,6 +333,8 @@ class SettingsController extends Controller
 
     public function updateServiceCategory(Request $request, ServiceCategory $category)
     {
+        $this->authorizeConfigManagement();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'parent_id' => 'nullable|exists:service_categories,id',
@@ -319,6 +356,8 @@ class SettingsController extends Controller
 
     public function destroyServiceCategory(ServiceCategory $category)
     {
+        $this->authorizeConfigManagement();
+
         $category->delete();
 
         return redirect()->back()->with('success', 'Category deleted.');
@@ -326,6 +365,7 @@ class SettingsController extends Controller
 
     public function reorderCategories(Request $request)
     {
+        $this->authorizeConfigManagement();
         $request->validate(['ordered_ids' => 'required|array']);
         foreach ($request->ordered_ids as $index => $id) {
             ServiceCategory::where('id', $id)->update(['order_index' => $index]);
@@ -335,6 +375,7 @@ class SettingsController extends Controller
 
     public function reorderServices(Request $request)
     {
+        $this->authorizeConfigManagement();
         $request->validate([
             'ordered_ids' => 'required|array',
             'category_id' => 'nullable'
@@ -358,7 +399,7 @@ class SettingsController extends Controller
     public function storeCubby(Request $request)
     {
         $request->validate(['name' => 'required|string|max:50']);
-        $branchId = auth()->user()->role === 'super_admin' ? null : $this->getActiveBranchId();
+        $branchId = $this->getActiveBranchId();
         Cubby::create([
             'branch_id' => $branchId,
             'name' => $request->name,
@@ -461,7 +502,9 @@ class SettingsController extends Controller
 
     public function storePackage(Request $request)
     {
-        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
+        $this->authorizeConfigManagement();
+        
+        $branchId = \App\Models\Setting::get('centralized_management', '1') == '1' ? null : $this->getActiveBranchId();
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -471,7 +514,7 @@ class SettingsController extends Controller
         ]);
 
         $package = Package::create([
-            'branch_id' => null,
+            'branch_id' => $branchId,
             'name' => $request->name,
             'price' => $request->price,
             'payment_type' => $request->payment_type,
@@ -493,6 +536,8 @@ class SettingsController extends Controller
 
     public function updatePackage(Request $request, Package $package)
     {
+        $this->authorizeConfigManagement();
+
         $request->validate([
             'name' => 'required|string|max:255',
             'price' => 'required|numeric|min:0',
@@ -524,6 +569,8 @@ class SettingsController extends Controller
 
     public function destroyPackage(Package $package)
     {
+        $this->authorizeConfigManagement();
+        
         $package->delete();
 
         return redirect()->back()->with('success', 'Package deleted successfully.');
@@ -531,6 +578,7 @@ class SettingsController extends Controller
 
     public function updateDeliverySettings(Request $request)
     {
+        $this->authorizeConfigManagement();
 
         $request->validate([
             'minimum_delivery_cost' => 'required|numeric|min:0',
@@ -558,13 +606,15 @@ class SettingsController extends Controller
 
     public function storeDeliveryRange(Request $request)
     {
+        $this->authorizeConfigManagement();
+
         $request->validate([
             'min_distance_km' => 'required|numeric|min:0',
             'max_distance_km' => 'required|numeric|gt:min_distance_km',
             'cost' => 'required|numeric|min:0',
         ]);
 
-        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
+        $branchId = \App\Models\Setting::get('centralized_management', '1') == '1' ? null : $this->getActiveBranchId();
         \App\Models\DeliveryRange::create([
             'branch_id' => $branchId,
             'min_distance_km' => $request->min_distance_km,
@@ -577,19 +627,21 @@ class SettingsController extends Controller
 
     public function deleteDeliveryRange(\App\Models\DeliveryRange $deliveryRange)
     {
+        $this->authorizeConfigManagement();
         $deliveryRange->delete();
         return redirect()->back()->with('success', 'Delivery Range deleted successfully.');
     }
 
     public function storePickupTimePeriod(Request $request)
     {
+        $this->authorizeConfigManagement();
         $request->validate([
             'label' => 'required|string|max:255',
             'start_time' => 'required|date_format:H:i',
             'end_time' => 'required|date_format:H:i|after:start_time',
         ]);
 
-        $branchId = in_array(auth()->user()->role, ['super_admin', 'workshop_admin']) ? null : $this->getActiveBranchId();
+        $branchId = \App\Models\Setting::get('centralized_management', '1') == '1' ? null : $this->getActiveBranchId();
         \App\Models\PickupTimePeriod::create([
             'branch_id' => $branchId,
             'label' => $request->label,
@@ -603,6 +655,7 @@ class SettingsController extends Controller
 
     public function deletePickupTimePeriod(\App\Models\PickupTimePeriod $pickupTimePeriod)
     {
+        $this->authorizeConfigManagement();
         $pickupTimePeriod->delete();
         return redirect()->back()->with('success', 'Pickup time period deleted successfully.');
     }
@@ -610,14 +663,17 @@ class SettingsController extends Controller
     // Extras CRUD
     public function storeExtra(Request $request)
     {
+        $this->authorizeConfigManagement();
         $request->validate([
             'name' => 'required|string|max:255',
             'price_type' => 'required|in:per_piece,per_kg,per_sqft',
             'price' => 'required|numeric|min:0',
         ]);
 
+        $branchId = \App\Models\Setting::get('centralized_management', '1') == '1' ? null : $this->getActiveBranchId();
+
         \App\Models\Extra::create([
-            'branch_id' => null,
+            'branch_id' => $branchId,
             'name' => $request->name,
             'price_type' => $request->price_type,
             'price' => $request->price,
@@ -629,6 +685,7 @@ class SettingsController extends Controller
 
     public function updateExtra(Request $request, \App\Models\Extra $extra)
     {
+        $this->authorizeConfigManagement();
         $request->validate([
             'name' => 'required|string|max:255',
             'price_type' => 'required|in:per_piece,per_kg,per_sqft',
@@ -643,6 +700,7 @@ class SettingsController extends Controller
 
     public function destroyExtra(\App\Models\Extra $extra)
     {
+        $this->authorizeConfigManagement();
         $extra->delete();
         return redirect()->back()->with('success', 'Extra deleted successfully.');
     }
@@ -650,6 +708,7 @@ class SettingsController extends Controller
     // Turnaround Types CRUD
     public function storeTurnaroundType(Request $request)
     {
+        $this->authorizeConfigManagement();
         $request->validate([
             'name' => 'required|string|max:255',
             'markup_type' => 'required|in:percentage,flat',
@@ -661,8 +720,10 @@ class SettingsController extends Controller
             \App\Models\TurnaroundType::query()->update(['is_default' => false]);
         }
 
+        $branchId = \App\Models\Setting::get('centralized_management', '1') == '1' ? null : $this->getActiveBranchId();
+
         \App\Models\TurnaroundType::create([
-            'branch_id' => null,
+            'branch_id' => $branchId,
             'name' => $request->name,
             'markup_type' => $request->markup_type,
             'markup_value' => $request->markup_value,
@@ -675,6 +736,7 @@ class SettingsController extends Controller
 
     public function updateTurnaroundType(Request $request, \App\Models\TurnaroundType $turnaroundType)
     {
+        $this->authorizeConfigManagement();
         $request->validate([
             'name' => 'required|string|max:255',
             'markup_type' => 'required|in:percentage,flat',
@@ -701,6 +763,7 @@ class SettingsController extends Controller
 
     public function destroyTurnaroundType(\App\Models\TurnaroundType $turnaroundType)
     {
+        $this->authorizeConfigManagement();
         if (strtolower($turnaroundType->name) === 'standard') {
             return redirect()->back()->with('error', 'The Standard turnaround type cannot be deleted.');
         }

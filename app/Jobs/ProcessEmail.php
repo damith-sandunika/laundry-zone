@@ -74,7 +74,7 @@ class ProcessEmail implements ShouldQueue
                     ->getHeaders()
                         ->addTextHeader('List-Unsubscribe', '<mailto:' . $fromAddress . '?subject=unsubscribe>')
                         ->addTextHeader('Precedence', 'bulk')
-                        ->addTextHeader('X-Mailer', '365laundry-Mailer');
+                        ->addTextHeader('X-Mailer', 'LaundryZone-Mailer');
             });
 
             $this->emailLog->update(['status' => 'sent', 'response' => 'Sent successfully via SMTP']);

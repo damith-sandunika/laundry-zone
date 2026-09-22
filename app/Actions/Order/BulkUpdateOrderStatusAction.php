@@ -31,100 +31,114 @@ class BulkUpdateOrderStatusAction
             'cancelled' => 7,
         ];
 
-        DB::transaction(function () use ($orderIds, $status, $cubby_id, $userId, $stateOrder) {
-            foreach ($orderIds as $id) {
-                $order = Order::with('customer')->find($id);
-
-                if ($status !== 'cancelled') {
-                    if (($stateOrder[$status] ?? 0) <= ($stateOrder[$order->status] ?? 0)) {
-                        continue;
-                    }
-                }
-
-                $order->status = $status;
-
-                if ($status === 'done') {
-                    if ($cubby_id) {
-                        $oldCubby = $order->cubbies()->whereNull('released_at')->first();
-                        if ($oldCubby && $oldCubby->cubby_id != $cubby_id) {
-                            $oldCubby->update(['released_at' => now()]);
-                            Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
+        try {
+            DB::transaction(function () use ($orderIds, $status, $cubby_id, $userId, $stateOrder) {
+                Order::with('customer', 'cubbies')->whereIn('id', $orderIds)->chunkById(100, function ($orders) use ($status, $cubby_id, $userId, $stateOrder) {
+                    foreach ($orders as $order) {
+                        if ($status !== 'cancelled') {
+                            if (($stateOrder[$status] ?? 0) <= ($stateOrder[$order->status] ?? 0)) {
+                                continue;
+                            }
                         }
 
-                        if (! $oldCubby || $oldCubby->cubby_id != $cubby_id) {
-                            OrderCubby::create([
-                                'order_id' => $order->id,
-                                'cubby_id' => $cubby_id,
-                                'assigned_at' => now(),
-                            ]);
+                        $order->status = $status;
+
+                        if ($status === 'done') {
+                            if ($cubby_id) {
+                                $oldCubby = $order->cubbies()->whereNull('released_at')->first();
+                                if ($oldCubby && $oldCubby->cubby_id != $cubby_id) {
+                                    $oldCubby->update(['released_at' => now()]);
+                                    Cubby::where('id', $oldCubby->cubby_id)->update(['status' => 'empty']);
+                                }
+
+                                if (! $oldCubby || $oldCubby->cubby_id != $cubby_id) {
+                                    OrderCubby::create([
+                                        'order_id' => $order->id,
+                                        'cubby_id' => $cubby_id,
+                                        'assigned_at' => now(),
+                                    ]);
+                                }
+
+                                Cubby::where('id', $cubby_id)->update(['status' => 'occupied']);
+                            }
+
+                            $dispatch = WorkshopDispatch::where('order_id', $order->id)
+                                ->whereNotIn('status', ['received_at_branch'])
+                                ->first();
+                            if ($dispatch) {
+                                $dispatch->update([
+                                    'status' => 'received_at_branch',
+                                    'received_at_branch_at' => now(),
+                                ]);
+                            }
                         }
 
-                        Cubby::where('id', $cubby_id)->update(['status' => 'occupied']);
-                    }
+                        if ($status === 'done') {
+                            $appt = DeliveryAppointment::where('order_id', $order->id)->first();
+                            if ($appt && $appt->status !== 'ready') {
+                                $appt->update(['status' => 'ready']);
+                            }
+                        }
 
-                    $dispatch = WorkshopDispatch::where('order_id', $order->id)
-                        ->whereNotIn('status', ['received_at_branch'])
-                        ->first();
-                    if ($dispatch) {
-                        $dispatch->update([
-                            'status' => 'received_at_branch',
-                            'received_at_branch_at' => now(),
+                        if ($status === 'delivered') {
+                            $order->delivered_at = now();
+                            if ($order->payment_method === 'credit') {
+                                $order->payment_status = 'pending';
+                            } else {
+                                $amountToPay = $order->total - $order->paid_amount;
+                                if ($amountToPay > 0) {
+                                    PaymentTransaction::create([
+                                        'order_id' => $order->id,
+                                        'amount' => $amountToPay,
+                                        'payment_method' => $order->payment_method ?? 'cash',
+                                        'created_by' => $userId,
+                                    ]);
+                                }
+                                $order->payment_status = 'paid';
+                                if ($amountToPay > 0) {
+                                    $order->paid_amount += $amountToPay;
+                                }
+                            }
+
+                            $orderCubby = $order->cubbies()->whereNull('released_at')->first();
+                            if ($orderCubby) {
+                                $orderCubby->update(['released_at' => now()]);
+                                Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
+                            }
+
+                            $appt = DeliveryAppointment::where('order_id', $order->id)->first();
+                            if ($appt) {
+                                $appt->update(['status' => 'delivered']);
+                            }
+                        }
+
+                        $order->save();
+
+                        OrderStatusHistory::create([
+                            'order_id' => $order->id,
+                            'status' => $status,
+                            'changed_by' => $userId,
                         ]);
                     }
+                });
+            });
+
+            Log::info("Bulk update status completed.", ['count' => count($orderIds), 'status' => $status, 'user_id' => $userId]);
+
+            Order::whereIn('id', $orderIds)->chunkById(100, function ($orders) use ($status) {
+                foreach ($orders as $order) {
+                    $this->triggerNotifications($order, $status);
                 }
+            });
 
-                if ($status === 'done') {
-                    $appt = DeliveryAppointment::where('order_id', $order->id)->first();
-                    if ($appt && $appt->status !== 'ready') {
-                        $appt->update(['status' => 'ready']);
-                    }
-                }
-
-                if ($status === 'delivered') {
-                    $order->delivered_at = now();
-                    if ($order->payment_method === 'credit') {
-                        $order->payment_status = 'pending';
-                    } else {
-                        $amountToPay = $order->total - $order->paid_amount;
-                        if ($amountToPay > 0) {
-                            PaymentTransaction::create([
-                                'order_id' => $order->id,
-                                'amount' => $amountToPay,
-                                'payment_method' => $order->payment_method ?? 'cash',
-                                'created_by' => $userId,
-                            ]);
-                        }
-                        $order->payment_status = 'paid';
-                        if ($amountToPay > 0) {
-                            $order->paid_amount += $amountToPay;
-                        }
-                    }
-
-                    $orderCubby = $order->cubbies()->whereNull('released_at')->first();
-                    if ($orderCubby) {
-                        $orderCubby->update(['released_at' => now()]);
-                        Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
-                    }
-
-                    $appt = DeliveryAppointment::where('order_id', $order->id)->first();
-                    if ($appt) {
-                        $appt->update(['status' => 'delivered']);
-                    }
-                }
-
-                $order->save();
-
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => $status,
-                    'changed_by' => $userId,
-                ]);
-            }
-        });
-
-        $orders = Order::whereIn('id', $orderIds)->get();
-        foreach ($orders as $order) {
-            $this->triggerNotifications($order, $status);
+        } catch (\Throwable $e) {
+            Log::error("Bulk Update Order Status failed: " . $e->getMessage(), [
+                'order_ids' => $orderIds,
+                'status' => $status,
+                'user_id' => $userId,
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
         }
     }
 

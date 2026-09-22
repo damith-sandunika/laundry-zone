@@ -30,21 +30,21 @@ class CommunicationService
                 'subject' => "Walk-in Order Placed",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been placed successfully. We will let you know once it is completed. - 365 Laundry</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been placed successfully. We will let you know once it is completed. - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
                 ",
             ],
             'pos_walkin_ready' => [
                 'subject' => "Walk-in Order Ready",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Great news! Your walk-in order <strong>#{$orderId}</strong> is washed and ready to be picked up. Thank you! - 365 Laundry</p>
+                    <p style='margin:0 0 16px;'>Great news! Your walk-in order <strong>#{$orderId}</strong> is washed and ready to be picked up. Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
                 ",
             ],
             'pos_walkin_completed' => [
                 'subject' => "Walk-in Order Completed",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is fully completed and settled. Thank you for your business! - 365 Laundry</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is fully completed and settled. Thank you for your business! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
                     <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
@@ -70,7 +70,7 @@ class CommunicationService
                 'subject' => "Collection Order Completed",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is completed and settled. Thank you for choosing 365 Laundry!</p>
+                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is completed and settled. Thank you for choosing " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "!</p>
                 ",
             ],
             'delivery_order_confirmed' => [
@@ -98,7 +98,7 @@ class CommunicationService
                 'subject' => "Delivery Order Completed",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> has been successfully delivered. Thank you for using 365 Laundry!</p>
+                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> has been successfully delivered. Thank you for using " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "!</p>
                     <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
@@ -110,7 +110,7 @@ class CommunicationService
                 'subject' => "Payment Request for Order #{$orderId}",
                 'body'    => "
                     <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>The bill for your order <strong>#{$orderId}</strong> has been finalized. The total amount is <strong>{$total}</strong> and the amount due is <strong>{$due}</strong>. Please arrange the payment. Thank you! - 365 Laundry</p>
+                    <p style='margin:0 0 16px;'>The bill for your order <strong>#{$orderId}</strong> has been finalized. The total amount is <strong>{$total}</strong> and the amount due is <strong>{$due}</strong>. Please arrange the payment. Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
                 ",
             ],
             'payment_received' => [
@@ -124,7 +124,7 @@ class CommunicationService
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Amount Due</td><td style='padding:8px 12px;background:#f8fafc;'>{$due}</td></tr>
                     </table>
-                    <p style='margin:16px 0 0;'>Thank you! - 365 Laundry</p>
+                    <p style='margin:16px 0 0;'>Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
                 ",
             ],
             'rider_assigned' => [
@@ -137,7 +137,7 @@ class CommunicationService
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Rider Phone</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_phone'] ?? '') . "</td></tr>
                         <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Vehicle Number</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_vehicle_number'] ?? 'N/A') . "</td></tr>
                     </table>
-                    <p style='margin:16px 0 0;'>Thank you! - 365 Laundry</p>
+                    <p style='margin:16px 0 0;'>Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
                 ",
             ]
         ];

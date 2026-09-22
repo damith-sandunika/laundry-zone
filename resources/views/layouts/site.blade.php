@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>365laundry.lk - Premium Laundry & Dry Cleaning Service</title>
+    <title>{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} - Premium Laundry & Dry Cleaning Service</title>
     <link rel="icon" type="image/png" href="{{ asset('images/360_laundry_logo.png') }}">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap"
@@ -190,8 +190,8 @@
         
         <!-- Logo & Text -->
         <div class="relative z-10 flex flex-col items-center animate-pulse-slow">
-            <img src="{{ asset('images/360_laundry_logo.png') }}" alt="365laundry.lk" class="h-24 w-auto mb-6 bg-white/60 p-2 rounded-3xl border border-white/20 backdrop-blur-md shadow-2xl">
-            <h1 class="text-4xl font-black text-white tracking-wider drop-shadow-lg">365laundry<span class="text-blue-300">.lk</span></h1>
+            <img src="{{ asset('images/360_laundry_logo.png') }}" alt="{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}" class="h-24 w-auto mb-6 bg-white/60 p-2 rounded-3xl border border-white/20 backdrop-blur-md shadow-2xl">
+            <h1 class="text-4xl font-black text-white tracking-wider drop-shadow-lg">{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</h1>
             <p class="text-blue-100 mt-2 font-bold tracking-[0.2em] text-sm uppercase">Premium Care</p>
         </div>
 
@@ -214,7 +214,7 @@
             <div class="flex justify-between h-16 items-center">
                 <!-- Brand -->
                 <a href="{{ route('home') }}" class="flex items-center gap-2">
-                    <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="365laundry.lk Logo" class="h-10 w-auto">
+                    <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} Logo" class="h-10 w-auto">
                 </a>
 
                 <!-- Right: Sign In + Book Now -->
@@ -238,7 +238,7 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 border-b border-slate-700 pb-12 mb-8">
                 <div class="col-span-1 md:col-span-2">
                     <div class="flex items-center mb-4">
-                        <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="365laundry.lk Logo" class="h-10 w-auto bg-white/10 p-1.5 rounded-xl border border-white/20">
+                        <img src="{{ asset('images/360_laundry_logo_site.png') }}" alt="{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} Logo" class="h-10 w-auto bg-white/10 p-1.5 rounded-xl border border-white/20">
                     </div>
                     <p class="text-sm text-slate-400 mb-6 max-w-sm">Professional laundry and dry cleaning services with care and convenience delivered right to your doorstep.</p>
                     <div class="flex gap-4">
@@ -271,7 +271,7 @@
 
             </div>
             <div class="text-center text-sm text-slate-500">
-                <p>&copy; {{ date('Y') }} 365laundry.lk. All Rights Reserved.</p>
+                <p>&copy; {{ date('Y') }} {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}. All Rights Reserved.</p>
                 <p class="mt-1 text-slate-600 text-xs font-medium">Powered by <a href="https://dsrzone.com"
                         target="_blank"
                         class="text-blue-500 hover:text-blue-400 font-bold transition-colors">DSRZone</a></p>

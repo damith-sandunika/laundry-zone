@@ -556,7 +556,7 @@
     <section class="py-16 lg:py-20 bg-slate-50 border-t border-slate-100">
         <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="text-center mb-12">
-                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mb-4">Why Choose 365laundry.lk?</h2>
+                <h2 class="text-3xl md:text-5xl font-extrabold text-brand mb-4">Why Choose {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}?</h2>
                 <p class="text-slate-500 max-w-2xl mx-auto font-medium">We combine state-of-the-art technology with expert care to give your clothes the premium treatment they deserve.</p>
             </div>
             
@@ -612,7 +612,7 @@
 
             @php
                 $reviews = [
-                    ['name' => 'Nadeesha Perera', 'text' => 'Excellent service! My clothes were picked up on time and delivered perfectly pressed and smelling fresh. Highly recommend 365 Laundry.', 'color' => 'bg-blue-500', 'initial' => 'N', 'time' => 'a week ago'],
+                    ['name' => 'Nadeesha Perera', 'text' => 'Excellent service! My clothes were picked up on time and delivered perfectly pressed and smelling fresh. Highly recommend {{ \App\Models\Setting::get(\'company_name\', \'Laundry Zone\') }}.', 'color' => 'bg-blue-500', 'initial' => 'N', 'time' => 'a week ago'],
                     ['name' => 'Gayan Fernando', 'text' => 'Very reliable and fast. Had a tough stain on my favorite shirt and they managed to get it out completely. The staff is also very polite.', 'color' => 'bg-green-500', 'initial' => 'G', 'time' => '2 weeks ago'],
                     ['name' => 'Tharindi Silva', 'text' => 'Best laundry service in Kotikawatta. The 48-hour delivery is exactly as promised. Packaging is also very neat and clean.', 'color' => 'bg-purple-500', 'initial' => 'T', 'time' => 'a month ago'],
                     ['name' => 'Kasun Weerasinghe', 'text' => 'Great value for money. They handle my office wear perfectly. The convenience of them picking it up from home is unmatched.', 'color' => 'bg-orange-500', 'initial' => 'K', 'time' => '2 months ago'],
