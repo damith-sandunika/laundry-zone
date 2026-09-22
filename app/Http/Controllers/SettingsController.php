@@ -192,9 +192,11 @@ class SettingsController extends Controller
                 'company_name' => 'nullable|string|max:255',
                 'auto_close_time' => 'nullable|date_format:H:i',
                 'centralized_management' => 'nullable|boolean',
+                'site_landing_page' => 'nullable|string|max:255',
             ]);
             
             \App\Models\Setting::set('centralized_management', $request->has('centralized_management') ? '1' : '0');
+            \App\Models\Setting::set('site_landing_page', $request->input('site_landing_page', ''));
 
             if ($request->has('company_name')) {
                 \App\Models\Setting::set('company_name', $request->company_name);

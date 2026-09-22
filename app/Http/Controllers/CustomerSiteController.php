@@ -17,6 +17,16 @@ class CustomerSiteController extends Controller
 {
     public function home()
     {
+        $redirectUrl = \App\Models\Setting::get('site_landing_page', '');
+        if (!empty($redirectUrl)) {
+            return redirect($redirectUrl);
+        }
+
+        // If the website folder is deleted, prevent a 500 error by falling back
+        if (!view()->exists('website.home')) {
+            return redirect()->route('customer.login');
+        }
+
         // Include both workshop branches and delivery-enabled branches on the map
         $branches = Branch::where('is_active', true)
             ->where(function($q) {
@@ -70,7 +80,7 @@ class CustomerSiteController extends Controller
 
         $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
 
-        return view('site.home', compact('branches', 'categories', 'packages', 'turnaroundTypes', 'extras', 'pickupTimePeriods', 'minimumOrderLimit', 'shopLat', 'shopLng', 'deliveryRanges', 'workshops', 'paymentMethods', 'isCentralized'));
+        return view('website.home', compact('branches', 'categories', 'packages', 'turnaroundTypes', 'extras', 'pickupTimePeriods', 'minimumOrderLimit', 'shopLat', 'shopLng', 'deliveryRanges', 'workshops', 'paymentMethods', 'isCentralized'));
     }
 
     public function booking()

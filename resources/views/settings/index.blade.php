@@ -154,6 +154,18 @@
                                     If disabled, Branch Admins manage their own configurations locally.
                                 </p>
                             </div>
+
+                            <div class="pt-4 mt-4 border-t border-gray-100">
+                                <label class="block text-xs font-bold text-gray-800 uppercase mb-1">Site Landing Page (Redirect)</label>
+                                <p class="text-[11px] text-gray-500 mb-2">
+                                    When visitors open the website, redirect them to this URL path. Leave blank to show the default homepage.
+                                    <br>Example: <code class="bg-gray-100 px-1 rounded">/customer/login</code> or <code class="bg-gray-100 px-1 rounded">/customer/book</code>
+                                </p>
+                                <input type="text" name="site_landing_page"
+                                    value="{{ \App\Models\Setting::get('site_landing_page', '') }}"
+                                    placeholder="Leave blank for default homepage"
+                                    class="w-full text-sm border-gray-200 rounded-md focus:border-blue-500 focus:ring-blue-500 font-mono">
+                            </div>
                         @else
                             <div>
                                 <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">

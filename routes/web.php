@@ -35,12 +35,13 @@ Route::redirect('/login', '/stafflogin');
 Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
 
 // ─── Public Website Pages ───
-Route::get('/about', function () { return view('site.pages.about'); })->name('site.about');
-Route::get('/faq', function () { return view('site.pages.faq'); })->name('site.faq');
-Route::get('/how-it-works', function () { return view('site.pages.how-it-works'); })->name('site.how-it-works');
-Route::get('/terms', function () { return view('site.pages.terms'); })->name('site.terms');
-Route::get('/privacy', function () { return view('site.pages.privacy'); })->name('site.privacy');
-Route::get('/quality', function () { return view('site.pages.quality'); })->name('site.quality');
+Route::get('/about', function () { return view()->exists('website.pages.about') ? view('website.pages.about') : redirect()->route('customer.login'); })->name('site.about');
+Route::get('/faq', function () { return view()->exists('website.pages.faq') ? view('website.pages.faq') : redirect()->route('customer.login'); })->name('site.faq');
+Route::get('/how-it-works', function () { return view()->exists('website.pages.how-it-works') ? view('website.pages.how-it-works') : redirect()->route('customer.login'); })->name('site.how-it-works');
+Route::get('/terms', function () { return view()->exists('website.pages.terms') ? view('website.pages.terms') : redirect()->route('customer.login'); })->name('site.terms');
+Route::get('/privacy', function () { return view()->exists('website.pages.privacy') ? view('website.pages.privacy') : redirect()->route('customer.login'); })->name('site.privacy');
+Route::get('/quality', function () { return view()->exists('website.pages.quality') ? view('website.pages.quality') : redirect()->route('customer.login'); })->name('site.quality');
+
 
 // Fix for Windows PHP built-in server symlink 403 error
 Route::get('/storage/receipts/{filename}', function ($filename) {
