@@ -35,12 +35,18 @@ Route::redirect('/login', '/stafflogin');
 Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
 
 // ─── Public Website Pages ───
-Route::get('/about', function () { return view()->exists('website.pages.about') ? view('website.pages.about') : redirect()->route('customer.login'); })->name('site.about');
-Route::get('/faq', function () { return view()->exists('website.pages.faq') ? view('website.pages.faq') : redirect()->route('customer.login'); })->name('site.faq');
-Route::get('/how-it-works', function () { return view()->exists('website.pages.how-it-works') ? view('website.pages.how-it-works') : redirect()->route('customer.login'); })->name('site.how-it-works');
-Route::get('/terms', function () { return view()->exists('website.pages.terms') ? view('website.pages.terms') : redirect()->route('customer.login'); })->name('site.terms');
-Route::get('/privacy', function () { return view()->exists('website.pages.privacy') ? view('website.pages.privacy') : redirect()->route('customer.login'); })->name('site.privacy');
-Route::get('/quality', function () { return view()->exists('website.pages.quality') ? view('website.pages.quality') : redirect()->route('customer.login'); })->name('site.quality');
+Route::get('/about', function () {
+    return view()->exists('website.pages.about') ? view('website.pages.about') : redirect()->route('customer.login'); })->name('site.about');
+Route::get('/faq', function () {
+    return view()->exists('website.pages.faq') ? view('website.pages.faq') : redirect()->route('customer.login'); })->name('site.faq');
+Route::get('/how-it-works', function () {
+    return view()->exists('website.pages.how-it-works') ? view('website.pages.how-it-works') : redirect()->route('customer.login'); })->name('site.how-it-works');
+Route::get('/terms', function () {
+    return view()->exists('website.pages.terms') ? view('website.pages.terms') : redirect()->route('customer.login'); })->name('site.terms');
+Route::get('/privacy', function () {
+    return view()->exists('website.pages.privacy') ? view('website.pages.privacy') : redirect()->route('customer.login'); })->name('site.privacy');
+Route::get('/quality', function () {
+    return view()->exists('website.pages.quality') ? view('website.pages.quality') : redirect()->route('customer.login'); })->name('site.quality');
 
 
 // Fix for Windows PHP built-in server symlink 403 error
@@ -84,7 +90,7 @@ Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group
     Route::get('/orders/{order:order_number}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
     Route::post('/orders/{order:order_number}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
     Route::get('/orders/{order:order_number}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
-    
+
     // Appointments
     Route::get('/appointments/{appointment}', function (\App\Models\Appointment $appointment) {
         if (!$appointment->order_number) {
@@ -224,11 +230,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
         Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
 
-            // Payment Settings
-            Route::post('/settings/payment-methods', [\App\Http\Controllers\PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
+        // Payment Settings
+        Route::post('/settings/payment-methods', [\App\Http\Controllers\PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
 
-            // Notifications Settings
-            Route::post('/settings/notifications', [\App\Http\Controllers\SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
+        // Notifications Settings
+        Route::post('/settings/notifications', [\App\Http\Controllers\SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
 
 
 
@@ -266,11 +272,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/turnaround-types', [SettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
         Route::put('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
         Route::delete('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
-        
+
         Route::post('/settings/delivery-global', [SettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
         Route::post('/settings/delivery-ranges', [SettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
         Route::delete('/settings/delivery-ranges/{deliveryRange}', [SettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
-        
+
         Route::post('/settings/pickup-time-periods', [SettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
         Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [SettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
 
@@ -328,13 +334,13 @@ Route::middleware(['auth'])->group(function () {
         // Reports Routes (Accessible by admin, branch_admin, workshop_admin, super_admin, staff)
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
-        
+
         Route::get('/reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
         Route::get('/reports/sales/pdf', [ReportController::class, 'salesReportPdf'])->name('reports.sales.pdf');
-        
+
         Route::get('/reports/services', [ReportController::class, 'serviceReport'])->name('reports.services');
         Route::get('/reports/services/pdf', [ReportController::class, 'serviceReportPdf'])->name('reports.services.pdf');
-        
+
         Route::get('/reports/customers', [ReportController::class, 'customerReport'])->name('reports.customers');
         Route::get('/reports/customers/pdf', [ReportController::class, 'customerReportPdf'])->name('reports.customers.pdf');
 
@@ -343,7 +349,7 @@ Route::middleware(['auth'])->group(function () {
     });
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
 
 // SMS Webhook Route
 Route::post('/sms/callback', [\App\Http\Controllers\SmsWebhookController::class, 'handleCallback']);

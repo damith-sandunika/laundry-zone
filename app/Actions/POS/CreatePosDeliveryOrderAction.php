@@ -83,8 +83,10 @@ class CreatePosDeliveryOrderAction
                         'turnaround_type_id' => $turnaroundTypeId,
                         'custom_turnaround_percentage' => $customTurnaroundPercent,
                         'turnaround_extra_charge' => $turnaroundCharge,
-                        'selected_extras' => $selectedExtras,
+                        'selected_extras' => [],
                     ];
+
+                    $lastIndex = count($processedCart) - 1;
 
                     if (is_array($selectedExtras) && count($selectedExtras) > 0) {
                         foreach ($selectedExtras as $selEx) {
@@ -93,30 +95,14 @@ class CreatePosDeliveryOrderAction
                             
                             $extra = \App\Models\Extra::find($extraId);
                             if ($extra) {
-                                $extraService = \App\Models\ServiceType::firstOrCreate(
-                                    ['name' => 'Extra: ' . $extra->name],
-                                    [
-                                        'color' => 'slate', 
-                                        'price_type' => 'per_item', 
-                                        'base_price' => $extra->price, 
-                                        'loyalty_points_earn' => 0, 
-                                        'is_active' => 1, 
-                                        'description' => 'Extra service'
-                                    ]
-                                );
-
                                 $extraSubtotal = $extra->price * $extraQty;
                                 $subtotal += $extraSubtotal;
 
-                                $processedCart[] = [
-                                    'service_type_id' => $extraService->id,
-                                    'name' => 'Extra: ' . $extra->name,
+                                $processedCart[$lastIndex]['selected_extras'][] = [
+                                    'id' => $extra->id,
                                     'qty' => $extraQty,
-                                    'base_price' => $extra->price,
-                                    'total_price' => $extraSubtotal,
-                                    'turnaround_type_id' => null,
-                                    'turnaround_extra_charge' => 0,
-                                    'selected_extras' => [],
+                                    'price' => $extra->price,
+                                    'total' => $extraSubtotal
                                 ];
                             }
                         }
@@ -146,7 +132,7 @@ class CreatePosDeliveryOrderAction
                 ]);
 
                 foreach ($processedCart as $item) {
-                    OrderItem::create([
+                    $orderItem = OrderItem::create([
                         'order_id'        => $order->id,
                         'service_type_id' => $item['service_type_id'],
                         'item_description' => $item['name'],
@@ -157,6 +143,18 @@ class CreatePosDeliveryOrderAction
                         'custom_turnaround_percentage' => $item['custom_turnaround_percentage'] ?? null,
                         'turnaround_extra_charge' => $item['turnaround_extra_charge'],
                     ]);
+                    
+                    if (isset($item['selected_extras']) && count($item['selected_extras']) > 0) {
+                        foreach ($item['selected_extras'] as $ex) {
+                            \App\Models\OrderItemExtra::create([
+                                'order_item_id' => $orderItem->id,
+                                'extra_id'      => $ex['id'],
+                                'quantity'      => $ex['qty'],
+                                'unit_price'    => $ex['price'],
+                                'total_price'   => $ex['total']
+                            ]);
+                        }
+                    }
                 }
 
                 // Save cart_json matching the frontend structure for consistency
