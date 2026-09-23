@@ -193,60 +193,86 @@ class DashboardController extends Controller
 
         $branchId = $this->getActiveBranchId();
 
+        \Log::info('openShift: user=' . auth()->id() . ' branch=' . $branchId);
+
         // Check if there is already an open session
         $existing = RegisterSession::where('branch_id', $branchId)
             ->where('status', 'open')
             ->first();
 
         if ($existing) {
-            return redirect()->route('dashboard')->with('error', 'Branch is already open.');
+            \Log::info('openShift: session already open id=' . $existing->id);
+            return $this->dashboardRedirect()->with('info', 'Branch shift is already open.');
         }
 
-        $newSession = RegisterSession::create([
-            'branch_id'    => $branchId,
-            'user_id'      => auth()->id(),
-            'opening_cash' => $request->opening_cash,
-            'opened_at'    => now(),
-            'status'       => 'open',
-        ]);
+        try {
+            $newSession = RegisterSession::create([
+                'branch_id'    => $branchId,
+                'user_id'      => auth()->id(),
+                'opening_cash' => $request->opening_cash,
+                'opened_at'    => now(),
+                'status'       => 'open',
+            ]);
 
-        // ── Sync branches.cash_balance to the opening cash amount ──
-        Branch::where('id', $branchId)->update(['cash_balance' => $request->opening_cash]);
+            \Log::info('openShift: created session id=' . $newSession->id . ' branch=' . $branchId);
 
-        // Mark assigned staff for system access
-        $assignedStaffDesc = [];
-        if ($request->has('assigned_staff')) {
-            foreach ($request->assigned_staff as $staffId) {
-                \App\Models\Attendance::create([
-                    'user_id'             => $staffId,
-                    'date'                => now()->toDateString(),
-                    'register_session_id' => $newSession->id,
-                    'is_assigned'         => true,
-                    'status'              => 'present',
-                ]);
+            // ── Sync branches.cash_balance to the opening cash amount ──
+            Branch::where('id', $branchId)->update(['cash_balance' => $request->opening_cash]);
 
-                $staff = \App\Models\User::find($staffId);
-                if ($staff) {
-                    $assignedStaffDesc[] = $staff->name;
+            // Mark assigned staff for system access
+            $assignedStaffDesc = [];
+            if ($request->has('assigned_staff')) {
+                foreach ($request->assigned_staff as $staffId) {
+                    \App\Models\Attendance::create([
+                        'user_id'             => $staffId,
+                        'date'                => now()->toDateString(),
+                        'register_session_id' => $newSession->id,
+                        'is_assigned'         => true,
+                        'status'              => 'present',
+                    ]);
+
+                    $staff = \App\Models\User::find($staffId);
+                    if ($staff) {
+                        $assignedStaffDesc[] = $staff->name;
+                    }
                 }
             }
+
+            // Log the event
+            $logDesc = 'Shift opened with Rs. ' . number_format($request->opening_cash, 2);
+            if (!empty($assignedStaffDesc)) {
+                $logDesc .= '. Staff Assigned: ' . implode(', ', $assignedStaffDesc);
+            }
+
+            \App\Models\BranchLog::create([
+                'branch_id'   => $branchId,
+                'user_id'     => auth()->id(),
+                'action'      => 'shift_opened',
+                'description' => $logDesc,
+            ]);
+
+            return $this->dashboardRedirect()->with('success', 'Branch shift opened successfully.');
+
+        } catch (\Exception $e) {
+            \Log::error('openShift error: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Shift open failed: ' . $e->getMessage());
         }
+    }
 
-        // Log the event
-        $logDesc = 'Shift opened with Rs. ' . number_format($request->opening_cash, 2);
-        if (!empty($assignedStaffDesc)) {
-            $logDesc .= '. Staff Assigned: ' . implode(', ', $assignedStaffDesc);
+    /**
+     * Redirect to the correct dashboard based on the logged-in user's role.
+     * Prevents double-redirect for workshop users.
+     */
+    private function dashboardRedirect()
+    {
+        $user = auth()->user();
+        if (
+            $user->role === 'workshop_admin' ||
+            ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop')
+        ) {
+            return redirect()->route('workshop.dashboard');
         }
-
-        \App\Models\BranchLog::create([
-            'branch_id'   => $branchId,
-            'user_id'     => auth()->id(),
-            'action'      => 'shift_opened',
-            'description' => $logDesc,
-        ]);
-
-        // Redirect to dashboard directly (not back()) to ensure fresh session state loads
-        return redirect()->route('dashboard')->with('success', 'Branch shift opened successfully.');
+        return redirect()->route('dashboard');
     }
 
     public function updateAttendance(Request $request)
@@ -344,7 +370,7 @@ class DashboardController extends Controller
         ]);
 
         // Redirect to dashboard directly (not back()) for clean state
-        return redirect()->route('dashboard')->with('success', 'Shift closed. Final Cash: Rs.' . number_format($finalCash, 2) . '.');
+        return $this->dashboardRedirect()->with('success', 'Shift closed. Final Cash: Rs.' . number_format($finalCash, 2) . '.');
     }
 }
 
