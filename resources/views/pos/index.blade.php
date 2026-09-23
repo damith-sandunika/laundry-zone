@@ -843,9 +843,9 @@
                                 <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Pickup Scheduled Date <span class="text-red-500">*</span></label>
                                 <input type="date" x-model="pickupDateOnly"
                                     class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-black text-slate-800 outline-none transition-all cursor-pointer">
-                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 mt-3">Pickup Time Slot <span class="text-red-500">*</span></label>
+                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5 mt-3">Pickup Time Slot <span class="text-slate-400 font-semibold normal-case">(optional)</span></label>
                                 <select x-model="pickupTimeSlot" class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-black text-slate-800 outline-none transition-all cursor-pointer">
-                                    <option value="">— Select a time slot —</option>
+                                    <option value="">— Any time —</option>
                                     <template x-for="slot in window.posSystemData.timeSlots" :key="slot.id">
                                         <option :value="slot.start_time + '-' + slot.end_time" x-text="formatTime(slot.start_time) + ' – ' + formatTime(slot.end_time)"></option>
                                     </template>
@@ -1530,9 +1530,8 @@
                     if (!this.selectedCust) { alert('Please select a customer in POS first.'); return; }
                     if (!this.pickupAddress.trim()) { alert('Please enter the Pickup Address.'); return; }
                     if (!this.pickupDateOnly) { alert('Please select Pickup Date.'); return; }
-                    if (!this.pickupTimeSlot) { alert('Please select Pickup Time.'); return; }
 
-                    let selectedTimeStart = this.pickupTimeSlot.split('-')[0];
+                    let selectedTimeStart = this.pickupTimeSlot ? this.pickupTimeSlot.split('-')[0] : '00:00:00';
                     let combinedDateTime = this.pickupDateOnly + ' ' + selectedTimeStart;
                     
                     let deliveryCombined = null;
