@@ -502,13 +502,13 @@
 
                                         <template x-if="dispatch.status === 'completed_at_workshop'">
                                             <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
-                                                <template x-if="dispatch.order.branch_id == {{ auth()->user()->branch_id ?? 'null' }}">
+                                                <template x-if="dispatch.order.branch_id == {{ auth()->user()->branch_id ?? 'null' }} || dispatch.order.branch_id == dispatch.workshop_branch_id || dispatch.order.is_delivery_order || {{ auth()->user()->role === 'super_admin' ? 'true' : 'false' }}">
                                                     <div style="display:flex;gap:6px;">
                                                         <template x-if="dispatch.order.is_delivery_order">
                                                             <button @click="openDeliveryModal(dispatch)"
                                                                 style="padding:5px 14px;background:linear-gradient(to right,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
                                                                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                                <i class="fa-solid fa-truck"></i> Assign to Delivery
+                                                                <i class="fa-solid fa-truck"></i> Assign Rider
                                                             </button>
                                                         </template>
                                                         <template x-if="!dispatch.order.is_delivery_order">
@@ -520,7 +520,7 @@
                                                         </template>
                                                     </div>
                                                 </template>
-                                                <template x-if="dispatch.order.branch_id != {{ auth()->user()->branch_id ?? 'null' }}">
+                                                <template x-if="dispatch.order.branch_id != {{ auth()->user()->branch_id ?? 'null' }} && dispatch.order.branch_id != dispatch.workshop_branch_id && !dispatch.order.is_delivery_order && !{{ auth()->user()->role === 'super_admin' ? 'true' : 'false' }}">
                                                     <button @click="workshopAction(dispatch.id, 'return')"
                                                         style="padding:5px 14px;background:linear-gradient(to right,#8b5cf6,#6d28d9);color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(139,92,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
                                                         onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
