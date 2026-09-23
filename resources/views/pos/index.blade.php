@@ -130,6 +130,80 @@
                         </div>
                     </div>
                 </div>
+
+                <!-- ========== FAST ENTRY BAR ========== -->
+                <div class="p-3 bg-white border-t-2 border-slate-100 z-20 flex gap-2 items-center relative" style="border-radius:0 0 24px 24px;">
+
+                    <!-- Search Box -->
+                    <div class="relative flex-[2]">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </div>
+                        <input
+                            type="text"
+                            id="fast-search-input"
+                            x-model="fastSearchQuery"
+                            @input="onFastSearchInput"
+                            @keydown.enter.prevent="onFastSearchEnter"
+                            @keydown="onFastSearchKeyDown"
+                            @keydown.escape="fastSearchSuggestions = []"
+                            @focus="if(fastSearchQuery) onFastSearchInput()"
+                            @click.away="fastSearchSuggestions = []"
+                            placeholder="Quick Search: name, code, category..."
+                            autocomplete="off"
+                            class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-black text-slate-800 transition-all outline-none placeholder:text-slate-400 placeholder:font-medium">
+
+                        <!-- Suggestions Dropdown (pops UP) -->
+                        <div
+                            x-show="fastSearchSuggestions.length > 0"
+                            x-transition
+                            class="absolute bottom-full mb-2 left-0 w-full bg-white border border-slate-200 rounded-2xl shadow-[0_-10px_40px_rgba(0,0,0,0.12)] max-h-[280px] overflow-y-auto custom-scrollbar z-50">
+                            <template x-for="(sug, idx) in fastSearchSuggestions" :key="idx">
+                                <div
+                                    @click="fastSearchHighlightIndex = idx; onFastSearchEnter();"
+                                    @mouseenter="fastSearchHighlightIndex = idx"
+                                    :class="fastSearchHighlightIndex === idx ? 'bg-blue-50 border-l-4 border-l-blue-500' : 'border-l-4 border-l-transparent hover:bg-slate-50'"
+                                    class="px-4 py-2.5 cursor-pointer transition-colors flex items-center justify-between border-b border-slate-50 last:border-0">
+                                    <div class="flex items-center gap-2">
+                                        <div x-show="sug.type === 'service'" class="w-6 h-6 rounded-md bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
+                                        </div>
+                                        <div x-show="sug.type !== 'service'" class="w-6 h-6 rounded-md bg-orange-100 text-orange-600 flex items-center justify-center shrink-0">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" /></svg>
+                                        </div>
+                                        <div class="flex flex-col">
+                                            <span class="text-[13px] font-black text-slate-800" :class="fastSearchHighlightIndex === idx ? 'text-blue-700' : ''" x-text="sug.label"></span>
+                                            <span x-show="sug.type === 'service' && sug.item.item_code" class="text-[10px] font-bold text-slate-400" x-text="sug.item.item_code"></span>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center gap-2 shrink-0">
+                                        <span x-show="sug.type === 'service'" class="text-[12px] font-black text-blue-600" x-text="'Rs.' + parseFloat(sug.item.base_price).toFixed(0)"></span>
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded-md uppercase tracking-wider" :class="sug.type === 'service' ? 'bg-blue-100 text-blue-700' : 'bg-orange-100 text-orange-700'" x-text="sug.type"></span>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- Qty Box -->
+                    <div class="w-20">
+                        <input
+                            type="number"
+                            id="fast-qty-input"
+                            x-model="fastSearchQty"
+                            @keydown.enter.prevent="onFastQtyEnter"
+                            @keydown.escape="focusFastSearch"
+                            placeholder="Qty"
+                            min="0.01"
+                            step="any"
+                            class="w-full px-3 py-2.5 bg-slate-50 border-2 border-slate-200 focus:border-green-500 focus:ring-4 focus:ring-green-500/10 rounded-xl text-[14px] font-black text-slate-800 transition-all outline-none text-center hide-arrows">
+                    </div>
+
+                    <!-- Add Button -->
+                    <button @click="onFastQtyEnter" class="w-11 h-11 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl shadow-md flex items-center justify-center transition-all shrink-0">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" /></svg>
+                    </button>
+                </div>
             </div>
 
             <!-- ===================== Right: Order Panel ===================== -->
@@ -842,6 +916,13 @@
                 showCustDropdown: false,
                 selectedCustomer: null,
                 cart: [],
+                fastSearchQuery: '',
+                fastSearchQty: 1,
+                fastSearchSuggestions: [],
+                fastSearchHighlightIndex: 0,
+                selectedFastService: null,
+                fastDrillCategory: null,
+                fastDrillSubcategory: null,
 
                 activePackage: null,
                 showPackageModal: false,
@@ -864,6 +945,7 @@
                     };
                     // Auto-select first parent category and first sub-category on load
                     this.$nextTick(() => {
+                        this.focusFastSearch();
                         const parentCats = this.allCategories.filter(c => !c.parent_id);
                         if (parentCats.length > 0) {
                             this.activeCategory = parentCats[0].id;
@@ -872,6 +954,183 @@
                             }
                         }
                     });
+                },
+
+                focusFastSearch() {
+                    let el = document.getElementById('fast-search-input');
+                    if (el) el.focus();
+                },
+
+                focusFastQty() {
+                    this.$nextTick(() => {
+                        let el = document.getElementById('fast-qty-input');
+                        if (el) { el.focus(); el.select(); }
+                    });
+                },
+
+                onFastSearchInput() {
+                    // If in drill-down mode, don't re-run text search
+                    if (this.fastDrillCategory !== null || this.fastDrillSubcategory !== null) return;
+                    let q = this.fastSearchQuery.toLowerCase().trim();
+                    if (!q) { this.fastSearchSuggestions = []; return; }
+                    let suggestions = [];
+                    // Exact item code match first
+                    let exactCode = this.allServices.find(s => s.item_code && s.item_code.toLowerCase() === q);
+                    if (exactCode) {
+                        suggestions.push({ type: 'service', item: exactCode, label: exactCode.name });
+                    }
+                    // Partial match on name or item_code
+                    this.allServices.forEach(s => {
+                        if (s === exactCode) return;
+                        if (s.name.toLowerCase().includes(q) || (s.item_code && s.item_code.toLowerCase().includes(q))) {
+                            suggestions.push({ type: 'service', item: s, label: s.name });
+                        }
+                    });
+                    // Main categories
+                    this.allCategories.filter(c => !c.parent_id).forEach(c => {
+                        if (c.name.toLowerCase().includes(q)) {
+                            suggestions.push({ type: 'category', item: c, parent_id: null, label: '📁 ' + c.name });
+                        }
+                        // Sub categories
+                        if (c.children) {
+                            c.children.forEach(sub => {
+                                if (sub.name.toLowerCase().includes(q)) {
+                                    suggestions.push({ type: 'subcategory', item: sub, parent_id: c.id, label: '📂 ' + sub.name });
+                                }
+                            });
+                        }
+                    });
+                    this.fastSearchSuggestions = suggestions.slice(0, 12);
+                    this.fastSearchHighlightIndex = 0;
+                },
+
+                // Drill into a category - show its subcategories or services in dropdown
+                fastDrillIntoCategory(cat) {
+                    this.fastDrillCategory = cat;
+                    this.fastDrillSubcategory = null;
+                    let subs = cat.children || [];
+                    let directServices = this.allServices.filter(s => s.category_id === cat.id);
+                    let suggestions = [];
+                    // Back item
+                    suggestions.push({ type: 'back', item: null, label: '← Back to Search' });
+                    // If has subcategories, show them first
+                    subs.forEach(sub => {
+                        suggestions.push({ type: 'subcategory', item: sub, parent_id: cat.id, label: '📂 ' + sub.name });
+                    });
+                    // Direct services in this category
+                    directServices.forEach(s => {
+                        suggestions.push({ type: 'service', item: s, label: s.name });
+                    });
+                    this.fastSearchSuggestions = suggestions;
+                    this.fastSearchHighlightIndex = 1; // skip 'back'
+                },
+
+                // Drill into a subcategory - show its services
+                fastDrillIntoSubcategory(sub, parentCat) {
+                    this.fastDrillSubcategory = sub;
+                    let services = this.allServices.filter(s => s.category_id === sub.id);
+                    let suggestions = [];
+                    suggestions.push({ type: 'back_to_cat', item: parentCat, label: '← ' + (parentCat ? parentCat.name : 'Back') });
+                    services.forEach(s => {
+                        suggestions.push({ type: 'service', item: s, label: s.name });
+                    });
+                    this.fastSearchSuggestions = suggestions;
+                    this.fastSearchHighlightIndex = suggestions.length > 1 ? 1 : 0;
+                },
+
+                onFastSearchEnter() {
+                    if (this.fastSearchSuggestions.length === 0) return;
+                    let selected = this.fastSearchSuggestions[this.fastSearchHighlightIndex];
+                    if (!selected) return;
+
+                    if (selected.type === 'back') {
+                        // Go back to text search
+                        this.fastDrillCategory = null;
+                        this.fastDrillSubcategory = null;
+                        this.fastSearchSuggestions = [];
+                        this.fastSearchQuery = '';
+                        this.focusFastSearch();
+                    } else if (selected.type === 'back_to_cat') {
+                        // Go back to parent category drill
+                        this.fastDrillSubcategory = null;
+                        if (selected.item) {
+                            this.fastDrillIntoCategory(selected.item);
+                        } else {
+                            this.fastDrillCategory = null;
+                            this.fastSearchSuggestions = [];
+                            this.fastSearchQuery = '';
+                        }
+                        this.focusFastSearch();
+                    } else if (selected.type === 'service') {
+                        this.selectedFastService = selected.item;
+                        this.fastSearchQuery = selected.item.name;
+                        this.fastSearchSuggestions = [];
+                        this.fastDrillCategory = null;
+                        this.fastDrillSubcategory = null;
+                        this.focusFastQty();
+                    } else if (selected.type === 'category') {
+                        // Drill into category - show subcategories/services in dropdown
+                        this.fastDrillIntoCategory(selected.item);
+                        this.focusFastSearch();
+                    } else if (selected.type === 'subcategory') {
+                        // Find parent category for back navigation
+                        let parentCat = this.allCategories.find(c => c.id === selected.parent_id) || null;
+                        this.fastDrillIntoSubcategory(selected.item, parentCat);
+                        this.focusFastSearch();
+                    }
+                },
+
+                onFastSearchKeyDown(e) {
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        if (this.fastSearchHighlightIndex < this.fastSearchSuggestions.length - 1) this.fastSearchHighlightIndex++;
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        if (this.fastSearchHighlightIndex > 0) this.fastSearchHighlightIndex--;
+                    } else if (e.key === 'Escape' || (e.key === 'Backspace' && this.fastSearchQuery === '' && (this.fastDrillCategory || this.fastDrillSubcategory))) {
+                        // Escape drill-down
+                        if (this.fastDrillSubcategory && this.fastDrillCategory) {
+                            this.fastDrillIntoCategory(this.fastDrillCategory);
+                        } else {
+                            this.fastDrillCategory = null;
+                            this.fastDrillSubcategory = null;
+                            this.fastSearchSuggestions = [];
+                            this.fastSearchQuery = '';
+                        }
+                    }
+                },
+
+                onFastQtyEnter() {
+                    if (!this.selectedFastService) return;
+                    let qty = parseFloat(this.fastSearchQty);
+                    if (!qty || qty <= 0) return;
+                    this.addToCartWithQty(this.selectedFastService, qty);
+                    this.selectedFastService = null;
+                    this.fastSearchQuery = '';
+                    this.fastSearchQty = 1;
+                    this.focusFastSearch();
+                },
+
+                addToCartWithQty(service, qty) {
+                    let defaultPrice = parseFloat(service.base_price);
+                    let existingIdx = this.cart.findIndex(i => i.id === service.id && !i.is_special && parseFloat(i.base_price) === defaultPrice);
+                    if (existingIdx !== -1) {
+                        let existing = this.cart.splice(existingIdx, 1)[0];
+                        existing.qty = Math.round((parseFloat(existing.qty) + qty) * 100) / 100;
+                        this.cart.unshift(existing);
+                    } else {
+                        let defaultTt = this.allTurnaroundTypes.find(tt => tt.is_default);
+                        this.cart.unshift({
+                            ...service,
+                            qty: qty,
+                            base_price: defaultPrice,
+                            turnaround_type_id: defaultTt ? defaultTt.id : null,
+                            custom_turnaround_percentage: null,
+                            turnaround_multiplier: defaultTt ? defaultTt.multiplier : 1,
+                            is_special: false,
+                            selected_extras: []
+                        });
+                    }
                 },
 
                 get filteredCategories() {
@@ -1023,12 +1282,14 @@
                     }
 
                     let defaultPrice = parseFloat(service.base_price);
-                    let existing = this.cart.find(i => i.id === service.id && !i.is_special && parseFloat(i.base_price) === defaultPrice);
-                    if (existing) { 
-                        existing.qty += 1; 
+                    let existingIdx2 = this.cart.findIndex(i => i.id === service.id && !i.is_special && parseFloat(i.base_price) === defaultPrice);
+                    if (existingIdx2 !== -1) {
+                        let existing = this.cart.splice(existingIdx2, 1)[0];
+                        existing.qty += 1;
+                        this.cart.unshift(existing);
                     } else { 
                         let defaultTt = this.allTurnaroundTypes.find(tt => tt.is_default);
-                        this.cart.push({ 
+                        this.cart.unshift({ 
                             ...service, 
                             qty: 1,
                             base_price: defaultPrice,
@@ -1106,7 +1367,7 @@
                         alert('Please enter a service name and price.');
                         return;
                     }
-                    this.cart.push({
+                    this.cart.unshift({
                         id: 'special_' + Date.now(),
                         service_type_id: 9,
                         name: this.specialName,
@@ -1189,7 +1450,6 @@
                                     cart: data.cart
                                 }
                             }));
-                            printOrderChit(data.order_id);
                             this.cart = [];
                             this.selectedCustomer = null;
                             this.paymentMode = 'pay_on_pickup';

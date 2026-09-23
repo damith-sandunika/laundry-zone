@@ -253,6 +253,7 @@ class SettingsController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'item_code' => 'nullable|string|max:50',
             'category_id' => 'nullable|exists:service_categories,id',
             'base_price' => 'required|numeric|min:0',
             'price_type' => 'required|in:per_kg,per_item,per_sqft',
@@ -264,6 +265,7 @@ class SettingsController extends Controller
         $service = ServiceType::create([
             'branch_id' => $branchId,
             'name' => $request->name,
+            'item_code' => $request->item_code,
             'category_id' => $request->category_id,
             'base_price' => $request->base_price,
             'price_type' => $request->price_type,
@@ -282,13 +284,14 @@ class SettingsController extends Controller
 
         $request->validate([
             'name' => 'required|string|max:255',
+            'item_code' => 'nullable|string|max:50',
             'category_id' => 'nullable|exists:service_categories,id',
             'base_price' => 'required|numeric|min:0',
             'price_type' => 'required|in:per_kg,per_item,per_sqft',
             'is_active' => 'boolean',
             'inventory' => 'nullable|array',
         ]);
-        $updateData = $request->only(['name', 'category_id', 'base_price', 'price_type', 'is_active', 'icon', 'color']);
+        $updateData = $request->only(['name', 'item_code', 'category_id', 'base_price', 'price_type', 'is_active', 'icon', 'color']);
         $updateData['is_visible_on_website'] = $request->has('is_visible_on_website');
         $service->update($updateData);
 

@@ -47,13 +47,15 @@ class WorkshopController extends Controller
         $branchId = $this->getActiveBranchId();
 
         // Active register session details
-        $activeSession = \App\Models\RegisterSession::where('branch_id', $branchId)
+        $activeSession = \App\Models\RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->where('branch_id', $branchId)
             ->where('status', 'open')
             ->first();
 
         $suggestedOpeningCash = 0;
         if (!$activeSession) {
-            $lastSession = \App\Models\RegisterSession::where('branch_id', $branchId)
+            $lastSession = \App\Models\RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                ->where('branch_id', $branchId)
                 ->where('status', 'closed')
                 ->orderBy('closed_at', 'desc')
                 ->first();
@@ -461,7 +463,7 @@ class WorkshopController extends Controller
     {
         try {
             $action->execute($dispatch, auth()->id());
-            return response()->json(['success' => true, 'status' => 'processing', 'order_number' => $dispatch->order->order_number]);
+            return response()->json(['success' => true, 'status' => 'processing', 'order_number' => $dispatch->order->order_number, 'order_id' => $dispatch->order->id]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::startProcessing error', [
                 'dispatch_id' => $dispatch->id ?? null,
@@ -477,7 +479,7 @@ class WorkshopController extends Controller
     {
         try {
             $action->execute($dispatch, $request->validated(), auth()->id());
-            return response()->json(['success' => true, 'status' => 'completed_at_workshop']);
+            return response()->json(['success' => true, 'status' => 'completed_at_workshop', 'order_number' => $dispatch->order->order_number, 'order_id' => $dispatch->order->id]);
         } catch (\Exception $e) {
             \Log::error('WorkshopController::complete error', [
                 'dispatch_id' => $dispatch->id ?? null,

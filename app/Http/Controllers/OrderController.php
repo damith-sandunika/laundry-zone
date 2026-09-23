@@ -358,6 +358,15 @@ class OrderController extends Controller
         return view('orders.chit', compact('order'));
     }
 
+    public function printLabel(Order $order)
+    {
+        $order->load(['customer', 'items.serviceType.category.parent', 'items.turnaroundType', 'items.extras.extra', 'deliveryAppointment']);
+        $branch = Branch::find($order->branch_id);
+        $mainBranch = Branch::orderBy('id')->first();
+
+        return view('orders.label', compact('order', 'branch', 'mainBranch'));
+    }
+
     public function invoice(Order $order)
     {
         $order->load(['customer', 'items.serviceType.category.parent', 'items.turnaroundType', 'items.extras.extra', 'branch']);

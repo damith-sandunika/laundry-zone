@@ -133,6 +133,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
     Route::get('/orders/{order:id}/print', [OrderController::class, 'printBill'])->name('orders.print');
     Route::get('/orders/{order:id}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
+    Route::get('/orders/{order:id}/label', [OrderController::class, 'printLabel'])->name('orders.printLabel');
     Route::get('/orders/{order:id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::post('/orders/{order:id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
     Route::post('/orders/{order:id}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');

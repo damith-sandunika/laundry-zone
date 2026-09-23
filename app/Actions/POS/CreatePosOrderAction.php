@@ -170,7 +170,7 @@ class CreatePosOrderAction
                 'branch_id' => $branchId,
                 'customer_id' => $customerId,
                 'created_by' => $user->id,
-                'status' => 'received',
+                'status' => 'to_wash',
                 'subtotal' => $subtotal,
                 'discount' => $discountAmount,
                 'additional' => 0,
@@ -193,7 +193,7 @@ class CreatePosOrderAction
 
             OrderStatusHistory::create([
                 'order_id' => $order->id,
-                'status' => 'received',
+                'status' => 'to_wash',
                 'changed_by' => $user->id,
             ]);
 
@@ -271,12 +271,12 @@ class CreatePosOrderAction
                     'workshop_branch_id' => $branchId,
                     'dispatched_by'      => $user->id,
                     'dispatched_at'      => now(),
-                    'status'             => 'processing',
+                    'status'             => 'received_at_workshop',
                     'received_by'        => $user->id,
                     'received_at_workshop_at' => now(),
                     'dispatch_notes'     => 'Walk-in POS Order',
                 ]);
-                $order->update(['status' => 'processing']);
+                $order->update(['status' => 'received_at_workshop']);
             }
 
             if ($paidAmount > 0 && $paymentMode === 'pay_now') {

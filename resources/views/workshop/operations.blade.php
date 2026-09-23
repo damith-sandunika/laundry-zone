@@ -333,6 +333,9 @@
                 });
                 const data = await res.json();
                 if (data.success) {
+                    if (data.order_id) {
+                        window.open(`/orders/${data.order_id}/label`, '_blank');
+                    }
                     window.location.reload();
                 } else {
                     alert(data.message || 'Failed to mark done.');

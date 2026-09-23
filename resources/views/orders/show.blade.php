@@ -123,6 +123,16 @@
                 background: #f5f3ff;
                 border-color: #c4b5fd;
             }
+
+            .ord-btn--label {
+                color: #0f766e;
+                border-color: #99f6e4;
+            }
+
+            .ord-btn--label:hover {
+                background: #f0fdfa;
+                border-color: #5eead4;
+            }
         </style>
 
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;">
@@ -154,6 +164,15 @@
                         <span class="ord-btn-label">Pay Now</span>
                     </div>
                 @endif
+
+                {{-- 🏷️ Print Label --}}
+                <div class="ord-btn-wrap">
+                    <a href="{{ route('orders.printLabel', $order->id) }}" target="_blank"
+                        class="ord-btn ord-btn--label" title="">
+                        🏷️
+                    </a>
+                    <span class="ord-btn-label">Print Label</span>
+                </div>
 
                 {{-- ✏️ Edit Order --}}
                 @if(!in_array($order->status, ['delivered', 'completed']))
@@ -265,59 +284,7 @@
         </script>
     @endif
 
-    <!-- Status Banner -->
-    <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;
-        {{ $order->status === 'received' ? 'background:#fffbeb;color:#d97706;border:1.5px solid #fde68a;' :
-    ($order->status === 'done' ? 'background:#f0fdf4;color:#16a34a;border:1.5px solid #bbf7d0;' :
-        ($order->status === 'delivered' ? 'background:#f8fafc;color:#475569;border:1.5px solid #e2e8f0;' :
-            'background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;')) }}">
-
-        <div style="display:flex;align-items:center;gap:10px;">
-            <span>Order Status:</span>
-            <span style="font-size:16px;font-weight:900;">{{ $order->status }}</span>
-        </div>
-
-        @php
-            $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->first();
-            $hasPayment = $order->paymentTransactions()->whereIn('status', ['completed', 'pending'])->exists() || $order->receipt_path || ($order->deliveryAppointment && $order->deliveryAppointment->receipt_path);
-            $canStartWashing = $dispatch && in_array($dispatch->status, ['dispatched_to_workshop', 'received_at_workshop']) && $hasPayment;
-        @endphp
-
-        @if($canStartWashing)
-            <button onclick="startWashing({{ $dispatch->id }})"
-                style="padding:8px 16px;background:#eab308;color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                <i class="fa-solid fa-play"></i> Start Washing
-            </button>
-            <script>
-                async function startWashing(dispatchId) {
-                    if (!confirm('Are you sure you want to start washing this order?')) return;
-                    try {
-                        const res = await fetch(`/workshop/dispatches/${dispatchId}/start-processing`, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                'Accept': 'application/json',
-                                'Content-Type': 'application/json'
-                            }
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            if (data.order_number) {
-                                window.open(`/orders/${data.order_number}/chit`, '_blank');
-                            }
-                            window.location.reload();
-                        } else {
-                            alert(data.message || 'Failed to start washing.');
-                        }
-                    } catch (err) {
-                        console.error(err);
-                        alert('Connection error');
-                    }
-                }
-            </script>
-        @endif
-    </div>
+    @include('orders.partials.workflow_actions')
 
     @if($order->correctionRequests->whereIn('type', ['items_change', 'order_change'])->count() > 0)
         <div class="flex flex-col gap-3 mb-6">

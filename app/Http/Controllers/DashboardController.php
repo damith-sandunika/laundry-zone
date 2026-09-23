@@ -63,13 +63,15 @@ class DashboardController extends Controller
         }
 
         // Active register session details
-        $activeSession = RegisterSession::where('branch_id', $branchId)
+        $activeSession = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->where('branch_id', $branchId)
             ->where('status', 'open')
             ->first();
 
         $suggestedOpeningCash = 0;
         if (!$activeSession) {
-            $lastSession = RegisterSession::where('branch_id', $branchId)
+            $lastSession = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                ->where('branch_id', $branchId)
                 ->where('status', 'closed')
                 ->orderBy('closed_at', 'desc')
                 ->first();
@@ -135,7 +137,7 @@ class DashboardController extends Controller
             $superAdminStats = [
                 'total_revenue_today' => $todayRevenue,
                 'today_present_staff' => Attendance::whereDate('date', $today)->whereIn('status', ['present', 'late'])->count(),
-                'opening_branches' => RegisterSession::where('status', 'open')->distinct('branch_id')->count('branch_id'),
+                'opening_branches' => RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('status', 'open')->distinct('branch_id')->count('branch_id'),
                 'new_orders_today' => Order::whereDate('created_at', $today)->count(),
             ];
 
@@ -196,7 +198,8 @@ class DashboardController extends Controller
         \Log::info('openShift: user=' . auth()->id() . ' branch=' . $branchId);
 
         // Check if there is already an open session
-        $existing = RegisterSession::where('branch_id', $branchId)
+        $existing = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->where('branch_id', $branchId)
             ->where('status', 'open')
             ->first();
 
@@ -282,7 +285,7 @@ class DashboardController extends Controller
         ]);
 
         $branchId = $this->getActiveBranchId();
-        $activeSession = RegisterSession::where('branch_id', $branchId)->where('status', 'open')->first();
+        $activeSession = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)->where('branch_id', $branchId)->where('status', 'open')->first();
 
         if (!$activeSession) {
             return redirect()->back()->with('error', 'No active shift found.');
@@ -324,7 +327,8 @@ class DashboardController extends Controller
     public function closeShift(Request $request)
     {
         $branchId = $this->getActiveBranchId();
-        $session = RegisterSession::where('branch_id', $branchId)
+        $session = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->where('branch_id', $branchId)
             ->where('status', 'open')
             ->first();
 
