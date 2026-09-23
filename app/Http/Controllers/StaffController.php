@@ -47,7 +47,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:255',
-            'role' => 'required|in:admin,branch_admin,staff,rider,workshop_admin',
+            'role' => 'required|in:admin,branch_admin,staff,rider,workshop_admin,super_admin',
             'password' => 'required|string|min:8',
             'nic' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
@@ -69,8 +69,8 @@ class StaffController extends Controller
         $currentUserRole = auth()->user()->role;
 
         $role = $request->role;
-        // Only super_admin can create admin users. Others (like rider/staff/workshop) are allowed.
-        if ($role === 'admin' && $currentUserRole !== 'super_admin') {
+        // Only super_admin can create admin or super_admin users. Others (like rider/staff/workshop) are allowed.
+        if (in_array($role, ['admin', 'super_admin']) && $currentUserRole !== 'super_admin') {
             $role = 'staff';
         }
 
