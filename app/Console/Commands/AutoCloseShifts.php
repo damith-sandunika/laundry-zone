@@ -33,7 +33,8 @@ class AutoCloseShifts extends Command
      */
     public function handle()
     {
-        $now = Carbon::now()->format('H:i');
+        // Force Asia/Colombo timezone so stored auto_close_time ("22:00") matches correctly
+        $now = Carbon::now('Asia/Colombo')->format('H:i');
 
         $openSessions = RegisterSession::where('status', 'open')
             ->whereHas('branch', function ($query) use ($now) {
@@ -52,13 +53,13 @@ class AutoCloseShifts extends Command
                 ->where('created_at', '>=', $session->opened_at)
                 ->where('payment_method', 'cash')
                 ->sum('amount');
-                
+
             $directCashOrders = Order::where('branch_id', $branchId)
                 ->where('created_at', '>=', $session->opened_at)
                 ->where('payment_method', 'cash')
                 ->whereDoesntHave('paymentTransactions')
                 ->sum('paid_amount');
-                
+
             $cashCollected += $directCashOrders;
 
             $bankDepositsLogged = \App\Models\BankDeposit::where('branch_id', $branchId)
@@ -69,19 +70,22 @@ class AutoCloseShifts extends Command
 
             $session->update([
                 'closing_cash' => $finalCash,
-                'closed_at' => now(),
-                'status' => 'closed',
-                'closed_by' => null, // Auto closed
+                'closed_at'    => now(),
+                'status'       => 'closed',
+                'closed_by'    => null, // Auto closed
             ]);
 
+            // ── Sync branches.cash_balance so BankDeposit validator and dashboard stay in sync ──
+            Branch::where('id', $branchId)->update(['cash_balance' => $finalCash]);
+
             \App\Models\BranchLog::create([
-                'branch_id' => $branchId,
-                'user_id' => null,
-                'action' => 'shift_closed',
+                'branch_id'   => $branchId,
+                'user_id'     => null,
+                'action'      => 'shift_closed',
                 'description' => 'Shift auto-closed by system. Final Cash: Rs. ' . number_format($finalCash, 2),
             ]);
         }
-        $this->info(count($openSessions).' shifts auto-closed.');
+
+        $this->info(count($openSessions) . ' shifts auto-closed.');
     }
 }
-
