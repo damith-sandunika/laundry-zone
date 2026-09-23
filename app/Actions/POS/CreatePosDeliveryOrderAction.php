@@ -13,7 +13,7 @@ class CreatePosDeliveryOrderAction
 {
     public function execute(User $user, array $data): array
     {
-        $branchId = $user->branch_id ?? 1;
+        $branchId = $user->branch_id ?? \App\Models\Branch::first()->id;
 
         return DB::transaction(function () use ($data, $user, $branchId) {
             $pickupDate = date('Y-m-d H:i:s', strtotime($data['pickup_date']));
