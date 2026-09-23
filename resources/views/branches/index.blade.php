@@ -99,12 +99,6 @@
                                     class="text-xs font-semibold px-2.5 py-1 bg-gray-50 border border-gray-200 text-gray-600 rounded hover:bg-gray-100">
                                     Edit
                                 </button>
-                                <form method="POST" action="{{ route('branches.destroy', $branch) }}" onsubmit="return confirm('Permanently delete this branch?')" class="inline">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="text-xs font-semibold px-2.5 py-1 bg-red-50 border border-red-200 text-red-600 rounded hover:bg-red-100">
-                                        Delete
-                                    </button>
-                                </form>
                             </td>
                         </tr>
                     @endforeach

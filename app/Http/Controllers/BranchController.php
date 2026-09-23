@@ -133,13 +133,8 @@ class BranchController extends Controller
     {
         Gate::authorize('manage-branches');
 
-        try {
-            $branch->delete();
-            return redirect()->route('branches.index')->with('success', 'Branch deleted successfully.');
-        } catch (\Illuminate\Database\QueryException $e) {
-            // Cannot delete because it has linked users/orders
-            return redirect()->route('branches.index')->with('error', 'Cannot delete this branch because it has existing orders, users, or data linked to it. Please disable it instead.');
-        }
+        // Prevent branch deletion to maintain database integrity (users, orders, etc.)
+        return redirect()->route('branches.index')->with('error', 'Branches cannot be deleted to maintain system data integrity. Please disable the branch by unchecking "Active Branch" instead.');
     }
 }
 
