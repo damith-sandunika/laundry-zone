@@ -158,7 +158,9 @@ class CommunicationService
     public function sendDeliveryOrderReady(Order $order) { $this->dispatch('delivery_order_ready', $order); }
     public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
 
-    public function sendFinalizedBill(Order $order, $requestedAmount = null) { $this->dispatch('bill_finalized', $order, ['requested_amount' => $requestedAmount]); }
+    public function sendFinalizedBill(Order $order, $requestedAmount = null, $paymentLink = null) { 
+        $this->dispatch('bill_finalized', $order, ['requested_amount' => $requestedAmount, 'payment_link' => $paymentLink]); 
+    }
     public function sendPaymentReceived(Order $order) { $this->dispatch('payment_received', $order); }
     public function sendRiderAssigned(Order $order, \App\Models\User $rider) { $this->dispatch('rider_assigned', $order, ['rider' => $rider]); }
 
@@ -166,9 +168,15 @@ class CommunicationService
 
     protected function dispatch(string $type, Order $order, array $extraData = [])
     {
-        $isSmsEnabled   = Setting::where('key', 'is_sms_enabled')->value('value') === 'true';
-        $isEmailEnabled = Setting::where('key', 'is_email_enabled')->value('value') === 'true';
-        $isWhatsappEnabled = Setting::where('key', 'is_whatsapp_enabled')->value('value') === 'true';
+        // Cache settings for 5 minutes — prevents 3 DB queries per notification dispatch
+        $settings = \Illuminate\Support\Facades\Cache::remember('global_comm_settings', 300, function () {
+            return Setting::whereIn('key', ['is_sms_enabled', 'is_email_enabled', 'is_whatsapp_enabled'])
+                ->pluck('value', 'key');
+        });
+
+        $isSmsEnabled      = ($settings->get('is_sms_enabled') === 'true');
+        $isEmailEnabled    = ($settings->get('is_email_enabled') === 'true');
+        $isWhatsappEnabled = ($settings->get('is_whatsapp_enabled') === 'true');
 
         $customer = $order->customer;
         if (!$customer) return;
@@ -197,7 +205,7 @@ class CommunicationService
             'total'          => 'Rs.' . number_format($order->total, 2),
             'amount_due'     => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
             'payment_status' => $paymentStatusText,
-            'tracking_link'  => url("/customer/orders/{$order->id}"),
+            'tracking_link'  => $extraData['payment_link'] ?? url("/customer/orders/{$order->order_number}"),
             'requested_amount' => 'Rs.' . number_format($requestedAmountRaw, 2),
             'rider_name'     => $riderName,
             'rider_phone'    => $riderPhone,
@@ -225,7 +233,7 @@ class CommunicationService
                     $this->sendSms($order, $customer->phone, $type, $message);
                 }
             } catch (\Throwable $e) {
-                Log::error("CommunicationService SMS failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
+                Log::channel('communications')->error("CommunicationService SMS failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
 
@@ -247,7 +255,7 @@ class CommunicationService
                     $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
                 }
             } catch (\Throwable $e) {
-                Log::error("CommunicationService WhatsApp failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
+                Log::channel('communications')->error("CommunicationService WhatsApp failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
 
@@ -277,7 +285,7 @@ class CommunicationService
                 }
                 $this->sendEmail($order, $customer->email, $type, $subject, $body);
             } catch (\Throwable $e) {
-                Log::error("CommunicationService Email failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
+                Log::channel('communications')->error("CommunicationService Email failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
             }
         }
     }

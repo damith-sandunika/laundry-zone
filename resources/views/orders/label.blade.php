@@ -231,13 +231,13 @@
         <hr class="divider">
 
         <!-- Payment -->
-        <div class="row"><span>Total</span><span class="bold">Rs. {{ number_format($order->total, 2) }}</span></div>
-        <div class="row"><span>Paid</span><span>Rs. {{ number_format($order->paid_amount, 2) }}</span></div>
         @php $balance = max(0, $order->total - $order->paid_amount); @endphp
+        @if($balance > 0)
         <div class="balance-row">
-            <span>Balance Due</span>
+            <span>Pending Amount</span>
             <span>Rs. {{ number_format($balance, 2) }}</span>
         </div>
+        @endif
 
         <!-- Delivery Address -->
         @if($order->is_delivery_order && $order->deliveryAppointment?->delivery_address)

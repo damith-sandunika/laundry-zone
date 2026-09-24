@@ -20,7 +20,16 @@ class Order extends Model
             ->dontLogEmptyChanges();
     }
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'order_number', 'branch_id', 'customer_id', 'created_by', 'status', 
+        'subtotal', 'discount', 'additional', 'delivery_fee', 'total', 
+        'paid_amount', 'branch_profit', 'workshop_profit', 'requested_advance', 
+        'payment_approved', 'payment_status', 'receipt_path', 'payment_method', 
+        'loyalty_points_used', 'loyalty_points_earned', 'due_date', 'notes', 
+        'is_online_booking', 'ready_at', 'delivered_at', 'picked_up_at', 
+        'dispatched_to_workshop_at', 'returned_from_workshop_at', 
+        'delivery_appointment_id', 'is_delivery_order', 'delivery_address', 'workshop_id'
+    ];
 
     protected $casts = [
         'due_date' => 'datetime',

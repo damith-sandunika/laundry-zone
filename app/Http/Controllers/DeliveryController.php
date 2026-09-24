@@ -23,18 +23,22 @@ class DeliveryController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        // Super admins and workshop admins have full access
-        $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
-        $hasFullAccess = $user->isSuperAdmin() || $isWorkshopAdmin;
+        // Super admins ONLY have full access to all branches
+        $hasFullAccess = $user->isSuperAdmin();
 
         // Branch admins and staff can only access if delivery is enabled for their branch
         if (! $hasFullAccess && (! $user->branch || ! $user->branch->is_delivery_enabled)) {
-            abort(403, 'Delivery operations are not enabled for your branch.');
+            // Workshop admins can still access delivery page (for receiving back orders)
+            $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
+            if (! $isWorkshopAdmin) {
+                abort(403, 'Delivery operations are not enabled for your branch.');
+            }
         }
 
         $query = DeliveryAppointment::with(['customer', 'branch', 'deliveryTasks.rider', 'order.paymentTransactions', 'order.items.serviceType.category', 'order.items.extras', 'cancelledBy'])
             ->orderByDesc('id');
 
+        // Always scope to own branch — only super_admin sees all
         if (! $hasFullAccess) {
             $query->where('branch_id', $branchId);
         }

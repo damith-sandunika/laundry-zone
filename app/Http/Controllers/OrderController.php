@@ -258,12 +258,15 @@ class OrderController extends Controller
 
         $customer = $order->customer;
         if ($customer) {
-            $paymentLink = url("/orders/{$order->id}/pay?amount={$amount}");
+            // Secure payment link with 48-hour expiry and signature to prevent tampering
+            $paymentLink = \Illuminate\Support\Facades\URL::temporarySignedRoute(
+                'customer.orders.pay',
+                now()->addHours(48),
+                ['order' => $order->order_number, 'amount' => $amount]
+            );
 
-            // Sending manual payment request using generic method or standard approach?
-            // Actually they wanted a "bill finalize" message!
             $commService = new \App\Services\CommunicationService();
-            $commService->sendFinalizedBill($order, $amount);
+            $commService->sendFinalizedBill($order, $amount, $paymentLink);
 
             return response()->json(['success' => true, 'message' => 'Payment request sent.']);
         }
@@ -273,12 +276,19 @@ class OrderController extends Controller
 
     public function updateOrder(Request $request, Order $order, \App\Actions\Order\UpdateOrderAction $action)
     {
+        // Prevent cross-branch and unauthorized edits
+        \Illuminate\Support\Facades\Gate::authorize('update', $order);
+
         if (in_array($order->status, ['delivered', 'cancelled'])) {
             return response()->json(['success' => false, 'message' => 'Cannot edit an order that is already delivered or cancelled.']);
         }
 
         $cart = $request->cart;
-        Log::info('Order Update Request Payload: ', $request->all());
+        Log::channel('security')->info('Order Update Request', [
+            'order_id' => $order->id, 
+            'user_id' => auth()->id(), 
+            'status' => $order->status
+        ]);
         if (!$cart || !is_array($cart) || count($cart) === 0) {
             return response()->json(['success' => false, 'message' => 'Cart cannot be empty.']);
         }

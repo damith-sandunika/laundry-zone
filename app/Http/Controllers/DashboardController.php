@@ -90,10 +90,11 @@ class DashboardController extends Controller
         $stats['completed_today'] = $completedToday->count();
         $stats['total_customers'] = $totalCustomers->count();
 
-        // Active orders sorted by nearest due_date first
+        // Active orders sorted by nearest due_date first — limit to 50 to prevent memory exhaustion at scale
         $recentOrders = (clone $activeOrders)->with('customer')
             ->orderByRaw('due_date IS NULL') // Put null due dates at the end
             ->orderBy('due_date', 'asc')
+            ->limit(50)
             ->get();
 
         // Low stock items

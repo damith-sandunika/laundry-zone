@@ -153,7 +153,7 @@ class POSController extends Controller
             \Log::error('POSController::placeDeliveryOrder error: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
-                'message' => 'An error occurred while placing the delivery order. Please try again.',
+                'message' => 'An error occurred: ' . $e->getMessage() . ' (Line: ' . $e->getLine() . ')',
             ], 500);
         }
     }

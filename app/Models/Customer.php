@@ -19,7 +19,11 @@ class Customer extends Authenticatable
             ->dontLogEmptyChanges();
     }
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'branch_id', 'title', 'name', 'phone', 'email', 'password', 
+        'remember_token', 'address', 'loyalty_points', 'is_active', 
+        'default_discount'
+    ];
 
     public function getAddressAttribute($value)
     {

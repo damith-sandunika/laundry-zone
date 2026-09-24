@@ -88,8 +88,7 @@ class NotificationController extends Controller
         if (in_array($user->role, ['branch_admin', 'staff', 'admin', 'super_admin', 'workshop_admin'])) {
             // 4. New Pickup Requests
             $pendingPickupsQuery = \App\Models\DeliveryAppointment::with(['customer', 'order'])->where('status', 'pending');
-            $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
-            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
+            if ($user->role !== 'super_admin') {
                 $pendingPickupsQuery->where('branch_id', $user->branch_id);
             }
             $pendingPickups = $pendingPickupsQuery->limit(50)->get()->map(function ($p) {
@@ -114,9 +113,12 @@ class NotificationController extends Controller
             $pendingPaymentsQuery = Order::whereHas('paymentTransactions', function ($q) {
                 $q->where('status', 'pending');
             })->whereNotIn('status', ['delivered', 'cancelled']);
-            $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
-            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
-                $pendingPaymentsQuery->where('branch_id', $user->branch_id);
+
+            if ($user->role !== 'super_admin') {
+                $pendingPaymentsQuery->where(function($q) use ($user) {
+                    $q->where('branch_id', $user->branch_id)
+                      ->orWhere('workshop_id', $user->branch_id);
+                });
             }
             $pendingPayments = $pendingPaymentsQuery->limit(50)->get()->map(function($o) {
                 return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
@@ -139,9 +141,10 @@ class NotificationController extends Controller
                 ->where('status', 'pending')
                 ->has('order');
             
-            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
+            if ($user->role !== 'super_admin') {
                 $pendingCorrectionsQuery->whereHas('order', function ($q) use ($user) {
-                    $q->where('branch_id', $user->branch_id);
+                    $q->where('branch_id', $user->branch_id)
+                      ->orWhere('workshop_id', $user->branch_id);
                 });
             }
             $pendingCorrections = $pendingCorrectionsQuery->limit(50)->get()->map(function($cr) {
@@ -166,8 +169,7 @@ class NotificationController extends Controller
 
             // 5b. Inventory Low Stock Alerts
             $lowStockQuery = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'min_stock')->where('is_active', true);
-            $isWorkshopAdmin = $user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop');
-            if ($user->role !== 'super_admin' && !$isWorkshopAdmin) {
+            if ($user->role !== 'super_admin') {
                 $lowStockQuery->where('branch_id', $user->branch_id);
             }
             

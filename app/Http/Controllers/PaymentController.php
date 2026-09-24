@@ -55,7 +55,7 @@ class PaymentController extends Controller
         );
 
         if (($localMd5sig !== $md5sig) || empty($merchantSecret)) {
-            \Illuminate\Support\Facades\Log::warning("Payment signature validation failed for order {$orderId}");
+            \Illuminate\Support\Facades\Log::channel('payments')->warning("Payment signature validation failed for order {$orderId}");
             return response()->json(['error' => 'Invalid signature'], 403);
         }
 
@@ -98,14 +98,14 @@ class PaymentController extends Controller
                             );
                         } catch (\Exception $notifEx) {
                             // Notification failure must NOT roll back the payment update
-                            \Illuminate\Support\Facades\Log::warning(
+                            \Illuminate\Support\Facades\Log::channel('payments')->warning(
                                 "Payment notification failed for order {$orderId}: " . $notifEx->getMessage()
                             );
                         }
                     }
                 });
             } catch (\Exception $e) {
-                \Illuminate\Support\Facades\Log::error(
+                \Illuminate\Support\Facades\Log::channel('payments')->error(
                     "Payment webhook DB error for order {$orderId}: " . $e->getMessage()
                 );
                 // Return 500 so PayHere retries the webhook

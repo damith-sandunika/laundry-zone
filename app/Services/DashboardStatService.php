@@ -101,65 +101,30 @@ class DashboardStatService
         ];
     }
 
-    /**
-     * Helper to calculate delivery fees and commissionable sales.
-     */
     private function calculateSalesMetrics(RegisterSession $activeSession, int $branchId): array
     {
         $totalDeliveryFees = 0;
         $commissionableSales = 0;
         $grossSales = 0;
 
-        // Process payment transactions
-        $shiftPayments = PaymentTransaction::with('order')
-            ->whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
+        // Process all orders created during this shift
+        $shiftOrders = Order::where('branch_id', $branchId)
             ->where('created_at', '>=', $activeSession->opened_at)
             ->get();
 
-        foreach ($shiftPayments as $payment) {
-            if ($payment->order) {
-                $order = $payment->order;
-                $deliveryFee = $order->delivery_fee ?? 0;
-                
-                $paidBefore = PaymentTransaction::where('order_id', $order->id)
-                    ->where('id', '<', $payment->id)
-                    ->sum('amount');
-
-                if ($paidBefore >= $deliveryFee) {
-                    $paidToDelivery = 0;
-                    $commissionable = $payment->amount;
-                } else {
-                    $remainingDeliveryFee = $deliveryFee - $paidBefore;
-                    $paidToDelivery = min($payment->amount, $remainingDeliveryFee);
-                    $commissionable = $payment->amount - $paidToDelivery;
-                }
-                
-                $totalDeliveryFees += $paidToDelivery;
-                $commissionableSales += $commissionable;
-                $grossSales += $payment->amount;
-            }
-        }
-
-        // Process direct orders
-        $directOrders = Order::where('branch_id', $branchId)
-            ->where('created_at', '>=', $activeSession->opened_at)
-            ->whereDoesntHave('paymentTransactions')
-            ->whereIn('payment_method', ['cash', 'bank'])
-            ->get();
-
-        foreach ($directOrders as $order) {
+        foreach ($shiftOrders as $order) {
+            $orderTotal = $order->total ?? 0;
             $deliveryFee = $order->delivery_fee ?? 0;
-            $paid = $order->paid_amount;
             
-            $paidToDelivery = min($paid, $deliveryFee);
-            $commissionable = $paid - $paidToDelivery;
+            $commissionable = max(0, $orderTotal - $deliveryFee);
             
-            $totalDeliveryFees += $paidToDelivery;
+            $totalDeliveryFees += $deliveryFee;
             $commissionableSales += $commissionable;
-            $grossSales += $paid;
+            $grossSales += $orderTotal;
         }
 
-        // Package sales
+        // Package sales (assuming these are paid in full upfront usually, or we accrue them)
+        // For packages, we will keep them as cash-basis or when package is created.
         $totalPackageSales = PackagePayment::whereHas('customerPackage', fn ($q) => $q->where('branch_id', $branchId))
             ->where('created_at', '>=', $activeSession->opened_at)
             ->sum('amount');

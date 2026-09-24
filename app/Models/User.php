@@ -13,7 +13,10 @@ class User extends Authenticatable
     use BelongsToBranch, SoftDeletes;
     use HasFactory, Notifiable;
 
-    protected $guarded = ['id'];
+    protected $fillable = [
+        'name', 'email', 'phone', 'email_verified_at', 'password', 'role', 
+        'can_manage_global_config', 'branch_id', 'is_active', 'remember_token'
+    ];
 
     public function profile()
     {

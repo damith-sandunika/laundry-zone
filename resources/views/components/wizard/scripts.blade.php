@@ -1,0 +1,5 @@
+@include('components.wizard.scripts.core')
+@include('components.wizard.scripts.auth')
+@include('components.wizard.scripts.maps-markers')
+@include('components.wizard.scripts.distance-fee')
+@include('components.wizard.scripts.cart')

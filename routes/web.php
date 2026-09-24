@@ -16,14 +16,25 @@ use App\Http\Controllers\PackageController;
 use App\Http\Controllers\PaymentSettingsController;
 use App\Http\Controllers\POSController;
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\ReportController;
+use App\Http\Controllers\Reports\MainReportController;
+use App\Http\Controllers\Reports\SalesReportController;
+use App\Http\Controllers\Reports\ServiceReportController;
+use App\Http\Controllers\Reports\CustomerReportController;
+use App\Http\Controllers\Reports\ShiftReportController;
 use App\Http\Controllers\RiderController;
-use App\Http\Controllers\SettingsController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SmsTemplateController;
 use App\Http\Controllers\EmailTemplateController;
 use App\Http\Controllers\WhatsappTemplateController;
-use App\Http\Controllers\WorkshopController;
+use App\Http\Controllers\Workshop\WorkshopDashboardController;
+use App\Http\Controllers\Workshop\WorkshopOperationsController;
+use App\Http\Controllers\Workshop\WorkshopDispatchController;
+use App\Http\Controllers\Workshop\WorkshopBillingController;
+use App\Http\Controllers\Settings\GeneralSettingsController;
+use App\Http\Controllers\Settings\ServiceSettingsController;
+use App\Http\Controllers\Settings\LogisticsSettingsController;
+use App\Http\Controllers\Settings\PackageSettingsController;
+use App\Http\Controllers\Settings\InventorySettingsController;
 use App\Models\Order;
 use Illuminate\Support\Facades\Route;
 
@@ -74,9 +85,9 @@ Route::post('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswo
 Route::get('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showResetForm'])->name('customer.password.resetForm');
 Route::post('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'resetPassword'])->name('customer.password.update');
 
-// AJAX Auth for Wizard
-Route::post('/customer/ajax-login', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxLogin'])->name('customer.ajax.login');
-Route::post('/customer/ajax-register', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxRegister'])->name('customer.ajax.register');
+// AJAX Auth for Wizard — rate limited to prevent brute force
+Route::post('/customer/ajax-login', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxLogin'])->name('customer.ajax.login')->middleware('throttle:10,1');
+Route::post('/customer/ajax-register', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxRegister'])->name('customer.ajax.register')->middleware('throttle:5,1');
 
 // Public Booking Wizard
 Route::get('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('customer.booking');
@@ -149,8 +160,11 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve');
     Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject');
     // Workshop dispatch from order
-    Route::post('/orders/{order}/dispatch-workshop', [WorkshopController::class, 'dispatch'])->name('orders.dispatchWorkshop');
-    Route::post('/orders/workshop/bulk-dispatch', [WorkshopController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
+    Route::post('/orders/{order}/dispatch-workshop', [WorkshopDispatchController::class, 'dispatch'])->name('orders.dispatchWorkshop');
+    Route::post('/orders/workshop/bulk-dispatch', [WorkshopDispatchController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
+    // Workshop finalize bill - accessible by branch_admin, workshop_admin, super_admin
+    Route::get('/workshop/orders/{order_number}/finalize-bill', [WorkshopBillingController::class, 'finalizeBill'])->name('workshop.finalizeBill')->middleware('admin');
+
     // Order Management
     Route::get('/orders/archive', [App\Http\Controllers\OrderArchiveController::class, 'index'])->name('orders.archive');
     Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
@@ -190,19 +204,18 @@ Route::middleware(['auth'])->group(function () {
 
     // ─── WORKSHOP ROUTES ───
     Route::middleware(['workshop'])->prefix('workshop')->name('workshop.')->group(function () {
-        Route::get('/dashboard', [WorkshopController::class, 'dashboard'])->name('dashboard');
-        Route::get('/operations', [WorkshopController::class, 'operations'])->name('operations');
-        Route::get('/history', [WorkshopController::class, 'history'])->name('history');
-        Route::post('/dispatches/{dispatch}/receive', [WorkshopController::class, 'receive'])->name('receive');
-        Route::post('/dispatches/{dispatch}/start-processing', [WorkshopController::class, 'startProcessing'])->name('startProcessing');
-        Route::post('/dispatches/{dispatch}/complete', [WorkshopController::class, 'complete'])->name('complete');
-        Route::post('/dispatches/{dispatch}/handover', [WorkshopController::class, 'handover'])->name('handover');
-        Route::post('/dispatches/{dispatch}/return', [WorkshopController::class, 'returnToBranch'])->name('return');
-        Route::get('/orders/{order_number}/finalize-bill', [WorkshopController::class, 'finalizeBill'])->name('finalizeBill');
-        Route::post('/dispatches/{dispatch}/delivery', [WorkshopController::class, 'dispatchDelivery'])->name('dispatchDelivery');
-        Route::post('/dispatches/{dispatch}/request-payment', [WorkshopController::class, 'requestPayment'])->name('requestPayment');
-        Route::post('/dispatches/{dispatch}/approve-payment', [WorkshopController::class, 'approvePayment'])->name('approvePayment');
-        Route::post('/bulk-status', [WorkshopController::class, 'bulkStatus'])->name('bulkStatus');
+        Route::get('/dashboard', [WorkshopDashboardController::class, 'dashboard'])->name('dashboard');
+        Route::get('/operations', [WorkshopOperationsController::class, 'operations'])->name('operations');
+        Route::get('/history', [WorkshopDashboardController::class, 'history'])->name('history');
+        Route::post('/dispatches/{dispatch}/receive', [WorkshopOperationsController::class, 'receive'])->name('receive');
+        Route::post('/dispatches/{dispatch}/start-processing', [WorkshopOperationsController::class, 'startProcessing'])->name('startProcessing');
+        Route::post('/dispatches/{dispatch}/complete', [WorkshopOperationsController::class, 'complete'])->name('complete');
+        Route::post('/dispatches/{dispatch}/handover', [WorkshopOperationsController::class, 'handover'])->name('handover');
+        Route::post('/dispatches/{dispatch}/return', [WorkshopOperationsController::class, 'returnToBranch'])->name('return');
+        Route::post('/dispatches/{dispatch}/delivery', [WorkshopOperationsController::class, 'dispatchDelivery'])->name('dispatchDelivery');
+        Route::post('/dispatches/{dispatch}/request-payment', [WorkshopBillingController::class, 'requestPayment'])->name('requestPayment');
+        Route::post('/dispatches/{dispatch}/approve-payment', [WorkshopBillingController::class, 'approvePayment'])->name('approvePayment');
+        Route::post('/bulk-status', [WorkshopOperationsController::class, 'bulkStatus'])->name('bulkStatus');
     });
 
     // ─── DELIVERY (BRANCH ADMIN & STAFF & WORKSHOP ADMIN) ───
@@ -227,58 +240,60 @@ Route::middleware(['auth'])->group(function () {
 
     // ─── ADMIN + WORKSHOP_ADMIN SETTINGS ───
     Route::middleware(['admin'])->group(function () {
-        Route::get('/settings', [SettingsController::class, 'index'])->name('settings.index');
-        Route::post('/settings/general', [SettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
+        Route::get('/settings', [GeneralSettingsController::class, 'index'])->name('settings.index');
+        Route::post('/settings/general', [GeneralSettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
 
         // Payment Settings
-        Route::post('/settings/payment-methods', [\App\Http\Controllers\PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
+        Route::post('/settings/payment-methods', [PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
 
         // Notifications Settings
-        Route::post('/settings/notifications', [\App\Http\Controllers\SettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
+        Route::post('/settings/notifications', [GeneralSettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
 
+        // Cubbies
+        Route::post('/settings/cubbies', [LogisticsSettingsController::class, 'storeCubby'])->name('settings.storeCubby');
+        Route::put('/settings/cubbies/{cubby}', [LogisticsSettingsController::class, 'updateCubby'])->name('settings.updateCubby');
+        Route::delete('/settings/cubbies/{cubby}', [LogisticsSettingsController::class, 'destroyCubby'])->name('settings.destroyCubby');
 
+        // Inventory
+        Route::post('/settings/inventory', [InventorySettingsController::class, 'storeInventory'])->name('settings.storeInventory');
+        Route::post('/settings/inventory/{item}/stock-in', [InventorySettingsController::class, 'stockIn'])->name('settings.stockIn');
 
-        Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
-        Route::put('/settings/cubbies/{cubby}', [SettingsController::class, 'updateCubby'])->name('settings.updateCubby');
-        Route::delete('/settings/cubbies/{cubby}', [SettingsController::class, 'destroyCubby'])->name('settings.destroyCubby');
+        // Service Reordering
+        Route::post('/settings/services/reorder', [ServiceSettingsController::class, 'reorderServices'])->name('settings.reorderServices');
+        Route::post('/settings/service-categories/reorder', [ServiceSettingsController::class, 'reorderCategories'])->name('settings.reorderCategories');
 
-        Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
-        Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
+        // Services & Categories
+        Route::get('/settings/services', [ServiceSettingsController::class, 'servicesManager'])->name('settings.services');
+        Route::post('/settings/services', [ServiceSettingsController::class, 'storeService'])->name('settings.storeService');
+        Route::put('/settings/services/{service}', [ServiceSettingsController::class, 'updateService'])->name('settings.updateService');
+        Route::delete('/settings/services/{service}', [ServiceSettingsController::class, 'destroyService'])->name('settings.destroyService');
 
-        Route::post('/settings/services/reorder', [SettingsController::class, 'reorderServices'])->name('settings.reorderServices');
-        Route::post('/settings/services/reorder', [SettingsController::class, 'reorderServices'])->name('settings.reorderServices');
-        Route::post('/settings/service-categories/reorder', [SettingsController::class, 'reorderCategories'])->name('settings.reorderCategories');
+        Route::post('/settings/service-categories', [ServiceSettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
+        Route::put('/settings/service-categories/{category}', [ServiceSettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
+        Route::delete('/settings/service-categories/{category}', [ServiceSettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
 
-        // Services, Categories, Packages, Extras, Turnaround, Delivery & Pickup Settings (Branch & Workshop Admins)
-        Route::get('/settings/services', [SettingsController::class, 'servicesManager'])->name('settings.services');
-        Route::post('/settings/services', [SettingsController::class, 'storeService'])->name('settings.storeService');
-        Route::put('/settings/services/{service}', [SettingsController::class, 'updateService'])->name('settings.updateService');
-        Route::delete('/settings/services/{service}', [SettingsController::class, 'destroyService'])->name('settings.destroyService');
-
-        Route::post('/settings/service-categories', [SettingsController::class, 'storeServiceCategory'])->name('settings.storeServiceCategory');
-        Route::put('/settings/service-categories/{category}', [SettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
-        Route::delete('/settings/service-categories/{category}', [SettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
-
-        Route::post('/settings/packages', [SettingsController::class, 'storePackage'])->name('settings.storePackage');
-        Route::put('/settings/packages/{package}', [SettingsController::class, 'updatePackage'])->name('settings.updatePackage');
-        Route::delete('/settings/packages/{package}', [SettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
+        // Packages
+        Route::post('/settings/packages', [PackageSettingsController::class, 'storePackage'])->name('settings.storePackage');
+        Route::put('/settings/packages/{package}', [PackageSettingsController::class, 'updatePackage'])->name('settings.updatePackage');
+        Route::delete('/settings/packages/{package}', [PackageSettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
 
         // Extras
-        Route::post('/settings/extras', [SettingsController::class, 'storeExtra'])->name('settings.storeExtra');
-        Route::put('/settings/extras/{extra}', [SettingsController::class, 'updateExtra'])->name('settings.updateExtra');
-        Route::delete('/settings/extras/{extra}', [SettingsController::class, 'destroyExtra'])->name('settings.destroyExtra');
+        Route::post('/settings/extras', [ServiceSettingsController::class, 'storeExtra'])->name('settings.storeExtra');
+        Route::put('/settings/extras/{extra}', [ServiceSettingsController::class, 'updateExtra'])->name('settings.updateExtra');
+        Route::delete('/settings/extras/{extra}', [ServiceSettingsController::class, 'destroyExtra'])->name('settings.destroyExtra');
 
         // Turnaround Types
-        Route::post('/settings/turnaround-types', [SettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
-        Route::put('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
-        Route::delete('/settings/turnaround-types/{turnaroundType}', [SettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
+        Route::post('/settings/turnaround-types', [ServiceSettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
+        Route::put('/settings/turnaround-types/{turnaroundType}', [ServiceSettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
+        Route::delete('/settings/turnaround-types/{turnaroundType}', [ServiceSettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
 
-        Route::post('/settings/delivery-global', [SettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
-        Route::post('/settings/delivery-ranges', [SettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
-        Route::delete('/settings/delivery-ranges/{deliveryRange}', [SettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
+        // Delivery & Pickup
+        Route::post('/settings/delivery-global', [LogisticsSettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
+        Route::post('/settings/delivery-ranges', [LogisticsSettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
+        Route::delete('/settings/delivery-ranges/{deliveryRange}', [LogisticsSettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
 
-        Route::post('/settings/pickup-time-periods', [SettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
-        Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [SettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
+        Route::post('/settings/pickup-time-periods', [LogisticsSettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
+        Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [LogisticsSettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
 
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
@@ -303,13 +318,6 @@ Route::middleware(['auth'])->group(function () {
             Route::resource('promotions', App\Http\Controllers\PromotionController::class)->except(['create', 'show', 'edit']);
         });
 
-        Route::post('/settings/cubbies', [SettingsController::class, 'storeCubby'])->name('settings.storeCubby');
-        Route::put('/settings/cubbies/{cubby}', [SettingsController::class, 'updateCubby'])->name('settings.updateCubby');
-        Route::delete('/settings/cubbies/{cubby}', [SettingsController::class, 'destroyCubby'])->name('settings.destroyCubby');
-
-        Route::post('/settings/inventory', [SettingsController::class, 'storeInventory'])->name('settings.storeInventory');
-        Route::post('/settings/inventory/{item}/stock-in', [SettingsController::class, 'stockIn'])->name('settings.stockIn');
-
         // HR Routes
         Route::get('/hr/dashboard', [HRDashboardController::class, 'index'])->name('hr.dashboard');
         Route::get('/hr/dashboard/pdf', [HRDashboardController::class, 'exportPdf'])->name('hr.dashboard.pdf');
@@ -331,21 +339,21 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);
 
-        // Reports Routes (Accessible by admin, branch_admin, workshop_admin, super_admin, staff)
-        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/pdf', [ReportController::class, 'exportPdf'])->name('reports.pdf');
+        // ─── Reports Routes ───
+        Route::get('/reports', [MainReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/pdf', [MainReportController::class, 'exportPdf'])->name('reports.pdf');
+        Route::post('/reports/packages/{customerPackage}/approve-payment', [MainReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
 
-        Route::get('/reports/sales', [ReportController::class, 'salesReport'])->name('reports.sales');
-        Route::get('/reports/sales/pdf', [ReportController::class, 'salesReportPdf'])->name('reports.sales.pdf');
+        Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales');
+        Route::get('/reports/sales/pdf', [SalesReportController::class, 'exportPdf'])->name('reports.sales.pdf');
 
-        Route::get('/reports/services', [ReportController::class, 'serviceReport'])->name('reports.services');
-        Route::get('/reports/services/pdf', [ReportController::class, 'serviceReportPdf'])->name('reports.services.pdf');
+        Route::get('/reports/services', [ServiceReportController::class, 'index'])->name('reports.services');
+        Route::get('/reports/services/pdf', [ServiceReportController::class, 'exportPdf'])->name('reports.services.pdf');
 
-        Route::get('/reports/customers', [ReportController::class, 'customerReport'])->name('reports.customers');
-        Route::get('/reports/customers/pdf', [ReportController::class, 'customerReportPdf'])->name('reports.customers.pdf');
+        Route::get('/reports/customers', [CustomerReportController::class, 'index'])->name('reports.customers');
+        Route::get('/reports/customers/pdf', [CustomerReportController::class, 'exportPdf'])->name('reports.customers.pdf');
 
-        Route::get('/reports/close-shift', [ReportController::class, 'closeShiftReport'])->name('reports.closeShift');
-        Route::post('/reports/packages/{customerPackage}/approve-payment', [ReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
+        Route::get('/reports/close-shift', [ShiftReportController::class, 'index'])->name('reports.closeShift');
     });
 });
 

@@ -170,7 +170,7 @@ class CreatePosOrderAction
                 'branch_id' => $branchId,
                 'customer_id' => $customerId,
                 'created_by' => $user->id,
-                'status' => 'to_wash',
+                'status' => 'received',
                 'subtotal' => $subtotal,
                 'discount' => $discountAmount,
                 'additional' => 0,
@@ -193,7 +193,7 @@ class CreatePosOrderAction
 
             OrderStatusHistory::create([
                 'order_id' => $order->id,
-                'status' => 'to_wash',
+                'status' => 'received',
                 'changed_by' => $user->id,
             ]);
 

@@ -129,39 +129,6 @@ class UpdateOrderStatusAction
             }
         });
 
-        $this->triggerNotifications($order, $status);
-    }
-
-    private function triggerNotifications(Order $order, string $status)
-    {
-        try {
-            $commService = new CommunicationService();
-            $dispatch = WorkshopDispatch::where('order_id', $order->id)->first();
-            $isCollection = false;
-            
-            if (! $order->is_delivery_order && $dispatch && $dispatch->branch_id !== $dispatch->workshop_branch_id) {
-                $isCollection = true;
-            }
-
-            if ($status === 'done') {
-                if ($order->is_delivery_order) {
-                    $commService->sendDeliveryOrderReady($order);
-                } elseif ($isCollection) {
-                    $commService->sendCollectionOrderReady($order);
-                } else {
-                    $commService->sendPosWalkinReady($order);
-                }
-            } elseif ($status === 'delivered' || $status === 'completed') {
-                if ($order->is_delivery_order) {
-                    $commService->sendDeliveryCompleted($order);
-                } elseif ($isCollection) {
-                    $commService->sendCollectionOrderCompleted($order);
-                } else {
-                    $commService->sendPosWalkinCompleted($order);
-                }
-            }
-        } catch (\Exception $e) {
-            Log::error('Notification failed: ' . $e->getMessage());
-        }
+        \App\Jobs\SendOrderNotificationJob::dispatch($order, $status);
     }
 }
