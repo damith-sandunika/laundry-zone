@@ -201,12 +201,15 @@
 
         <!-- Brand -->
         <div class="center" style="padding-bottom: 5px; border-bottom: 2px solid #000; margin-bottom: 6px;">
-            <div class="brand-name">{{ $mainBranch->name ?? '360 Laundry' }}</div>
-            @if($branch && $branch->name !== ($mainBranch->name ?? ''))
-                <div class="brand-sub">{{ $branch->name }}</div>
-            @endif
-            @if($branch && $branch->phone)
-                <div class="brand-sub">{{ $branch->phone }}</div>
+            <div class="brand-name">{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
+            @if($branch)
+                <div class="brand-sub" style="font-weight:800;">{{ $branch->name }}</div>
+                @if($branch->address)
+                    <div class="brand-sub">{{ $branch->address }}</div>
+                @endif
+                @if($branch->phone)
+                    <div class="brand-sub">📞 {{ $branch->phone }}</div>
+                @endif
             @endif
         </div>
 

@@ -50,7 +50,7 @@
 
     <!-- Letterhead -->
     <div class="letterhead">
-        <div class="laundry-name">360 Laundry</div>
+        <div class="laundry-name">{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
         <div class="laundry-details">Customer Sales Report</div>
     </div>
 
@@ -134,7 +134,7 @@
     </table>
 
     <div class="footer">
-        360 Laundry &bull; Customer Sales Report &bull; {{ $customer->name }} &bull; {{ $label }} &bull; Generated on {{ now()->format('M d, Y h:i A') }}
+        {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} &bull; Customer Sales Report &bull; {{ $customer->name }} &bull; {{ $label }} &bull; Generated on {{ now()->format('M d, Y h:i A') }}
     </div>
 
 </body>
