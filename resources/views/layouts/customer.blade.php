@@ -15,8 +15,10 @@
         .bg-brand { background-color: #1e3a8a; }
         .bg-accent { background-color: #2563eb; }
     </style>
+    @include('layouts.partials.gtm')
 </head>
 <body class="antialiased text-slate-800 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden min-h-screen flex flex-col">
+    @include('layouts.partials.gtm-body')
 
 <!-- Navbar -->
 <nav class="bg-white/90 backdrop-blur-md shadow-sm sticky top-0 z-50 transition-all duration-300" x-data="{ mobileMenuOpen: false }">

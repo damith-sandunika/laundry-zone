@@ -60,11 +60,13 @@
             background: #94a3b8;
         }
     </style>
+    @include('layouts.partials.gtm')
 </head>
 
 <body class="font-sans antialiased bg-slate-50 text-slate-800 selection:bg-blue-100 selection:text-blue-900"
     x-data="{ sidebarOpen: false, sidebarCollapsed: localStorage.getItem('sidebarCollapsed') === 'true', notifOpen: false, profileOpen: false }"
     x-init="$watch('sidebarCollapsed', val => localStorage.setItem('sidebarCollapsed', val))">
+    @include('layouts.partials.gtm-body')
     <div class="flex h-screen overflow-hidden bg-slate-50/50">
 
         <style>

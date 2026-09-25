@@ -35,6 +35,9 @@ return [
         ],
     ],
 
+    // ── SEO / Analytics ──
+    'gtm_id' => env('GTM_ID', ''),
+
 ];
 
 

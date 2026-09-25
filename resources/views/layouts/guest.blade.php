@@ -13,8 +13,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
     <link rel="manifest" href="/manifest.json">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @include('layouts.partials.gtm')
 </head>
 <body class="font-sans antialiased bg-slate-900 min-h-screen flex m-0">
+    @include('layouts.partials.gtm-body')
 
     <!-- ──────── LEFT PANEL ──────── -->
     <div class="hidden lg:flex flex-col justify-between w-[55%] min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 px-14 py-14">

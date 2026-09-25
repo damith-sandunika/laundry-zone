@@ -172,9 +172,11 @@
             50% { opacity: 0.95; transform: scale(0.98); }
         }
     </style>
+    @include('layouts.partials.gtm')
 </head>
 
 <body class="antialiased text-gray-800 selection:bg-blue-200 selection:text-blue-900 overflow-x-hidden">
+    @include('layouts.partials.gtm-body')
 
     <!-- Welcome Loader -->
     <div id="welcome-loader" class="fixed inset-0 z-[9999] liquid-bg flex flex-col items-center justify-center overflow-hidden transition-opacity duration-700">
