@@ -197,7 +197,7 @@
                             @endif
                         </div>
                     </td>
-                    <td class="center">{{ $item->quantity }}</td>
+                    <td class="center">{{ $item->quantity == floor($item->quantity) ? (int)$item->quantity : rtrim(rtrim(number_format($item->quantity, 2), '0'), '.') }}</td>
                     <td class="right">Rs.{{ number_format($item->unit_price, 2) }}</td>
                     <td class="right" style="color: #0f172a; font-weight: 800;">Rs.{{ number_format($item->unit_price * max(1, $item->quantity), 2) }}</td>
                 </tr>
@@ -206,7 +206,7 @@
                     <td style="padding-left: 30px; font-size:13px; color:#d97706;">
                         ⚡ Express Surcharge
                     </td>
-                    <td class="center" style="color:#d97706;">{{ $item->quantity }}</td>
+                    <td class="center" style="color:#d97706;">{{ $item->quantity == floor($item->quantity) ? (int)$item->quantity : rtrim(rtrim(number_format($item->quantity, 2), '0'), '.') }}</td>
                     <td class="right" style="color:#d97706;">Rs.{{ number_format($item->turnaround_extra_charge / max(1, $item->quantity), 2) }}</td>
                     <td class="right" style="color: #d97706; font-weight: 800;">+ Rs.{{ number_format($item->turnaround_extra_charge, 2) }}</td>
                 </tr>
@@ -218,7 +218,7 @@
                         <td style="padding-left: 30px; font-size:13px; color:#475569;">
                             + {{ $e->extra->name }}
                         </td>
-                        <td class="center">{{ $e->quantity }}</td>
+                        <td class="center">{{ $e->quantity == floor($e->quantity) ? (int)$e->quantity : rtrim(rtrim(number_format($e->quantity, 2), '0'), '.') }}</td>
                         <td class="right">Rs.{{ number_format($e->unit_price, 2) }}</td>
                         <td class="right" style="color: #0f172a; font-weight: 800;">Rs.{{ number_format($e->unit_price * $e->quantity, 2) }}</td>
                     </tr>
@@ -227,7 +227,7 @@
                 @endforeach
                 <tr style="background:white; color:#0f172a; border-top:2px solid #e2e8f0; border-bottom:2px solid #e2e8f0;">
                     <td style="text-align:right; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; padding:12px 16px;">Total Items / Qty:</td>
-                    <td class="center" style="font-weight:900; font-size:15px; padding:12px 16px; color:#3b82f6;">{{ number_format($total_qty, 2) }}</td>
+                    <td class="center" style="font-weight:900; font-size:15px; padding:12px 16px; color:#3b82f6;">{{ $total_qty == floor($total_qty) ? (int)$total_qty : rtrim(rtrim(number_format($total_qty, 2), '0'), '.') }}</td>
                     <td colspan="2"></td>
                 </tr>
             </tbody>
