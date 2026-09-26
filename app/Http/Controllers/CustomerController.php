@@ -32,6 +32,8 @@ class CustomerController extends Controller
             'name' => 'required|string|max:255',
             'phone' => 'required|string|max:50',
             'email' => 'nullable|email|max:255',
+            'date_of_birth' => 'nullable|date',
+            'nic' => 'nullable|string|max:20',
         ]);
 
         $exists = Customer::where('phone', $request->phone)->first();
@@ -49,6 +51,8 @@ class CustomerController extends Controller
             'phone' => $request->phone,
             'email' => $request->email,
             'address' => $request->address ?? null,
+            'date_of_birth' => $request->date_of_birth ?? null,
+            'nic' => $request->nic ?? null,
             'is_active' => true,
         ]);
 
@@ -145,9 +149,11 @@ class CustomerController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string|max:255',
             'password' => 'nullable|string|min:6|confirmed',
+            'date_of_birth' => 'nullable|date',
+            'nic' => 'nullable|string|max:20',
         ]);
 
-        $data = $request->only(['title', 'name', 'phone', 'email', 'address']);
+        $data = $request->only(['title', 'name', 'phone', 'email', 'address', 'date_of_birth', 'nic']);
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
