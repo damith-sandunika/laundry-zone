@@ -16,6 +16,11 @@ class WorkshopOperationsController extends Controller
 
         $query = WorkshopDispatch::with(['order.customer', 'order.deliveryAppointment', 'order.paymentTransactions', 'order.cubby.cubby', 'order.items.serviceType', 'branch', 'dispatchedBy'])
             ->join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
+            ->whereIn('workshop_dispatches.id', function ($q) {
+                $q->selectRaw('MAX(id)')
+                  ->from('workshop_dispatches')
+                  ->groupBy('order_id');
+            })
             ->select('workshop_dispatches.*')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId))
             ->whereNotIn('workshop_dispatches.status', ['received_at_branch'])

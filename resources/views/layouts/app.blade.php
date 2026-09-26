@@ -218,16 +218,55 @@
         });
 
         document.addEventListener('submit', function (e) {
+            const form = e.target;
+            
+            // Prevent double submission
+            if (form.dataset.submitting === 'true') {
+                e.preventDefault();
+                return false;
+            }
+            form.dataset.submitting = 'true';
+            
+            // Disable submit buttons visually and functionally
+            const btns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+            btns.forEach(btn => {
+                if (!btn.disabled) {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.6';
+                    btn.style.cursor = 'wait';
+                }
+            });
+            
             NProgress.start();
         });
 
         const originalFetch = window.fetch;
         window.fetch = async function (...args) {
+            const activeEl = document.activeElement;
+            const isButton = activeEl && (activeEl.tagName === 'BUTTON' || activeEl.tagName === 'A');
+            
+            if (isButton) {
+                // If this button is already processing a fetch, hang the duplicate request
+                if (activeEl.dataset.fetching === 'true') {
+                    return new Promise(() => {}); // never resolves
+                }
+                activeEl.dataset.fetching = 'true';
+                activeEl.style.pointerEvents = 'none';
+                activeEl.style.opacity = '0.6';
+                activeEl.style.cursor = 'wait';
+            }
+            
             NProgress.start();
             try {
                 const response = await originalFetch.apply(this, args);
                 return response;
             } finally {
+                if (isButton) {
+                    activeEl.dataset.fetching = 'false';
+                    activeEl.style.pointerEvents = 'auto';
+                    activeEl.style.opacity = '1';
+                    activeEl.style.cursor = 'pointer';
+                }
                 NProgress.done();
             }
         };
