@@ -249,13 +249,16 @@
 
         <!-- ── Overpayment Modal ── -->
         <div x-cloak x-show="showOverpaymentModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/70 backdrop-blur-[6px] p-4">
-            <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.3);width:100%;max-width:460px;overflow:hidden;">
-                <div style="padding:24px;background:linear-gradient(135deg,#fef3c7,#fffbeb);border-bottom:1px solid #fde68a;">
-                    <div style="font-size:28px;margin-bottom:8px;">⚠️</div>
-                    <h3 style="font-size:18px;font-weight:900;color:#92400e;margin:0;">Overpayment Detected</h3>
-                    <p style="font-size:13px;color:#b45309;margin:4px 0 0;font-weight:600;">
-                        Customer has paid <strong>Rs. <span x-text="overpaymentAmount.toFixed(2)"></span></strong> more than the new total.
-                    </p>
+            <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.3);width:100%;max-width:460px;overflow:hidden;" @click.away="showOverpaymentModal = false">
+                <div style="padding:24px;background:linear-gradient(135deg,#fef3c7,#fffbeb);border-bottom:1px solid #fde68a;display:flex;justify-content:space-between;align-items:flex-start;">
+                    <div>
+                        <div style="font-size:28px;margin-bottom:8px;">⚠️</div>
+                        <h3 style="font-size:18px;font-weight:900;color:#92400e;margin:0;">Overpayment Detected</h3>
+                        <p style="font-size:13px;color:#b45309;margin:4px 0 0;font-weight:600;">
+                            Customer has paid <strong>Rs. <span x-text="overpaymentAmount.toFixed(2)"></span></strong> more than the new total.
+                        </p>
+                    </div>
+                    <button @click="showOverpaymentModal = false" style="background:none;border:none;cursor:pointer;color:#92400e;font-size:20px;opacity:0.6;">✕</button>
                 </div>
                 <div style="padding:24px;display:flex;flex-direction:column;gap:12px;">
                     <p style="font-size:13px;color:#334155;font-weight:600;margin:0;">What would you like to do with the extra <strong>Rs. <span x-text="overpaymentAmount.toFixed(2)"></span></strong>?</p>
