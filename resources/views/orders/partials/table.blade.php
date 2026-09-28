@@ -102,8 +102,14 @@
                                             assigned</span>
                                     </template>
                                 </td>
-                                <td style="padding:12px 20px;text-align:right;font-weight:800;color:#0f172a;font-size:13px;"
-                                    x-text="parseFloat(order.total) === 0 ? 'Package' : 'Rs.' + parseFloat(order.total).toFixed(2)">
+                                <td style="padding:12px 20px;text-align:right;">
+                                    <div style="font-size:13px;font-weight:800;color:#0f172a;" x-text="parseFloat(order.total) === 0 ? 'Package' : 'Rs. ' + parseFloat(order.total).toFixed(2)"></div>
+                                    <template x-if="parseFloat(order.total) > 0">
+                                        <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;align-items:flex-end;">
+                                            <span style="font-size:11px;font-weight:700;color:#16a34a;" x-text="'Paid: Rs. ' + parseFloat(order.paid_amount || 0).toFixed(2)"></span>
+                                            <span style="font-size:11px;font-weight:700;color:#dc2626;" x-text="'Pending: Rs. ' + Math.max(0, parseFloat(order.total || 0) - parseFloat(order.paid_amount || 0)).toFixed(2)"></span>
+                                        </div>
+                                    </template>
                                 </td>
                                 @if(auth()->user()->role !== 'super_admin')
                                     <td style="padding:12px 20px;text-align:center;">
@@ -175,64 +181,32 @@
                                                         onmouseover="this.style.background='#eff6ff'"
                                                         onmouseout="this.style.background='white'">View</a>
 
-                                                    <template
-                                                        x-if="order.status !== 'delivered' && order.status !== 'cancelled' && order.status !== 'dispatched_to_workshop'">
-                                                        <button @click="openEdit(order)"
-                                                            style="padding:5px 8px;background:white;color:#d97706;border:1.5px solid #fde68a;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
-                                                            onmouseover="this.style.background='#fffbeb'"
-                                                            onmouseout="this.style.background='white'" title="Edit Order">
-                                                            ✏️
-                                                        </button>
-                                                    </template>
+
 
                                                     <template
                                                         x-if="currentTab === 'arriving' && order.status === 'returned_from_workshop'">
                                                         <div style="display:inline-flex;gap:6px;align-items:center;">
-                                                            <template x-if="!order.is_delivery_order">
-                                                                <button @click="openCubbetPopup(order)"
-                                                                    style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);transition:transform 0.1s;"
-                                                                    onmouseover="this.style.transform='scale(1.05)'"
-                                                                    onmouseout="this.style.transform='scale(1)'">
-                                                                    ✅ Confirm Arrival
-                                                                </button>
-                                                            </template>
-
-                                                            <template x-if="order.is_delivery_order">
-                                                                <button @click="openDeliveryDispatchPopup(order)"
-                                                                    style="padding:5px 10px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(14,165,233,0.3);transition:transform 0.1s;"
-                                                                    onmouseover="this.style.transform='scale(1.05)'"
-                                                                    onmouseout="this.style.transform='scale(1)'">
-                                                                    Confirm & Dispatch
-                                                                </button>
-                                                            </template>
+                                                            <button @click="openCubbetPopup(order)"
+                                                                style="padding:5px 10px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);transition:transform 0.1s;"
+                                                                onmouseover="this.style.transform='scale(1.05)'"
+                                                                onmouseout="this.style.transform='scale(1)'">
+                                                                ✅ Confirm Arrival
+                                                            </button>
                                                         </div>
                                                     </template>
 
                                                     <template x-if="currentTab === 'done' && order.status === 'done'">
                                                         <button
-                                                            @click="order.delivery_appointment ? openDeliveryDispatchPopup(order) : openDeliverPopup(order)"
+                                                            @click="(order.delivery_appointment && order.delivery_appointment.delivery_preference !== 'pickup_from_branch') ? openDeliveryDispatchPopup(order) : openDeliverPopup(order)"
                                                             style="padding:5px 10px;background:#0ea5e9;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(14,165,233,0.3);transition:transform 0.1s;"
                                                             onmouseover="this.style.transform='scale(1.05)'"
                                                             onmouseout="this.style.transform='scale(1)'">
                                                             <span
-                                                                x-text="order.delivery_appointment ? 'Dispatch Delivery' : 'Deliver'"></span>
+                                                                x-text="(order.delivery_appointment && order.delivery_appointment.delivery_preference !== 'pickup_from_branch') ? 'Dispatch Delivery' : 'Deliver'"></span>
                                                         </button>
                                                     </template>
 
-                                                    <button
-                                                        @click="window.open('/orders/' + order.id + '/chit', '_blank', 'width=300,height=400')"
-                                                        style="padding:5px 10px;background:white;color:#0f172a;border:1.5px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.15s;"
-                                                        onmouseover="this.style.background='#f8fafc'"
-                                                        onmouseout="this.style.background='white'">
-                                                        🖨️
-                                                    </button>
 
-                                                    <button @click="openReverse(order.id)"
-                                                        style="padding:5px 7px;background:white;color:#dc2626;border:1.5px solid #fecaca;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.15s;line-height:1;"
-                                                        onmouseover="this.style.background='#fef2f2'"
-                                                        onmouseout="this.style.background='white'" title="Reverse Order">
-                                                        ↩
-                                                    </button>
                                                 </div>
                                             </template>
                                         </div>
