@@ -76,6 +76,27 @@
                         class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">{{ old('address', $customer->address) }}</textarea>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Date of Birth</label>
+                        <input type="date" name="date_of_birth" value="{{ old('date_of_birth', $customer->date_of_birth) }}"
+                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        @error('date_of_birth') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">NIC Number</label>
+                        <input type="text" name="nic" value="{{ old('nic', $customer->nic) }}" placeholder="e.g. 200012345678"
+                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        @error('nic') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Customer Mark / Note</label>
+                        <input type="text" name="customer_mark" value="{{ old('customer_mark', $customer->customer_mark) }}" placeholder="e.g. 01 (For manual routing)"
+                            class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
+                        @error('customer_mark') <p class="text-red-500 text-xs mt-1">{{ $message }}</p> @enderror
+                    </div>
+                </div>
+
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <a href="{{ route('customers.show', $customer) }}" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-50 transition-all shadow-sm">
                         Cancel

@@ -3,8 +3,24 @@
         <div class="flex justify-between items-center">
             <div>
                 <p class="text-xs text-gray-400 mb-1"><a href="{{ route('customers.index') }}" class="hover:text-blue-600">← Customers</a></p>
-                <h2 class="text-xl font-bold text-gray-800">{{ $customer->name }}</h2>
-                <p class="text-xs text-gray-500">{{ $customer->phone }} @if($customer->address) &bull; {{ $customer->address }}@endif</p>
+                <h2 class="text-xl font-bold text-gray-800">
+                    @if($customer->customer_mark)
+                        <span class="text-blue-600 mr-1">{{ $customer->customer_mark }} -</span>
+                    @endif
+                    {{ $customer->name }}
+                </h2>
+                <p class="text-xs text-gray-500">
+                    {{ $customer->phone }} 
+                    @if($customer->address) &bull; {{ $customer->address }}@endif
+                </p>
+                <div class="flex gap-4 mt-2 text-xs text-gray-500 font-semibold">
+                    @if($customer->date_of_birth)
+                        <div class="flex items-center gap-1"><i class="fa-solid fa-cake-candles text-gray-400"></i> {{ \Carbon\Carbon::parse($customer->date_of_birth)->format('M d, Y') }}</div>
+                    @endif
+                    @if($customer->nic)
+                        <div class="flex items-center gap-1"><i class="fa-solid fa-id-card text-gray-400"></i> {{ $customer->nic }}</div>
+                    @endif
+                </div>
             </div>
             <div class="flex gap-2">
                 <a href="{{ route('customers.edit', $customer) }}" class="px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-semibold rounded hover:bg-gray-50 transition-colors">

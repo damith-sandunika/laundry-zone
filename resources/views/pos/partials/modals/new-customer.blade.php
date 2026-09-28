@@ -10,6 +10,7 @@
                 let address = document.getElementById('nc-address').value;
                 let date_of_birth = document.getElementById('nc-dob').value;
                 let nic = document.getElementById('nc-nic').value;
+                let customer_mark = document.getElementById('nc-mark').value;
                 if(!name || !phone) return alert('Name and phone are required.');
                 
                 this.isSaving = true;
@@ -21,7 +22,7 @@
                             'X-CSRF-TOKEN': document.querySelector('meta[name=\'csrf-token\']').content,
                             'Accept': 'application/json'
                         },
-                        body: JSON.stringify({ title, name, phone, email, address, date_of_birth, nic, source: 'pos' })
+                        body: JSON.stringify({ title, name, phone, email, address, date_of_birth, nic, customer_mark, source: 'pos' })
                     });
                     let data = await res.json();
                     if(data.success) {
@@ -101,6 +102,11 @@
                             <input type="text" id="nc-nic" placeholder="e.g. 200012345678"
                                 class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all placeholder:text-slate-400">
                         </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Customer Mark / Note (Optional)</label>
+                        <input type="text" id="nc-mark" placeholder="e.g. 01 (For manual routing)"
+                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all placeholder:text-slate-400">
                     </div>
                 </form>
                 <div class="px-6 py-5 bg-white border-t border-slate-100 flex gap-3">

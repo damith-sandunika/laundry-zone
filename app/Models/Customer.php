@@ -14,7 +14,7 @@ class Customer extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'phone', 'address', 'title', 'email', 'date_of_birth', 'nic'])
+            ->logOnly(['name', 'phone', 'address', 'title', 'email', 'date_of_birth', 'nic', 'customer_mark'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
@@ -22,7 +22,7 @@ class Customer extends Authenticatable
     protected $fillable = [
         'branch_id', 'title', 'name', 'phone', 'email', 'password', 
         'remember_token', 'address', 'loyalty_points', 'is_active', 
-        'default_discount', 'date_of_birth', 'nic'
+        'default_discount', 'date_of_birth', 'nic', 'customer_mark'
     ];
 
     public function getAddressAttribute($value)

@@ -118,7 +118,10 @@
         <div class="header">
             <div class="text-bold text-center">{{ $order->order_number }}</div>
             <div class="text-small">
-                {{ strtoupper(($order->customer->title ? $order->customer->title . ' ' : '') . ($order->customer->name ?? 'Walk-in')) }}
+                @if($order->customer && $order->customer->customer_mark)
+                    {{ $order->customer->customer_mark }} - 
+                @endif
+                {{ strtoupper(optional($order->customer)->title ? optional($order->customer)->title . ' ' : '') }}{{ strtoupper(optional($order->customer)->name ?? 'Walk-in') }}
                 @if($order->customer && $order->customer->phone)
                     <br>{{ $order->customer->phone }}
                 @endif
