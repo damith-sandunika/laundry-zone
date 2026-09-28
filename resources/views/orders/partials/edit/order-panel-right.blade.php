@@ -192,14 +192,14 @@
                     </div>
 
                     <!-- Edit Correction Fields -->
-                    <div class="p-4 bg-slate-800/80 rounded-b-[24px] border-t border-slate-700/50 mt-1">
+                    <div class="px-4 pt-4 pb-8 bg-slate-800/80 rounded-b-[24px] border-t border-slate-700/50 mt-1">
                         <div class="flex items-end gap-3">
                             <div class="flex flex-col gap-1 flex-1">
                                 <label class="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Reason <span class="text-red-400">*</span></label>
-                                <input type="text" x-model="editReason" placeholder="Reason..." class="bg-slate-900 border border-slate-700 rounded-lg text-white text-[13px] font-medium py-2 px-3 focus:ring-1 focus:ring-blue-500 w-full outline-none h-[44px]" required>
+                                <input type="text" x-model="editReason" placeholder="Reason..." class="bg-slate-900 border border-slate-700 rounded-lg text-white text-[12px] font-medium py-1.5 px-3 focus:ring-1 focus:ring-blue-500 w-full outline-none h-[38px]" required>
                             </div>
                             <button @click="saveOrder()" :disabled="cart.length === 0 || isSaving || !editReason"
-                                class="h-[44px] px-5 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-black text-[13px] tracking-wide transition-all shadow-[0_4px_15px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.6)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-2 shrink-0">
+                                class="h-[38px] px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-black text-[12px] tracking-wide transition-all shadow-[0_4px_15px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.6)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-1.5 shrink-0">
                                 <svg x-show="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
