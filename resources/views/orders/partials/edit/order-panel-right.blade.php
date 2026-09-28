@@ -195,15 +195,15 @@
                     <div class="p-2 bg-slate-800/80 rounded-b-[24px] border-t border-slate-700/50 mt-1">
                         <div class="flex items-end gap-2">
                             <div class="flex flex-col gap-0.5 flex-1">
-                                <label class="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Reason <span class="text-red-400">*</span></label>
-                                <input type="text" x-model="editReason" placeholder="Reason..." class="bg-slate-900 border border-slate-700 rounded-lg text-white text-[11px] font-medium py-1 px-1.5 focus:ring-1 focus:ring-blue-500 w-full outline-none h-[28px]" required>
+                                <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wide">Reason <span class="text-red-400">*</span></label>
+                                <input type="text" x-model="editReason" placeholder="Reason..." class="bg-slate-900 border border-slate-700 rounded-lg text-white text-[12px] font-medium py-1 px-2 focus:ring-1 focus:ring-blue-500 w-full outline-none h-[38px]" required>
                             </div>
                             <button @click="saveOrder()" :disabled="cart.length === 0 || isSaving || !editReason"
-                                class="h-[28px] px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-black text-[10px] tracking-wide transition-all shadow-[0_4px_15px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.6)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-1.5 shrink-0">
-                                <svg x-show="!isSaving" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                class="h-[38px] px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-black text-[12px] tracking-wide transition-all shadow-[0_4px_15px_rgba(37,99,235,0.4)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.6)] disabled:opacity-50 disabled:shadow-none flex items-center justify-center gap-1.5 shrink-0">
+                                <svg x-show="!isSaving" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                                 </svg>
-                                <svg x-show="isSaving" class="animate-spin w-3 h-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <svg x-show="isSaving" class="animate-spin w-4 h-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
