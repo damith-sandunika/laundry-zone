@@ -1,6 +1,6 @@
     <!-- Filters Section -->
     <div class="bg-white p-3 md:p-6 rounded-xl md:rounded-2xl border border-slate-200 shadow-sm mb-4 md:mb-6">
-        <form action="{{ route('reports.index') }}" method="GET" class="flex flex-wrap gap-2 md:gap-4 items-end">
+        <form action="{{ route($route_name ?? 'reports.index') }}" method="GET" class="flex flex-wrap gap-2 md:gap-4 items-end">
             @if($isSuperAdmin)
                 <div class="w-full md:flex-1 md:min-w-[200px]">
                     <label class="block text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 md:mb-2">Branch</label>
@@ -35,8 +35,6 @@
                 <button type="button" onclick="applyQuickDate('{{ date('Y-m-d') }}', '{{ date('Y-m-d') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Today</button>
                 <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('-1 day')) }}', '{{ date('Y-m-d', strtotime('-1 day')) }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Yesterday</button>
                 <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('monday this week')) }}', '{{ date('Y-m-d') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">This Week</button>
-                <button type="button" onclick="applyQuickDate('{{ date('Y-m-01') }}', '{{ date('Y-m-t') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">This Month</button>
-                <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('first day of last month')) }}', '{{ date('Y-m-d', strtotime('last day of last month')) }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Last Month</button>
             </div>
         </form>
     </div>
@@ -45,6 +43,6 @@
         function applyQuickDate(start, end) {
             document.querySelector('input[name="start_date"]').value = start;
             document.querySelector('input[name="end_date"]').value = end;
-            document.querySelector('form[action="{{ route('reports.index') }}"]').submit();
+            document.querySelector('form[action="{{ route($route_name ?? 'reports.index') }}"]').submit();
         }
     </script>

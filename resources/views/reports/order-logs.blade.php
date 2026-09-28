@@ -44,7 +44,22 @@
                 </button>
             </div>
         </form>
+        
+        <div class="w-full mt-2 pt-3 border-t border-slate-100 flex flex-wrap gap-2 items-center">
+            <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">Quick:</span>
+            <button type="button" onclick="applyQuickDate('{{ date('Y-m-d') }}', '{{ date('Y-m-d') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Today</button>
+            <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('-1 day')) }}', '{{ date('Y-m-d', strtotime('-1 day')) }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Yesterday</button>
+            <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('monday this week')) }}', '{{ date('Y-m-d') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">This Week</button>
+        </div>
     </div>
+    
+    <script>
+        function applyQuickDate(start, end) {
+            document.querySelector('input[name="start_date"]').value = start;
+            document.querySelector('input[name="end_date"]').value = end;
+            document.querySelector('form[action="{{ route('reports.order-logs') }}"]').submit();
+        }
+    </script>
 
     <!-- Data Table -->
     <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-6">
