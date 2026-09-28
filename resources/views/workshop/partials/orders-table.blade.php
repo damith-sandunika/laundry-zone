@@ -29,10 +29,20 @@
                                 </td>
                                 <td style="padding:12px 20px;">
                                     <div style="font-size:13px;font-weight:800;color:#0f172a;" x-text="'Rs. ' + parseFloat(dispatch.order.total || 0).toFixed(2)"></div>
-                                    <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
-                                        <span style="font-size:11px;font-weight:700;color:#16a34a;" x-text="'Paid: Rs. ' + parseFloat(dispatch.order.paid_amount || 0).toFixed(2)"></span>
-                                        <span style="font-size:11px;font-weight:700;color:#dc2626;" x-text="'Pending: Rs. ' + Math.max(0, parseFloat(dispatch.order.total || 0) - parseFloat(dispatch.order.paid_amount || 0)).toFixed(2)"></span>
-                                    </div>
+                                    <template x-if="parseFloat(dispatch.order.total || 0) > 0">
+                                        <div style="margin-top:2px;font-size:11px;font-weight:700;">
+                                            <template x-if="parseFloat(dispatch.order.total || 0) <= parseFloat(dispatch.order.paid_amount || 0)">
+                                                <span style="color:#16a34a;background:#dcfce7;padding:2px 6px;border-radius:4px;">Fully Paid</span>
+                                            </template>
+                                            <template x-if="parseFloat(dispatch.order.total || 0) > parseFloat(dispatch.order.paid_amount || 0)">
+                                                <div style="display:flex;align-items:center;">
+                                                    <span style="color:#16a34a;" x-text="'Rs. ' + parseFloat(dispatch.order.paid_amount || 0).toFixed(2)"></span>
+                                                    <span style="color:#94a3b8;margin:0 4px;">/</span>
+                                                    <span style="color:#dc2626;" x-text="'Rs. ' + Math.max(0, parseFloat(dispatch.order.total || 0) - parseFloat(dispatch.order.paid_amount || 0)).toFixed(2)"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
                                 </td>
                                 <td style="padding:12px 20px;">
                                     <span :style="

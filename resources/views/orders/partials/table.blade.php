@@ -105,9 +105,17 @@
                                 <td style="padding:12px 20px;text-align:right;">
                                     <div style="font-size:13px;font-weight:800;color:#0f172a;" x-text="parseFloat(order.total) === 0 ? 'Package' : 'Rs. ' + parseFloat(order.total).toFixed(2)"></div>
                                     <template x-if="parseFloat(order.total) > 0">
-                                        <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;align-items:flex-end;">
-                                            <span style="font-size:11px;font-weight:700;color:#16a34a;" x-text="'Paid: Rs. ' + parseFloat(order.paid_amount || 0).toFixed(2)"></span>
-                                            <span style="font-size:11px;font-weight:700;color:#dc2626;" x-text="'Pending: Rs. ' + Math.max(0, parseFloat(order.total || 0) - parseFloat(order.paid_amount || 0)).toFixed(2)"></span>
+                                        <div style="margin-top:2px;font-size:11px;font-weight:700;display:flex;justify-content:flex-end;">
+                                            <template x-if="parseFloat(order.total || 0) <= parseFloat(order.paid_amount || 0)">
+                                                <span style="color:#16a34a;background:#dcfce7;padding:2px 6px;border-radius:4px;">Fully Paid</span>
+                                            </template>
+                                            <template x-if="parseFloat(order.total || 0) > parseFloat(order.paid_amount || 0)">
+                                                <div style="display:flex;align-items:center;">
+                                                    <span style="color:#16a34a;" x-text="'Rs. ' + parseFloat(order.paid_amount || 0).toFixed(2)"></span>
+                                                    <span style="color:#94a3b8;margin:0 4px;">/</span>
+                                                    <span style="color:#dc2626;" x-text="'Rs. ' + Math.max(0, parseFloat(order.total || 0) - parseFloat(order.paid_amount || 0)).toFixed(2)"></span>
+                                                </div>
+                                            </template>
                                         </div>
                                     </template>
                                 </td>
