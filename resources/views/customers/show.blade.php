@@ -2,28 +2,11 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
-                <p class="text-xs text-gray-400 mb-1"><a href="{{ route('customers.index') }}" class="hover:text-blue-600">← Customers</a></p>
-                <h2 class="text-xl font-bold text-gray-800">
-                    @if($customer->customer_mark)
-                        <span class="text-blue-600 mr-1">{{ $customer->customer_mark }} -</span>
-                    @endif
-                    {{ $customer->name }}
-                </h2>
-                <p class="text-xs text-gray-500">
-                    {{ $customer->phone }} 
-                    @if($customer->address) &bull; {{ $customer->address }}@endif
-                </p>
-                <div class="flex gap-4 mt-2 text-xs text-gray-500 font-semibold">
-                    @if($customer->date_of_birth)
-                        <div class="flex items-center gap-1"><i class="fa-solid fa-cake-candles text-gray-400"></i> {{ \Carbon\Carbon::parse($customer->date_of_birth)->format('M d, Y') }}</div>
-                    @endif
-                    @if($customer->nic)
-                        <div class="flex items-center gap-1"><i class="fa-solid fa-id-card text-gray-400"></i> {{ $customer->nic }}</div>
-                    @endif
-                </div>
+                <p class="text-xs text-slate-400 mb-1"><a href="{{ route('customers.index') }}" class="hover:text-blue-600 font-semibold transition-colors">← Back to Customers</a></p>
+                <h2 class="text-xl font-black text-slate-800">Customer Profile</h2>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('customers.edit', $customer) }}" class="px-3 py-2 bg-white border border-gray-200 text-gray-700 text-xs font-semibold rounded hover:bg-gray-50 transition-colors">
+                <a href="{{ route('customers.edit', $customer) }}" class="px-4 py-2 bg-white border-2 border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
                     ✏️ Edit Profile
                 </a>
             </div>
@@ -31,8 +14,72 @@
     </x-slot>
 
     @if(session('success'))
-        <div class="bg-green-50 text-green-700 p-3 mb-4 text-sm border border-green-100 rounded-md">{{ session('success') }}</div>
+        <div class="bg-green-50 text-green-700 p-3 mb-4 text-sm font-bold border border-green-100 rounded-xl">{{ session('success') }}</div>
     @endif
+
+    <!-- Profile Card -->
+    <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6 mb-6 relative overflow-hidden">
+        <!-- Background decorative blob -->
+        <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+        
+        <div class="relative flex flex-col md:flex-row gap-6 items-start md:items-center">
+            <!-- Avatar / Initial -->
+            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-500/30 shrink-0">
+                {{ substr($customer->name, 0, 1) }}
+            </div>
+            
+            <!-- Details -->
+            <div class="flex-1">
+                <div class="flex items-center gap-3 mb-1">
+                    <h2 class="text-2xl font-black text-slate-800">
+                        {{ $customer->title ? $customer->title . ' ' : '' }}{{ $customer->name }}
+                    </h2>
+                    @if($customer->customer_mark)
+                        <span class="px-3 py-1 bg-amber-100 text-amber-700 font-bold text-[10px] rounded-lg border border-amber-200 uppercase tracking-widest shadow-sm">
+                            {{ $customer->customer_mark }}
+                        </span>
+                    @endif
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-slate-500 mt-2">
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-phone text-[10px]"></i>
+                        </div>
+                        <span class="text-slate-700">{{ $customer->phone }}</span>
+                    </div>
+                    
+                    @if($customer->address)
+                    <div class="flex items-center gap-2">
+                        <div class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center text-slate-400">
+                            <i class="fa-solid fa-location-dot text-[10px]"></i>
+                        </div>
+                        <span class="text-slate-600">{{ $customer->address }}</span>
+                    </div>
+                    @endif
+                </div>
+                
+                @if($customer->date_of_birth || $customer->nic)
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 pt-4 border-t border-slate-100/60">
+                    @if($customer->date_of_birth)
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100">
+                        <i class="fa-solid fa-cake-candles"></i> 
+                        {{ \Carbon\Carbon::parse($customer->date_of_birth)->format('M d, Y') }}
+                    </div>
+                    @endif
+                    
+                    @if($customer->nic)
+                    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg text-xs font-bold border border-purple-100">
+                        <i class="fa-solid fa-id-card"></i> 
+                        NIC: {{ $customer->nic }}
+                    </div>
+                    @endif
+                </div>
+                @endif
+            </div>
+        </div>
+    </div>
 
     <!-- Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
