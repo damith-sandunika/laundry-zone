@@ -5,4 +5,5 @@
 
                         @include('orders.partials.main_column.order-details')
                 @include('orders.partials.main_column.laundry-items')
+                @include('orders.partials.main_column.activity-log')
         </div>

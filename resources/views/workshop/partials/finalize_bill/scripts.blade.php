@@ -10,12 +10,12 @@
                 activeSubcategory: null,
                 cart: @json($cartItems),
 
-                deliveryFee: {{ (float) ($dispatch->order->delivery_fee ?? $order->delivery_fee ?? 0) }},
+                deliveryFee: {{ (float) ($dispatch?->order?->delivery_fee ?? $order->delivery_fee ?? 0) }},
                 discountPercent: 0,
                 requestedAdvance: 0,
                 isSaving: false,
-                orderId: {{ $dispatch->order_id ?? $order->id ?? 0 }},
-                orderNumber: '{{ $dispatch->order->order_number ?? $order->order_number ?? '' }}',
+                orderId: {{ $dispatch?->order_id ?? $order->id ?? 0 }},
+                orderNumber: '{{ $dispatch?->order?->order_number ?? $order->order_number ?? '' }}',
 
                 init() {
                     if (this.categories.length > 0) {

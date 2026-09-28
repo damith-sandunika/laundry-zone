@@ -26,6 +26,7 @@ class StorePosDeliveryOrderRequest extends FormRequest
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
             'advance_amount'   => 'nullable|numeric|min:0',
             'customer_package_id' => 'nullable|integer',
+            'delivery_preference' => 'nullable|in:deliver_to_address,pickup_from_branch',
         ];
     }
 }

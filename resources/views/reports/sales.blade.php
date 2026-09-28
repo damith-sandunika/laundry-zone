@@ -122,7 +122,9 @@
                                 @endphp
                                 <span class="px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold border {{ $color }}">{{ $label }}</span>
                             </td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($activity->amount, 2) }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black {{ $activity->amount < 0 ? 'text-red-500' : 'text-emerald-500' }}">
+                                Rs.{{ number_format($activity->amount, 2) }}
+                            </td>
                         </tr>
                     @empty
                         <tr>

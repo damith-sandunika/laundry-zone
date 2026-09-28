@@ -68,9 +68,16 @@
 
                             <!-- Delivery Address -->
                             <div>
-                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Delivery Address <span class="text-slate-400 font-semibold normal-case">(if different)</span></label>
-                                <textarea x-model="deliveryAddress" rows="3" placeholder="Leave blank if same as pickup…"
-                                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-800 outline-none transition-all resize-none placeholder:text-slate-400"></textarea>
+                                <label class="flex items-center space-x-2 mb-2 cursor-pointer">
+                                    <input type="checkbox" x-model="customerWillPickup" class="form-checkbox text-orange-500 rounded border-slate-300 w-4 h-4">
+                                    <span class="text-[12px] font-extrabold text-slate-700">Customer will pickup from branch</span>
+                                </label>
+                                
+                                <div x-show="!customerWillPickup" x-transition>
+                                    <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Delivery Address <span class="text-slate-400 font-semibold normal-case">(if different)</span></label>
+                                    <textarea x-model="deliveryAddress" rows="3" placeholder="Leave blank if same as pickup…"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 rounded-xl px-4 py-3 text-[13px] font-bold text-slate-800 outline-none transition-all resize-none placeholder:text-slate-400"></textarea>
+                                </div>
                             </div>
                         </div>
 

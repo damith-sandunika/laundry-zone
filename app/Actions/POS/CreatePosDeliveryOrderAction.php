@@ -27,7 +27,7 @@ class CreatePosDeliveryOrderAction
                 'delivery_address'     => $data['delivery_address'] ?? $data['pickup_address'],
                 'pickup_scheduled_at'  => $pickupDate,
                 'delivery_scheduled_at'=> $deliveryDate,
-                'delivery_preference'  => 'deliver_to_address',
+                'delivery_preference'  => $data['delivery_preference'] ?? 'deliver_to_address',
                 'payment_method'       => ($data['payment_mode'] ?? null) === 'pay_now' ? 'cash' : 'cash',
                 'status'               => 'confirmed', // auto-confirmed since staff initiated
                 'notes'                => $data['notes'] ?? null,
@@ -112,6 +112,8 @@ class CreatePosDeliveryOrderAction
                 $paymentMode = $data['payment_mode'] ?? 'pay_on_pickup';
                 $paidAmount  = $paymentMode === 'pay_now' ? $subtotal : 0;
 
+                $isPickupFromBranch = ($data['delivery_preference'] ?? 'deliver_to_address') === 'pickup_from_branch';
+
                 $order = Order::create([
                     'order_number'            => Order::generateOrderNumber($branchId, true),
                     'branch_id'               => $branchId,
@@ -125,7 +127,7 @@ class CreatePosDeliveryOrderAction
                     'paid_amount'             => $paidAmount,
                     'payment_method'          => $paymentMode === 'pay_now' ? ($data['payment_method'] ?? 'cash') : null,
                     'due_date'                => $pickupDate,
-                    'is_delivery_order'       => true,
+                    'is_delivery_order'       => !$isPickupFromBranch,
                     'delivery_appointment_id' => $appointment->id,
                     'delivery_address'        => $data['delivery_address'] ?? $data['pickup_address'],
                     'notes'                   => $data['notes'] ?? null,

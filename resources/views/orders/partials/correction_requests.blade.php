@@ -1,6 +1,6 @@
-@if($order->correctionRequests->whereIn('type', ['items_change', 'order_change'])->count() > 0)
+@if($order->correctionRequests->count() > 0)
         <div class="flex flex-col gap-3 mb-6">
-            @foreach($order->correctionRequests->whereIn('type', ['items_change', 'order_change'])->sortByDesc('created_at') as $cr)
+            @foreach($order->correctionRequests->sortByDesc('created_at') as $cr)
                 <div class="p-4 rounded-xl flex items-start justify-between gap-4 text-[13px] border-2 shadow-sm
                             {{ $cr->status === 'pending' ? 'bg-amber-50 text-amber-900 border-amber-200 shadow-amber-100/50' :
                     ($cr->status === 'approved' ? 'bg-emerald-50 text-emerald-900 border-emerald-200 shadow-emerald-100/50' :
@@ -243,6 +243,34 @@
                                             </div>
                                         </div>
                                     @endif
+                                @elseif($cr->type === 'convert_to_delivery')
+                                    <div class="mt-2 text-[11px]">
+                                        <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Updates:</strong>
+                                        <div class="mt-1 space-y-1.5 bg-white/50 rounded-lg p-2 border border-slate-100">
+                                            <div class="flex items-start gap-1.5">
+                                                <span class="bg-blue-100 text-blue-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Address</span>
+                                                <div class="flex-1 font-bold text-slate-800">{{ $cr->new_data['delivery_address'] ?? 'N/A' }}</div>
+                                            </div>
+                                            <div class="flex items-start gap-1.5">
+                                                <span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Fee</span>
+                                                <div class="flex-1 font-bold text-slate-800">Rs.{{ number_format($cr->new_data['delivery_fee'] ?? 0, 2) }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                @elseif($cr->type === 'convert_to_pickup')
+                                    <div class="mt-2 text-[11px]">
+                                        <strong class="text-slate-500 uppercase tracking-wide text-[10px]">Updates:</strong>
+                                        <div class="mt-1 space-y-1.5 bg-white/50 rounded-lg p-2 border border-slate-100">
+                                            <div class="flex items-start gap-1.5">
+                                                <span class="bg-amber-100 text-amber-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Pickup</span>
+                                                <div class="flex-1 font-bold text-slate-800">Converted to Customer Pickup</div>
+                                            </div>
+                                            <div class="flex items-start gap-1.5">
+                                                <span class="bg-emerald-100 text-emerald-700 text-[9px] font-black px-1.5 py-0.5 rounded uppercase shrink-0 mt-0.5">Fee Removed</span>
+                                                <div class="flex-1 font-bold text-slate-800">Rs.{{ number_format($cr->old_data['delivery_fee'] ?? 0, 2) }} deducted</div>
+                                            </div>
+                                        </div>
+                                    </div>
                                 @endif
                             </div>
                         @endif

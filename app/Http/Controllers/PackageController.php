@@ -21,7 +21,7 @@ class PackageController extends Controller
     {
         $branchId = $this->getActiveBranchId();
         $customerPackages = CustomerPackage::with(['customer', 'package', 'services.serviceType'])
-            ->when(!auth()->user()->hasRole('super_admin'), function ($q) use ($branchId) {
+            ->when(!auth()->user()->isSuperAdmin(), function ($q) use ($branchId) {
                 return $q->where('branch_id', $branchId);
             })
             ->orderBy('created_at', 'desc')

@@ -21,6 +21,10 @@
                 handoverPrintReceipt: true,
                 isHandoverSubmitting: false,
 
+                showBranchArrivalModal: false,
+                branchArrivalCubbyId: '',
+                isBranchArrivalSubmitting: false,
+
                 initData(dispatchObj) {
                     this.dispatch = dispatchObj;
                     if (this.dispatch && this.dispatch.order) {
@@ -89,13 +93,46 @@
                     this.isDoneSubmitting = false;
                 },
 
+                async submitBranchArrival() {
+                    this.isBranchArrivalSubmitting = true;
+                    try {
+                        const res = await fetch(`/orders/${this.dispatch.order.id}/status`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                status: 'done',
+                                cubby_id: this.branchArrivalCubbyId || null
+                            })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Failed to confirm arrival.');
+                        }
+                    } catch (err) {
+                        console.error('AJAX Error:', err);
+                        alert('Connection error');
+                    }
+                    this.isBranchArrivalSubmitting = false;
+                },
+
                 async submitDelivery() {
                     if (this.deliveryMethod === 'rider' && !this.deliveryRiderId) return alert('Select a rider');
                     if (this.deliveryMethod === 'pickme_flash' && !this.deliveryPickmeCost) return alert('Enter PickMe cost');
 
                     this.isDispatchingDelivery = true;
                     try {
-                        const res = await fetch(`/workshop/dispatches/${this.dispatch.id}/delivery`, {
+                        let url = `/workshop/dispatches/${this.dispatch.id}/delivery`;
+                        if (this.dispatch.status === 'received_at_branch') {
+                            url = `/orders/${this.dispatch.order.id}/dispatch-delivery`;
+                        }
+                        
+                        const res = await fetch(url, {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
@@ -127,25 +164,59 @@
                     this.isDispatchingDelivery = false;
                 },
 
+                async convertToCustomerWillPickup() {
+                    if (!confirm('Customer will come and collect from branch. Convert this delivery order to pickup?')) return;
+                    try {
+                        const res = await fetch(`/orders/${this.dispatch.order.id}/convert-to-pickup`, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            }
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            alert(data.message || 'Failed to convert.');
+                        }
+                    } catch (err) {
+                        alert('Connection error');
+                    }
+                },
+
                 async submitHandover() {
                     this.isHandoverSubmitting = true;
                     try {
-                        const res = await fetch(`/workshop/dispatches/${this.dispatch.id}/handover`, {
+                        let url = `/workshop/dispatches/${this.dispatch.id}/handover`;
+                        let body = {
+                            payment_method: this.handoverPaymentMethod,
+                            amount_paid: this.handoverAmountPaid ? parseFloat(this.handoverAmountPaid) : 0
+                        };
+
+                        if (this.dispatch.status === 'received_at_branch') {
+                            url = `/orders/${this.dispatch.order.id}/status`;
+                            body = {
+                                status: 'delivered',
+                                payment_method: this.handoverPaymentMethod
+                            };
+                        }
+
+                        const res = await fetch(url, {
                             method: 'POST',
                             headers: {
                                 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
                                 'Accept': 'application/json',
                                 'Content-Type': 'application/json'
                             },
-                            body: JSON.stringify({
-                                payment_method: this.handoverPaymentMethod,
-                                amount_paid: this.handoverAmountPaid ? parseFloat(this.handoverAmountPaid) : 0
-                            })
+                            body: JSON.stringify(body)
                         });
                         const data = await res.json();
                         if (data.success) {
-                            if (this.handoverPrintReceipt && data.order_number) {
-                                window.open(`/orders/${data.order_number}/print`, '_blank');
+                            const printId = data.order_number || data.print_bill_id;
+                            if (this.handoverPrintReceipt && printId) {
+                                window.open(`/orders/${printId}/print`, '_blank');
                             }
                             setTimeout(() => {
                                 window.location.reload();

@@ -25,6 +25,12 @@ class BranchController extends Controller
         return view('branches.create');
     }
 
+    public function edit(Branch $branch)
+    {
+        Gate::authorize('manage-branches');
+        return view('branches.edit', compact('branch'));
+    }
+
     public function store(Request $request)
     {
         Gate::authorize('manage-branches');

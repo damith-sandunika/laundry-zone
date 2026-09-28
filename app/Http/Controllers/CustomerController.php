@@ -25,6 +25,11 @@ class CustomerController extends Controller
         return view('customers.index', compact('customers'));
     }
 
+    public function create()
+    {
+        return redirect()->route('customers.index');
+    }
+
     public function store(Request $request)
     {
         $request->validate([

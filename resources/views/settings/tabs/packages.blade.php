@@ -1,6 +1,6 @@
             @if($canManageConfig)
             <!-- PACKAGES TAB -->
-            <div x-show="activeTab === 'packages'" style="display: none;" x-data="{ packageModalOpen: false }">
+            <div style="display: block;" x-data="{ packageModalOpen: false }">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Subscription Packages</h3>
                     <button @click="packageModalOpen = true"

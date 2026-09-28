@@ -90,7 +90,8 @@
                             na.order_numbers.forEach(n => {
                                 let text = typeof n === 'object' ? n.number : n;
                                 let url = typeof n === 'object' && n.url ? n.url : '#';
-                                let key = na.id + '_' + text;
+                                let itemKey = typeof n === 'object' && n.id ? n.id : text;
+                                let key = na.id + '_' + itemKey;
                                 if (!this.seenAlertKeys.includes(key)) {
                                     this.seenAlertKeys.push(key);
                                     newlyArrived.push({ label: na.label, text: text, url: url });

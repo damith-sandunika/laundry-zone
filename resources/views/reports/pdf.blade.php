@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>FULL FINANCIAL REPORT</title>
+    <title>Financial_Report_{{ $startDate }}_to_{{ $endDate }}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
         body { padding: 40px; color: #333; font-size: 11px; background: #fff; }
@@ -97,38 +97,7 @@
         </tbody>
     </table>
 
-    <!-- 2. Packages Detail -->
-    @if($customerPackages->count() > 0)
-    <h2>Package Sales</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Customer</th>
-                <th>Package Name</th>
-                <th>Issue Date</th>
-                <th class="text-center">Status</th>
-                <th class="text-right">Amount</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($customerPackages as $cp)
-            <tr>
-                <td>{{ $cp->customer->name ?? '—' }}</td>
-                <td>{{ $cp->package->name ?? '—' }}</td>
-                <td>{{ $cp->start_date->format('M d, Y') }}</td>
-                <td class="text-center">
-                    <span class="badge {{ $cp->payment_status === 'paid' ? 'badge-green' : 'badge-amber' }}">{{ $cp->payment_status }}</span>
-                </td>
-                <td class="text-right">Rs.{{ number_format($cp->package->price ?? 0, 2) }}</td>
-            </tr>
-            @endforeach
-            <tr class="total-row">
-                <td colspan="4">TOTAL PACKAGE REVENUE</td>
-                <td class="text-right">Rs.{{ number_format($totalPackagePayments, 2) }}</td>
-            </tr>
-        </tbody>
-    </table>
-    @endif
+
 
     <!-- 3. Expenses List -->
     @if($expenses->count() > 0)
@@ -166,17 +135,14 @@
             <td style="width: 70%;">Total Service Revenue</td>
             <td class="text-right">Rs.{{ number_format($totalSales, 2) }}</td>
         </tr>
-        <tr>
-            <td>Total Package Sales Revenue</td>
-            <td class="text-right">Rs.{{ number_format($totalPackagePayments, 2) }}</td>
-        </tr>
+
         <tr>
             <td>Total Delivery Fees Collected</td>
             <td class="text-right">Rs.{{ number_format($totalDeliveryFees, 2) }}</td>
         </tr>
         <tr class="total-row">
             <td>TOTAL GROSS INCOME</td>
-            <td class="text-right" style="color:#2563eb;">Rs.{{ number_format($totalSales + $totalPackagePayments + $totalDeliveryFees, 2) }}</td>
+            <td class="text-right" style="color:#2563eb;">Rs.{{ number_format($totalSales + $totalDeliveryFees, 2) }}</td>
         </tr>
         <tr class="expense-row">
             <td>Less: Total Inventory Billed (Cost of materials used)</td>
@@ -188,7 +154,7 @@
         </tr>
         <tr class="profit-row">
             <td>NET PROFIT</td>
-            <td class="text-right">Rs.{{ number_format(($totalSales + $totalPackagePayments + $totalDeliveryFees) - ($totalExpenses + $totalInventoryCost), 2) }}</td>
+            <td class="text-right">Rs.{{ number_format(($totalSales + $totalDeliveryFees) - ($totalExpenses + $totalInventoryCost), 2) }}</td>
         </tr>
         @if(isset($totalBranchProfit) && isset($totalWorkshopProfit) && ($totalBranchProfit > 0 || $totalWorkshopProfit > 0))
         <tr>
@@ -210,8 +176,8 @@
         <!-- Card 1 -->
         <div class="card" style="background: #f8fafc; border-color: #cbd5e1;">
             <div class="card-title">Total Gross Income</div>
-            <div class="card-value" style="color: #0f172a;">Rs.{{ number_format($totalSales + $totalPackagePayments + $totalDeliveryFees, 2) }}</div>
-            <div class="card-sub">Services + Packages + Delivery</div>
+            <div class="card-value" style="color: #0f172a;">Rs.{{ number_format($totalSales + $totalDeliveryFees, 2) }}</div>
+            <div class="card-sub">Services + Delivery</div>
         </div>
 
         <div style="display:table-cell; width:2%;"></div> <!-- Spacer -->

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Sales Report</title>
+    <title>Sales_Report_{{ $startDate }}_to_{{ $endDate }}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
         body { padding: 40px; color: #333; font-size: 11px; background: #fff; }
@@ -159,7 +159,7 @@
         <tfoot>
             <tr style="background: #f8fafc; font-weight: bold; border-top: 2px solid #cbd5e1;">
                 <td colspan="{{ ($isSuperAdmin && !$branchId) ? 5 : 4 }}" class="text-right" style="padding-top:12px; padding-bottom:12px; font-size:12px;">GRAND TOTAL:</td>
-                <td class="text-center" style="padding-top:12px; padding-bottom:12px; font-size:12px; color: #0f172a;">{{ number_format($orders->sum('total_qty'), 1) }}</td>
+                <td class="text-center" style="padding-top:12px; padding-bottom:12px; font-size:12px; color: #0f172a;">{{ number_format($orders->getCollection()->sum('total_qty'), 1) }}</td>
                 <td></td>
                 <td class="text-right" style="padding-top:12px; padding-bottom:12px; font-size:12px; color: #059669;">Rs.{{ number_format($totalSalesAmount, 2) }}</td>
             </tr>

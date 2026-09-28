@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 
 class InventoryController extends Controller
 {
@@ -78,6 +79,17 @@ class InventoryController extends Controller
         ]);
 
         $updatedCount = 0;
+        
+        // Pre-validate all items to ensure sufficient stock
+        foreach ($request->items as $data) {
+            if (empty($data['quantity'])) continue;
+            
+            $item = InventoryItem::find($data['id']);
+            if ($item && $item->current_stock < (float) $data['quantity']) {
+                return redirect()->back()->with('error', "Not enough stock available for item: {$item->name}. Available: {$item->current_stock}");
+            }
+        }
+
         foreach ($request->items as $data) {
             if (empty($data['quantity'])) {
                 continue;

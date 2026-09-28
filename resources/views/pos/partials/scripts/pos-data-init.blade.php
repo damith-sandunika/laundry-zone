@@ -2,7 +2,9 @@
 window.posSystemData = {
             timeSlots: @json($timeSlots),
             extras: @json($extras),
-            turnaroundTypes: @json($turnaroundTypes)
+            turnaroundTypes: @json($turnaroundTypes),
+            defaultPickupDays: {{ (int)\App\Models\Setting::get('default_pickup_days', '3') }},
+            defaultPickupTime: '{{ \App\Models\Setting::get('default_pickup_time', '17:00') }}'
         };
         
         window.posSystem = function() {
@@ -48,6 +50,17 @@ window.posSystemData = {
                         this.allCustomers.push(customer);
                         this.selectCustomer(customer);
                     };
+
+                    // Auto-calculate default due date using settings
+                    let today = new Date();
+                    today.setDate(today.getDate() + window.posSystemData.defaultPickupDays);
+                    // Apply fixed pickup time from settings (e.g. "17:00")
+                    const timeParts = (window.posSystemData.defaultPickupTime || '17:00').split(':');
+                    today.setHours(parseInt(timeParts[0] || 17), parseInt(timeParts[1] || 0), 0, 0);
+                    // Format as YYYY-MM-DDTHH:MM for datetime-local input
+                    const pad = n => String(n).padStart(2, '0');
+                    this.dueDate = today.getFullYear() + '-' + pad(today.getMonth()+1) + '-' + pad(today.getDate()) + 'T' + pad(today.getHours()) + ':' + pad(today.getMinutes());
+
                     // Auto-select first parent category and first sub-category on load
                     this.$nextTick(() => {
                         this.focusFastSearch();

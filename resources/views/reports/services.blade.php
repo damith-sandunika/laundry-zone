@@ -71,7 +71,22 @@
                             @if($isSuperAdmin && !$branchId)
                                 <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $serv->branch_name ?? 'Unknown' }}</td>
                             @endif
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $serv->category_name ?? 'Uncategorized' }} - {{ $serv->service_name }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4">
+                                <div class="flex flex-col gap-0.5">
+                                    <div class="flex items-center gap-1.5 text-[9px] md:text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                        @if($serv->main_category_name)
+                                            <span class="text-blue-500">{{ $serv->main_category_name }}</span>
+                                            <svg class="w-2.5 h-2.5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M9 5l7 7-7 7"/></svg>
+                                            <span class="text-slate-500">{{ $serv->category_name }}</span>
+                                        @else
+                                            <span class="text-blue-500">{{ $serv->category_name ?? 'Uncategorized' }}</span>
+                                        @endif
+                                    </div>
+                                    <div class="font-black text-slate-900 text-[11px] md:text-sm">
+                                        {{ $serv->service_name }}
+                                    </div>
+                                </div>
+                            </td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($serv->total_qty, 1) }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($serv->total_revenue, 2) }}</td>
                         </tr>

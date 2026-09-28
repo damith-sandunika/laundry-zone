@@ -103,25 +103,18 @@ class DashboardStatService
 
     private function calculateSalesMetrics(RegisterSession $activeSession, int $branchId): array
     {
-        $totalDeliveryFees = 0;
-        $commissionableSales = 0;
-        $grossSales = 0;
-
-        // Process all orders created during this shift
-        $shiftOrders = Order::where('branch_id', $branchId)
+        // Use SQL aggregations instead of loading all models into memory to prevent OOM on large datasets
+        $orderMetrics = Order::where('branch_id', $branchId)
             ->where('created_at', '>=', $activeSession->opened_at)
-            ->get();
+            ->selectRaw('
+                SUM(COALESCE(total, 0)) as gross_sales,
+                SUM(COALESCE(delivery_fee, 0)) as total_delivery_fees,
+                SUM(CASE WHEN COALESCE(total, 0) > COALESCE(delivery_fee, 0) THEN COALESCE(total, 0) - COALESCE(delivery_fee, 0) ELSE 0 END) as commissionable_sales
+            ')->first();
 
-        foreach ($shiftOrders as $order) {
-            $orderTotal = $order->total ?? 0;
-            $deliveryFee = $order->delivery_fee ?? 0;
-            
-            $commissionable = max(0, $orderTotal - $deliveryFee);
-            
-            $totalDeliveryFees += $deliveryFee;
-            $commissionableSales += $commissionable;
-            $grossSales += $orderTotal;
-        }
+        $grossSales = (float) ($orderMetrics->gross_sales ?? 0);
+        $totalDeliveryFees = (float) ($orderMetrics->total_delivery_fees ?? 0);
+        $commissionableSales = (float) ($orderMetrics->commissionable_sales ?? 0);
 
         // Package sales (assuming these are paid in full upfront usually, or we accrue them)
         // For packages, we will keep them as cash-basis or when package is created.

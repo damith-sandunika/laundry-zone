@@ -144,21 +144,23 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('customers', CustomerController::class);
 
     Route::post('/orders/{order:id}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
-    Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store');
-    Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve');
-    Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject');
+    Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store')->middleware('throttle:10,1');
+    Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve')->middleware('throttle:10,1');
+    Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject')->middleware('throttle:10,1');
     Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
     Route::get('/orders/{order:id}/print', [OrderController::class, 'printBill'])->name('orders.print');
     Route::get('/orders/{order:id}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
     Route::get('/orders/{order:id}/label', [OrderController::class, 'printLabel'])->name('orders.printLabel');
     Route::get('/orders/{order:id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::post('/orders/{order:id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::post('/orders/{order:id}/reverse', [OrderController::class, 'reverseOrder'])->name('orders.reverseOrder');
     Route::post('/orders/{order:id}/dispatch-delivery', [OrderController::class, 'dispatchDelivery'])->name('orders.dispatchDelivery');
     Route::post('/orders/{order:id}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
     Route::post('/orders/{order:id}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
-    Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve');
-    Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject');
+    Route::post('/orders/{order:id}/convert-to-delivery', [OrderController::class, 'convertToDelivery'])->name('orders.convertToDelivery');
+    Route::post('/orders/{order:id}/convert-to-pickup', [OrderController::class, 'convertToPickup'])->name('orders.convertToPickup');
+    Route::post('/orders/{order:id}/refund-overpayment', [OrderController::class, 'refundOverpayment'])->name('orders.refundOverpayment')->middleware('throttle:10,1');
+    Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve')->middleware('throttle:10,1');
+    Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject')->middleware('throttle:10,1');
     // Workshop dispatch from order
     Route::post('/orders/{order}/dispatch-workshop', [WorkshopDispatchController::class, 'dispatch'])->name('orders.dispatchWorkshop');
     Route::post('/orders/workshop/bulk-dispatch', [WorkshopDispatchController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
@@ -166,14 +168,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/workshop/orders/{order_number}/finalize-bill', [WorkshopBillingController::class, 'finalizeBill'])->name('workshop.finalizeBill')->middleware('admin');
 
     // Order Management
+    Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
     Route::get('/orders/archive', [App\Http\Controllers\OrderArchiveController::class, 'index'])->name('orders.archive');
     Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
     Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
     Route::resource('orders', OrderController::class)->only(['index', 'edit']);
-
-    Route::post('/packages/{customerPackage}/mark-paid', [PackageController::class, 'markPaid'])->name('packages.markPaid');
-    Route::get('/packages/{customerPackage}/print', [PackageController::class, 'printReceipt'])->name('packages.print');
-    Route::resource('packages', PackageController::class)->except(['create', 'edit', 'update']);
 
 
 
@@ -240,7 +239,16 @@ Route::middleware(['auth'])->group(function () {
 
     // ─── ADMIN + WORKSHOP_ADMIN SETTINGS ───
     Route::middleware(['admin'])->group(function () {
-        Route::get('/settings', [GeneralSettingsController::class, 'index'])->name('settings.index');
+                Route::get('/settings/general', [GeneralSettingsController::class, 'general'])->name('settings.general');
+        Route::get('/settings/extras', [GeneralSettingsController::class, 'extras'])->name('settings.extras');
+        Route::get('/settings/turnarounds', [GeneralSettingsController::class, 'turnaroundTypes'])->name('settings.turnarounds');
+        Route::get('/settings/cubbies', [GeneralSettingsController::class, 'cubbies'])->name('settings.cubbies');
+        Route::get('/settings/delivery', [GeneralSettingsController::class, 'delivery'])->name('settings.delivery');
+        Route::get('/settings/pickup-times', [GeneralSettingsController::class, 'pickupTimes'])->name('settings.pickup-times');
+        Route::get('/settings/payment-methods', [GeneralSettingsController::class, 'paymentMethods'])->name('settings.payment-methods');
+        Route::get('/settings/notifications', [GeneralSettingsController::class, 'notifications'])->name('settings.notifications');
+
+        Route::redirect('/settings', '/settings/general')->name('settings.index');
         Route::post('/settings/general', [GeneralSettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
 
         // Payment Settings
@@ -272,10 +280,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/settings/service-categories/{category}', [ServiceSettingsController::class, 'updateServiceCategory'])->name('settings.updateServiceCategory');
         Route::delete('/settings/service-categories/{category}', [ServiceSettingsController::class, 'destroyServiceCategory'])->name('settings.destroyServiceCategory');
 
-        // Packages
-        Route::post('/settings/packages', [PackageSettingsController::class, 'storePackage'])->name('settings.storePackage');
-        Route::put('/settings/packages/{package}', [PackageSettingsController::class, 'updatePackage'])->name('settings.updatePackage');
-        Route::delete('/settings/packages/{package}', [PackageSettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
+
 
         // Extras
         Route::post('/settings/extras', [ServiceSettingsController::class, 'storeExtra'])->name('settings.storeExtra');
@@ -298,6 +303,7 @@ Route::middleware(['auth'])->group(function () {
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
             Route::get('/branch-logs', [\App\Http\Controllers\BranchLogController::class, 'index'])->name('superadmin.branch-logs');
+            Route::get('/orders-change-log', [\App\Http\Controllers\OrderLogReportController::class, 'index'])->name('superadmin.order-logs');
 
             Route::get('/sms-templates', [SmsTemplateController::class, 'index'])->name('sms-templates.index');
             Route::put('/sms-templates/{template}', [SmsTemplateController::class, 'update'])->name('sms-templates.update');
@@ -332,17 +338,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/hr/{staff}/payslip', [StaffController::class, 'downloadPayslip'])->name('hr.payslip.download');
 
         // Branches
-        Route::resource('branches', BranchController::class)->except(['show', 'edit']);
+        Route::resource('branches', BranchController::class)->except(['show']);
         Route::get('/branch/month-plan', [BranchPlanController::class, 'index'])->name('branch.month_plan');
         Route::post('/branch/month-plan', [BranchPlanController::class, 'store'])->name('branch.month_plan.store');
-        Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
+        Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopDispatchController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
         Route::resource('staff', StaffController::class);
 
         // ─── Reports Routes ───
         Route::get('/reports', [MainReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [MainReportController::class, 'exportPdf'])->name('reports.pdf');
-        Route::post('/reports/packages/{customerPackage}/approve-payment', [MainReportController::class, 'approvePackagePayment'])->name('reports.approvePackagePayment');
+
 
         Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales');
         Route::get('/reports/sales/pdf', [SalesReportController::class, 'exportPdf'])->name('reports.sales.pdf');

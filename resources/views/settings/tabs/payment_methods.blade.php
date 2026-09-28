@@ -1,4 +1,4 @@
-            <div x-show="activeTab === 'payment_methods'" style="display: none;">
+            <div style="display: block;">
                 <form action="{{ route('settings.payment-methods.update') }}" method="POST">
                     @csrf
 

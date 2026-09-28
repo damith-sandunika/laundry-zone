@@ -18,62 +18,63 @@ class GeneralSettingsController extends Controller
      * The main settings index page (only shows general settings to non-super-admins).
      * Kept here because it loads data for ALL tabs.
      */
-    public function index()
+        public function general()
     {
         $branchId = $this->getActiveBranchId();
         $branch = Branch::find($branchId);
+        return view('settings.pages.general', compact('branch'));
+    }
+
+    public function extras()
+    {
+        $branchId = $this->getActiveBranchId();
         $isGlobalMode = Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
-
-        $serviceCategories = ServiceCategory::where(function ($q) use ($branchId, $isGlobalMode) {
-            if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
-        })->with(['children.services' => function ($q) use ($branchId, $isGlobalMode) {
-            if (!$isGlobalMode) $q->where(fn($sq) => $sq->whereNull('branch_id')->orWhere('branch_id', $branchId));
-            $q->orderBy('order_index');
-        }, 'services' => function ($q) use ($branchId, $isGlobalMode) {
-            if (!$isGlobalMode) $q->where(fn($sq) => $sq->whereNull('branch_id')->orWhere('branch_id', $branchId));
-            $q->orderBy('order_index');
-        }])->orderBy('order_index')->get();
-
-        $mainCategories = $serviceCategories->whereNull('parent_id');
-
-        $services = ServiceType::where(function ($q) use ($branchId, $isGlobalMode) {
-            if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
-        })->with(['inventoryItems', 'category'])->orderBy('order_index')->get();
-
-        $turnaroundTypes = \App\Models\TurnaroundType::where(function ($q) use ($branchId, $isGlobalMode) {
-            if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
-        })->orderBy('is_default', 'desc')->orderBy('name')->get();
-
         $extras = \App\Models\Extra::where(function ($q) use ($branchId, $isGlobalMode) {
             if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
         })->orderBy('name')->get();
+        return view('settings.pages.extras', compact('extras'));
+    }
 
-        $cubbies = Cubby::where('branch_id', $branchId)->get();
-        $inventoryItems = InventoryItem::where('branch_id', $branchId)->get();
-
-        $packages = Package::where(function ($q) use ($branchId, $isGlobalMode) {
+    public function turnaroundTypes()
+    {
+        $branchId = $this->getActiveBranchId();
+        $isGlobalMode = Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
+        $turnaroundTypes = \App\Models\TurnaroundType::where(function ($q) use ($branchId, $isGlobalMode) {
             if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
-        })->with('services.serviceType')->get();
+        })->orderBy('is_default', 'desc')->orderBy('name')->get();
+        return view('settings.pages.turnaround_types', compact('turnaroundTypes'));
+    }
 
+    public function cubbies()
+    {
+        $branchId = $this->getActiveBranchId();
+        $cubbies = Cubby::where('branch_id', $branchId)->get();
+        return view('settings.pages.cubbies', compact('cubbies'));
+    }
+
+    public function delivery()
+    {
+        $branchId = $this->getActiveBranchId();
+        $isGlobalMode = Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
         $deliveryRanges = \App\Models\DeliveryRange::where(function ($q) use ($branchId, $isGlobalMode) {
             if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
         })->get();
+        $minimumDeliveryCost = Setting::get('minimum_delivery_cost', 0);
+        return view('settings.pages.delivery', compact('deliveryRanges', 'minimumDeliveryCost'));
+    }
 
-        $paymentMethods = collect();
-        if (Setting::get('payment_bank_transfer_active', '1') == '1') {
-            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
-        }
-        if (Setting::get('payment_online_active', '0') == '1') {
-            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
-        }
-
+    public function pickupTimes()
+    {
+        $branchId = $this->getActiveBranchId();
+        $isGlobalMode = Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
         $pickupTimePeriods = \App\Models\PickupTimePeriod::where(function ($q) use ($branchId, $isGlobalMode) {
             if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
         })->orderBy('start_time')->get();
+        return view('settings.pages.pickup_times', compact('pickupTimePeriods'));
+    }
 
-        $workshops = Branch::workshops()->get();
-        $minimumDeliveryCost = Setting::get('minimum_delivery_cost', 0);
-
+    public function paymentMethods()
+    {
         $paymentMethodsList = [
             (object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer', 'is_active' => Setting::get('payment_bank_transfer_active', '1') == '1'],
             (object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer', 'is_active' => Setting::get('payment_online_active', '0') == '1'],
@@ -90,14 +91,31 @@ class GeneralSettingsController extends Controller
             'gateway_merchant_id' => Setting::get('gateway_merchant_id', ''),
             'gateway_secret_key'  => Setting::get('gateway_secret_key', ''),
         ];
+        return view('settings.pages.payment_methods', compact('paymentMethodsList', 'bankDetails', 'gatewayDetails'));
+    }
 
-        return view('settings.index', compact(
-            'branch', 'serviceCategories', 'mainCategories', 'services', 'cubbies',
-            'inventoryItems', 'packages', 'paymentMethods', 'deliveryRanges',
-            'pickupTimePeriods', 'workshops', 'minimumDeliveryCost',
-            'paymentMethodsList', 'bankDetails', 'gatewayDetails',
-            'turnaroundTypes', 'extras'
-        ));
+    public function notifications()
+    {
+        return view('settings.pages.notifications');
+    }
+
+    public function packages()
+    {
+        $branchId = $this->getActiveBranchId();
+        $isGlobalMode = Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
+        
+        $serviceCategories = ServiceCategory::with(['services' => function ($q) use ($branchId, $isGlobalMode) {
+            if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
+            $q->orderBy('order_index');
+        }])->orderBy('order_index')->get();
+
+        $packages = Package::where(function ($q) use ($branchId, $isGlobalMode) {
+            if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
+        })->with('services.serviceType')->get();
+        
+        $canManageConfig = auth()->user()->canManageGlobalConfig();
+        
+        return view('settings.pages.packages', compact('serviceCategories', 'packages', 'canManageConfig'));
     }
 
     public function updateGeneral(UpdateGeneralSettingsRequest $request)
@@ -109,6 +127,8 @@ class GeneralSettingsController extends Controller
             Setting::set('auto_print_label', $request->has('auto_print_label') ? '1' : '0');
             Setting::set('auto_print_pos_chit', $request->has('auto_print_pos_chit') ? '1' : '0');
             Setting::set('site_landing_page', $request->input('site_landing_page', ''));
+            Setting::set('default_pickup_days', $request->input('default_pickup_days', '3'));
+            Setting::set('default_pickup_time', $request->input('default_pickup_time', '17:00'));
             if ($request->has('company_name')) Setting::set('company_name', $request->company_name);
             if ($request->has('auto_close_time')) Branch::query()->update(['auto_close_time' => $request->auto_close_time]);
         } else {
@@ -119,6 +139,10 @@ class GeneralSettingsController extends Controller
                 $data['logo_path'] = app(\App\Actions\UploadImageAction::class)->execute($request->file('logo'), 'logos', 'logo');
             }
             if ($branch) $branch->update($data);
+            
+            // Branch-level POS pickup defaults
+            Setting::set('default_pickup_days', $request->input('default_pickup_days', '3'));
+            Setting::set('default_pickup_time', $request->input('default_pickup_time', '17:00'));
         }
 
         return redirect()->back()->with('success', 'General settings saved.');

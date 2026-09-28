@@ -1,5 +1,6 @@
 <!-- Add Service Modal -->
-<div x-show="serviceModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+<div x-data="{ serviceModalOpen: false }" @open-service-modal.window="serviceModalOpen = true">
+<div x-show="serviceModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
     <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
         <div x-show="serviceModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity"
             @click="serviceModalOpen = false">
@@ -39,7 +40,7 @@
                             <h4 class="text-xs font-bold text-gray-800 uppercase mb-2">Link Supplies to
                                 Auto-Deduct</h4>
                             <div class="space-y-2 max-h-40 overflow-y-auto">
-                                @foreach($inventoryItems as $item)
+                                @foreach($inventoryItems ?? [] as $item)
                                     <div class="flex items-center justify-between">
                                         <span class="text-xs text-gray-600">{{ $item->name }}
                                             ({{ $item->unit }})</span>
@@ -67,9 +68,11 @@
         </div>
     </div>
 </div>
+</div>
 
 <!-- Add Cubby Modal -->
-<div x-show="cubbyModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+<div x-data="{ cubbyModalOpen: false }" @open-cubby-modal.window="cubbyModalOpen = true">
+<div x-show="cubbyModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
     <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
         <div x-show="cubbyModalOpen" x-transition.opacity class="fixed inset-0 transition-opacity"
             @click="cubbyModalOpen = false">
@@ -103,6 +106,7 @@
             </form>
         </div>
     </div>
+</div>
 </div>
 
 <!-- ── Add Delivery Range Modal ── -->

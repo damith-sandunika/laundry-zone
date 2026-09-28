@@ -57,16 +57,18 @@
                 <!-- Completed at Workshop -->
                 <template x-if="dispatch.status === 'completed_at_workshop'">
                     <div style="display:flex;gap:6px;">
-                        <template x-if="dispatch.order.branch_id == {{ auth()->user()->branch_id ?? 'null' }} || dispatch.order.branch_id == dispatch.workshop_branch_id || dispatch.order.is_delivery_order || {{ auth()->user()->role === 'super_admin' ? 'true' : 'false' }}">
+                        <template x-if="dispatch.order.branch_id === dispatch.workshop_branch_id">
                             <div style="display:flex;gap:6px;">
-                                <template x-if="dispatch.order.is_delivery_order">
-                                    <button @click="showDeliveryModal = true"
-                                        style="padding:8px 16px;background:linear-gradient(to right,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                        <i class="fa-solid fa-truck"></i> Assign Rider
-                                    </button>
+                                <template x-if="dispatch.order.is_delivery_order && dispatch.order.delivery_appointment && dispatch.order.delivery_appointment.delivery_preference !== 'pickup_from_branch'">
+                                    <div style="display:flex;gap:6px;">
+                                        <button @click="showDeliveryModal = true"
+                                            style="padding:8px 16px;background:linear-gradient(to right,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                                            onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                            <i class="fa-solid fa-truck"></i> Assign Rider
+                                        </button>
+                                    </div>
                                 </template>
-                                <template x-if="!dispatch.order.is_delivery_order">
+                                <template x-if="!dispatch.order.is_delivery_order || !dispatch.order.delivery_appointment || dispatch.order.delivery_appointment.delivery_preference === 'pickup_from_branch'">
                                     <button @click="showHandoverModal = true"
                                         style="padding:8px 16px;background:linear-gradient(to right,#10b981,#059669);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
                                         onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
@@ -75,7 +77,7 @@
                                 </template>
                             </div>
                         </template>
-                        <template x-if="dispatch.order.branch_id != {{ auth()->user()->branch_id ?? 'null' }} && dispatch.order.branch_id != dispatch.workshop_branch_id && !dispatch.order.is_delivery_order && !{{ auth()->user()->role === 'super_admin' ? 'true' : 'false' }}">
+                        <template x-if="dispatch.order.branch_id !== dispatch.workshop_branch_id">
                             <button @click="workshopAction('return')"
                                 style="padding:8px 16px;background:linear-gradient(to right,#8b5cf6,#6d28d9);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(139,92,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
                                 onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
@@ -86,7 +88,35 @@
                 </template>
                 
                 <template x-if="dispatch.status === 'returned_to_branch'">
-                    <span style="font-size:11px;color:#94a3b8;font-weight:600;">Awaiting Branch...</span>
+                    <button @click="showBranchArrivalModal = true"
+                        style="padding:8px 16px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fa-solid fa-check-circle"></i> Confirm Arrival
+                    </button>
+                </template>
+
+                <!-- Received at Branch (Ready for Final Handover/Delivery) -->
+                <template x-if="dispatch.status === 'received_at_branch'">
+                    <div style="display:flex;gap:6px;">
+                        <!-- is_delivery_order + deliver_to_address → Assign Rider + Convert to Pickup -->
+                        <template x-if="dispatch.order.is_delivery_order && dispatch.order.delivery_appointment && dispatch.order.delivery_appointment.delivery_preference !== 'pickup_from_branch'">
+                            <div style="display:flex;gap:6px;">
+                                <button @click="showDeliveryModal = true"
+                                    style="padding:8px 16px;background:linear-gradient(to right,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                    <i class="fa-solid fa-truck"></i> Assign Rider
+                                </button>
+                            </div>
+                        </template>
+                        <!-- Not a delivery order OR pickup_from_branch → Handover to Customer -->
+                        <template x-if="!dispatch.order.is_delivery_order || !dispatch.order.delivery_appointment || dispatch.order.delivery_appointment.delivery_preference === 'pickup_from_branch'">
+                            <button @click="showHandoverModal = true"
+                                style="padding:8px 16px;background:linear-gradient(to right,#10b981,#059669);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                <i class="fa-solid fa-box-open"></i> Handover to Cust
+                            </button>
+                        </template>
+                    </div>
                 </template>
             </div>
         </template>

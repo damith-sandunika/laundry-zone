@@ -1,4 +1,4 @@
-            <div x-show="activeTab === 'extras'" style="display: none;">
+            <div style="display: block;">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Extras (e.g., Hangers, Special Detergent)</h3>
                     <button onclick="document.getElementById('add-extra-modal').style.display='flex'"

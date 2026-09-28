@@ -19,13 +19,14 @@
                 bulkStatus: 'done',
                 bulkCubbyId: '',
                 bulkWorkshopId: '',
+
+                showCubbetModal: false,
+                cubbetOrder: null,
+                selectedCubby: '',
                 showReverseModal: false,
                 reverseOrderId: null,
                 reversePassword: '',
                 reverseError: '',
-                showCubbetModal: false,
-                cubbetOrder: null,
-                selectedCubby: '',
                 showDeliverModal: false,
                 deliverOrder: null,
                 deliveryPaymentMethod: 'cash',
@@ -67,7 +68,7 @@
 
                 openPaymentModal(order) { this.paymentOrder = order; this.paymentAmountType = 'full'; this.customPaymentAmount = ''; this.showPaymentModal = true; },
                 openSlipModal(receipt, order) { this.selectedSlip = receipt; this.selectedOrder = order; this.showSlipModal = true; },
-                openReverse(orderId) { this.reverseOrderId = orderId; this.reversePassword = ''; this.reverseError = ''; this.showReverseModal = true; },
+
                 openCubbetPopup(order) { this.cubbetOrder = order; this.selectedCubby = ''; this.showCubbetModal = true; },
                 openDeliverPopup(order) { this.deliverOrder = order; this.deliveryPaymentMethod = 'cash'; this.showDeliverModal = true; },
                 openDeliveryDispatchPopup(order) { this.deliverOrder = order; this.deliveryMethod = 'rider'; this.deliveryRiderId = ''; this.deliveryPickmeCost = ''; this.deliveryPaymentMethod = 'cash'; this.isDispatchingDelivery = false; this.showDispatchDeliveryModal = true; },
@@ -97,19 +98,7 @@
                     this.isRequestingPayment = false;
                 },
 
-                async submitReverse() {
-                    this.reverseError = '';
-                    try {
-                        const res = await fetch('/orders/' + this.reverseOrderId + '/reverse', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                            body: JSON.stringify({ password: this.reversePassword })
-                        });
-                        const data = await res.json();
-                        if (data.success) { window.location.reload(); }
-                        else { this.reverseError = data.message || 'Authorization failed'; }
-                    } catch (err) { this.reverseError = 'Connection error. Please try again.'; }
-                },
+
 
                 async submitDispatch() {
                     if (!this.bulkWorkshopId) { alert('Please select a workshop'); return; }
@@ -121,6 +110,35 @@
                         });
                         window.location.reload();
                     } catch (err) { window.location.reload(); }
+                },
+
+                openReverse(orderId) {
+                    this.reverseOrderId = orderId;
+                    this.reversePassword = '';
+                    this.reverseError = '';
+                    this.showReverseModal = true;
+                },
+
+                async submitReverse() {
+                    this.reverseError = '';
+                    try {
+                        const res = await fetch(`/orders/${this.reverseOrderId}/reverse`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                            },
+                            body: JSON.stringify({ password: this.reversePassword })
+                        });
+                        const data = await res.json();
+                        if (data.success) {
+                            window.location.reload();
+                        } else {
+                            this.reverseError = data.message || 'Verification failed';
+                        }
+                    } catch (err) {
+                        this.reverseError = 'Error connecting to server';
+                    }
                 },
 
                 async markAsDone() {

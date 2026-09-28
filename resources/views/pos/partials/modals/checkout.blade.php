@@ -1,6 +1,5 @@
 <!-- ===================== Checkout Modal ===================== -->
         <div x-show="showCheckoutModal" x-cloak
-            x-effect="if(showCheckoutModal) $nextTick(() => { const dp = document.getElementById('due-date-input'); if(dp) { try { dp.showPicker(); } catch(e) { dp.focus(); dp.click(); } } })"
             class="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="showCheckoutModal = false"></div>
             
@@ -21,12 +20,9 @@
                     <!-- Delivery Date -->
                     <div>
                         <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Estimated Delivery Date</label>
-                        <div class="flex gap-2">
-                            <input type="datetime-local" id="due-date-input" x-model="dueDate"
-                                class="flex-1 bg-slate-50 border-2 border-slate-200 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all cursor-pointer">
-                            <button @click="document.getElementById('due-date-input').blur()" type="button" class="px-4 bg-blue-100 hover:bg-blue-200 text-blue-700 font-bold rounded-xl text-sm transition-colors shadow-sm">
-                                Done
-                            </button>
+                        <div class="flex gap-2 items-center">
+                            <input type="datetime-local" x-model="dueDate"
+                                class="flex-1 bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-3 text-[14px] font-black text-slate-800 outline-none transition-all cursor-pointer">
                         </div>
                     </div>
 

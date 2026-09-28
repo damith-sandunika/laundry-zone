@@ -13,6 +13,7 @@
                 deliveryDateOnly: '',
                 deliveryTimeSlot: '',
                 notes: '',
+                customerWillPickup: false,
 
                 formatTime(timeStr) {
                     if(!timeStr) return '';
@@ -42,6 +43,7 @@
                         }
                         this.deliveryAddress = '';
                         this.notes = '';
+                        this.customerWillPickup = false;
                         this.show = true;
                     });
                 },
@@ -65,12 +67,13 @@
                         const payload = {
                             customer_id:      this.selectedCust.id,
                             pickup_address:   this.pickupAddress,
-                            delivery_address: this.deliveryAddress || this.pickupAddress,
+                            delivery_address: this.customerWillPickup ? null : (this.deliveryAddress || this.pickupAddress),
                             pickup_date:      combinedDateTime,
-                            delivery_date:    deliveryCombined,
+                            delivery_date:    this.customerWillPickup ? null : deliveryCombined,
                             notes:            this.notes,
                             cart:             this.cartItems.length > 0 ? this.cartItems : [],
                             payment_mode:     'pay_on_pickup',
+                            delivery_preference: this.customerWillPickup ? 'pickup_from_branch' : 'deliver_to_address',
                         };
 
                         const res = await fetch('/pos/delivery', {

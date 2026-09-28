@@ -67,11 +67,7 @@
                         class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200 whitespace-nowrap">
                         Turnarounds
                     </button>
-                    <button @click="activeTab = 'packages'; localStorage.setItem('settingsActiveTab', 'packages')"
-                        :class="activeTab === 'packages' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
-                        class="relative px-3 py-2 text-sm font-medium rounded-xl transition-all duration-200">
-                        Packages
-                    </button>
+
                     <button @click="activeTab = 'delivery'; localStorage.setItem('settingsActiveTab', 'delivery')"
                         :class="activeTab === 'delivery' ? 'bg-white text-blue-700 shadow-sm ring-1 ring-gray-200/50' : 'text-gray-500 hover:text-gray-700 hover:bg-gray-200/50'"
                         class="px-5 py-2 text-sm font-bold rounded-lg transition-all duration-200">
@@ -158,10 +154,7 @@
             <!-- NOTIFICATIONS TAB -->
             @include('settings.tabs.notifications')
 
-            @if($canManageConfig)
-            <!-- PACKAGES TAB -->
-            @include('settings.tabs.packages')
-            @endif
+
 
         </div>
 

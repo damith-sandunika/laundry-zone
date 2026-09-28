@@ -84,29 +84,57 @@
                                     <div style="display:inline-flex;gap:6px;align-items:center;">
                                         <button type="button" data-appt="{{ json_encode(['customer' => $appt->customer, 'order' => $appt->order, 'branch' => $appt->branch, 'delivery_preference' => $appt->delivery_preference, 'pickup_lat' => $appt->latitude, 'pickup_lng' => $appt->longitude, 'delivery_lat' => $appt->delivery_lat, 'delivery_lng' => $appt->delivery_lng, 'pickup_address' => $appt->pickup_address, 'delivery_address' => $appt->delivery_address, 'pickup_scheduled_at' => $appt->pickup_scheduled_at, 'delivery_scheduled_at' => $appt->delivery_scheduled_at, 'notes' => $appt->special_notes ?? '', 'item_description' => $appt->item_description ?? '', 'cart_json' => formatCartForPreview($appt->cart_json)]) }}" @click="openPreview($event.currentTarget.dataset.appt)" style="padding:6px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;color:#3b82f6;cursor:pointer;" title="Preview Order"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:16px;height:16px;"><path stroke-linecap="round" stroke-linejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" /></svg></button>
                                         @if($appt->status === 'ready')
-                                            <form method="POST" action="{{ route('delivery.assignDeliveryRider', ['appointment' => $appt->id]) }}" style="margin:0;display:flex;gap:4px;align-items:center;">
+                                            <form method="POST" action="{{ route('delivery.assignDeliveryRider', ['appointment' => $appt->id]) }}" style="margin:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
                                                 @csrf
                                                 <input type="hidden" name="order_id" value="{{ $appt->order_id }}">
-                                                <select name="rider_id" required onchange="this.parentElement.querySelector('.pickme_fields').style.display = this.value === 'pickme_flash' ? 'block' : 'none';" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;">
+                                                
+                                                <select x-data @change="
+                                                    const val = $event.target.value;
+                                                    const p = $event.target.closest('form');
+                                                    if(val === 'pickme_flash') {
+                                                        p.querySelector('.internal_rider_select').style.display = 'none';
+                                                        p.querySelector('.internal_rider_select').disabled = true;
+                                                        p.querySelector('.pickme_fields').style.display = 'flex';
+                                                        p.querySelector('.pickme_rider_id').disabled = false;
+                                                    } else if(val === 'internal') {
+                                                        p.querySelector('.internal_rider_select').style.display = 'block';
+                                                        p.querySelector('.internal_rider_select').disabled = false;
+                                                        p.querySelector('.pickme_fields').style.display = 'none';
+                                                        p.querySelector('.pickme_rider_id').disabled = true;
+                                                    } else {
+                                                        p.querySelector('.internal_rider_select').style.display = 'none';
+                                                        p.querySelector('.internal_rider_select').disabled = true;
+                                                        p.querySelector('.pickme_fields').style.display = 'none';
+                                                        p.querySelector('.pickme_rider_id').disabled = true;
+                                                    }
+                                                " style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:130px;" required>
+                                                    <option value="" disabled selected>Select Action</option>
                                                     <option value="pickme_flash">PickMe / Flash</option>
-                                                    <option value="">Select Rider</option>
+                                                    <option value="internal">Assign Rider</option>
+                                                </select>
+                                                
+                                                <select name="rider_id" class="internal_rider_select" style="display:none;padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:130px;" disabled required>
+                                                    <option value="">-- Choose Rider --</option>
                                                     @foreach($riders as $rider)
                                                         <option value="{{ $rider->id }}">{{ $rider->name }}</option>
                                                     @endforeach
                                                 </select>
-                                                <div class="pickme_fields" style="display:block; margin-top:4px;">
-                                                    <input type="number" name="pickme_flash_cost" placeholder="Cost (Rs)" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:70px; margin-right: 4px;">
+                                                
+                                                <div class="pickme_fields" style="display:none;flex-direction:column;gap:4px;width:130px;">
+                                                    <input type="hidden" name="rider_id" class="pickme_rider_id" value="pickme_flash" disabled>
+                                                    <input type="number" name="pickme_flash_cost" placeholder="Cost (Rs)" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:100%;">
                                                     @if($order && $order->paid_amount < $order->total)
-                                                    <div style="margin-top:4px;font-size:10px;font-weight:700;color:#334155;">Balance: Rs. {{ number_format($order->total - $order->paid_amount, 2) }}</div>
-                                                    <select name="payment_method" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:90px;margin-top:4px;">
+                                                    <div style="font-size:10px;font-weight:700;color:#334155;">Balance: Rs. {{ number_format($order->total - $order->paid_amount, 2) }}</div>
+                                                    <select name="payment_method" style="padding:4px 8px;border:1.5px solid #cbd5e1;border-radius:6px;font-size:11px;font-weight:600;color:#334155;outline:none;background:white;width:100%;">
                                                         <option value="cash">Cash</option>
                                                         <option value="card">Card</option>
                                                         <option value="bank_transfer">Bank</option>
                                                     </select>
                                                     @endif
                                                 </div>
-                                                <button type="submit" style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">
-                                                    Assign
+                                                
+                                                <button type="submit" style="padding:5px 10px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);width:130px;">
+                                                    Assign & Complete
                                                 </button>
                                             </form>
                                             @if(session('print_url'))

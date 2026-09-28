@@ -1,7 +1,7 @@
-            <div x-show="activeTab === 'cubbies'" style="display: none;">
+            <div style="display: block;">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Cubbets / Racks</h3>
-                    <button @click="cubbyModalOpen = true"
+                    <button @click="$dispatch('open-cubby-modal')"
                         class="px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded hover:bg-blue-700 transition-colors">
                         + Add Location
                     </button>

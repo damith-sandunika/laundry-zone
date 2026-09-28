@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Service Sales Report</title>
+    <title>Service_Sales_Report_{{ $startDate }}_to_{{ $endDate }}</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
         body { padding: 40px; color: #333; font-size: 11px; background: #fff; }

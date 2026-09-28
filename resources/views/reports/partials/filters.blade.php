@@ -29,5 +29,22 @@
                     <span class="md:hidden">Apply</span>
                 </button>
             </div>
+            
+            <div class="w-full mt-2 pt-3 border-t border-slate-100 flex flex-wrap gap-2 items-center">
+                <span class="text-[10px] md:text-xs font-bold text-slate-400 uppercase tracking-wider mr-2">Quick:</span>
+                <button type="button" onclick="applyQuickDate('{{ date('Y-m-d') }}', '{{ date('Y-m-d') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Today</button>
+                <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('-1 day')) }}', '{{ date('Y-m-d', strtotime('-1 day')) }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Yesterday</button>
+                <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('monday this week')) }}', '{{ date('Y-m-d') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">This Week</button>
+                <button type="button" onclick="applyQuickDate('{{ date('Y-m-01') }}', '{{ date('Y-m-t') }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">This Month</button>
+                <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('first day of last month')) }}', '{{ date('Y-m-d', strtotime('last day of last month')) }}')" class="px-3 py-1.5 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-xs font-bold rounded-lg transition-colors">Last Month</button>
+            </div>
         </form>
     </div>
+
+    <script>
+        function applyQuickDate(start, end) {
+            document.querySelector('input[name="start_date"]').value = start;
+            document.querySelector('input[name="end_date"]').value = end;
+            document.querySelector('form[action="{{ route('reports.index') }}"]').submit();
+        }
+    </script>

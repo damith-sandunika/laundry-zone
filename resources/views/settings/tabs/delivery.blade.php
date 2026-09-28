@@ -1,4 +1,4 @@
-            <div x-show="activeTab === 'delivery'" style="display: none;">
+            <div style="display: block;">
 
                 <!-- Global Delivery Settings -->
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-8 p-6">

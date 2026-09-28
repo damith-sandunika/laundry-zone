@@ -1,6 +1,6 @@
             <!-- NOTIFICATIONS TAB -->
             @if(auth()->user()->role === 'super_admin')
-                <div x-show="activeTab === 'notifications'" style="display: none;">
+                <div style="display: block;">
                     <form action="{{ route('settings.notifications.update') }}" method="POST">
                         @csrf
                         

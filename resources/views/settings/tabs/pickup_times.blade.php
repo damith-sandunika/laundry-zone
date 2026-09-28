@@ -1,4 +1,4 @@
-            <div x-show="activeTab === 'pickup_times'" style="display: none;">
+            <div style="display: block;">
                 <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Pickup Time Periods</h3>
                     <button onclick="document.getElementById('add-pickup-time-modal').style.display='flex'"

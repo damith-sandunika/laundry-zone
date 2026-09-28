@@ -55,16 +55,15 @@ class WorkshopBillingController extends Controller
             ->with(['items.serviceType', 'items.extras', 'customer', 'deliveryAppointment'])
             ->firstOrFail();
 
+        // Find the most recent workshop dispatch (any status) — or null if none exists
         $dispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)
-            ->whereNotIn('status', ['received_at_branch'])
             ->latest()
-            ->firstOrFail();
+            ->first();
 
-        // Scope to the workshop's branch (fall back to order branch if dispatch has no branch)
-        $branchId = $dispatch->workshop->branch_id
-            ?? $dispatch->branch_id
-            ?? $order->branch_id
-            ?? null;
+        // Use dispatch's workshop branch, or fall back to the order's own branch
+        $branchId = ($dispatch && $dispatch->workshop)
+            ? $dispatch->workshop->branch_id ?? $dispatch->branch_id
+            : $order->branch_id;
 
         $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
 

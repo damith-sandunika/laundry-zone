@@ -81,48 +81,8 @@ class OrderCorrectionController extends Controller
         if (in_array($request->type, ['items_change', 'order_change'])) {
             $subtotal = 0;
             if (isset($newData['cart']) && is_array($newData['cart'])) {
-                foreach ($newData['cart'] as $item) {
-                    $qty = (float) ($item['qty'] ?? 1);
-                    $basePrice = (float) ($item['base_price'] ?? 0);
-                    
-                    $turnaroundTypeId = !empty($item['turnaround_type_id']) ? $item['turnaround_type_id'] : null;
-                    $customTurnaroundPercent = null;
-                    if ($turnaroundTypeId === 'custom') {
-                        $turnaroundTypeId = null;
-                        $customTurnaroundPercent = isset($item['custom_turnaround_percentage']) ? (float) $item['custom_turnaround_percentage'] : null;
-                    }
-
-                    $itemSubtotalBeforeTurnaround = ($qty * $basePrice);
-                    $turnaroundCharge = 0;
-                    
-                    if ($customTurnaroundPercent !== null) {
-                        $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($customTurnaroundPercent / 100);
-                    } else if ($turnaroundTypeId) {
-                        $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
-                        if ($tt) {
-                            if ($tt->markup_type === 'percentage') {
-                                $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($tt->markup_value / 100);
-                            } else {
-                                $turnaroundCharge = $tt->markup_value * $qty;
-                            }
-                        }
-                    }
-
-                    $itemTotal = $itemSubtotalBeforeTurnaround + $turnaroundCharge;
-                    $selectedExtras = $item['selected_extras'] ?? [];
-                    
-                    if (is_array($selectedExtras) && count($selectedExtras) > 0) {
-                        foreach ($selectedExtras as $selEx) {
-                            $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
-                            $extraQty = is_array($selEx) && isset($selEx['qty']) ? (float)$selEx['qty'] : 1;
-                            $extra = \App\Models\Extra::find($extraId);
-                            if ($extra) {
-                                $itemTotal += ($extraQty * $extra->price);
-                            }
-                        }
-                    }
-                    $subtotal += $itemTotal;
-                }
+                $calcResult = app(\App\Actions\Order\CalculateOrderTotalAction::class)->execute($newData['cart']);
+                $subtotal = $calcResult['subtotal'];
             }
             $discountPercentage = isset($newData['discount_percentage']) ? (float) $newData['discount_percentage'] : ($order->customer ? $order->customer->default_discount : 0);
             $discountAmount = $subtotal * ($discountPercentage / 100);
@@ -131,49 +91,61 @@ class OrderCorrectionController extends Controller
             $newData['calculated_total'] = $subtotal - $discountAmount + $deliveryFee;
         }
 
-        $correction = OrderCorrectionRequest::create([
-            'order_id' => $order->id,
-            'requested_by' => auth()->id(),
-            'status' => 'pending',
-            'type' => $request->type,
-            'reason' => $request->reason,
-            'old_data' => $oldData,
-            'new_data' => $newData,
-        ]);
-
         $user = auth()->user();
         $isAdmin = in_array($user->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']);
 
-        if ($isAdmin) {
-            // Auto approve if requested by an admin
-            if (!$correction->order_id) {
-                dd('Order ID is null!', $correction, $order);
+        try {
+            DB::transaction(function () use ($order, $request, $oldData, $newData, $user, $isAdmin) {
+                $correction = OrderCorrectionRequest::create([
+                    'order_id' => $order->id,
+                    'requested_by' => auth()->id(),
+                    'status' => 'pending',
+                    'type' => $request->type,
+                    'reason' => $request->reason,
+                    'old_data' => $oldData,
+                    'new_data' => $newData,
+                ]);
+
+                if ($isAdmin) {
+                    $this->approve($correction);
+                    
+                    OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'status' => $order->status,
+                        'changed_by' => $user->id,
+                        'note' => "Correction auto-applied by Admin ({$request->type}): " . $request->reason,
+                    ]);
+                } else {
+                    OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'status' => $order->status,
+                        'changed_by' => auth()->id(),
+                        'note' => "Correction requested ({$request->type}): " . $request->reason,
+                    ]);
+                }
+            });
+
+            if ($isAdmin) {
+                return response()->json(['success' => true, 'message' => 'Order updated successfully.']);
             }
-            $this->approve($correction);
-            
-            // The note is added inside approve(), but we can add a specific note that it was auto-approved
-            OrderStatusHistory::create([
+
+            // Notify admins
+            $admins = User::whereIn('role', ['admin', 'branch_admin', 'workshop_admin'])
+                ->where(function($q) use ($order) {
+                    $q->where('branch_id', $order->branch_id)->orWhereNull('branch_id');
+                })->get();
+            Notification::send($admins, new SystemAlertNotification("Correction Requested for Order #{$order->order_number}", route('orders.show', $order->order_number), 'warning'));
+
+            return response()->json(['success' => true, 'message' => 'Correction request submitted. Waiting for admin approval.']);
+
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Order Correction Store Error: ' . $e->getMessage(), [
                 'order_id' => $order->id,
-                'status' => $order->status,
-                'changed_by' => $user->id,
-                'note' => "Correction auto-applied by Admin ({$request->type}): " . $request->reason,
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
             ]);
-
-            return response()->json(['success' => true, 'message' => 'Order updated successfully.']);
+            return response()->json(['success' => false, 'message' => 'Failed to submit correction request. Please try again.']);
         }
-
-        OrderStatusHistory::create([
-            'order_id' => $order->id,
-            'status' => $order->status,
-            'changed_by' => auth()->id(),
-            'note' => "Correction requested ({$request->type}): " . $request->reason,
-        ]);
-
-        // Notify admins
-        $admins = User::whereIn('role', ['admin', 'branch_admin'])->where('branch_id', $order->branch_id)->get();
-        Notification::send($admins, new SystemAlertNotification("Correction Requested for Order #{$order->order_number}", route('orders.show', $order->order_number), 'warning'));
-
-        return response()->json(['success' => true, 'message' => 'Correction request submitted. Waiting for admin approval.']);
     }
 
     public function approve(OrderCorrectionRequest $correction)
@@ -185,224 +157,62 @@ class OrderCorrectionController extends Controller
             return back()->with('error', 'Request is not pending.');
         }
 
-        DB::transaction(function () use ($correction) {
-            $order = $correction->order ?? \App\Models\Order::withoutGlobalScopes()->find($correction->order_id);
-            $newData = $correction->new_data;
+        try {
+            DB::transaction(function () use ($correction) {
+                $order = $correction->order ?? \App\Models\Order::withoutGlobalScopes()->find($correction->order_id);
+                $newData = $correction->new_data;
 
-            if ($correction->type === 'payment_change') {
-                $newMethod = $newData['payment_method'];
-                $transactionId = $newData['transaction_id'] ?? null;
-
-                if ($transactionId) {
-                    $tx = PaymentTransaction::find($transactionId);
-                    if ($tx) {
-                        $oldMethod = $tx->payment_method;
-                        if ($newMethod === 'credit' && $oldMethod !== 'credit') {
-                            $tx->delete();
-                        } else {
-                            $tx->update(['payment_method' => $newMethod]);
-                        }
-                    }
-                } else {
-                    $oldMethod = $order->payment_method;
-
-                    if ($newMethod === 'credit' && $oldMethod !== 'credit') {
-                        PaymentTransaction::where('order_id', $order->id)->delete();
-                    } elseif ($oldMethod === 'credit' && $newMethod !== 'credit') {
-                        PaymentTransaction::create([
-                            'order_id' => $order->id,
-                            'amount' => $order->total,
-                            'payment_method' => $newMethod,
-                            'status' => 'completed',
-                            'created_by' => auth()->id() ?? 1,
-                        ]);
-                    } else {
-                        PaymentTransaction::where('order_id', $order->id)
-                            ->where('payment_method', $oldMethod)
-                            ->update(['payment_method' => $newMethod]);
-                    }
+                if ($correction->type === 'payment_change') {
+                    $correctionNote = app(\App\Actions\Order\UpdateOrderPaymentAction::class)->execute($order, $newData);
+                } else if ($correction->type === 'items_change' || $correction->type === 'order_change') {
+                    $correctionNote = app(\App\Actions\Order\UpdateOrderItemsAction::class)->execute($order, $newData, $correction->type);
+                } else if ($correction->type === 'convert_to_delivery') {
+                    $correctionNote = app(\App\Actions\Order\ConvertOrderToDeliveryAction::class)->execute($order, $newData);
+                } else if ($correction->type === 'convert_to_pickup') {
+                    $correctionNote = app(\App\Actions\Order\ConvertOrderToPickupAction::class)->execute($order, $newData);
+                } else if ($correction->type === 'overpayment_handling') {
+                    $correctionNote = app(\App\Actions\Order\HandleOverpaymentAction::class)->execute($order, $newData);
                 }
 
-                $actualPaidAmount = PaymentTransaction::where('order_id', $order->id)->where('status', 'completed')->sum('amount');
-                $paymentStatus = $actualPaidAmount >= $order->total ? 'paid' : ($actualPaidAmount > 0 ? 'partial' : ($newMethod === 'credit' ? 'pending' : 'unpaid'));
-                
-                $order->update([
-                    'payment_method' => $newMethod,
-                    'paid_amount' => $actualPaidAmount,
-                    'payment_status' => $paymentStatus,
+                $correction->update([
+                    'status' => 'approved',
+                    'approved_by' => auth()->id(),
+                    'resolved_at' => now(),
                 ]);
-            } else if ($correction->type === 'items_change' || $correction->type === 'order_change') {
-                $newMethod = $order->payment_method;
-                $oldMethod = $order->payment_method;
 
-                if ($correction->type === 'order_change' && isset($newData['payment_method'])) {
-                    $newMethod = $newData['payment_method'];
-                    $oldMethod = $order->payment_method;
+                $requesterName = $correction->requestedBy->name ?? 'System';
+                $approverName = auth()->user()->name ?? 'System';
+                $reqDate = \Carbon\Carbon::parse($correction->created_at)->format('d M Y, h:i A');
+                $appDate = now()->format('d M Y, h:i A');
+                $finalNote = ($correctionNote ?? "Correction approved ({$correction->type}).") . "\n[Requested by: {$requesterName} at {$reqDate} | Approved by: {$approverName} at {$appDate}]";
 
-                    if ($newMethod === 'credit' && $oldMethod !== 'credit') {
-                        PaymentTransaction::where('order_id', $order->id)->delete();
-                        $order->update([
-                            'payment_method' => $newMethod,
-                            'paid_amount' => 0,
-                            'payment_status' => 'unpaid'
-                        ]);
-                    } elseif ($oldMethod === 'credit' && $newMethod !== 'credit') {
-                        // Will create transaction at the end with correct new total
-                        $order->update([
-                            'payment_method' => $newMethod,
-                        ]);
-                    } else {
-                        $order->update([
-                            'payment_method' => $newMethod,
-                        ]);
-                        PaymentTransaction::where('order_id', $order->id)
-                            ->where('payment_method', $oldMethod)
-                            ->update(['payment_method' => $newMethod]);
-                    }
-                }
-
-                // Similar to updateOrder logic
-                OrderItem::where('order_id', $order->id)->delete();
-                $subtotal = 0;
-                
-                foreach ($newData['cart'] as $item) {
-                    $qty = (float) ($item['qty'] ?? 1);
-                    $basePrice = (float) ($item['base_price'] ?? 0);
-                    
-                    $turnaroundTypeId = !empty($item['turnaround_type_id']) ? $item['turnaround_type_id'] : null;
-                    $customTurnaroundPercent = null;
-                    if ($turnaroundTypeId === 'custom') {
-                        $turnaroundTypeId = null;
-                        $customTurnaroundPercent = isset($item['custom_turnaround_percentage']) ? (float) $item['custom_turnaround_percentage'] : null;
-                    }
-
-                    $itemSubtotalBeforeTurnaround = ($qty * $basePrice);
-                    $turnaroundCharge = 0;
-                    
-                    if ($customTurnaroundPercent !== null) {
-                        $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($customTurnaroundPercent / 100);
-                    } else if ($turnaroundTypeId) {
-                        $tt = \App\Models\TurnaroundType::find($turnaroundTypeId);
-                        if ($tt) {
-                            if ($tt->markup_type === 'percentage') {
-                                $turnaroundCharge = $itemSubtotalBeforeTurnaround * ($tt->markup_value / 100);
-                            } else {
-                                $turnaroundCharge = $tt->markup_value * $qty;
-                            }
-                        }
-                    }
-
-                    $itemTotal = $itemSubtotalBeforeTurnaround + $turnaroundCharge;
-                    $selectedExtras = $item['selected_extras'] ?? [];
-                    
-                    if (is_array($selectedExtras) && count($selectedExtras) > 0) {
-                        foreach ($selectedExtras as $selEx) {
-                            $extraId = is_array($selEx) ? ($selEx['id'] ?? $selEx) : $selEx;
-                            $extraQty = is_array($selEx) && isset($selEx['qty']) ? (float)$selEx['qty'] : 1;
-                            
-                            $extra = \App\Models\Extra::find($extraId);
-                            if ($extra) {
-                                $itemTotal += ($extraQty * $extra->price);
-                            }
-                        }
-                    }
-
-                    $subtotal += $itemTotal;
-
-                    $orderItem = OrderItem::create([
-                        'order_id' => $order->id,
-                        'service_type_id' => $item['service_type_id'] ?? null,
-                        'item_description' => isset($item['service_type_id']) ? null : ($item['name'] ?? 'Custom Service'),
-                        'quantity' => $qty,
-                        'unit_price' => $basePrice,
-                        'total_price' => $itemTotal,
-                        'turnaround_type_id' => $turnaroundTypeId,
-                        'custom_turnaround_percentage' => $customTurnaroundPercent,
-                        'turnaround_extra_charge' => $turnaroundCharge,
-                    ]);
-
-                    if (is_array($selectedExtras) && count($selectedExtras) > 0) {
-                        foreach ($selectedExtras as $ex) {
-                            $extraId = is_array($ex) ? ($ex['id'] ?? $ex) : $ex;
-                            $extraQty = is_array($ex) && isset($ex['qty']) ? (float)$ex['qty'] : 1;
-                            
-                            $extra = \App\Models\Extra::find($extraId);
-                            if ($extra) {
-                                \App\Models\OrderItemExtra::create([
-                                    'order_item_id' => $orderItem->id,
-                                    'extra_id' => $extraId,
-                                    'quantity' => $extraQty,
-                                    'unit_price' => $extra->price,
-                                    'total_price' => $extra->price * $extraQty
-                                ]);
-                            }
-                        }
-                    }
-                }
-
-                $discountPercentage = isset($newData['discount_percentage']) ? (float) $newData['discount_percentage'] : ($order->customer ? $order->customer->default_discount : 0);
-                $discountAmount = $subtotal * ($discountPercentage / 100);
-                $deliveryFee = isset($newData['delivery_fee']) ? (float) $newData['delivery_fee'] : $order->delivery_fee;
-                $total = $subtotal - $discountAmount + $deliveryFee;
-                
-                // Recalculate paid_amount from actual completed transactions (do NOT blindly override)
-                $actualPaidAmount = PaymentTransaction::where('order_id', $order->id)
-                    ->where('status', 'completed')
-                    ->sum('amount');
-
-                // If it was changed FROM credit TO another method, we need to apply full payment and create transaction
-                if ($correction->type === 'order_change' && $oldMethod === 'credit' && $newMethod !== 'credit') {
-                    PaymentTransaction::create([
-                        'order_id' => $order->id,
-                        'amount' => $total,
-                        'payment_method' => $newMethod,
-                        'status' => 'completed',
-                        'created_by' => auth()->id() ?? 1,
-                    ]);
-                    $actualPaidAmount = $total;
-                }
-                // For non-credit methods: preserve real transactions, don't force-update amounts
-                // This ensures that if someone already paid Rs.800 and the order is now Rs.1000,
-                // the balance shows Rs.200 due — not pretend they paid the new total.
-
-                $paymentStatus = $actualPaidAmount >= $total ? 'paid' : ($actualPaidAmount > 0 ? 'partial' : 'unpaid');
-
-                $order->update([
-                    'subtotal' => $subtotal,
-                    'discount' => $discountAmount,
-                    'delivery_fee' => $deliveryFee,
-                    'total' => $total,
-                    'paid_amount' => $actualPaidAmount,
-                    'payment_status' => $paymentStatus,
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => $order->status,
+                    'changed_by' => auth()->id(),
+                    'note' => $finalNote,
                 ]);
+            });
+
+            // Notify requester
+            if ($correction->requestedBy) {
+                $notificationOrder = $correction->order ?? \App\Models\Order::withoutGlobalScopes()->find($correction->order_id);
+                if ($notificationOrder) {
+                    Notification::send([$correction->requestedBy], new SystemAlertNotification("Correction Approved for Order #{$notificationOrder->order_number}", route('orders.show', $notificationOrder->order_number), 'success'));
+                }
             }
 
-            $correction->update([
-                'status' => 'approved',
-                'approved_by' => auth()->id(),
-                'resolved_at' => now(),
-            ]);
-
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => $order->status,
-                'changed_by' => auth()->id(),
-                'note' => "Correction approved ({$correction->type}).",
-            ]);
-        });
-
-        // Notify requester
-        if ($correction->requestedBy) {
-            $notificationOrder = $correction->order ?? \App\Models\Order::withoutGlobalScopes()->find($correction->order_id);
-            if ($notificationOrder) {
-                Notification::send([$correction->requestedBy], new SystemAlertNotification("Correction Approved for Order #{$notificationOrder->order_number}", route('orders.show', $notificationOrder->order_number), 'success'));
+            if (request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Correction approved successfully.']);
             }
+            return back()->with('success', 'Correction approved successfully.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Order Correction Error: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Something went wrong while processing the order. Please try again.']);
+            }
+            return back()->with('error', 'Something went wrong while processing the order. Please try again.');
         }
-
-        if (request()->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Correction approved successfully.']);
-        }
-        return back()->with('success', 'Correction approved successfully.');
     }
 
     public function reject(OrderCorrectionRequest $correction)
@@ -414,27 +224,41 @@ class OrderCorrectionController extends Controller
             return back()->with('error', 'Request is not pending.');
         }
 
-        $correction->update([
-            'status' => 'rejected',
-            'approved_by' => auth()->id(),
-            'resolved_at' => now(),
-        ]);
+        try {
+            DB::transaction(function () use ($correction) {
+                $correction->update([
+                    'status' => 'rejected',
+                    'approved_by' => auth()->id(),
+                    'resolved_at' => now(),
+                ]);
 
-        OrderStatusHistory::create([
-            'order_id' => $correction->order_id,
-            'status' => $correction->order->status,
-            'changed_by' => auth()->id(),
-            'note' => "Correction rejected ({$correction->type}).",
-        ]);
+                OrderStatusHistory::create([
+                    'order_id' => $correction->order_id,
+                    'status' => $correction->order->status,
+                    'changed_by' => auth()->id(),
+                    'note' => "Correction rejected ({$correction->type}).",
+                ]);
+            });
 
-        if ($correction->requestedBy) {
-            Notification::send([$correction->requestedBy], new SystemAlertNotification("Correction Rejected for Order #{$correction->order->order_number}", route('orders.show', $correction->order->order_number), 'error'));
+            if ($correction->requestedBy) {
+                Notification::send([$correction->requestedBy], new SystemAlertNotification("Correction Rejected for Order #{$correction->order->order_number}", route('orders.show', $correction->order->order_number), 'error'));
+            }
+
+            if (request()->wantsJson()) {
+                return response()->json(['success' => true, 'message' => 'Correction rejected.']);
+            }
+            return back()->with('success', 'Correction rejected.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Order Correction Reject Error: ' . $e->getMessage(), [
+                'correction_id' => $correction->id,
+                'user_id' => auth()->id(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            if (request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Failed to reject correction request. Please try again.']);
+            }
+            return back()->with('error', 'Failed to reject correction request. Please try again.');
         }
-
-        if (request()->wantsJson()) {
-            return response()->json(['success' => true, 'message' => 'Correction rejected.']);
-        }
-        return back()->with('success', 'Correction rejected.');
     }
 }
 

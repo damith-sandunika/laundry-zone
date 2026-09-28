@@ -137,34 +137,37 @@ class NotificationController extends Controller
             }
 
             // 5a. Pending Correction Requests
-            $pendingCorrectionsQuery = \App\Models\OrderCorrectionRequest::with('order')
-                ->where('status', 'pending')
-                ->has('order');
-            
-            if ($user->role !== 'super_admin') {
+            if (in_array($user->role, ['branch_admin', 'admin', 'workshop_admin'])) {
+                $pendingCorrectionsQuery = \App\Models\OrderCorrectionRequest::with('order')
+                    ->where('status', 'pending')
+                    ->has('order');
+                
                 $pendingCorrectionsQuery->whereHas('order', function ($q) use ($user) {
                     $q->where('branch_id', $user->branch_id)
-                      ->orWhere('workshop_id', $user->branch_id);
+                      ->orWhere('workshop_id', $user->branch_id)
+                      ->orWhereNull('branch_id'); // Just in case
                 });
-            }
-            $pendingCorrections = $pendingCorrectionsQuery->limit(50)->get()->map(function($cr) {
-                return [
-                    'number' => ($cr->order->order_number ?? 'Unknown') . ' (' . str_replace('_', ' ', $cr->type) . ')', 
-                    'url' => $cr->order ? route('orders.show', $cr->order->order_number) : '#'
-                ];
-            })->toArray();
+                
+                $pendingCorrections = $pendingCorrectionsQuery->limit(50)->get()->map(function($cr) {
+                    return [
+                        'id' => 'cr_' . $cr->id,
+                        'number' => ($cr->order->order_number ?? 'Unknown') . ' (' . str_replace('_', ' ', $cr->type) . ')', 
+                        'url' => $cr->order ? route('orders.show', $cr->order->order_number) : '#'
+                    ];
+                })->toArray();
 
-            if (count($pendingCorrections) > 0) {
-                $alerts[] = [
-                    'id'            => 'pending_corrections',
-                    'label'         => 'Order Correction Requests',
-                    'count'         => count($pendingCorrections),
-                    'order_numbers' => $pendingCorrections,
-                    'icon'          => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-                    'color'         => 'orange',
-                    'url'           => '#',
-                ];
-                $totalCount += count($pendingCorrections);
+                if (count($pendingCorrections) > 0) {
+                    $alerts[] = [
+                        'id'            => 'pending_corrections',
+                        'label'         => 'Order Correction Requests',
+                        'count'         => count($pendingCorrections),
+                        'order_numbers' => $pendingCorrections,
+                        'icon'          => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
+                        'color'         => 'orange',
+                        'url'           => '#',
+                    ];
+                    $totalCount += count($pendingCorrections);
+                }
             }
 
             // 5b. Inventory Low Stock Alerts

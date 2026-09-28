@@ -18,6 +18,7 @@ class ServiceReportController extends Controller
         $endDate      = $request->input('end_date', now()->toDateString());
 
         $query = OrderItem::select(
+                'main_categories.name as main_category_name',
                 'service_categories.name as category_name',
                 'service_types.name as service_name',
                 \DB::raw('SUM(order_items.quantity) as total_qty'),
@@ -25,6 +26,7 @@ class ServiceReportController extends Controller
             )
             ->join('service_types', 'service_types.id', '=', 'order_items.service_type_id')
             ->leftJoin('service_categories', 'service_categories.id', '=', 'service_types.category_id')
+            ->leftJoin('service_categories as main_categories', 'main_categories.id', '=', 'service_categories.parent_id')
             ->join('orders', 'orders.id', '=', 'order_items.order_id')
             ->where('orders.status', '!=', 'cancelled')
             ->whereBetween('orders.created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
@@ -50,7 +52,7 @@ class ServiceReportController extends Controller
     {
         $data     = $this->buildQuery($request);
         $services = $data['query']
-            ->groupBy('service_categories.name', 'service_types.name')
+            ->groupBy('main_categories.name', 'service_categories.name', 'service_types.name')
             ->having('total_qty', '>', 0)
             ->orderBy('total_revenue', 'desc')
             ->get();
@@ -70,7 +72,7 @@ class ServiceReportController extends Controller
     {
         $data     = $this->buildQuery($request);
         $services = $data['query']
-            ->groupBy('service_categories.name', 'service_types.name')
+            ->groupBy('main_categories.name', 'service_categories.name', 'service_types.name')
             ->having('total_qty', '>', 0)
             ->orderBy('total_revenue', 'desc')
             ->get();

@@ -30,7 +30,6 @@ class CollectCreditPaymentAction
 
             if ($order->paid_amount >= $order->total) {
                 $order->payment_status = 'paid';
-                $order->payment_method = $data['payment_method'];
             }
 
             $order->save();
