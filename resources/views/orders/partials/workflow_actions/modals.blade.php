@@ -270,15 +270,7 @@
                         </div>
                     </button>
 
-                    <!-- Option 2: Keep as Credit -->
-                    <button type="button" @click="handleOverpayment('keep')" :disabled="isProcessingRefund"
-                        style="width:100%;padding:16px;background:linear-gradient(135deg,#6366f1,#4f46e5);color:white;border:none;border-radius:14px;cursor:pointer;text-align:left;display:flex;align-items:center;gap:12px;box-shadow:0 4px 12px rgba(79,70,229,0.25);">
-                        <span style="font-size:24px;">🏦</span>
-                        <div>
-                            <div style="font-size:14px;font-weight:900;">Keep as Store Credit</div>
-                            <div style="font-size:11px;opacity:0.85;margin-top:2px;">Keep Rs. <span x-text="overpaymentAmount.toFixed(2)"></span> with the shop. No cash returned.</div>
-                        </div>
-                    </button>
+
 
                     <p x-show="isProcessingRefund" style="text-align:center;font-size:12px;color:#6366f1;font-weight:700;margin:0;">Processing...</p>
                 </div>
