@@ -164,6 +164,16 @@
                     </div>
                 @endif
 
+                {{-- 💸 Refund Excess --}}
+                @if(!in_array($order->status, ['delivered', 'completed']) && $order->paid_amount - $order->total > 0)
+                    <div class="ord-btn-wrap" x-data="{}">
+                        <button type="button" @click="$dispatch('open-overpayment-modal', {{ $order->paid_amount - $order->total }})" class="ord-btn" style="color: #ef4444; border-color: #fca5a5;" title="" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='white'">
+                            💸
+                        </button>
+                        <span class="ord-btn-label">Refund Excess</span>
+                    </div>
+                @endif
+
                 {{-- 🏷️ Print Label --}}
                 <div class="ord-btn-wrap">
                     <a href="{{ route('orders.printLabel', $order->id) }}" target="_blank"
@@ -183,7 +193,27 @@
                 </div>
                 @endif
 
-                {{-- 🖨 Download PDF / Print Invoice Modal --}}
+                {{-- 🚚 Convert to Delivery --}}
+                @if(!$order->is_delivery_order && !in_array($order->status, ['delivered', 'completed']) && $order->branch?->is_delivery_enabled)
+                <div class="ord-btn-wrap" x-data="{}">
+                    <button type="button" @click="$dispatch('open-convert-delivery-modal')" class="ord-btn" style="color: #ea580c; border-color: #fed7aa;" title="Convert to Delivery" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background='white'">
+                        🚚
+                    </button>
+                    <span class="ord-btn-label">Convert to Delivery</span>
+                </div>
+                @endif
+
+                {{-- 🏠 Convert to Customer Pickup --}}
+                @if($order->is_delivery_order && !in_array($order->status, ['delivered', 'completed']) && $order->deliveryAppointment && $order->deliveryAppointment->delivery_preference !== 'pickup_from_branch')
+                <div class="ord-btn-wrap" x-data="{}">
+                    <button type="button"
+                        @click="$dispatch('open-convert-pickup-modal')"
+                        class="ord-btn" style="color:#d97706;border-color:#fde68a;" onmouseover="this.style.background='#fffbeb'" onmouseout="this.style.background='white'" title="Convert to Customer Pickup">
+                        🏠
+                    </button>
+                    <span class="ord-btn-label">Cust Will Pickup</span>
+                </div>
+                @endif
                 <div class="ord-btn-wrap" x-data="{ openPrintModal: false, showMain: true, showSub: true, showService: true }">
                     <button type="button" @click="openPrintModal = true" class="ord-btn ord-btn--pdf" title="Print Invoice Options">
                         📄
