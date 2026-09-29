@@ -348,7 +348,15 @@ Route::middleware(['auth'])->group(function () {
         // ─── Reports Routes ───
         Route::get('/reports', [MainReportController::class, 'index'])->name('reports.index');
         Route::get('/reports/pdf', [MainReportController::class, 'exportPdf'])->name('reports.pdf');
+        Route::get('/reports/pending-orders', [\App\Http\Controllers\Reports\PendingOrdersReportController::class, 'index'])->name('reports.pending-orders');
+        Route::get('/reports/active-orders-pdf', [\App\Http\Controllers\Reports\PendingOrdersReportController::class, 'exportPdf'])->name('reports.active-orders-pdf');
 
+        Route::get('/reports/credit-orders', [\App\Http\Controllers\Reports\CreditReportController::class, 'index'])->name('reports.credit-orders');
+        Route::get('/reports/credit-orders/pdf', [\App\Http\Controllers\Reports\CreditReportController::class, 'exportPdf'])->name('reports.credit-orders.pdf');
+        Route::get('/reports/credit-orders/customer/{customerId}', [\App\Http\Controllers\Reports\CreditReportController::class, 'customerOrders'])->name('reports.credit-orders.customer');
+
+        Route::get('/reports/pending-payments', [\App\Http\Controllers\Reports\PendingPaymentsReportController::class, 'index'])->name('reports.pending-payments');
+        Route::get('/reports/pending-payments/pdf', [\App\Http\Controllers\Reports\PendingPaymentsReportController::class, 'exportPdf'])->name('reports.pending-payments.pdf');
 
         Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales');
         Route::get('/reports/sales/pdf', [SalesReportController::class, 'exportPdf'])->name('reports.sales.pdf');

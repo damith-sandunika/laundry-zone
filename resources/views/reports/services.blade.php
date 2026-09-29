@@ -75,6 +75,12 @@
             </table>
         </div>
     </div>
+
+    @if($services->hasPages())
+    <div class="mt-4">
+        {{ $services->links() }}
+    </div>
+    @endif
 </x-app-layout>
 
 

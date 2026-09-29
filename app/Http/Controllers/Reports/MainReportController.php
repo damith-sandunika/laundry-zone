@@ -67,13 +67,6 @@ class MainReportController extends Controller
             $totalBranchProfit = $profitData['totalBranchProfit'];
             $totalWorkshopProfit = $profitData['totalWorkshopProfit'];
 
-            $creditOrdersQuery = Order::with(['customer', 'branch'])
-                ->whereColumn('paid_amount', '<', 'total')
-                ->where('payment_method', 'credit');
-            if ($branchId)
-                $creditOrdersQuery->where('branch_id', $branchId);
-            $creditOrders = $creditOrdersQuery->orderBy('created_at', 'desc')->paginate(15, ['*'], 'credit_page');
-
             $services = $this->reportService->getServiceBreakdown($branchId, $startDate, $endDate);
 
         $expenseQuery = Expense::whereBetween('expense_date', [$startDate, $endDate]);
@@ -164,7 +157,6 @@ class MainReportController extends Controller
                 'inventoryLogs',
                 'startDate',
                 'endDate',
-                'creditOrders',
                 'customerPackages',
                 'branches',
                 'branchId',

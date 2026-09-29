@@ -13,8 +13,6 @@
                 <button @click="activeReport = 'deposits'" :class="activeReport === 'deposits' ? 'bg-white text-blue-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
                     Bank Deposits
                 </button>
-                <button @click="activeReport = 'credit_orders'" :class="activeReport === 'credit_orders' ? 'bg-white text-orange-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'" class="px-3 py-1.5 md:px-5 md:py-2.5 text-[11px] md:text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-all whitespace-nowrap">
-                    Credit Orders
-                </button>
+
             </div>
         </div>

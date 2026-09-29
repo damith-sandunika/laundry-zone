@@ -65,6 +65,9 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-50/50">
+                            @php
+                                $tabRenderCounts = ['overdue' => 0, 'today' => 0, 'tomorrow' => 0, 'next' => 0];
+                            @endphp
                             @forelse($recentOrders as $order)
                                 @php
                                     $sc = ['received' => ['text-slate-600', 'bg-slate-100'], 'washing' => ['text-blue-700', 'bg-blue-50'], 'drying' => ['text-violet-700', 'bg-violet-50'], 'ready' => ['text-emerald-700', 'bg-emerald-50'], 'delivered' => ['text-teal-700', 'bg-teal-50'], 'cancelled' => ['text-red-700', 'bg-red-50']];
@@ -84,8 +87,9 @@
                                             $rowTab = 'tomorrow';
                                         }
                                     }
+                                    $tabRenderCounts[$rowTab]++;
                                 @endphp
-                                <tr x-show="orderTab === '{{ $rowTab }}'" class="hover:bg-slate-50/50 transition-colors group {{ $isOverdue ? 'bg-red-50/50' : '' }}">
+                                <tr x-show="orderTab === '{{ $rowTab }}' && {{ $tabRenderCounts[$rowTab] }} <= 5" class="hover:bg-slate-50/50 transition-colors group {{ $isOverdue ? 'bg-red-50/50' : '' }}">
                                     <td class="px-3 py-3 whitespace-nowrap">
                                         <a href="{{ route('orders.show', $order->order->order_number ?? '') }}" class="text-[12px] font-black text-blue-600 hover:text-blue-800 transition-colors">{{ $order->order->order_number ?? 'N/A' }}</a>
                                     </td>
@@ -121,5 +125,11 @@
                             @endforelse
                         </tbody>
                     </table>
+                </div>
+                <div class="px-4 py-2 border-t border-slate-100 bg-slate-50/30 flex justify-center">
+                    <a href="{{ route('reports.pending-orders', ['workshop' => 1]) }}" class="text-[11px] font-bold text-blue-600 hover:text-blue-800 transition-colors flex items-center gap-1">
+                        See all pending items
+                        <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </a>
                 </div>
             </div>

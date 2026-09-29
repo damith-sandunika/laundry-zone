@@ -60,6 +60,12 @@
             </table>
         </div>
     </div>
+
+    @if($customers->hasPages())
+    <div class="mt-4">
+        {{ $customers->links() }}
+    </div>
+    @endif
 </x-app-layout>
 
 

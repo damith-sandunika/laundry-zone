@@ -22,7 +22,6 @@
         @include('reports.partials.tabs')
 
         <div>
-            @include('reports.partials.tab-credit-orders')
 
             @include('reports.partials.tab-expenses')
 

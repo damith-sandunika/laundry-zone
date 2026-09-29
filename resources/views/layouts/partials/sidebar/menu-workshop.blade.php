@@ -98,17 +98,20 @@
                             </button>
                             <div x-show="open" style="display: none;" class="pl-9 mt-1 space-y-1">
                                 <a href="{{ route('reports.index') }}"
-                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.index') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">General
-                                    Report</a>
+                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.index') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">General Report</a>
                                 <a href="{{ route('reports.sales') }}"
-                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.sales') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Sales
-                                    Report</a>
+                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.sales') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Sales Report</a>
                                 <a href="{{ route('reports.services') }}"
-                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.services') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Service
-                                    Report</a>
+                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.services') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Services Report</a>
+                                <a href="{{ route('reports.pending-orders', ['workshop' => 1]) }}"
+                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.pending-orders') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Pending Items Report</a>
                                 <a href="{{ route('reports.customers') }}"
                                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.customers') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Customer
                                     Report</a>
+                                <a href="{{ route('reports.credit-orders') }}"
+                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.credit-orders') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Credit Orders</a>
+                                <a href="{{ route('reports.pending-payments') }}"
+                                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('reports.pending-payments') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Pending Payments</a>
                             </div>
                         </div>
 

@@ -11,6 +11,11 @@ class ServiceReportController extends Controller
 {
     private function buildQuery(Request $request)
     {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
         $user         = auth()->user();
         $isSuperAdmin = $user->isSuperAdmin();
         $branchId     = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
@@ -55,10 +60,24 @@ class ServiceReportController extends Controller
             ->groupBy('main_categories.name', 'service_categories.name', 'service_types.name')
             ->having('total_qty', '>', 0)
             ->orderBy('total_revenue', 'desc')
-            ->get();
+            ->paginate(15)
+            ->withQueryString();
 
-        $totalQty     = $services->sum('total_qty');
-        $totalRevenue = $services->sum('total_revenue');
+        $totalsQuery = OrderItem::join('orders', 'orders.id', '=', 'order_items.order_id')
+            ->where('orders.status', '!=', 'cancelled')
+            ->whereBetween('orders.created_at', [$data['startDate'].' 00:00:00', $data['endDate'].' 23:59:59']);
+        
+        if ($data['branchId']) {
+            $totalsQuery->where('orders.branch_id', $data['branchId']);
+        }
+        
+        $totalsData = $totalsQuery->select(
+            \DB::raw('SUM(order_items.quantity) as total_qty'),
+            \DB::raw('SUM(order_items.total_price * (1 - IFNULL(orders.discount / NULLIF(orders.subtotal, 0), 0))) as total_revenue')
+        )->first();
+        
+        $totalQty     = $totalsData->total_qty ?? 0;
+        $totalRevenue = $totalsData->total_revenue ?? 0;
         $branches     = $data['isSuperAdmin'] ? Branch::where('is_active', true)->get() : collect();
         $startDate    = $data['startDate'];
         $endDate      = $data['endDate'];
@@ -70,20 +89,32 @@ class ServiceReportController extends Controller
 
     public function exportPdf(Request $request)
     {
+        $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+        if ($start->diffInDays($end) > 31) {
+            return back()->with('error', 'PDF generation is limited to a maximum of 31 days to ensure system stability. Please select a smaller date range.');
+        }
+
         $data     = $this->buildQuery($request);
-        $services = $data['query']
-            ->groupBy('main_categories.name', 'service_categories.name', 'service_types.name')
+        
+        $servicesCollection = collect();
+        foreach ($data['query']->groupBy('main_categories.name', 'service_categories.name', 'service_types.name')
             ->having('total_qty', '>', 0)
-            ->orderBy('total_revenue', 'desc')
-            ->get();
+            ->orderBy('total_revenue', 'desc')->cursor() as $row) {
+            $servicesCollection->push($row);
+        }
+        $services = $servicesCollection;
 
         $totalQty     = $services->sum('total_qty');
         $totalRevenue = $services->sum('total_revenue');
-        $startDate    = $data['startDate'];
-        $endDate      = $data['endDate'];
         $branchId     = $data['branchId'];
         $isSuperAdmin = $data['isSuperAdmin'];
         $branch       = Branch::find($branchId ?? 1);
+
+        \Illuminate\Support\Facades\Log::info("User ID " . auth()->id() . " generated Service PDF Report from {$startDate} to {$endDate}");
 
         return view('reports.services_pdf', compact('services', 'startDate', 'endDate', 'branch', 'totalQty', 'totalRevenue', 'isSuperAdmin', 'branchId'));
     }

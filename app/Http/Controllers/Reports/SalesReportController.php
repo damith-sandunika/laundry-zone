@@ -12,6 +12,11 @@ class SalesReportController extends Controller
 {
     private function buildActivities(Request $request, int $perPage)
     {
+        $request->validate([
+            'start_date' => 'nullable|date',
+            'end_date' => 'nullable|date|after_or_equal:start_date',
+        ]);
+
         $user         = auth()->user();
         $isSuperAdmin = $user->isSuperAdmin();
         $branchId     = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
@@ -118,8 +123,21 @@ class SalesReportController extends Controller
 
     public function exportPdf(Request $request)
     {
+        $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
+        $endDate = $request->input('end_date', now()->toDateString());
+        
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+        
+        if ($start->diffInDays($end) > 31) {
+            return back()->with('error', 'PDF generation is limited to a maximum of 31 days to ensure system stability. Please select a smaller date range.');
+        }
+
         $data = $this->buildActivities($request, 5000); // Higher limit for PDF
         $data['branch'] = Branch::find($data['branchId'] ?? 1);
+        
+        \Illuminate\Support\Facades\Log::info("User ID " . auth()->id() . " generated Sales PDF Report from {$startDate} to {$endDate}");
+        
         return view('reports.sales_pdf', $data);
     }
 }
