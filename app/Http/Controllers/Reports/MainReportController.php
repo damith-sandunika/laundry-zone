@@ -188,6 +188,12 @@ class MainReportController extends Controller
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
 
+        $start = \Carbon\Carbon::parse($startDate);
+        $end = \Carbon\Carbon::parse($endDate);
+        if ($start->diffInDays($end) > 31) {
+            return back()->with('error', 'PDF generation is limited to a maximum of 31 days to ensure system stability. Please select a smaller date range.');
+        }
+
         try {
             $salesData = $this->reportService->getSalesData($branchId, $startDate, $endDate);
             $salesQuery = $salesData['salesQuery'];

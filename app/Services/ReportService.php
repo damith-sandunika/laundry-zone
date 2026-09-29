@@ -33,7 +33,9 @@ class ReportService
             : 'GREATEST(0, total - paid_amount)';
 
         $totalCredit  = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw("SUM({$maxFunc})")->value(DB::raw("SUM({$maxFunc})")) ?? 0;
-        $totalPending = (clone $salesQuery)->whereNotIn('payment_method', ['credit'])->selectRaw("SUM({$maxFunc})")->value(DB::raw("SUM({$maxFunc})")) ?? 0;
+        $totalPending = (clone $salesQuery)->where(function ($q) {
+            $q->where('payment_method', '!=', 'credit')->orWhereNull('payment_method');
+        })->selectRaw("SUM({$maxFunc})")->value(DB::raw("SUM({$maxFunc})")) ?? 0;
 
         $deliveryRevenue = (clone $salesQuery)
             ->whereExists(function ($query) {

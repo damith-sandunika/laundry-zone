@@ -14,14 +14,13 @@ class GetCreditOrdersAction
             ->where('payment_method', 'credit')
             ->where('status', '!=', 'cancelled')
             ->whereNotNull('customer_id')
-            ->whereNotNull('delivered_at')
-            ->whereBetween('delivered_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+            ->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
 
         if ($isAggregate) {
             $query->select('customer_id', DB::raw('SUM(total - paid_amount) as total_credit'), DB::raw('COUNT(id) as pending_orders'))
                   ->groupBy('customer_id');
         } else {
-            $query->with('branch')->orderBy('customer_id')->orderBy('delivered_at', 'desc');
+            $query->with('branch')->orderBy('customer_id')->orderBy('created_at', 'desc');
         }
 
         if ($branchId) {
