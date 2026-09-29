@@ -49,9 +49,16 @@
                 </div>
                 <h3 class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Pending / Due</h3>
             </div>
-            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10">Rs.{{ number_format($totalPending + $totalCredit, 2) }}</p>
-            <div class="mt-3 text-[9px] md:text-xs font-bold text-rose-500 flex items-center gap-1 relative z-10">
-                Includes Rs.{{ number_format($totalCredit, 2) }} from Credit Customers
+            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10 mb-3">Rs.{{ number_format($totalPending + $totalCredit, 2) }}</p>
+            <div class="flex items-center gap-2 relative z-10">
+                <div class="flex-1 bg-rose-50/50 rounded-xl p-2.5 border border-rose-100">
+                    <div class="text-[9px] font-bold text-rose-500 uppercase tracking-widest mb-0.5">Regular Pending</div>
+                    <div class="text-sm font-black text-rose-700">Rs.{{ number_format($totalPending, 2) }}</div>
+                </div>
+                <div class="flex-1 bg-orange-50/50 rounded-xl p-2.5 border border-orange-100">
+                    <div class="text-[9px] font-bold text-orange-500 uppercase tracking-widest mb-0.5">Credit Orders</div>
+                    <div class="text-sm font-black text-orange-700">Rs.{{ number_format($totalCredit, 2) }}</div>
+                </div>
             </div>
         </div>
 
@@ -64,18 +71,34 @@
                 </div>
                 <h3 class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Collected Payments</h3>
             </div>
-            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10">Rs.{{ number_format($totalCollected, 2) }}</p>
-            <div class="mt-3 flex flex-col gap-1.5 text-[11px] font-bold relative z-10">
-                <span class="text-emerald-700 bg-emerald-100/50 px-2.5 py-1 rounded-md inline-flex justify-between items-center w-full">
-                    <span>🏪 Branch Revenue</span>
+            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10 mb-3">Rs.{{ number_format($totalCollected, 2) }}</p>
+            
+            <div class="grid grid-cols-3 gap-2 relative z-10 mb-3">
+                <div class="bg-emerald-50/50 rounded-lg p-2 border border-emerald-100 text-center">
+                    <div class="text-[8px] font-bold text-emerald-600 uppercase tracking-wider mb-0.5">💵 Cash</div>
+                    <div class="text-xs font-black text-emerald-700">{{ number_format($collectedCash, 0) }}</div>
+                </div>
+                <div class="bg-blue-50/50 rounded-lg p-2 border border-blue-100 text-center">
+                    <div class="text-[8px] font-bold text-blue-600 uppercase tracking-wider mb-0.5">💳 Card</div>
+                    <div class="text-xs font-black text-blue-700">{{ number_format($collectedCard, 0) }}</div>
+                </div>
+                <div class="bg-indigo-50/50 rounded-lg p-2 border border-indigo-100 text-center">
+                    <div class="text-[8px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">🏦 Bank</div>
+                    <div class="text-xs font-black text-indigo-700">{{ number_format($collectedBank, 0) }}</div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5 text-[10px] font-bold relative z-10">
+                <span class="text-emerald-700 bg-emerald-100/30 px-2 py-1 rounded inline-flex justify-between items-center w-full">
+                    <span>🏪 Branch</span>
                     <span>Rs.{{ number_format($totalBranchProfit, 2) }}</span>
                 </span>
-                <span class="text-blue-700 bg-blue-100/50 px-2.5 py-1 rounded-md inline-flex justify-between items-center w-full">
-                    <span>🏭 Workshop Revenue</span>
+                <span class="text-blue-700 bg-blue-100/30 px-2 py-1 rounded inline-flex justify-between items-center w-full">
+                    <span>🏭 Workshop</span>
                     <span>Rs.{{ number_format($totalWorkshopProfit, 2) }}</span>
                 </span>
-                <span class="text-violet-700 bg-violet-100/50 px-2.5 py-1 rounded-md inline-flex justify-between items-center w-full">
-                    <span>🚚 Delivery Fees</span>
+                <span class="text-violet-700 bg-violet-100/30 px-2 py-1 rounded inline-flex justify-between items-center w-full">
+                    <span>🚚 Delivery</span>
                     <span>Rs.{{ number_format($totalDeliveryFees, 2) }}</span>
                 </span>
             </div>
