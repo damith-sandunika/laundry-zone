@@ -51,7 +51,9 @@ class ReportService
                       ->whereColumn('delivery_appointments.order_id', 'orders.id');
             })->sum('total');
 
-        return compact('salesQuery', 'totalSales', 'totalCredit', 'totalPending', 'deliveryRevenue', 'walkinRevenue', 'maxFunc');
+        $totalCollectedFromOrders = (clone $salesQuery)->sum(DB::raw("COALESCE(paid_amount, 0)"));
+
+        return compact('salesQuery', 'totalSales', 'totalCredit', 'totalPending', 'deliveryRevenue', 'walkinRevenue', 'maxFunc', 'totalCollectedFromOrders');
     }
 
     public function getPaymentsData($branchId, $startDate, $endDate)

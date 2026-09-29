@@ -1,6 +1,6 @@
     <!-- Key Metrics Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-        <!-- Total Order Value -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-6">
+        <!-- Total Order Value & Channel Revenue -->
         <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group">
             <div class="absolute -top-4 -right-4 w-24 h-24 bg-blue-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"></div>
             <div class="flex items-center gap-3 mb-4 relative z-10">
@@ -9,34 +9,17 @@
                 </div>
                 <h3 class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Total Order Value</h3>
             </div>
-            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10">Rs.{{ number_format($totalSales, 2) }}</p>
-            <div class="mt-3 text-[11px] font-bold text-slate-500 relative z-10">
-                Total value of all orders placed.
-            </div>
-        </div>
-
-        <!-- Walk-in vs Delivery -->
-        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm relative overflow-hidden group">
-            <div class="absolute -top-4 -right-4 w-24 h-24 bg-violet-50 rounded-full group-hover:scale-150 transition-transform duration-500 ease-out"></div>
-            <div class="flex items-center gap-3 mb-4 relative z-10">
-                <div class="w-10 h-10 bg-violet-50 text-violet-500 rounded-xl flex items-center justify-center">
-                    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10 mb-3">Rs.{{ number_format($totalSales, 2) }}</p>
+            
+            <div class="flex items-center gap-2 relative z-10">
+                <div class="flex-1 bg-slate-50/80 rounded-xl p-2.5 border border-slate-100">
+                    <div class="text-[9px] font-bold text-slate-500 uppercase tracking-widest mb-0.5">🚶 Walk-in</div>
+                    <div class="text-sm font-black text-slate-700">Rs.{{ number_format($walkinRevenue, 2) }}</div>
                 </div>
-                <h3 class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Channel Revenue</h3>
-            </div>
-            <div class="flex items-end gap-4 relative z-10">
-                <div class="flex-1">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">🚶 Walk-in</div>
-                    <div class="text-[11px] md:text-base font-black text-slate-900 tracking-tight">Rs.{{ number_format($walkinRevenue, 2) }}</div>
+                <div class="flex-1 bg-violet-50/80 rounded-xl p-2.5 border border-violet-100">
+                    <div class="text-[9px] font-bold text-violet-500 uppercase tracking-widest mb-0.5">🚚 Delivery</div>
+                    <div class="text-sm font-black text-violet-700">Rs.{{ number_format($deliveryRevenue, 2) }}</div>
                 </div>
-                <div class="w-px h-10 bg-slate-200"></div>
-                <div class="flex-1">
-                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">🚚 Delivery</div>
-                    <div class="text-[11px] md:text-base font-black text-violet-500 tracking-tight">Rs.{{ number_format($deliveryRevenue, 2) }}</div>
-                </div>
-            </div>
-            <div class="mt-3 text-[11px] font-bold text-slate-500 relative z-10">
-                Gross value broken down by channel.
             </div>
         </div>
 
@@ -71,7 +54,13 @@
                 </div>
                 <h3 class="text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Collected Payments</h3>
             </div>
-            <p class="text-3xl font-black text-slate-900 tracking-tight relative z-10 mb-3">Rs.{{ number_format($totalCollected, 2) }}</p>
+            <div class="flex items-end justify-between relative z-10 mb-3">
+                <p class="text-3xl font-black text-slate-900 tracking-tight">Rs.{{ number_format($totalCollected, 2) }}</p>
+                <div class="text-right">
+                    <div class="text-[8px] font-bold text-emerald-600 uppercase tracking-wider">From These Orders</div>
+                    <div class="text-xs font-black text-emerald-700">Rs.{{ number_format($totalCollectedFromOrders, 2) }}</div>
+                </div>
+            </div>
             
             <div class="grid grid-cols-3 gap-2 relative z-10 mb-3">
                 <div class="bg-emerald-50/50 rounded-lg p-2 border border-emerald-100 text-center">

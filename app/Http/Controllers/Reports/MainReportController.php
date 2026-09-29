@@ -45,6 +45,7 @@ class MainReportController extends Controller
             $deliveryRevenue = $salesData['deliveryRevenue'];
             $walkinRevenue = $salesData['walkinRevenue'];
             $maxFunc = $salesData['maxFunc'];
+            $totalCollectedFromOrders = $salesData['totalCollectedFromOrders'];
 
             $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->paginate(15);
             
@@ -172,7 +173,8 @@ class MainReportController extends Controller
                 'bankDeposits',
                 'pettyCashTopups',
                 'totalTopupsAmount',
-                'branchPettyCashSummary'
+                'branchPettyCashSummary',
+                'totalCollectedFromOrders'
             ));
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('MainReportController index error: ' . $e->getMessage());
