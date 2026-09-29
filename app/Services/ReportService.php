@@ -29,8 +29,8 @@ class ReportService
         $totalSales = (clone $salesQuery)->sum('total');
 
         $maxFunc = DB::getDriverName() === 'sqlite'
-            ? 'MAX(0, total - paid_amount)'
-            : 'GREATEST(0, total - paid_amount)';
+            ? 'MAX(0, total - COALESCE(paid_amount, 0))'
+            : 'GREATEST(0, total - COALESCE(paid_amount, 0))';
 
         $totalCredit  = (clone $salesQuery)->where('payment_method', 'credit')->selectRaw("SUM({$maxFunc})")->value(DB::raw("SUM({$maxFunc})")) ?? 0;
         $totalPending = (clone $salesQuery)->where(function ($q) {
