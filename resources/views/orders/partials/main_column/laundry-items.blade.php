@@ -48,6 +48,7 @@
                                             'unit_price' => $item->unit_price,
                                             'total_price' => $item->unit_price * max(1, $item->quantity),
                                             'turnaround_charge' => $item->turnaround_extra_charge ?? 0,
+                                            'note' => $item->note,
                                         ]);
                                     }
                                 } elseif ($order->deliveryAppointment && $order->deliveryAppointment->cart_json) {
@@ -105,6 +106,7 @@
                                             'unit_price' => $price,
                                             'total_price' => $lineTotal,
                                             'turnaround_charge' => $ttCharge,
+                                            'note' => $ci['note'] ?? null,
                                         ]);
                                     }
                                     $cartSubtotal = $calcSub;
@@ -128,6 +130,12 @@
                                                 </span>
                                             @endif
                                         </div>
+                                        @if(!empty($row['note']))
+                                            <div style="margin-top:4px;font-size:10px;color:#16a34a;background:#f0fdf4;padding:4px 8px;border-radius:6px;border:1px solid #bbf7d0;display:inline-flex;align-items:center;gap:4px;">
+                                                <svg style="width:12px;height:12px;" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                                {{ $row['note'] }}
+                                            </div>
+                                        @endif
                                     </td>
                                     <td style="padding:10px 16px;text-align:center;font-weight:700;color:#334155;">
                                         {{ $row['qty'] }}

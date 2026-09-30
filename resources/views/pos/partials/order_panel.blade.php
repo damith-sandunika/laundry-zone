@@ -126,6 +126,13 @@
                                         <button x-show="showExtras" @click="addMode = !addMode" class="text-[9px] bg-blue-50 text-blue-600 font-bold px-1.5 py-0.5 rounded border border-blue-100 hover:bg-blue-100 transition-colors">
                                             + Add Extra
                                         </button>
+
+                                        <button @click="openNoteModal(index)" 
+                                            :class="item.note ? 'text-green-600 bg-green-50 border-green-200 hover:bg-green-100' : 'text-slate-500 bg-slate-50 border-slate-200 hover:bg-slate-100'"
+                                            class="flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded border transition-colors ml-1">
+                                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            <span x-text="item.note ? 'Note Added' : 'Add Note'"></span>
+                                        </button>
                                     </div>
                                     <div class="flex items-center gap-1 shrink-0">
                                         <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">

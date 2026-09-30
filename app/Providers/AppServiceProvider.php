@@ -45,7 +45,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('is-admin', function ($user) {
-            return in_array($user->role, ['super_admin', 'admin', 'branch_admin']);
+            return in_array($user->role, ['super_admin', 'branch_admin']);
         });
 
         Gate::define('is-workshop-admin', function ($user) {
@@ -53,7 +53,7 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('manage-users', function ($user) {
-            return in_array($user->role, ['super_admin', 'admin']);
+            return $user->role === 'super_admin';
         });
 
         Gate::define('manage-branches', function ($user) {

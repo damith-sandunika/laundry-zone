@@ -28,7 +28,7 @@ class Order extends Model
         'loyalty_points_used', 'loyalty_points_earned', 'due_date', 'notes', 
         'is_online_booking', 'ready_at', 'delivered_at', 'picked_up_at', 
         'dispatched_to_workshop_at', 'returned_from_workshop_at', 
-        'delivery_appointment_id', 'is_delivery_order', 'delivery_address', 'workshop_id'
+        'delivery_appointment_id', 'is_delivery_order', 'delivery_address', 'workshop_id', 'payment_token'
     ];
 
     protected $casts = [
@@ -135,6 +135,9 @@ class Order extends Model
     {
         static::created(function ($order) {
             $order->order_number = (string) $order->id;
+            if (empty($order->payment_token)) {
+                $order->payment_token = 'inv_' . bin2hex(random_bytes(16));
+            }
             $order->saveQuietly();
         });
     }

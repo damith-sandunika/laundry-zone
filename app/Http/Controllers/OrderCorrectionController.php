@@ -92,7 +92,7 @@ class OrderCorrectionController extends Controller
         }
 
         $user = auth()->user();
-        $isAdmin = in_array($user->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']);
+        $isAdmin = in_array($user->role, ['branch_admin', 'workshop_admin', 'super_admin']);
 
         try {
             DB::transaction(function () use ($order, $request, $oldData, $newData, $user, $isAdmin) {
@@ -130,7 +130,7 @@ class OrderCorrectionController extends Controller
             }
 
             // Notify admins
-            $admins = User::whereIn('role', ['admin', 'branch_admin', 'workshop_admin'])
+            $admins = User::whereIn('role', ['branch_admin', 'workshop_admin'])
                 ->where(function($q) use ($order) {
                     $q->where('branch_id', $order->branch_id)->orWhereNull('branch_id');
                 })->get();

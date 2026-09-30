@@ -12,7 +12,7 @@
 
                         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                             <div class="p-6 border-b border-slate-100 bg-slate-50/50">
-                                <h3 class="text-lg font-black text-slate-800">Master Notification Settings</h3>
+                                <h3 class="text-lg font-black text-slate-800"><i class="fa-solid fa-bell text-yellow-500 mr-2"></i>Master Notification Settings</h3>
                                 <p class="text-sm text-slate-500 font-medium">Globally enable or disable notifications across the system.</p>
                             </div>
 

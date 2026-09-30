@@ -19,7 +19,7 @@ class HRDashboardController extends Controller
         $year = (int) $request->query('year', now()->year);
 
         // Base Query for Active Staff
-        $staffQuery = User::whereIn('role', ['admin', 'branch_admin', 'staff', 'rider', 'workshop_admin'])
+        $staffQuery = User::whereIn('role', ['branch_admin', 'staff', 'rider', 'workshop_admin'])
             ->where('is_active', true);
 
         if ($branchId) {
@@ -80,7 +80,7 @@ class HRDashboardController extends Controller
         $month = (int) $request->query('month', now()->month);
         $year = (int) $request->query('year', now()->year);
 
-        $staffQuery = User::whereIn('role', ['admin', 'branch_admin', 'staff', 'rider', 'workshop_admin'])
+        $staffQuery = User::whereIn('role', ['branch_admin', 'staff', 'rider', 'workshop_admin'])
             ->where('is_active', true);
 
         if ($branchId) {

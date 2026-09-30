@@ -103,6 +103,7 @@ class CreatePosOrderAction
                 'custom_turnaround_percentage' => $customTurnaroundPercent,
                 'turnaround_extra_charge' => $turnaroundCharge,
                 'selected_extras' => [],
+                'note' => $item['note'] ?? null,
             ];
 
             $lastIndex = count($processedCart) - 1;
@@ -237,6 +238,7 @@ class CreatePosOrderAction
                     'turnaround_type_id' => $item['turnaround_type_id'],
                     'custom_turnaround_percentage' => $item['custom_turnaround_percentage'] ?? null,
                     'turnaround_extra_charge' => $item['turnaround_extra_charge'],
+                    'note' => $item['note'],
                 ]);
                 
                 if (isset($item['selected_extras']) && count($item['selected_extras']) > 0) {

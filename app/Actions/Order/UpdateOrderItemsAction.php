@@ -57,6 +57,7 @@ class UpdateOrderItemsAction
                 'turnaround_type_id' => $item['calculated_turnaround_type_id'],
                 'custom_turnaround_percentage' => $item['calculated_custom_turnaround_percentage'],
                 'turnaround_extra_charge' => $item['calculated_turnaround_charge'],
+                'note' => $item['note'] ?? null,
             ]);
 
             if (is_array($item['calculated_selected_extras']) && count($item['calculated_selected_extras']) > 0) {

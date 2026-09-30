@@ -64,7 +64,7 @@ class HRController extends Controller
     {
         // Must be admin or HR to bulk update
         $user = auth()->user();
-        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin', 'admin'])) {
+        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin'])) {
             abort(403, 'Unauthorized action.');
         }
 

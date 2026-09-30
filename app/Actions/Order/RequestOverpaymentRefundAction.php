@@ -22,7 +22,7 @@ class RequestOverpaymentRefundAction
         }
 
         $user = \App\Models\User::find($userId);
-        $isAdmin = in_array($user->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']);
+        $isAdmin = in_array($user->role, ['branch_admin', 'workshop_admin', 'super_admin']);
 
         DB::beginTransaction();
 

@@ -21,7 +21,7 @@ class ProcessDeliveryConversionAction
     public function execute(Order $order, array $data, $user)
     {
         $fee = (float)($data['delivery_fee'] ?? 0);
-        $isAdmin = in_array($user->role, ['admin', 'branch_admin', 'workshop_admin', 'super_admin']);
+        $isAdmin = in_array($user->role, ['branch_admin', 'workshop_admin', 'super_admin']);
 
         if (!$isAdmin) {
             if ($order->correctionRequests()->where('status', 'pending')->exists()) {

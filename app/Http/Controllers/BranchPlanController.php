@@ -11,7 +11,7 @@ class BranchPlanController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin', 'admin'])) {
+        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin'])) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -46,7 +46,7 @@ class BranchPlanController extends Controller
     public function store(Request $request)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin', 'admin'])) {
+        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin'])) {
             abort(403, 'Unauthorized action.');
         }
 

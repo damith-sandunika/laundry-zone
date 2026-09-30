@@ -5,7 +5,7 @@
                     <!-- Payment Methods Toggles -->
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                         <div class="p-6 border-b border-slate-100 bg-slate-50/50">
-                            <h3 class="text-lg font-black text-slate-800">Available Payment Methods</h3>
+                            <h3 class="text-lg font-black text-slate-800"><i class="fa-solid fa-credit-card text-blue-600 mr-2"></i>Available Payment Methods</h3>
                             <p class="text-sm text-slate-500 font-medium">Enable or disable payment options for your
                                 customers.</p>
                         </div>
@@ -64,7 +64,7 @@
                     <!-- Bank Details Form -->
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                         <div class="p-6 border-b border-slate-100 bg-slate-50/50">
-                            <h3 class="text-lg font-black text-slate-800">Bank Transfer Details</h3>
+                            <h3 class="text-lg font-black text-slate-800"><i class="fa-solid fa-building-columns text-slate-600 mr-2"></i>Bank Transfer Details</h3>
                             <p class="text-sm text-slate-500 font-medium">These details will be displayed to customers
                                 when they select Bank Transfer during checkout.</p>
                         </div>
@@ -105,7 +105,7 @@
                     <!-- Mock Payment Gateway Settings -->
                     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-6">
                         <div class="p-6 border-b border-slate-100 bg-slate-50/50">
-                            <h3 class="text-lg font-black text-slate-800">Online Payment Gateway Settings (Mock)</h3>
+                            <h3 class="text-lg font-black text-slate-800"><i class="fa-solid fa-globe text-purple-600 mr-2"></i>Online Payment Gateway Settings (Mock)</h3>
                             <p class="text-sm text-slate-500 font-medium">Enter the API credentials provided by your
                                 bank or payment gateway provider.</p>
                         </div>

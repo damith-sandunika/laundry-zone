@@ -14,7 +14,7 @@ class DatabaseSeeder extends Seeder
             ServiceTypeSeeder::class,
             CubbySeeder::class,
             InventoryItemSeeder::class,
-            RiderDeliveryTemplateSeeder::class,
+            CommunicationTemplatesSeeder::class,
         ]);
     }
 }

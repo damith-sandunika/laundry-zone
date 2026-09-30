@@ -16,29 +16,26 @@ class StaffPolicy
 
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['admin', 'branch_admin', 'workshop_admin']);
+        return in_array($user->role, ['branch_admin', 'workshop_admin']);
     }
 
     public function view(User $user, User $model): bool
     {
-        if ($user->role === 'admin') return true;
         return $user->branch_id === $model->branch_id;
     }
 
     public function create(User $user): bool
     {
-        return in_array($user->role, ['admin', 'branch_admin', 'workshop_admin']);
+        return in_array($user->role, ['branch_admin', 'workshop_admin']);
     }
 
     public function update(User $user, User $model): bool
     {
-        if ($user->role === 'admin') return true;
         return $user->branch_id === $model->branch_id && $user->role !== 'staff';
     }
 
     public function delete(User $user, User $model): bool
     {
-        if ($user->role === 'admin') return true;
         return $user->branch_id === $model->branch_id && $user->role !== 'staff';
     }
 

@@ -91,6 +91,7 @@ class OrderController extends Controller
                         'total' => $extra->total_price,
                     ];
                 })->toArray(),
+                'note' => $item->note,
             ];
         })->toArray();
 

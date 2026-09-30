@@ -85,7 +85,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['super_admin', 'admin', 'branch_admin']);
+        return in_array($this->role, ['super_admin', 'branch_admin']);
     }
 
     public function isStaff(): bool
@@ -106,7 +106,7 @@ class User extends Authenticatable
     // Has admin-level access (super_admin or branch_admin)
     public function hasAdminAccess(): bool
     {
-        return in_array($this->role, ['super_admin', 'branch_admin', 'admin']);
+        return in_array($this->role, ['super_admin', 'branch_admin']);
     }
 
     // Dashboard redirect based on role
@@ -115,7 +115,6 @@ class User extends Authenticatable
         return match ($this->role) {
             'super_admin' => 'dashboard',
             'branch_admin',
-            'admin',
             'staff' => 'dashboard',
             'rider' => 'rider.dashboard',
             'workshop_admin' => 'workshop.dashboard',
@@ -128,7 +127,6 @@ class User extends Authenticatable
         return match ($this->role) {
             'super_admin' => 'Super Admin',
             'branch_admin' => 'Branch Admin',
-            'admin' => 'Admin',
             'staff' => 'Staff',
             'rider' => 'Delivery Rider',
             'workshop_admin' => 'Workshop Admin',

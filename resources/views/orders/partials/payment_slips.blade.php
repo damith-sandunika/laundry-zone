@@ -1,5 +1,5 @@
 <!-- ======= PAYMENT SLIPS ======= -->
-            <div class="max-w-sm flex flex-col gap-4 mt-4">
+            <div class="w-full flex flex-col gap-4 mt-4">
 
                 @php
                     $paymentTxs = \App\Models\PaymentTransaction::where('order_id', $order->id)
@@ -11,7 +11,7 @@
                     <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
                         <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">
                             Payment Slips</h3>
-                        <div style="display:flex;flex-direction:column;gap:10px;">
+                        <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;">
                             @foreach($paymentTxs as $index => $tx)
                                 <div x-data="{ openReviewModal: false, openPaymentEditModal: false, editReason: '', newPaymentMethod: '{{ strtolower($tx->payment_method ?? 'cash') }}', isUpdating: false, updatePaymentMethod() { this.isUpdating = true; fetch('{{ route('orders.corrections.store', $order->id) }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ type: 'payment_change', reason: this.editReason, new_data: { payment_method: this.newPaymentMethod, transaction_id: {{ $tx->id }} } }) }).then(r => r.json()).then(res => { if (res.success) { window.location.reload(); } else { alert(res.message || 'Error occurred'); this.isUpdating = false; } }).catch(err => { alert('Error occurred'); this.isUpdating = false; }); } }"
                                     style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
@@ -121,10 +121,9 @@
                                     <!-- End Change Payment Method Modal -->
 
                                     <!-- Review Modal -->
-                                    <template x-teleport="body">
-                                        <div x-show="openReviewModal" style="display:none;">
-                                            <div
-                                                style="position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:9999;">
+                                    <div x-show="openReviewModal" style="display:none;">
+                                        <div
+                                            style="position:fixed;inset:0;background:rgba(15,23,42,0.6);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;z-index:9999;">
                                                 <div @click.outside="openReviewModal = false"
                                                     style="background:white;border-radius:16px;padding:20px;width:100%;max-width:350px;box-shadow:0 10px 25px -5px rgba(0,0,0,0.1);">
                                                     <div
@@ -246,8 +245,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                    </template>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>

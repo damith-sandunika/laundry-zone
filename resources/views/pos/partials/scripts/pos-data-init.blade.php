@@ -36,6 +36,9 @@ window.posSystemData = {
                 packageCart: [],
 
                 showCheckoutModal: false,
+                showNoteModal: false,
+                currentNoteIndex: null,
+                currentNoteText: '',
                 isPlacingOrder: false,
                 paymentMode: 'pay_on_pickup',
                 paymentMethod: 'cash',
@@ -246,9 +249,27 @@ window.posSystemData = {
                             custom_turnaround_percentage: null,
                             turnaround_multiplier: defaultTt ? defaultTt.multiplier : 1,
                             is_special: false,
-                            selected_extras: []
+                            selected_extras: [],
+                            note: null
                         });
                     }
+                },
+
+                openNoteModal(index) {
+                    this.currentNoteIndex = index;
+                    this.currentNoteText = this.cart[index].note || '';
+                    this.showNoteModal = true;
+                    this.$nextTick(() => {
+                        let el = document.getElementById('note-modal-input');
+                        if (el) el.focus();
+                    });
+                },
+
+                saveNote() {
+                    if (this.currentNoteIndex !== null) {
+                        this.cart[this.currentNoteIndex].note = this.currentNoteText;
+                    }
+                    this.showNoteModal = false;
                 },
 
                 get filteredCategories() {

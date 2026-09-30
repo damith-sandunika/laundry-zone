@@ -55,7 +55,7 @@
         function applyQuickDate(start, end) {
             document.querySelector('input[name="start_date"]').value = start;
             document.querySelector('input[name="end_date"]').value = end;
-            document.querySelector('form[action="{{ route('reports.order-logs') }}"]').submit();
+            document.querySelector('form[action="{{ route('superadmin.order-logs') }}"]').submit();
         }
     </script>
 

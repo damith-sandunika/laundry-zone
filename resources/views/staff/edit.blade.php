@@ -74,7 +74,7 @@
                             <option value="rider" {{ $staff->role === 'rider' ? 'selected' : '' }}>🚗 Rider</option>
                             <option value="workshop_admin" {{ $staff->role === 'workshop_admin' ? 'selected' : '' }}>⚙️ Workshop Admin</option>
                             <option value="branch_admin" {{ $staff->role === 'branch_admin' ? 'selected' : '' }}>🏪 Branch Admin</option>
-                            @if(auth()->user()->isSuperAdmin() || auth()->user()->role === 'admin')
+                            @if(auth()->user()->isSuperAdmin())
                             <option value="super_admin" {{ $staff->role === 'super_admin' ? 'selected' : '' }}>⭐ Super Admin</option>
                             @endif
                         </select>

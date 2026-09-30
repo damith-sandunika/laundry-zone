@@ -305,6 +305,42 @@ class CommunicationService
         \App\Jobs\ProcessSms::dispatch($log);
     }
 
+    // ─── Direct SMS Sender ───────────────────────────────────────────────────
+
+    public function sendDirectSMS(string $phone, string $message)
+    {
+        $gateway = \App\Models\Setting::get('sms_gateway', 'mock');
+        $apiKey = \App\Models\Setting::get('sms_api_key');
+
+        if ($gateway === 'mock' || !$apiKey) {
+            Log::info("MOCK DIRECT SMS TO {$phone}: {$message}");
+            return true;
+        }
+
+        try {
+            // Strip any leading zeroes or + characters
+            $formattedPhone = ltrim($phone, '+0');
+            if (strlen($formattedPhone) == 9) {
+                $formattedPhone = '94' . $formattedPhone; // Sri Lanka format
+            }
+
+            // Textware or other gateway logic (as an example)
+            $response = \Illuminate\Support\Facades\Http::withHeaders([
+                'Authorization' => 'Bearer ' . $apiKey,
+                'Content-Type' => 'application/json',
+            ])->post('https://api.textware.lk/sms/send', [
+                'to' => $formattedPhone,
+                'message' => $message,
+                'sender' => \App\Models\Setting::get('sms_sender_id', '360Laundry'),
+            ]);
+
+            return $response->successful();
+        } catch (\Exception $e) {
+            Log::error("Direct SMS Error", ['phone' => $phone, 'error' => $e->getMessage()]);
+            return false;
+        }
+    }
+
     // ─── Email Sender ─────────────────────────────────────────────────────────
 
     protected function sendEmail(Order $order, string $email, string $type, string $subject, string $body)

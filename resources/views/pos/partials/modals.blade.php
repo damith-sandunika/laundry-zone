@@ -5,6 +5,8 @@
                 @include('pos.partials.modals.order-success')
 
                 @include('pos.partials.modals.package-order')
+
+                @include('pos.partials.modals.note')
     </div>
 
         @include('pos.partials.modals.delivery-request')

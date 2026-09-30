@@ -47,7 +47,7 @@ class CustomerPolicy
     public function update(User $user, Customer $customer): bool
     {
         // Branch Admins and above can update, or Staff in the same branch
-        if (in_array($user->role, ['admin', 'branch_admin', 'workshop_admin'])) {
+        if (in_array($user->role, ['branch_admin', 'workshop_admin'])) {
             return true;
         }
 
@@ -59,7 +59,7 @@ class CustomerPolicy
      */
     public function delete(User $user, Customer $customer): bool
     {
-        return in_array($user->role, ['super_admin', 'admin']);
+        return $user->role === 'super_admin';
     }
 
     /**

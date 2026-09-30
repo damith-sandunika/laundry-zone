@@ -4,6 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invoice - Order #{{ $order->order_number }}</title>
+    @php
+        if (empty($order->payment_token)) {
+            $order->payment_token = 'inv_' . bin2hex(random_bytes(16));
+            $order->saveQuietly();
+        }
+    @endphp
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -70,14 +76,22 @@
         .total-row.paid { color: #10b981; }
         .total-row.balance { background: #eff6ff; padding: 12px; border-radius: 8px; color: #2563eb; font-weight: 800; margin-top: 8px; }
 
-        .footer { position: absolute; bottom: 50px; left: 50px; right: 50px; display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid #f1f5f9; padding-top: 20px; }
-        .footer p { font-size: 12px; color: #94a3b8; font-weight: 500; }
-        .badge { background: #10b981; color: white; padding: 6px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+        .footer { position: absolute; bottom: 40px; left: 50px; right: 50px; display: flex; flex-direction: column; align-items: center; border-top: 1.5px solid #f1f5f9; padding-top: 20px; gap: 8px; text-align: center; }
+        .footer p { font-size: 13px; color: #64748b; font-weight: 600; }
+        .badge { background: #10b981; color: white; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; }
+        .badge.pending { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; font-size: 10px; }
+        .pay-btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 900; font-size: 16px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); margin: 5px 0; }
+        .print-link { display: none; font-size: 11px; font-weight: 700; color: #0f172a; margin: 5px 0; }
 
+        @media screen {
+            .print-only { display: none !important; }
+        }
         @media print {
             body { background: white; padding: 0; display: block; }
             .invoice-box { box-shadow: none; width: 100%; min-height: 100vh; padding: 15mm; border-radius: 0; margin: 0; }
             .no-print { display: none !important; }
+            .print-link { display: none !important; }
+            /* Button is kept visible for PDF exports */
         }
     </style>
 </head>
@@ -282,6 +296,18 @@
         </div>
 
         <div class="footer">
+            @if($order->paid_amount >= $order->total && $order->total > 0)
+                <div class="badge" style="margin-bottom: 8px;">FULLY PAID</div>
+            @elseif($order->total - $order->paid_amount > 0)
+                <div class="badge pending" style="margin-bottom: 8px;">{{ $order->payment_method === 'credit' ? 'CREDIT' : 'PAYMENT PENDING' }}</div>
+                
+                @if($order->payment_method !== 'credit')
+                    <a href="{{ route('payment.link.show', $order->payment_token) }}" class="pay-btn" target="_blank">
+                        PAY NOW - CLICK HERE
+                    </a>
+                @endif
+            @endif
+
             <p>
                 @if($mainBranch && $mainBranch->invoice_footer)
                     {!! nl2br(e($mainBranch->invoice_footer)) !!}
@@ -289,15 +315,10 @@
                     Thank you for your business! 🤍
                 @endif
             </p>
-            <div style="margin-top: 12px; font-size: 10px; color: #94a3b8;">
+            <div style="font-size: 11px; color: #94a3b8; font-weight: 500;">
                 <strong style="text-transform: uppercase; letter-spacing: 0.1em; color: #64748b;">Terms & Conditions:</strong> 
                 Please visit <a href="{{ url('/terms') }}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</a>
             </div>
-            @if($order->paid_amount >= $order->total && $order->total > 0)
-                <div class="badge">FULLY PAID</div>
-            @elseif($order->total - $order->paid_amount > 0)
-                <div class="badge" style="background:#f59e0b;">{{ $order->payment_method === 'credit' ? 'CREDIT' : 'PAYMENT PENDING' }}</div>
-            @endif
         </div>
     </div>
     

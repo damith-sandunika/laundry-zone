@@ -32,7 +32,7 @@ class OrderPolicy
      */
     public function view(User $user, Order $order): bool
     {
-        if (in_array($user->role, ['admin', 'workshop_admin'])) {
+        if ($user->role === 'workshop_admin') {
             return true;
         }
 
@@ -64,6 +64,6 @@ class OrderPolicy
      */
     public function delete(User $user, Order $order): bool
     {
-        return in_array($user->role, ['super_admin', 'admin']);
+        return $user->role === 'super_admin';
     }
 }

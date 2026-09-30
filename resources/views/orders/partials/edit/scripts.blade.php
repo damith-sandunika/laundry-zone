@@ -22,6 +22,9 @@
                 orderId: {{ $dispatch->order_id ?? $order->id ?? 0 }},
                 orderNumber: '{{ $dispatch->order->order_number ?? $order->order_number ?? '' }}',
                 editReason: '',
+                showNoteModal: false,
+                currentNoteIndex: null,
+                currentNoteText: '',
 
                 init() {
                     if (this.categories.length > 0) {
@@ -117,9 +120,27 @@
                             qty: 1,
                             turnaround_type_id: defaultTtId,
                             custom_turnaround_percentage: null,
-                            selected_extras: []
+                            selected_extras: [],
+                            note: null
                         });
                     }
+                },
+
+                openNoteModal(index) {
+                    this.currentNoteIndex = index;
+                    this.currentNoteText = this.cart[index].note || '';
+                    this.showNoteModal = true;
+                    this.$nextTick(() => {
+                        let el = document.getElementById('note-modal-input');
+                        if (el) el.focus();
+                    });
+                },
+
+                saveNote() {
+                    if (this.currentNoteIndex !== null) {
+                        this.cart[this.currentNoteIndex].note = this.currentNoteText;
+                    }
+                    this.showNoteModal = false;
                 },
 
                 getCategoryString(serviceId) {

@@ -42,6 +42,11 @@ use Illuminate\Support\Facades\Route;
 Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
 
+// ─── Public Payment Link ───
+Route::get('/pay/{token}', [\App\Http\Controllers\PaymentLinkController::class, 'show'])->name('payment.link.show');
+Route::post('/pay/{token}/bank-transfer', [\App\Http\Controllers\PaymentLinkController::class, 'submitBankTransfer'])->name('payment.link.submit');
+Route::post('/pay/{token}/webhook', [\App\Http\Controllers\PaymentLinkController::class, 'webhook'])->name('payment.link.webhook');
+
 // ─── Root → Public Website Home ───
 Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
 
@@ -141,7 +146,9 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/customers/pos', [CustomerController::class, 'store'])->name('customers.store.pos');
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::get('/customers/{customer}/sales-report/pdf', [CustomerController::class, 'salesReportPdf'])->name('customers.salesReport.pdf');
+    Route::get('/customers/top', [\App\Http\Controllers\TopCustomersController::class, 'index'])->name('customers.top');
     Route::resource('customers', CustomerController::class);
+    Route::resource('campaigns', \App\Http\Controllers\PromotionalCampaignController::class);
 
     Route::post('/orders/{order:id}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
     Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store')->middleware('throttle:10,1');
@@ -245,17 +252,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/settings/cubbies', [GeneralSettingsController::class, 'cubbies'])->name('settings.cubbies');
         Route::get('/settings/delivery', [GeneralSettingsController::class, 'delivery'])->name('settings.delivery');
         Route::get('/settings/pickup-times', [GeneralSettingsController::class, 'pickupTimes'])->name('settings.pickup-times');
-        Route::get('/settings/payment-methods', [GeneralSettingsController::class, 'paymentMethods'])->name('settings.payment-methods');
-        Route::get('/settings/notifications', [GeneralSettingsController::class, 'notifications'])->name('settings.notifications');
 
         Route::redirect('/settings', '/settings/general')->name('settings.index');
         Route::post('/settings/general', [GeneralSettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');
 
-        // Payment Settings
-        Route::post('/settings/payment-methods', [PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
-
-        // Notifications Settings
-        Route::post('/settings/notifications', [GeneralSettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
+        // Removed payment methods and notifications to super-admin group
 
         // Cubbies
         Route::post('/settings/cubbies', [LogisticsSettingsController::class, 'storeCubby'])->name('settings.storeCubby');
@@ -302,6 +303,12 @@ Route::middleware(['auth'])->group(function () {
 
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
+            Route::get('/settings/payment-methods', [GeneralSettingsController::class, 'paymentMethods'])->name('settings.payment-methods');
+            Route::post('/settings/payment-methods', [PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
+            
+            Route::get('/settings/notifications', [GeneralSettingsController::class, 'notifications'])->name('settings.notifications');
+            Route::post('/settings/notifications', [GeneralSettingsController::class, 'updateNotifications'])->name('settings.notifications.update');
+
             Route::get('/branch-logs', [\App\Http\Controllers\BranchLogController::class, 'index'])->name('superadmin.branch-logs');
             Route::get('/orders-change-log', [\App\Http\Controllers\OrderLogReportController::class, 'index'])->name('superadmin.order-logs');
 
@@ -360,6 +367,7 @@ Route::middleware(['auth'])->group(function () {
 
         Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales');
         Route::get('/reports/sales/pdf', [SalesReportController::class, 'exportPdf'])->name('reports.sales.pdf');
+        Route::get('/reports/sales/csv', [SalesReportController::class, 'exportCsv'])->name('reports.sales.csv');
 
         Route::get('/reports/services', [ServiceReportController::class, 'index'])->name('reports.services');
         Route::get('/reports/services/pdf', [ServiceReportController::class, 'exportPdf'])->name('reports.services.pdf');

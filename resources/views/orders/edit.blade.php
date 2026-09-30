@@ -11,6 +11,8 @@
 
             @include('orders.partials.edit.order-panel-right')
         </div>
+
+        @include('pos.partials.modals.note')
     </div>
 
     @include('orders.partials.edit.scripts')
