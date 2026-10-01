@@ -349,7 +349,7 @@
         }
     }">
 
-        @include('workshop.partials.summary')
+
         @include('workshop.partials.tabs-filter')
         @include('workshop.partials.orders-table')
         @include('workshop.partials.modals')

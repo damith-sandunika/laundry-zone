@@ -313,7 +313,7 @@
         }
     </script>
     @stack('scripts')
-    <!-- SweetAlert2 -->
+    @if(!auth()->check() || auth()->user()->role !== 'super_admin')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -358,6 +358,7 @@
             @endif
         });
     </script>
+    @endif
 </body>
 
 </html>

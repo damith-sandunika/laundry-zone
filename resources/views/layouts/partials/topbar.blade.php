@@ -176,7 +176,7 @@
                     </button>
 
                     <!-- Notifications Dropdown -->
-                    @if(auth()->check())
+                    @if(auth()->check() && auth()->user()->role !== 'super_admin')
                         <x-alert-system />
                     @endif
 

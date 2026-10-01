@@ -115,7 +115,9 @@
                         @include('workshop.dashboard.partials.shift-register')
         </div>
 
-                @include('workshop.dashboard.partials.staff-attendance')
+                @if(auth()->user()->role !== 'staff')
+                    @include('workshop.dashboard.partials.staff-attendance')
+                @endif
 
     @endif
 
