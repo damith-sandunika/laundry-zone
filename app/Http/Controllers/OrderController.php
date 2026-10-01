@@ -29,10 +29,7 @@ class OrderController extends Controller
 
         $orders = Order::with('customer')
             ->where(function ($query) use ($q) {
-                $query->where('order_number', 'like', "%{$q}%")
-                    ->orWhere('id', 'like', "%{$q}%")
-                    ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$q}%")
-                        ->orWhere('phone', 'like', "%{$q}%"));
+                $query->where('order_number', 'like', "%{$q}%");
             })
             ->when(
                 // Non-super-admin: scope to their branch (collection or workshop)
@@ -226,12 +223,7 @@ class OrderController extends Controller
 
         if ($q) {
             $query->where(function ($qb) use ($q) {
-                $qb->where('order_number', 'like', "%{$q}%")
-                    ->orWhere('id', 'like', "%{$q}%")
-                    ->orWhereHas('customer', function ($cq) use ($q) {
-                        $cq->where('name', 'like', "%{$q}%")
-                            ->orWhere('phone', 'like', "%{$q}%");
-                    });
+                $qb->where('order_number', 'like', "%{$q}%");
             });
         }
 
