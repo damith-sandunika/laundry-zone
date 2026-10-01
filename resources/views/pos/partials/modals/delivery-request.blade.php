@@ -1,5 +1,5 @@
 <!-- ===================== Delivery Request Modal ===================== -->
-    <div x-data="deliveryModal()" @open-delivery-modal.window="open = true; pickupDateOnly = ''; pickupTimeSlot = ''; deliveryDateOnly = ''; deliveryTimeSlot = ''; pickupAddress = ''; deliveryAddress = ''; notes = '';">
+    <div x-data="deliveryModal()">
         <template x-teleport="body">
             <div x-show="show" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 9999;">
                 <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" x-transition.opacity @click="show = false"></div>
