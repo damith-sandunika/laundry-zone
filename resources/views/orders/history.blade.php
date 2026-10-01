@@ -26,9 +26,10 @@
                 </thead>
                 <tbody>
                     @forelse($completedOrders as $order)
-                    <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                    @php $isDeleted = $order->trashed(); @endphp
+                    <tr style="background:{{ $isDeleted ? '#fef2f2' : 'white' }};border-bottom:1px solid #f1f5f9;transition:all 0.1s; {{ $isDeleted ? 'opacity: 0.8;' : '' }}" onmouseover="this.style.background='{{ $isDeleted ? '#fee2e2' : '#f8fafc' }}'" onmouseout="this.style.background='{{ $isDeleted ? '#fef2f2' : 'white' }}'">
                         <td style="padding:12px 20px;">
-                            <a href="{{ route('orders.show', $order->order_number ?? $order->id) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:underline;">
+                            <a href="{{ route('orders.show', $order->order_number ?? $order->id) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:{{ $isDeleted ? 'line-through' : 'underline' }};">
                                 #{{ $order->order_number ?? $order->id }}
                             </a>
                         </td>
@@ -50,8 +51,11 @@
                                 $st = $statusColors[$order->status] ?? ['bg' => '#f1f5f9', 'text' => '#475569', 'border' => '#e2e8f0'];
                             @endphp
                             <span style="display:inline-block;font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;background:{{ $st['bg'] }};color:{{ $st['text'] }};border:1px solid {{ $st['border'] }};">
-                                {{ ucfirst(str_replace('_', ' ', $order->status)) }}
+                                @if($isDeleted) DELETED @else {{ ucfirst(str_replace('_', ' ', $order->status)) }} @endif
                             </span>
+                            @if($isDeleted && $order->deletedBy)
+                                <div style="font-size:9px;color:#ef4444;font-weight:700;margin-top:4px;">By: {{ $order->deletedBy->name }}</div>
+                            @endif
                         </td>
                         <td style="padding:12px 20px;font-weight:600;color:#475569;">
                             <span style="display:block;">{{ $order->updated_at?->format('M d, Y') }}</span>
@@ -61,8 +65,15 @@
                             <a href="{{ route('orders.show', $order->order_number) }}"
                                style="display:inline-block;padding:5px 12px;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;"
                                onmouseover="this.style.background='#e2e8f0';this.style.color='#0f172a';" onmouseout="this.style.background='#f1f5f9';this.style.color='#334155';">
-                                View Order
+                                View
                             </a>
+                            @if(!$isDeleted && auth()->user() && in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'workshop_admin']))
+                                <button onclick="if(confirm('Are you sure you want to delete this order? It will be crossed out and removed from reports.')){ fetch('{{ route('orders.destroy', $order->id) }}', {method:'DELETE', headers:{'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'}}).then(r=>r.json()).then(d=>{if(d.success) location.reload(); else alert(d.message);}); }"
+                                        style="display:inline-block;padding:5px 12px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;margin-left:4px;"
+                                        onmouseover="this.style.background='#fecaca';" onmouseout="this.style.background='#fee2e2';">
+                                    Delete
+                                </button>
+                            @endif
                         </td>
                     </tr>
                     @empty

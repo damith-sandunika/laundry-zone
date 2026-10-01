@@ -356,7 +356,7 @@ class WorkshopDashboardController extends Controller
     {
         $user = auth()->user();
 
-        $dispatches = WorkshopDispatch::with(['order.customer', 'branch'])
+        $dispatches = WorkshopDispatch::with(['order' => fn($q) => $q->withTrashed()->with(['customer', 'deletedBy']), 'branch'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $this->getActiveBranchId()))
             ->orderByDesc('order_id')
             ->paginate(15);

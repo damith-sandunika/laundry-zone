@@ -180,6 +180,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
     Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
     Route::resource('orders', OrderController::class)->only(['index', 'edit']);
+    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
 
 

@@ -578,7 +578,7 @@ class OrderController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $query = Order::with('customer', 'branch')
+        $query = Order::withTrashed()->with('customer', 'branch', 'deletedBy')
             ->orderByDesc('id');
 
         if (!$user->isSuperAdmin() && $branchId) {
@@ -588,6 +588,32 @@ class OrderController extends Controller
         $completedOrders = $query->paginate(15);
 
         return view('orders.history', compact('completedOrders'));
+    }
+
+    public function destroy(Order $order)
+    {
+        $user = auth()->user();
+        if (!in_array($user->role, ['super_admin', 'workshop_admin', 'branch_admin'])) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        }
+
+        try {
+            $order->deleted_by = $user->id;
+            $order->saveQuietly();
+            $order->delete();
+            
+            OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => 'deleted',
+                'changed_by' => $user->id,
+                'note' => "Order deleted by Admin.",
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Order deleted successfully.']);
+        } catch (\Exception $e) {
+            Log::error('Order Delete Error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Failed to delete order.']);
+        }
     }
 }
 

@@ -5,12 +5,13 @@ namespace App\Models;
 use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Order extends Model
 {
-    use BelongsToBranch, HasFactory, LogsActivity;
+    use BelongsToBranch, HasFactory, LogsActivity, SoftDeletes;
 
     public function getActivitylogOptions(): LogOptions
     {
@@ -28,7 +29,7 @@ class Order extends Model
         'loyalty_points_used', 'loyalty_points_earned', 'due_date', 'notes', 
         'is_online_booking', 'ready_at', 'delivered_at', 'picked_up_at', 
         'dispatched_to_workshop_at', 'returned_from_workshop_at', 
-        'delivery_appointment_id', 'is_delivery_order', 'delivery_address', 'workshop_id', 'payment_token'
+        'delivery_appointment_id', 'is_delivery_order', 'delivery_address', 'workshop_id', 'payment_token', 'deleted_by'
     ];
 
     protected $casts = [
@@ -79,6 +80,11 @@ class Order extends Model
     public function workshop()
     {
         return $this->belongsTo(Branch::class, 'workshop_id')->withoutGlobalScopes();
+    }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by')->withoutGlobalScopes();
     }
 
     public function items()
