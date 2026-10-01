@@ -19,6 +19,7 @@
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Order Info</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Customer</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Branch</th>
+                        <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Total</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Status</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Last Updated</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;text-align:center;">Action</th>
@@ -39,6 +40,9 @@
                         <td style="padding:12px 20px;font-weight:700;color:#4f46e5;">
                             {{ $order->branch->name ?? '—' }}
                         </td>
+                        <td style="padding:12px 20px;font-weight:800;color:#0f172a;">
+                            Rs. {{ number_format($order->total, 2) }}
+                        </td>
                         <td style="padding:12px 20px;">
                             @php
                                 $statusColors = [
@@ -54,7 +58,7 @@
                                 @if($isDeleted) DELETED @else {{ ucfirst(str_replace('_', ' ', $order->status)) }} @endif
                             </span>
                             @if($isDeleted && $order->deletedBy)
-                                <div style="font-size:9px;color:#ef4444;font-weight:700;margin-top:4px;">By: {{ $order->deletedBy->name }}</div>
+                                <div style="font-size:9px;color:#ef4444;font-weight:700;margin-top:4px;">By: {{ $order->deletedBy->name }} <br> <span style="color:#b91c1c;">{{ $order->deleted_at?->format('M d, Y h:i A') }}</span></div>
                             @endif
                         </td>
                         <td style="padding:12px 20px;font-weight:600;color:#475569;">
@@ -62,11 +66,13 @@
                             <span style="font-size:11px;color:#94a3b8;font-weight:500;">{{ $order->updated_at?->format('h:i A') }}</span>
                         </td>
                         <td style="padding:12px 20px;text-align:center;">
+                            @if(!$isDeleted)
                             <a href="{{ route('orders.show', $order->order_number) }}"
                                style="display:inline-block;padding:5px 12px;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;"
                                onmouseover="this.style.background='#e2e8f0';this.style.color='#0f172a';" onmouseout="this.style.background='#f1f5f9';this.style.color='#334155';">
                                 View
                             </a>
+                            @endif
                             @if(!$isDeleted && auth()->user() && in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'workshop_admin']))
                                 <button onclick="if(confirm('Are you sure you want to delete this order? It will be crossed out and removed from reports.')){ fetch('{{ route('orders.destroy', $order->id) }}', {method:'DELETE', headers:{'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'}}).then(r=>r.json()).then(d=>{if(d.success) location.reload(); else alert(d.message);}); }"
                                         style="display:inline-block;padding:5px 12px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;margin-left:4px;"
