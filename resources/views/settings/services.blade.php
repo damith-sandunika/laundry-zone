@@ -6,6 +6,10 @@
                 <p class="text-sm text-gray-500 mt-1">Manage all laundry services and categories here.</p>
             </div>
             <div class="flex gap-2">
+                <a href="{{ route('settings.services.print') }}" target="_blank"
+                    class="px-4 py-2 bg-indigo-100 text-indigo-700 text-xs font-semibold rounded hover:bg-indigo-200 transition-colors">
+                    🖨 Print Price List
+                </a>
                 <button onclick="document.getElementById('add-category-modal').style.display='flex'"
                     class="px-4 py-2 bg-slate-800 text-white text-xs font-semibold rounded hover:bg-slate-900 transition-colors">
                     + Add Category

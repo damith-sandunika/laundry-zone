@@ -90,7 +90,7 @@
         .header {
             text-align: center;
             margin-bottom: 10px;
-            border-bottom: 1px dashed #000;
+            border-bottom: 1px solid #000;
             padding-bottom: 5px;
         }
 
@@ -139,7 +139,7 @@
             font-weight: bold;
             font-size: 0.78em;
             margin-top: 5px;
-            border-bottom: 1px dashed #000;
+            border-bottom: 1px solid #000;
             padding: 5px 0;
             margin-bottom: 15px;
         }
@@ -161,7 +161,7 @@
         }
 
         .note-line {
-            border-bottom: 1px dotted #000;
+            border-bottom: 1px solid #000;
             height: 18px;
             margin-top: 5px;
         }
@@ -268,13 +268,56 @@
                 </div>
             @endforeach
 
-            <div class="total-row" style="border-top: 1px dashed #000; margin-top: 8px; padding-top: 8px;">
+            <div class="total-row" style="border-top: 1px solid #000; margin-top: 8px; padding-top: 8px;">
                 <span>Total Qty</span>
                 <span>x{{ fmod($total_qty, 1) == 0 ? (int) $total_qty : number_format($total_qty, 2) }}</span>
             </div>
         </div>
 
-        <div class="special-note">
+        {{-- Payment Totals — controlled by General Setting: chit_show_totals --}}
+        @if(\App\Models\Setting::get('chit_show_totals', '0') == '1')
+        <div style="border-top: 1px solid #000; margin-top: 15px; padding-top: 10px; padding-bottom: 15px;">
+            @if($order->discount > 0)
+            <div class="item-row" style="font-size: 0.72em;">
+                <span>Subtotal</span>
+                <span>Rs.{{ number_format($order->subtotal, 2) }}</span>
+            </div>
+            @php $discountPct = ($order->subtotal > 0) ? round(($order->discount / $order->subtotal) * 100, 1) : 0; @endphp
+            <div class="item-row" style="font-size: 0.72em;">
+                <span>Discount{{ $discountPct > 0 ? ' (' . $discountPct . '%)' : '' }}</span>
+                <span>- Rs.{{ number_format($order->discount, 2) }}</span>
+            </div>
+            @endif
+            @if($order->delivery_fee > 0)
+            <div class="item-row" style="font-size: 0.72em;">
+                <span>Delivery Fee</span>
+                <span>Rs.{{ number_format($order->delivery_fee, 2) }}</span>
+            </div>
+            @endif
+            <div class="total-row" style="border-top: 1px solid #000; border-bottom: none; margin-bottom: 5px; font-size: 0.82em;">
+                <span>TOTAL</span>
+                <span>Rs.{{ number_format($order->total, 2) }}</span>
+            </div>
+            <div class="item-row" style="font-size: 0.72em;">
+                <span>Paid</span>
+                <span>Rs.{{ number_format($order->paid_amount, 2) }}</span>
+            </div>
+            @php $balance = $order->total - $order->paid_amount; @endphp
+            @if($balance > 0)
+            <div class="item-row" style="font-size: 0.78em; font-weight: 900; border-top: 1px solid #000; padding-top: 4px; margin-top: 4px;">
+                <span>Balance Due</span>
+                <span>Rs.{{ number_format($balance, 2) }}</span>
+            </div>
+            @else
+            <div class="item-row" style="font-size: 0.72em; font-weight: 900;">
+                <span>✓ Fully Paid</span>
+                <span>Rs.{{ number_format($order->paid_amount, 2) }}</span>
+            </div>
+            @endif
+        </div>
+        @endif
+
+        <div class="special-note" style="border-top: 1px solid #000; padding-top: 15px;">
             <div>Special Note :</div>
             <div class="note-line"></div>
             <div class="note-line"></div>
@@ -287,6 +330,8 @@
             <div>Quality check :</div>
             <div>Final inspection :</div>
         </div>
+
+
 
     </div><!-- /chit-wrapper -->
 

@@ -85,7 +85,7 @@
                 <div
                     class="flex flex-row items-center w-full lg:w-auto justify-between lg:justify-end gap-1.5 sm:gap-3 lg:gap-6 ml-auto border-t border-slate-100/80 lg:border-none pt-2 lg:pt-0">
                     {{-- Order Quick Search Box --}}
-                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'admin', 'staff', 'super_admin', 'workshop_admin']))
+                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'staff', 'super_admin', 'workshop_admin']))
                         <div class="block relative" x-data="orderSearch()" @click.away="close()">
                             <div class="relative">
                                 <svg class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-slate-400 pointer-events-none"

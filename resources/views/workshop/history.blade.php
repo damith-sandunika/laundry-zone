@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
-                <h2 class="ph-title">Completed Orders History</h2>
-                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all completed, returned, and handed-over workshop orders</p>
+                <h2 class="ph-title">Workshop Orders</h2>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all orders dispatched to this workshop</p>
             </div>
             <a href="{{ route('workshop.dashboard') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
                 Back to Dashboard
@@ -20,7 +20,7 @@
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Customer</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Branch</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Dispatched</th>
-                        <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Returned</th>
+                        <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Status</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;text-align:center;">Action</th>
                     </tr>
                 </thead>
@@ -28,7 +28,9 @@
                     @forelse($dispatches as $dispatch)
                     <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
                         <td style="padding:12px 20px;">
-                            <span style="font-size:13px;font-weight:800;color:#1d4ed8;">#{{ $dispatch->order->order_number ?? $dispatch->order->id }}</span>
+                            <a href="{{ route('orders.show', $dispatch->order->order_number ?? $dispatch->order->id) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:underline;">
+                                #{{ $dispatch->order->order_number ?? $dispatch->order->id }}
+                            </a>
                         </td>
                         <td style="padding:12px 20px;font-weight:700;color:#0f172a;">
                             {{ $dispatch->order->customer->name ?? 'Unknown' }}
@@ -42,10 +44,20 @@
                         </td>
                         <td style="padding:12px 20px;font-weight:600;color:#475569;">
                             @php
-                                $completedDate = $dispatch->received_at_branch_at ?? $dispatch->returned_at;
+                                $statusColors = [
+                                    'dispatched_to_workshop' => ['bg' => '#fef3c7', 'text' => '#b45309', 'label' => 'Pending receipt'],
+                                    'received_at_workshop' => ['bg' => '#dbeafe', 'text' => '#1d4ed8', 'label' => 'Received'],
+                                    'processing' => ['bg' => '#e0e7ff', 'text' => '#4338ca', 'label' => 'Processing'],
+                                    'completed_at_workshop' => ['bg' => '#dcfce7', 'text' => '#15803d', 'label' => 'Completed'],
+                                    'handed_over_to_delivery' => ['bg' => '#f3e8ff', 'text' => '#7e22ce', 'label' => 'With Rider'],
+                                    'received_at_branch' => ['bg' => '#f1f5f9', 'text' => '#475569', 'label' => 'At Branch'],
+                                    'returned_to_branch' => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'label' => 'Returned'],
+                                ];
+                                $st = $statusColors[$dispatch->status] ?? ['bg' => '#f1f5f9', 'text' => '#475569', 'label' => ucfirst(str_replace('_', ' ', $dispatch->status))];
                             @endphp
-                            <span style="display:block;">{{ $completedDate?->format('M d, Y') }}</span>
-                            <span style="font-size:11px;color:#94a3b8;font-weight:500;">{{ $completedDate?->format('h:i A') }}</span>
+                            <span style="display:inline-block;padding:4px 10px;background:{{ $st['bg'] }};color:{{ $st['text'] }};border-radius:9999px;font-size:11px;font-weight:700;">
+                                {{ $st['label'] }}
+                            </span>
                         </td>
                         <td style="padding:12px 20px;text-align:center;">
                             <a href="{{ route('orders.show', $dispatch->order->order_number) }}"
@@ -58,7 +70,7 @@
                     @empty
                     <tr>
                         <td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;font-weight:500;">
-                            No completed workshop orders found.
+                            No workshop orders found.
                         </td>
                     </tr>
                     @endforelse

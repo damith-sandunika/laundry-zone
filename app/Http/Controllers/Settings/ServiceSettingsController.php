@@ -27,6 +27,37 @@ class ServiceSettingsController extends Controller
         if (!$canManage) abort(403, 'Unauthorized config management mode.');
     }
 
+    public function printPriceList()
+    {
+        $this->authorizeConfigManagement();
+        $branchId = $this->getActiveBranchId();
+        $isGlobalMode = Setting::get('centralized_management', '1') == '1' && auth()->user()->canManageGlobalConfig();
+
+        // Get categories with their services that are visible on website
+        $serviceCategories = ServiceCategory::where(function ($q) use ($branchId, $isGlobalMode) {
+            if (!$isGlobalMode) $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
+        })->where('is_visible_on_website', true)
+          ->with(['children' => function($q) use ($branchId, $isGlobalMode) {
+               $q->where('is_visible_on_website', true);
+               if (!$isGlobalMode) $q->where(fn($sq) => $sq->whereNull('branch_id')->orWhere('branch_id', $branchId));
+               $q->orderBy('order_index');
+               $q->with(['services' => function($sq) use ($branchId, $isGlobalMode) {
+                   $sq->where('is_visible_on_website', true);
+                   if (!$isGlobalMode) $sq->where(fn($ssq) => $ssq->whereNull('branch_id')->orWhere('branch_id', $branchId));
+                   $sq->orderBy('order_index');
+               }]);
+          }, 'services' => function ($q) use ($branchId, $isGlobalMode) {
+               $q->where('is_visible_on_website', true);
+               if (!$isGlobalMode) $q->where(fn($sq) => $sq->whereNull('branch_id')->orWhere('branch_id', $branchId));
+               $q->orderBy('order_index');
+          }])->orderBy('order_index')->get();
+
+        $mainCategories = $serviceCategories->whereNull('parent_id');
+        $mainBranch = \App\Models\Branch::first();
+
+        return view('settings.pages.price_list_print', compact('mainCategories', 'mainBranch'));
+    }
+
     public function servicesIndex()
     {
         $services = ServiceType::all();

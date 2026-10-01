@@ -25,26 +25,39 @@ class OrderController extends Controller
         if (strlen($q) < 2)
             return response()->json([]);
 
+        $user = auth()->user();
+
         $orders = Order::with('customer')
             ->where(function ($query) use ($q) {
                 $query->where('order_number', 'like', "%{$q}%")
                     ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$q}%")
                         ->orWhere('phone', 'like', "%{$q}%"));
             })
+            ->when(
+                // Non-super-admin: scope to their branch (collection or workshop)
+                !$user->isSuperAdmin() && $user->branch_id,
+                fn($q) => $q->where(function ($sub) use ($user) {
+                    $sub->where('branch_id', $user->branch_id)    // orders collected at their branch
+                        ->orWhere('workshop_id', $user->branch_id); // orders dispatched TO their workshop
+                })
+            )
             ->orderBy('created_at', 'desc')
             ->limit(8)
-            ->get(['id', 'order_number', 'status', 'total', 'customer_id', 'created_at']);
+            ->get(['id', 'order_number', 'status', 'total', 'customer_id', 'created_at', 'branch_id', 'workshop_id']);
 
         return response()->json($orders->map(fn($o) => [
-            'id' => $o->id,
+            'id'           => $o->id,
             'order_number' => $o->order_number,
-            'status' => $o->status,
+            'status'       => $o->status,
             'status_label' => str_replace('_', ' ', ucfirst($o->status)),
-            'total' => number_format($o->total, 2),
-            'customer' => $o->customer?->name ?? 'Walk-in',
-            'url' => route('orders.show', $o->order_number),
+            'total'        => number_format($o->total, 2),
+            'customer'     => $o->customer?->name ?? 'Walk-in',
+            'url'          => route('orders.show', $o->order_number),
         ]));
     }
+
+
+
 
     public function edit(Order $order)
     {
@@ -570,8 +583,7 @@ class OrderController extends Controller
         $branchId = $user->branch_id;
 
         $query = Order::with('customer', 'branch')
-            ->whereIn('status', ['completed', 'delivered'])
-            ->orderBy('updated_at', 'desc');
+            ->orderByDesc('id');
 
         if (!$user->isSuperAdmin() && $branchId) {
             $query->where('branch_id', $branchId);

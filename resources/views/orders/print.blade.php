@@ -204,7 +204,8 @@
     @if($order->discount > 0 || $order->delivery_fee > 0 || $order->additional > 0)
         <div class="row"><span>Subtotal</span><span>Rs.{{ number_format($order->subtotal, 2) }}</span></div>
         @if($order->discount > 0)
-            <div class="row"><span>Discount</span><span>- Rs.{{ number_format($order->discount, 2) }}</span></div>
+            @php $discountPct = ($order->subtotal > 0) ? round(($order->discount / $order->subtotal) * 100, 1) : 0; @endphp
+            <div class="row"><span>Discount{{ $discountPct > 0 ? ' (' . $discountPct . '%)' : '' }}</span><span>- Rs.{{ number_format($order->discount, 2) }}</span></div>
         @endif
         @if($order->delivery_fee > 0)
             <div class="row"><span>Delivery Fee</span><span>Rs.{{ number_format($order->delivery_fee, 2) }}</span></div>

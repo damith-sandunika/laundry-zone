@@ -272,6 +272,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/service-categories/reorder', [ServiceSettingsController::class, 'reorderCategories'])->name('settings.reorderCategories');
 
         // Services & Categories
+        Route::get('/settings/services/print', [ServiceSettingsController::class, 'printPriceList'])->name('settings.services.print');
         Route::get('/settings/services', [ServiceSettingsController::class, 'servicesManager'])->name('settings.services');
         Route::post('/settings/services', [ServiceSettingsController::class, 'storeService'])->name('settings.storeService');
         Route::put('/settings/services/{service}', [ServiceSettingsController::class, 'updateService'])->name('settings.updateService');

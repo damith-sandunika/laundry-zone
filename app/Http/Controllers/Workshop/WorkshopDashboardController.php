@@ -358,8 +358,7 @@ class WorkshopDashboardController extends Controller
 
         $dispatches = WorkshopDispatch::with(['order.customer', 'branch'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $this->getActiveBranchId()))
-            ->whereIn('status', ['received_at_branch', 'returned_to_branch'])
-            ->orderByRaw('COALESCE(received_at_branch_at, returned_at) DESC')
+            ->orderByDesc('order_id')
             ->paginate(15);
 
         $cancelledBookings = \App\Models\DeliveryAppointment::with(['customer', 'cancelledBy'])

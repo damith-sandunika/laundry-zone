@@ -82,6 +82,18 @@
                                             </div>
                                         </label>
                                     </div>
+
+                                    <div class="pt-4 mt-4 border-t border-gray-100">
+                                        <label class="flex items-start gap-2 cursor-pointer w-max max-w-full">
+                                            <input type="checkbox" name="chit_show_totals" value="1" {{ \App\Models\Setting::get('chit_show_totals', '0') == '1' ? 'checked' : '' }} class="w-4 h-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <div>
+                                                <span class="text-sm font-semibold text-gray-700 block">Show Payment Totals on Job Chit</span>
+                                                <p class="text-[11px] text-gray-500 mt-1">
+                                                    If enabled, the job chit will display the order total, amount paid, and balance due at the bottom. Useful for showing payment status to customers. Default is OFF.
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         @else

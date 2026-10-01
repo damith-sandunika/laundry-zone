@@ -2,8 +2,8 @@
     <x-slot name="header">
         <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
-                <h2 class="ph-title">Completed Orders History</h2>
-                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all completed and delivered orders for this branch</p>
+                <h2 class="ph-title">All Orders History</h2>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all orders for this branch</p>
             </div>
             <a href="{{ route('orders.index') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
                 Back to Orders
@@ -20,7 +20,7 @@
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Customer</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Branch</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Status</th>
-                        <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Completed Date</th>
+                        <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;">Last Updated</th>
                         <th style="padding:14px 20px;font-weight:800;color:#0f172a;text-transform:uppercase;font-size:11px;letter-spacing:0.05em;text-align:center;">Action</th>
                     </tr>
                 </thead>
@@ -28,7 +28,9 @@
                     @forelse($completedOrders as $order)
                     <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
                         <td style="padding:12px 20px;">
-                            <span style="font-size:13px;font-weight:800;color:#1d4ed8;">#{{ $order->order_number ?? $order->id }}</span>
+                            <a href="{{ route('orders.show', $order->order_number ?? $order->id) }}" style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:underline;">
+                                #{{ $order->order_number ?? $order->id }}
+                            </a>
                         </td>
                         <td style="padding:12px 20px;font-weight:700;color:#0f172a;">
                             {{ $order->customer->name ?? 'Walk-in' }}
@@ -37,8 +39,18 @@
                             {{ $order->branch->name ?? '—' }}
                         </td>
                         <td style="padding:12px 20px;">
-                            <span style="display:inline-block;font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;">
-                                {{ ucfirst($order->status) }}
+                            @php
+                                $statusColors = [
+                                    'pending' => ['bg' => '#fef3c7', 'text' => '#b45309', 'border' => '#fde68a'],
+                                    'processing' => ['bg' => '#e0e7ff', 'text' => '#4338ca', 'border' => '#c7d2fe'],
+                                    'completed' => ['bg' => '#dcfce7', 'text' => '#15803d', 'border' => '#bbf7d0'],
+                                    'delivered' => ['bg' => '#dbeafe', 'text' => '#1d4ed8', 'border' => '#bfdbfe'],
+                                    'cancelled' => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'border' => '#fecaca'],
+                                ];
+                                $st = $statusColors[$order->status] ?? ['bg' => '#f1f5f9', 'text' => '#475569', 'border' => '#e2e8f0'];
+                            @endphp
+                            <span style="display:inline-block;font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;background:{{ $st['bg'] }};color:{{ $st['text'] }};border:1px solid {{ $st['border'] }};">
+                                {{ ucfirst(str_replace('_', ' ', $order->status)) }}
                             </span>
                         </td>
                         <td style="padding:12px 20px;font-weight:600;color:#475569;">
@@ -56,7 +68,7 @@
                     @empty
                     <tr>
                         <td colspan="6" style="padding:40px;text-align:center;color:#94a3b8;font-size:13px;font-weight:500;">
-                            No completed orders found.
+                            No orders found.
                         </td>
                     </tr>
                     @endforelse

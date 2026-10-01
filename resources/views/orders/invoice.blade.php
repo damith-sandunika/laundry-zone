@@ -124,7 +124,7 @@
         <div class="info-grid">
             <div class="info-box">
                 <h3>Bill To</h3>
-                <p>{{ $order->customer->name ?? 'Walk-in Customer' }}</p>
+                <p>{{ trim(($order->customer->title ? $order->customer->title . ' ' : '') . ($order->customer->name ?? 'Walk-in Customer')) }}</p>
                 <span>{{ $order->customer->phone ?? 'No Phone' }}</span>
                 <span>{{ $order->customer->email ?? '' }}</span>
                 @if($order->is_delivery_order && $order->delivery_address)
@@ -267,7 +267,10 @@
                 @endif
                 @if($order->discount > 0)
                 <div class="total-row" style="color: #ef4444;">
-                    <span>Discount</span>
+                    @php
+                        $discountPct = ($order->subtotal > 0) ? round(($order->discount / $order->subtotal) * 100, 1) : 0;
+                    @endphp
+                    <span>Discount {{ $discountPct > 0 ? '(' . $discountPct . '%)' : '' }}</span>
                     <span>- Rs.{{ number_format($order->discount, 2) }}</span>
                 </div>
                 @endif
