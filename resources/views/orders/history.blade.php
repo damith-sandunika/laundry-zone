@@ -57,15 +57,15 @@
                             <span style="display:inline-block;font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;background:{{ $st['bg'] }};color:{{ $st['text'] }};border:1px solid {{ $st['border'] }};">
                                 @if($isDeleted) DELETED @else {{ ucfirst(str_replace('_', ' ', $order->status)) }} @endif
                             </span>
-                            @if($isDeleted && $order->deletedBy)
-                                <div style="font-size:9px;color:#ef4444;font-weight:700;margin-top:4px;">By: {{ $order->deletedBy->name }} <br> <span style="color:#b91c1c;">{{ $order->deleted_at?->format('M d, Y h:i A') }}</span></div>
-                            @endif
                         </td>
                         <td style="padding:12px 20px;font-weight:600;color:#475569;">
                             <span style="display:block;">{{ $order->updated_at?->format('M d, Y') }}</span>
                             <span style="font-size:11px;color:#94a3b8;font-weight:500;">{{ $order->updated_at?->format('h:i A') }}</span>
                         </td>
                         <td style="padding:12px 20px;text-align:center;">
+                            @if($isDeleted && $order->deletedBy)
+                                <div style="font-size:10px;color:#ef4444;font-weight:700;">By: {{ $order->deletedBy->name }} <br> <span style="color:#b91c1c;">{{ $order->deleted_at?->format('M d, Y h:i A') }}</span></div>
+                            @endif
                             @if(!$isDeleted)
                             <a href="{{ route('orders.show', $order->order_number) }}"
                                style="display:inline-block;padding:5px 12px;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;"

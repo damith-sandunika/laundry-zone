@@ -63,11 +63,11 @@
                             <span style="display:inline-block;padding:4px 10px;background:{{ $st['bg'] }};color:{{ $st['text'] }};border-radius:9999px;font-size:11px;font-weight:700;">
                                 @if($isDeleted) DELETED @else {{ $st['label'] }} @endif
                             </span>
-                            @if($isDeleted && $dispatch->order->deletedBy)
-                                <div style="font-size:9px;color:#ef4444;font-weight:700;margin-top:4px;">By: {{ $dispatch->order->deletedBy->name }} <br> <span style="color:#b91c1c;">{{ $dispatch->order->deleted_at?->format('M d, Y h:i A') }}</span></div>
-                            @endif
                         </td>
                         <td style="padding:12px 20px;text-align:center;">
+                            @if($isDeleted && $dispatch->order->deletedBy)
+                                <div style="font-size:10px;color:#ef4444;font-weight:700;">By: {{ $dispatch->order->deletedBy->name }} <br> <span style="color:#b91c1c;">{{ $dispatch->order->deleted_at?->format('M d, Y h:i A') }}</span></div>
+                            @endif
                             @if(!$isDeleted)
                             <a href="{{ route('orders.show', $dispatch->order->order_number) }}"
                                style="display:inline-block;padding:5px 12px;background:#f1f5f9;color:#334155;border:1px solid #e2e8f0;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;"
