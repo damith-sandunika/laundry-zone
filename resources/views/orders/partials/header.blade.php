@@ -155,7 +155,7 @@
             <div style="display:flex;align-items:center;gap:8px;">
 
                 {{-- 💰 Pay Now --}}
-                @if(!in_array($order->status, ['delivered', 'completed']) && $order->total - $order->paid_amount > 0)
+                @if(!in_array($order->status, ['delivered', 'completed']) && $order->total - $order->paid_amount > 0 && (auth()->user()->isSuperAdmin() || auth()->user()->branch_id == $order->branch_id))
                     <div class="ord-btn-wrap" x-data="{}">
                         <button type="button" @click="$dispatch('open-pay-modal')" class="ord-btn--pay-full" title="">
                             💰
@@ -165,7 +165,7 @@
                 @endif
 
                 {{-- 💸 Refund Excess --}}
-                @if(!in_array($order->status, ['delivered', 'completed']) && $order->paid_amount - $order->total > 0)
+                @if(!in_array($order->status, ['delivered', 'completed']) && $order->paid_amount - $order->total > 0 && (auth()->user()->isSuperAdmin() || auth()->user()->branch_id == $order->branch_id))
                     <div class="ord-btn-wrap" x-data="{}">
                         <button type="button" @click="$dispatch('open-overpayment-modal', {{ $order->paid_amount - $order->total }})" class="ord-btn" style="color: #ef4444; border-color: #fca5a5;" title="" onmouseover="this.style.background='#fef2f2'" onmouseout="this.style.background='white'">
                             💸
