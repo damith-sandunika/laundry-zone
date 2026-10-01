@@ -91,7 +91,7 @@ class CustomerController extends Controller
             }]);
         }
 
-        return response()->json($query->limit(20)->get(['id', 'name', 'phone', 'default_discount']));
+        return response()->json($query->limit(20)->get(['id', 'name', 'phone', 'address', 'default_discount']));
     }
 
     public function show(Customer $customer)
