@@ -2,9 +2,9 @@
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
             @php
                 $cards = [
-                    ['label' => 'Active Orders', 'value' => $stats['active_orders'], 'sub' => 'Processing now', 'color' => 'text-blue-600', 'bg' => 'bg-blue-50', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', 'link' => route('orders.index', ['tab' => 'received'])],
+                    ['label' => 'New Orders', 'value' => $stats['active_orders'], 'sub' => 'Processing now', 'color' => 'text-blue-600', 'bg' => 'bg-blue-50', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01', 'link' => route('orders.index', ['tab' => 'received'])],
                     ['label' => 'Processing', 'value' => $stats['pending_deliveries'], 'sub' => 'Awaiting customer', 'color' => 'text-amber-500', 'bg' => 'bg-amber-50', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', 'link' => route('orders.index', ['tab' => 'processing'])],
-                    ['label' => 'Completed', 'value' => $stats['completed_today'], 'sub' => 'Delivered orders', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'icon' => 'M5 13l4 4L19 7', 'link' => route('orders.index', ['tab' => 'delivered'])],
+                    ['label' => 'Completed', 'value' => $stats['completed_today'], 'sub' => 'Delivered orders', 'color' => 'text-emerald-500', 'bg' => 'bg-emerald-50', 'icon' => 'M5 13l4 4L19 7', 'link' => route('orders.index', ['tab' => 'done'])],
                     ['label' => 'Total Payments Collected', 'value' => 'Rs.' . number_format($stats['total_payments_collected'] ?? 0, 0), 'sub' => null, 'color' => 'text-violet-600', 'bg' => 'bg-violet-50', 'icon' => 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', 'link' => null],
                 ];
             @endphp
