@@ -137,6 +137,9 @@
                                         Pick Order
                                     </a>
                                 @endif
+                                <button onclick="if(confirm('Are you sure you want to return this task? Order will be marked as returned.')) updateTask({{ $task->id }}, 'return')" style="flex:1; padding:12px; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;" title="Customer Unavailable">
+                                    ↩️ Return
+                                </button>
                             @else
                                 @php
                                     $due = 0;
@@ -149,6 +152,9 @@
                                 <button @click="openPaymentModal({{ $task->id }}, {{ $due }})" style="flex:2; padding:12px; background:#16a34a; color:white; border:none; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                     Deliver Order
+                                </button>
+                                <button onclick="if(confirm('Are you sure you want to return this task? Order will be sent back to branch.')) updateTask({{ $task->id }}, 'return')" style="flex:1; padding:12px; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;" title="Customer Unavailable">
+                                    ↩️ Return
                                 </button>
                             @endif
                         @endif

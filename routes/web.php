@@ -204,6 +204,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/tasks/{task}/on-way', [RiderController::class, 'onWay'])->name('tasks.onWay');
         Route::post('/tasks/{task}/arrived', [RiderController::class, 'arrived'])->name('tasks.arrived');
         Route::post('/tasks/{task}/complete', [RiderController::class, 'complete'])->name('tasks.complete');
+        Route::post('/tasks/{task}/return', [RiderController::class, 'returnTask'])->name('tasks.return');
         Route::post('/tasks/{task}/location', [RiderController::class, 'updateLocation'])->name('tasks.location');
         Route::get('/tasks/{task}/create-order', [RiderController::class, 'createOrder'])->name('createOrder');
         Route::post('/tasks/{task}/store-order', [RiderController::class, 'storeOrder'])->name('storeOrder');

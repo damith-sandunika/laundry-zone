@@ -45,6 +45,7 @@ class DeliveryTask extends Model
             'arrived' => 'Arrived',
             'waiting_for_payment' => 'Wait For Payment',
             'completed' => 'Completed',
+            'returned' => 'Returned',
             'cancelled' => 'Cancelled',
             default => ucfirst($this->status),
         };
@@ -59,6 +60,7 @@ class DeliveryTask extends Model
             'arrived' => 'purple',
             'waiting_for_payment' => 'red',
             'completed' => 'green',
+            'returned' => 'orange',
             'cancelled' => 'red',
             default => 'gray',
         };

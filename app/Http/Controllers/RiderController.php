@@ -184,6 +184,45 @@ class RiderController extends Controller
         return response()->json(['success' => true, 'status' => $newStatus]);
     }
 
+    // ─── Rider: Return Task (Customer Unavailable) ───
+    public function returnTask(Request $request, DeliveryTask $task)
+    {
+        $this->authorizeRiderTask($task);
+
+        if ($task->task_type === 'delivery') {
+            $order = Order::find($task->order_id);
+            if ($order) {
+                // Revert order back to 'done' (ready at branch)
+                $order->update([
+                    'status' => 'done',
+                    'delivered_at' => null
+                ]);
+
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => 'done',
+                    'changed_by' => auth()->id(),
+                    'note' => 'Delivery returned by rider (Customer unavailable). Order is back at branch.',
+                ]);
+            }
+            if ($task->appointment) {
+                $task->appointment->update(['status' => 'pending']);
+            }
+        } elseif ($task->task_type === 'pickup') {
+            if ($task->appointment) {
+                $task->appointment->update(['status' => 'pending']);
+            }
+        }
+
+        $task->update([
+            'status' => 'returned',
+            'completed_at' => now(), // Technically finished processing this task
+            'notes' => 'Returned: Customer unavailable'
+        ]);
+
+        return response()->json(['success' => true, 'status' => 'returned']);
+    }
+
     // ─── Rider: Mobile Order Creation ───
     public function createOrder(DeliveryTask $task)
     {
