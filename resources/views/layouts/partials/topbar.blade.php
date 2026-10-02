@@ -92,6 +92,17 @@
                 <!-- Right Side Actions (2nd Row on Mobile) -->
                 <div
                     class="flex flex-row items-center w-full lg:w-auto justify-between lg:justify-end gap-1.5 sm:gap-3 lg:gap-6 ml-auto border-t border-slate-100/80 lg:border-none pt-2 lg:pt-0">
+                    <!-- Mobile Back Button -->
+                    <button onclick="window.history.back()" title="Go Back"
+                        class="lg:hidden relative p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none group">
+                        <div
+                            class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 flex items-center justify-center transition-colors">
+                            <svg class="w-4 h-4 mr-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </div>
+                    </button>
+
                     {{-- Order Quick Search Box --}}
                     @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'staff', 'super_admin', 'workshop_admin']))
                         <div class="block relative" x-data="orderSearch()" @click.away="close()">
@@ -168,17 +179,6 @@
                             </div>
                         </div>
                     @endif
-
-                    <!-- Mobile Back Button -->
-                    <button onclick="window.history.back()" title="Go Back"
-                        class="lg:hidden relative p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none group">
-                        <div
-                            class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 flex items-center justify-center transition-colors">
-                            <svg class="w-4 h-4 mr-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                            </svg>
-                        </div>
-                    </button>
 
                     <!-- Manual Refresh Button -->
                     <button id="manual-refresh-btn" onclick="window.location.reload()" title="Refresh Page"
