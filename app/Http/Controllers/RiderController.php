@@ -192,17 +192,24 @@ class RiderController extends Controller
         if ($task->task_type === 'delivery') {
             $order = Order::find($task->order_id);
             if ($order) {
-                // Revert order back to 'done' (ready at branch)
+                // Find the previous status before it was assigned to a rider
+                $previousHistory = OrderStatusHistory::where('order_id', $order->id)
+                    ->whereNotIn('status', ['out_for_delivery', 'rider_assigned'])
+                    ->orderBy('id', 'desc')
+                    ->first();
+                
+                $revertStatus = $previousHistory ? $previousHistory->status : 'done';
+
                 $order->update([
-                    'status' => 'done',
+                    'status' => $revertStatus,
                     'delivered_at' => null
                 ]);
 
                 OrderStatusHistory::create([
                     'order_id' => $order->id,
-                    'status' => 'done',
+                    'status' => $revertStatus,
                     'changed_by' => auth()->id(),
-                    'note' => 'Delivery returned by rider (Customer unavailable). Order is back at branch.',
+                    'note' => 'Delivery returned by rider (Customer unavailable). Reverted to previous status.',
                 ]);
             }
             if ($task->appointment) {
