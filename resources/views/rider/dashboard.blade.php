@@ -171,11 +171,6 @@
                 </tbody>
             </table>
         </div>
-        
-                    <div style="color:#94a3b8; font-size:13px; font-weight:500; margin-top:4px;">Take a break or check back
-                        later.</div>
-                </div>
-            @endforelse
         </div>
 
         <!-- PAYMENT MODAL -->

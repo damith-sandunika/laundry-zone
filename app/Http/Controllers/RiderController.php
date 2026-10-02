@@ -44,6 +44,7 @@ class RiderController extends Controller
 
         $tasks = DeliveryTask::with(['appointment.customer', 'appointment.order', 'order', 'branch'])
             ->where('rider_id', $rider->id)
+            ->where('status', '!=', 'returned')
             ->orderByDesc('created_at')
             ->paginate(20);
 
