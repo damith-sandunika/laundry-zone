@@ -236,7 +236,8 @@ class DeliveryController extends Controller
                 $order->deliveryAppointment->update(['status' => 'returned']);
             }
 
-            return redirect()->route($isWorkshop ? 'workshop.operations' : 'orders.index', ['tab' => 'completed'])->with('success', 'Return confirmed and assigned to cubby.');
+            $tabName = $isWorkshop ? 'completed' : 'done';
+            return redirect()->route($isWorkshop ? 'workshop.operations' : 'orders.index', ['tab' => $tabName])->with('success', 'Return confirmed and assigned to cubby.');
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('DeliveryController@confirmReturn: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Could not confirm return. Please try again.');
