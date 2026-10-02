@@ -137,9 +137,6 @@
                                         Pick Order
                                     </a>
                                 @endif
-                                <button onclick="if(confirm('Are you sure you want to return this task? Order will be marked as returned.')) updateTask({{ $task->id }}, 'return')" style="flex:1; padding:12px; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;" title="Customer Unavailable">
-                                    ↩️ Return
-                                </button>
                             @else
                                 @php
                                     $due = 0;
