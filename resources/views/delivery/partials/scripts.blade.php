@@ -188,6 +188,12 @@
                     this.rejectApptId = apptId;
                     this.rejectReason = '';
                     this.showRejectModal = true;
+                },
+                showConfirmReturnModal: false,
+                confirmReturnOrderId: null,
+                openConfirmReturnModal(orderId) {
+                    this.confirmReturnOrderId = orderId;
+                    this.showConfirmReturnModal = true;
                 }
             }));
         });

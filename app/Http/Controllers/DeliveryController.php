@@ -93,7 +93,9 @@ class DeliveryController extends Controller
         }
         $riders = $ridersQuery->get();
 
-        return view('delivery.index', compact('appointments', 'currentTab', 'pickupsCount', 'returnsCount', 'branches', 'riders'));
+        $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->where('is_active', true)->get();
+
+        return view('delivery.index', compact('appointments', 'currentTab', 'pickupsCount', 'returnsCount', 'branches', 'riders', 'cubbies'));
     }
 
     // ─── Public routes moved to CustomerSiteController ───
@@ -190,6 +192,54 @@ class DeliveryController extends Controller
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('DeliveryController@collectCash: ' . $e->getMessage());
             return redirect()->back()->with('error', 'Could not collect cash. Please try again.');
+        }
+    }
+
+    // ─── Handle Confirm Return (Delivery Failure) ───
+    public function confirmReturn(Request $request, $orderId)
+    {
+        $request->validate([
+            'cubby_id' => 'required|exists:cubbies,id'
+        ]);
+
+        try {
+            $order = \App\Models\Order::findOrFail($orderId);
+            
+            // Assign to cubby
+            \App\Models\OrderCubby::updateOrCreate(
+                ['order_id' => $order->id],
+                ['cubby_id' => $request->cubby_id, 'assigned_at' => now()]
+            );
+            \App\Models\Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
+
+            $isWorkshop = auth()->user()->branch && auth()->user()->branch->type === 'workshop';
+            $status = $isWorkshop ? 'processing' : 'done';
+
+            $order->update(['status' => $status]);
+
+            \App\Models\OrderStatusHistory::create([
+                'order_id' => $order->id,
+                'status' => $status,
+                'changed_by' => auth()->id(),
+                'note' => 'Return confirmed. Assigned to cubby and marked as ' . $status . '.',
+            ]);
+
+            // Update workshop dispatch if workshop
+            if ($isWorkshop) {
+                \App\Models\WorkshopDispatch::where('order_id', $order->id)
+                    ->orderBy('id', 'desc')
+                    ->first()?->update(['status' => 'completed_at_workshop']);
+            }
+
+            // Update appointment
+            if ($order->deliveryAppointment) {
+                $order->deliveryAppointment->update(['status' => 'pending']);
+            }
+
+            return redirect()->route($isWorkshop ? 'workshop.operations' : 'orders.index', ['tab' => 'completed'])->with('success', 'Return confirmed and assigned to cubby.');
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('DeliveryController@confirmReturn: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Could not confirm return. Please try again.');
         }
     }
 }

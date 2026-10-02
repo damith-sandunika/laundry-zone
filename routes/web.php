@@ -236,6 +236,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/delivery/{appointment}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
     Route::post('/delivery/{appointment}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
     Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
+    Route::post('/delivery/{order}/confirm-return', [DeliveryController::class, 'confirmReturn'])->name('delivery.confirmReturn');
 
     // ─── INVENTORY (WORKSHOP ADMIN) ───
     Route::middleware(['workshop'])->group(function () {

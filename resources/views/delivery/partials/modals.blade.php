@@ -75,6 +75,42 @@
             </div>
         </div>
 
+        <!-- ── Confirm Return Modal (Assign Cubby) ── -->
+        <div x-cloak x-show="showConfirmReturnModal" class="fixed inset-0 z-[70] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
+            <div style="background:white;border-radius:24px;box-shadow:0 25px 50px rgba(0,0,0,0.25);width:100%;max-width:400px;overflow:hidden;" @click.away="showConfirmReturnModal = false">
+                <div style="padding:24px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;background:#fef2f2;">
+                    <div>
+                        <h3 style="font-size:18px;font-weight:900;color:#dc2626;margin:0;">Confirm Delivery Return</h3>
+                        <p style="font-size:12px;color:#b91c1c;margin:2px 0 0;font-weight:600;">Assign this returned order to a cubby.</p>
+                    </div>
+                    <button @click="showConfirmReturnModal = false" style="background:none;border:none;cursor:pointer;color:#dc2626;font-size:20px;">✕</button>
+                </div>
+                
+                <form :action="`/delivery/${confirmReturnOrderId}/confirm-return`" method="POST" style="margin:0;">
+                    @csrf
+                    <div style="padding:24px;display:flex;flex-direction:column;gap:16px;">
+                        
+                        <div>
+                            <label style="display:block;font-size:11.5px;font-weight:800;color:#334155;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Assign Cubby</label>
+                            <select name="cubby_id" required style="width:100%;padding:14px;border:2px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:600;color:#0f172a;outline:none;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#e2e8f0'">
+                                <option value="">Select a Cubby</option>
+                                @foreach($cubbies ?? [] as $cubby)
+                                    <option value="{{ $cubby->id }}">{{ $cubby->name }} ({{ ucfirst($cubby->status) }})</option>
+                                @endforeach
+                            </select>
+                        </div>
+
+                        <div style="display:flex;gap:12px;margin-top:8px;">
+                            <button type="button" @click="showConfirmReturnModal = false" style="flex:1;padding:14px;background:white;color:#64748b;font-size:14px;font-weight:800;border:2px solid #e2e8f0;border-radius:14px;cursor:pointer;">Cancel</button>
+                            <button type="submit" style="flex:1;padding:14px;background:#ef4444;color:white;font-size:14px;font-weight:900;border:none;border-radius:14px;cursor:pointer;box-shadow:0 4px 12px rgba(239,68,68,0.3);">
+                                Confirm Return
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
         <!-- ── Preview Modal ── -->
         <template x-teleport="body">
             <div x-cloak x-show="showPreviewModal" class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 2147483647; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px);">
