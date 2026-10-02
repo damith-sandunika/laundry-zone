@@ -30,12 +30,12 @@
             </div>
         </div>
 
-        <div style="padding:16px; display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:16px; background:#f8fafc;">
+        <div style="padding:16px; display:flex; flex-direction:column; gap:16px; background:#f8fafc; max-width:800px; margin:0 auto;">
             @forelse($tasks as $task)
                 <div style="background:white; border-radius:16px; border:1.5px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -2px rgba(0,0,0,0.05); overflow:hidden; display:flex; flex-direction:column; transition:transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
-                    <div style="padding:16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div style="padding:12px 16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:flex-start;">
                         <div>
-                            <span style="display:inline-block; font-size:10px; font-weight:800; padding:3px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:6px;
+                            <span style="display:inline-block; font-size:10px; font-weight:800; padding:2px 6px; border-radius:6px; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;
                                 {{ $task->task_type === 'pickup' ? 'background:#fef3c7; color:#d97706; border:1px solid #fde68a;' : 'background:#e0e7ff; color:#4338ca; border:1px solid #c7d2fe;' }}">
                                 {{ $task->task_type === 'pickup' ? '📦 Pickup' : '🚚 Delivery' }}
                             </span>
@@ -53,6 +53,7 @@
                             <span style="display:inline-block; font-size:10px; font-weight:800; padding:4px 8px; border-radius:6px; text-transform:uppercase; letter-spacing:0.04em;
                                 {{ $task->status === 'completed' ? 'background:#dcfce7; color:#15803d; border:1px solid #bbf7d0;' : '' }}
                                 {{ $task->status === 'cancelled' ? 'background:#fef2f2; color:#dc2626; border:1px solid #fecaca;' : '' }}
+                                {{ $task->status === 'returned' ? 'background:#fef2f2; color:#dc2626; border:1px solid #fecaca;' : '' }}
                                 {{ in_array($task->status, ['assigned','accepted','on_way','arrived']) ? 'background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe;' : '' }}
                                 {{ $task->status === 'waiting_for_payment' ? 'background:#fef2f2; color:#dc2626; border:1px solid #fecaca;' : '' }}
                             ">
@@ -60,23 +61,23 @@
                             </span>
                         </div>
                     </div>
-                    <div style="padding:16px; flex:1;">
-                        <div style="margin-bottom:16px;">
-                            <div style="font-size:11px; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Customer</div>
-                            <div style="font-weight:800; color:#0f172a; font-size:15px; margin-bottom:2px;">{{ $task->appointment->customer->name ?? 'Unknown' }}</div>
-                            <a href="tel:{{ $task->appointment->contact_phone }}" style="display:inline-flex; align-items:center; gap:4px; font-size:13px; color:#2563eb; font-weight:700; text-decoration:none; padding:4px 8px; background:#eff6ff; border-radius:6px;">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                    <div style="padding:12px 16px; flex:1;">
+                        <div style="margin-bottom:12px;">
+                            <div style="font-size:10px; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Customer</div>
+                            <div style="font-weight:800; color:#0f172a; font-size:14px; margin-bottom:2px;">{{ $task->appointment->customer->name ?? 'Unknown' }}</div>
+                            <a href="tel:{{ $task->appointment->contact_phone }}" style="display:inline-flex; align-items:center; gap:4px; font-size:12px; color:#2563eb; font-weight:700; text-decoration:none; padding:3px 6px; background:#eff6ff; border-radius:6px;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
                                 {{ $task->appointment->contact_phone ?? 'Call Customer' }}
                             </a>
                         </div>
                         <div>
-                            <div style="font-size:11px; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:4px;">Location</div>
-                            <div style="font-weight:600; color:#334155; font-size:13px; line-height:1.5; background:#f8fafc; padding:8px 12px; border-radius:8px; border:1px solid #f1f5f9;">
+                            <div style="font-size:10px; color:#94a3b8; font-weight:800; text-transform:uppercase; letter-spacing:0.05em; margin-bottom:2px;">Location</div>
+                            <div style="font-weight:600; color:#334155; font-size:12px; line-height:1.4; background:#f8fafc; padding:6px 10px; border-radius:8px; border:1px solid #f1f5f9;">
                                 {{ $task->task_type === 'pickup' ? $task->pickup_location : $task->dropoff_location }}
                             </div>
                         </div>
                     </div>
-                    <div style="padding:16px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; gap:8px; flex-wrap:wrap;">
+                    <div style="padding:12px 16px; background:#f8fafc; border-top:1px solid #f1f5f9; display:flex; gap:8px; flex-wrap:wrap;">
                         @php
                             $mapQ = urlencode($task->task_type === 'pickup' ? $task->pickup_location : $task->dropoff_location);
                             if ($task->task_type === 'pickup' && $task->appointment->latitude && $task->appointment->longitude) {
@@ -88,27 +89,27 @@
                         
                         <!-- Location Button -->
                         <a href="https://maps.google.com/?q={{ $mapQ }}" target="_blank"
-                            style="flex:1; min-width:80px; text-align:center; padding:12px; background:white; color:#0f172a; border:1.5px solid #cbd5e1; border-radius:12px; font-size:13px; font-weight:800; text-decoration:none; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.05); display:flex; align-items:center; justify-content:center; gap:6px;"
+                            style="flex:1; min-width:80px; text-align:center; padding:10px; background:white; color:#0f172a; border:1.5px solid #cbd5e1; border-radius:10px; font-size:12px; font-weight:800; text-decoration:none; transition:all 0.15s; box-shadow:0 1px 2px rgba(0,0,0,0.05); display:flex; align-items:center; justify-content:center; gap:6px;"
                             onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='white'">
                             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                             Map
                         </a>
 
                         <!-- Simplified Action Buttons -->
-                        @if(!in_array($task->status, ['completed', 'cancelled']))
+                        @if(!in_array($task->status, ['completed', 'cancelled', 'returned']))
                             @if($task->status === 'waiting_for_payment')
-                                <div style="flex:2; padding:12px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:12px; font-size:13px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px;">
+                                <div style="flex:2; padding:10px; background:#fef2f2; color:#dc2626; border:1px solid #fecaca; border-radius:10px; font-size:12px; font-weight:800; display:flex; align-items:center; justify-content:center; gap:6px;">
                                     Handover Cash to Admin
                                 </div>
                             @elseif($task->task_type === 'pickup')
                                 @if($task->appointment && $task->appointment->order_id)
-                                    <button onclick="updateTask({{ $task->id }}, 'complete')" style="flex:2; padding:12px; background:#16a34a; color:white; border:none; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    <button onclick="updateTask({{ $task->id }}, 'complete')" style="flex:2; padding:10px; background:#16a34a; color:white; border:none; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                         Complete Pickup
                                     </button>
                                 @else
-                                    <a href="{{ route('rider.createOrder', $task->id) }}" style="flex:2; padding:12px; background:#16a34a; color:white; text-decoration:none; border-radius:12px; font-size:13px; font-weight:800; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
-                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    <a href="{{ route('rider.createOrder', $task->id) }}" style="flex:2; padding:10px; background:#16a34a; color:white; text-decoration:none; border-radius:10px; font-size:12px; font-weight:800; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                         Pick Order
                                     </a>
                                 @endif
@@ -119,11 +120,11 @@
                                         $due = $task->appointment->order->total - $task->appointment->order->paid_amount;
                                     }
                                 @endphp
-                                <button @click="openPaymentModal({{ $task->id }}, {{ $due }})" style="flex:2; padding:12px; background:#16a34a; color:white; border:none; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
-                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                <button @click="openPaymentModal({{ $task->id }}, {{ $due }})" style="flex:2; padding:10px; background:#16a34a; color:white; border:none; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; box-shadow:0 2px 4px rgba(22,163,74,0.3); display:flex; align-items:center; justify-content:center; gap:6px;">
+                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
                                     Deliver Order
                                 </button>
-                                <button onclick="if(confirm('Are you sure you want to return this task? Order will be sent back to branch.')) updateTask({{ $task->id }}, 'return')" style="flex:1; padding:12px; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; border-radius:12px; font-size:13px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;" title="Customer Unavailable">
+                                <button onclick="if(confirm('Are you sure you want to return this task? Order will be sent back to branch.')) updateTask({{ $task->id }}, 'return')" style="flex:1; padding:10px; background:#fff7ed; color:#ea580c; border:1px solid #fed7aa; border-radius:10px; font-size:12px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px;" title="Customer Unavailable">
                                     ↩️ Return
                                 </button>
                             @endif
