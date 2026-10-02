@@ -124,7 +124,6 @@ class AssignDropoffRiderAction
                 \Log::warning('OrderStatusHistory insert failed (assignDropoff): ' . $e->getMessage());
             }
             $commService = new CommunicationService();
-            $commService->sendDeliveryConfirmation($order);
             $commService->sendRiderAssigned($order, $rider);
         }
 
