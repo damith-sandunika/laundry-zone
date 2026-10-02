@@ -1,3 +1,7 @@
+    @php
+        $isWorkshopUser = auth()->user()->role === 'super_admin' || ($dispatch && auth()->user()->branch_id == $dispatch->workshop_branch_id);
+        $isBranchUser = auth()->user()->role === 'super_admin' || (auth()->user()->branch_id == $order->branch_id);
+    @endphp
     <!-- Status Banner -->
     <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;
         {{ $order->status === 'received' ? 'background:#fffbeb;color:#d97706;border:1.5px solid #fde68a;' :
@@ -21,6 +25,7 @@
         <template x-if="dispatch">
             <div style="display:inline-flex;gap:6px;align-items:center;">
                 <!-- Dispatched to Workshop -->
+                @if($isWorkshopUser)
                 <template x-if="dispatch.status === 'dispatched_to_workshop'">
                     <button @click="workshopAction('receive')"
                         style="padding:8px 16px;background:#eab308;color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;"
@@ -28,8 +33,10 @@
                         Receive at Workshop
                     </button>
                 </template>
+                @endif
 
                 <!-- Received at Workshop (To Wash) -->
+                @if($isWorkshopUser)
                 <template x-if="dispatch.status === 'received_at_workshop'">
                     <div style="display:flex;gap:6px;">
                         <button @click="openFinalizePage()"
@@ -44,8 +51,10 @@
                         </button>
                     </div>
                 </template>
+                @endif
 
                 <!-- Processing (Washing) -->
+                @if($isWorkshopUser)
                 <template x-if="dispatch.status === 'processing'">
                     <button @click="showDoneModal = true"
                         style="padding:8px 16px;background:#10b981;color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.3);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
@@ -53,10 +62,12 @@
                         <i class="fa-solid fa-check"></i> Mark Done
                     </button>
                 </template>
+                @endif
 
                 <!-- Completed at Workshop -->
                 <template x-if="dispatch.status === 'completed_at_workshop'">
                     <div style="display:flex;gap:6px;">
+                        @if($isBranchUser)
                         <template x-if="dispatch.order.branch_id === dispatch.workshop_branch_id">
                             <div style="display:flex;gap:6px;">
                                 <template x-if="dispatch.order.is_delivery_order && dispatch.order.delivery_appointment && dispatch.order.delivery_appointment.delivery_preference !== 'pickup_from_branch'">
@@ -77,6 +88,8 @@
                                 </template>
                             </div>
                         </template>
+                        @endif
+                        @if($isWorkshopUser)
                         <template x-if="dispatch.order.branch_id !== dispatch.workshop_branch_id">
                             <button @click="workshopAction('return')"
                                 style="padding:8px 16px;background:linear-gradient(to right,#8b5cf6,#6d28d9);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(139,92,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
@@ -84,9 +97,11 @@
                                 <i class="fa-solid fa-arrow-right-from-bracket"></i> Send to Branch
                             </button>
                         </template>
+                        @endif
                     </div>
                 </template>
                 
+                @if($isBranchUser)
                 <template x-if="dispatch.status === 'returned_to_branch'">
                     <button @click="showBranchArrivalModal = true"
                         style="padding:8px 16px;background:#16a34a;color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(22,163,74,0.3);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
@@ -94,8 +109,10 @@
                         <i class="fa-solid fa-check-circle"></i> Confirm Arrival
                     </button>
                 </template>
+                @endif
 
                 <!-- Received at Branch (Ready for Final Handover/Delivery) -->
+                @if($isBranchUser)
                 <template x-if="dispatch.status === 'received_at_branch'">
                     <div style="display:flex;gap:6px;">
                         <!-- is_delivery_order + deliver_to_address → Assign Rider + Convert to Pickup -->
@@ -118,6 +135,7 @@
                         </template>
                     </div>
                 </template>
+                @endif
             </div>
         </template>
     </div>
