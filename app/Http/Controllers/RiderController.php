@@ -211,6 +211,17 @@ class RiderController extends Controller
                     'changed_by' => auth()->id(),
                     'note' => 'Delivery returned by rider (Customer unavailable). Reverted to previous status.',
                 ]);
+
+                if ($revertStatus === 'completed_at_workshop') {
+                    $lastDispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->latest('id')->first();
+                    if ($lastDispatch && $lastDispatch->status === 'returned_to_branch') {
+                        $lastDispatch->update([
+                            'status' => 'completed_at_workshop',
+                            'returned_by' => null,
+                            'returned_at' => null
+                        ]);
+                    }
+                }
             }
             if ($task->appointment) {
                 $task->appointment->update(['status' => 'pending']);
