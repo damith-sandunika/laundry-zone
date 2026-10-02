@@ -27,6 +27,10 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.key' => ApiKeyMiddleware::class,
         ]);
         
+        $middleware->web(append: [
+            \App\Http\Middleware\ExcludeRiderMiddleware::class,
+        ]);
+        
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
             if ($request->is('customer/*') || $request->is('book')) {
                 return '/customer/login';

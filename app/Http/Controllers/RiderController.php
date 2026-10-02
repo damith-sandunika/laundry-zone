@@ -46,7 +46,7 @@ class RiderController extends Controller
             ->where('rider_id', $rider->id)
             ->where('status', '!=', 'returned')
             ->orderByDesc('created_at')
-            ->paginate(20);
+            ->paginate(15);
 
         return view('rider.tasks', compact('tasks'));
     }
