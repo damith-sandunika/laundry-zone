@@ -233,7 +233,7 @@ class DeliveryController extends Controller
 
             // Update appointment
             if ($order->deliveryAppointment) {
-                $order->deliveryAppointment->update(['status' => 'pending']);
+                $order->deliveryAppointment->update(['status' => 'returned']);
             }
 
             return redirect()->route($isWorkshop ? 'workshop.operations' : 'orders.index', ['tab' => 'completed'])->with('success', 'Return confirmed and assigned to cubby.');
