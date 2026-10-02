@@ -20,6 +20,14 @@
                             $branch = \App\Models\Branch::find($branchId); 
                         @endphp
                         <div class="flex items-center justify-center lg:justify-start gap-2">
+                            <!-- Desktop Back Button -->
+                            <button onclick="window.history.back()" title="Go Back"
+                                class="hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 hover:bg-blue-100 hover:text-blue-600 text-slate-500 transition-colors pointer-events-auto">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                                </svg>
+                            </button>
+
                             @if(auth()->user()->role === 'rider')
                                 <div
                                     class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
@@ -160,6 +168,17 @@
                             </div>
                         </div>
                     @endif
+
+                    <!-- Mobile Back Button -->
+                    <button onclick="window.history.back()" title="Go Back"
+                        class="lg:hidden relative p-2 rounded-full hover:bg-slate-100 transition-colors focus:outline-none group">
+                        <div
+                            class="w-8 h-8 rounded-full bg-slate-100 text-slate-500 group-hover:bg-blue-100 group-hover:text-blue-600 flex items-center justify-center transition-colors">
+                            <svg class="w-4 h-4 mr-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </div>
+                    </button>
 
                     <!-- Manual Refresh Button -->
                     <button id="manual-refresh-btn" onclick="window.location.reload()" title="Refresh Page"
