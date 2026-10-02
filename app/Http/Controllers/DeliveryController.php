@@ -48,7 +48,7 @@ class DeliveryController extends Controller
 
         // We need total counts for the UI stat cards (without pagination)
         $pickupsCountQuery = clone $query;
-        $pickupsCount = $pickupsCountQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created'])->count();
+        $pickupsCount = $pickupsCountQuery->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created', 'returned_from_delivery'])->count();
 
         $returnsCountQuery = clone $query;
         // For returns, we need to filter out delivered orders that don't have pending cash.
@@ -80,7 +80,7 @@ class DeliveryController extends Controller
         if ($currentTab === 'returns') {
             $query->whereIn('id', $validReturnsIds);
         } else {
-            $query->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created']);
+            $query->whereIn('status', ['pending', 'confirmed', 'rider_assigned', 'picked_up', 'order_created', 'returned_from_delivery']);
         }
 
         $appointments = $query->paginate(15);

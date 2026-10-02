@@ -12,7 +12,7 @@
                     </thead>
                     <tbody>
                         @forelse($appointments as $appt)
-                            <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;{{ $appt->status === 'cancelled' ? 'opacity:0.7;background:#fff5f5;' : '' }}" onmouseover="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '0.85' }}'" onmouseout="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '1' }}'">
+                            <tr style="background:{{ $appt->status === 'returned_from_delivery' ? '#fee2e2' : 'white' }};border-bottom:1px solid #f1f5f9;transition:all 0.1s;{{ $appt->status === 'cancelled' ? 'opacity:0.7;background:#fff5f5;' : '' }}" onmouseover="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '0.85' }}'" onmouseout="this.style.opacity='{{ $appt->status === 'cancelled' ? '0.7' : '1' }}'">
                                 <td style="padding:12px 20px;">
                                     @if($appt->order_id && $appt->order)
                                         <a href="{{ route('orders.show', $appt->order->order_number) }}" style="font-size:13px;font-weight:800;color:{{ $appt->status === 'cancelled' ? '#dc2626;text-decoration:line-through;' : '#1d4ed8;' }};text-decoration:none;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">#{{ $appt->order->order_number ?? $appt->id }}</a>
@@ -115,6 +115,10 @@
                                                     </button>
                                                 </form>
                                             </div>
+                                        @elseif($appt->status === 'returned_from_delivery')
+                                            <button type="button" @click="openConfirmReturnModal({{ $appt->order_id ?? 0 }})" style="padding:5px 10px;background:#ef4444;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(239,68,68,0.3);">
+                                                Confirm Return
+                                            </button>
                                         @else
                                             <span style="font-size:11px;color:#94a3b8;font-weight:600;">No Action</span>
                                         @endif

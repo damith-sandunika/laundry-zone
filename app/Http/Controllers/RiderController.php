@@ -201,30 +201,19 @@ class RiderController extends Controller
                 $revertStatus = $previousHistory ? $previousHistory->status : 'done';
 
                 $order->update([
-                    'status' => $revertStatus,
+                    'status' => 'returned_from_delivery', // Explicitly marking it as returned
                     'delivered_at' => null
                 ]);
 
                 OrderStatusHistory::create([
                     'order_id' => $order->id,
-                    'status' => $revertStatus,
+                    'status' => 'returned_from_delivery',
                     'changed_by' => auth()->id(),
-                    'note' => 'Delivery returned by rider (Customer unavailable). Reverted to previous status.',
+                    'note' => 'Delivery returned by rider (Customer unavailable).',
                 ]);
-
-                if ($revertStatus === 'completed_at_workshop') {
-                    $lastDispatch = \App\Models\WorkshopDispatch::where('order_id', $order->id)->latest('id')->first();
-                    if ($lastDispatch && $lastDispatch->status === 'returned_to_branch') {
-                        $lastDispatch->update([
-                            'status' => 'completed_at_workshop',
-                            'returned_by' => null,
-                            'returned_at' => null
-                        ]);
-                    }
-                }
             }
             if ($task->appointment) {
-                $task->appointment->update(['status' => 'pending']);
+                $task->appointment->update(['status' => 'returned_from_delivery']);
             }
         } elseif ($task->task_type === 'pickup') {
             if ($task->appointment) {
