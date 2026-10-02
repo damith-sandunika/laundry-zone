@@ -157,9 +157,7 @@ class RiderController extends Controller
                 if ($balance > 0) {
                     $updateData['paid_amount'] = $order->paid_amount;
                     $updateData['payment_status'] = $order->payment_status;
-                    if ($paymentMethod === 'credit') {
-                        $updateData['payment_method'] = 'credit';
-                    }
+                    $updateData['payment_method'] = isset($actualMethod) ? $actualMethod : ($paymentMethod === 'credit' ? 'credit' : null);
                 }
 
                 $order->update($updateData);
