@@ -14,14 +14,14 @@
     <div class="mb-4 flex flex-wrap gap-3 items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-slate-100">
         <form method="GET" class="flex flex-wrap items-center gap-2">
             <div>
-                <input type="text" name="start_date" id="start_date"
-                    value="{{ request('start_date') }}" placeholder="Start Date"
-                    class="border-slate-200 rounded-md text-xs font-bold w-[120px] shadow-sm py-1.5">
+                <input type="date" name="start_date" id="start_date"
+                    value="{{ request('start_date') }}"
+                    class="border-slate-200 rounded-md text-xs font-bold w-[130px] shadow-sm py-1.5 text-slate-600">
             </div>
             <div>
-                <input type="text" name="end_date" id="end_date"
-                    value="{{ request('end_date') }}" placeholder="End Date"
-                    class="border-slate-200 rounded-md text-xs font-bold w-[120px] shadow-sm py-1.5">
+                <input type="date" name="end_date" id="end_date"
+                    value="{{ request('end_date') }}"
+                    class="border-slate-200 rounded-md text-xs font-bold w-[130px] shadow-sm py-1.5 text-slate-600">
             </div>
             <button type="submit"
                 class="px-3 py-1.5 bg-slate-800 text-white rounded-md text-xs font-bold shadow-sm hover:bg-slate-700 transition-colors">
@@ -74,6 +74,7 @@
             <div class="mt-2 flex flex-col gap-1 pt-2 border-t border-slate-50">
                 <div class="flex justify-between items-center mb-0.5">
                     <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase">From These Orders</span>
+                    <span class="text-[10px] font-black text-emerald-600">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
                     <span class="text-[11px] font-bold text-slate-500">💵 Cash</span>
@@ -90,14 +91,14 @@
             </div>
         </div>
 
-        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-start gap-3">
-            <div>
-                <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest block">Total Order Qty</span>
-                <span class="text-2xl font-black text-indigo-600">{{ $stats['order_qty'] }}</span>
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between gap-2">
+            <div class="bg-indigo-50/70 rounded-lg p-2.5 flex items-center justify-between border border-indigo-100/50 flex-1">
+                <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Total Orders</span>
+                <span class="text-xl font-black text-indigo-700">{{ $stats['order_qty'] }}</span>
             </div>
-            <div>
-                <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest block">Total Customers</span>
-                <span class="text-2xl font-black text-indigo-600">{{ $stats['total_customer_count'] }}</span>
+            <div class="bg-blue-50/70 rounded-lg p-2.5 flex items-center justify-between border border-blue-100/50 flex-1">
+                <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Customers</span>
+                <span class="text-xl font-black text-blue-700">{{ $stats['total_customer_count'] }}</span>
             </div>
         </div>
     </div>
@@ -276,22 +277,6 @@
         @endif
     </div>
     @endif
-    <x-slot name="scripts">
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                if(typeof flatpickr !== 'undefined') {
-                    flatpickr("#start_date", {
-                        dateFormat: "Y-m-d",
-                        maxDate: "today"
-                    });
-                    flatpickr("#end_date", {
-                        dateFormat: "Y-m-d",
-                        maxDate: "today"
-                    });
-                }
-            });
-        </script>
-    </x-slot>
 </x-app-layout>
 
 
