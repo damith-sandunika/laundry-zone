@@ -215,7 +215,7 @@
                             x-text="'Order: ' + collectOrderNumber"></p>
                     </div>
                     <button @click="collectModalOpen = false"
-                        class="w-8 h-8 flex items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors font-bold">A-</button>
+                        class="w-8 h-8 flex items-center justify-center rounded-full bg-red-100 text-red-600 hover:bg-red-200 transition-colors font-bold">&times;</button>
                 </div>
                 <div class="p-5 bg-white">
                     <form x-bind:action="'/orders/' + collectOrderId + '/credit-payment'" method="POST">
