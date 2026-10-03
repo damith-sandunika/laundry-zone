@@ -10,7 +10,7 @@
                 <h3 class="text-lg font-black text-slate-800">Finalize Bill - <span
                         x-text="orderData ? 'Order #' + orderData.order_number : ''"></span></h3>
                 <button @click="showFinalizeModal = false"
-                    style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;">Î“Â£Ã²</button>
+                    style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;">&times;</button>
             </div>
 
             <div class="flex flex-col lg:flex-row h-full overflow-hidden"
