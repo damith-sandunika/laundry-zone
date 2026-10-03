@@ -73,6 +73,7 @@
         /* ── Chit Body ── */
         body {
             font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            font-weight: 600;
             margin: 0;
             padding: 10px;
             color: #000;

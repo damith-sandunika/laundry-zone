@@ -19,6 +19,7 @@
 
         body {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-weight: 600;
             font-size: 12px;
             width: 74mm;
             max-width: 100%;
