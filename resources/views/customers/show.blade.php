@@ -6,7 +6,7 @@
                 <h2 class="text-xl font-black text-slate-800">Customer Profile</h2>
             </div>
             <div class="flex gap-2">
-                <a href="{{ route('customers.edit', ) }}" class="px-4 py-2 bg-white border-2 border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+                <a href="{{ route('customers.edit', $customer) }}" class="px-4 py-2 bg-white border-2 border-slate-200 text-slate-700 text-xs font-bold rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
                     ✏️ Edit Profile
                 </a>
             </div>
@@ -26,18 +26,18 @@
         <div class="relative flex flex-col md:flex-row gap-6 items-start md:items-center">
             <!-- Avatar / Initial -->
             <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-500/30 shrink-0">
-                {{ substr(->name, 0, 1) }}
+                {{ substr($customer->name, 0, 1) }}
             </div>
             
             <!-- Details -->
             <div class="flex-1">
                 <div class="flex items-center gap-3 mb-1">
                     <h2 class="text-2xl font-black text-slate-800">
-                        {{ ->title ? ->title . ' ' : '' }}{{ ->name }}
+                        {{ $customer->title ? $customer->title . ' ' : '' }}{{ $customer->name }}
                     </h2>
-                    @if(->customer_mark)
+                    @if($customer->customer_mark)
                         <span class="px-3 py-1 bg-amber-100 text-amber-700 font-bold text-[10px] rounded-lg border border-amber-200 uppercase tracking-widest shadow-sm">
-                            {{ ->customer_mark }}
+                            {{ $customer->customer_mark }}
                         </span>
                     @endif
                 </div>
@@ -47,32 +47,32 @@
                         <div class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center text-slate-400">
                             <i class="fa-solid fa-phone text-[10px]"></i>
                         </div>
-                        <span class="text-slate-700">{{ ->phone }}</span>
+                        <span class="text-slate-700">{{ $customer->phone }}</span>
                     </div>
                     
-                    @if(->address)
+                    @if($customer->address)
                     <div class="flex items-center gap-2">
                         <div class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center text-slate-400">
                             <i class="fa-solid fa-location-dot text-[10px]"></i>
                         </div>
-                        <span class="text-slate-600">{{ ->address }}</span>
+                        <span class="text-slate-600">{{ $customer->address }}</span>
                     </div>
                     @endif
                 </div>
                 
-                @if(->date_of_birth || ->nic)
+                @if($customer->date_of_birth || $customer->nic)
                 <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 pt-4 border-t border-slate-100/60">
-                    @if(->date_of_birth)
+                    @if($customer->date_of_birth)
                     <div class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100">
                         <i class="fa-solid fa-cake-candles"></i> 
-                        {{ \Carbon\Carbon::parse(->date_of_birth)->format('M d, Y') }}
+                        {{ \Carbon\Carbon::parse($customer->date_of_birth)->format('M d, Y') }}
                     </div>
                     @endif
                     
-                    @if(->nic)
+                    @if($customer->nic)
                     <div class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg text-xs font-bold border border-purple-100">
                         <i class="fa-solid fa-id-card"></i> 
-                        NIC: {{ ->nic }}
+                        NIC: {{ $customer->nic }}
                     </div>
                     @endif
                 </div>
@@ -84,16 +84,16 @@
     <!-- Stats Row -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-blue-600">{{  }}</p>
+            <p class="text-2xl font-bold text-blue-600">{{ $totalOrders }}</p>
             <p class="text-xs text-gray-500 mt-1">Total Orders</p>
         </div>
         <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-green-600">Rs.{{ number_format(, 2) }}</p>
+            <p class="text-2xl font-bold text-green-600">Rs.{{ number_format($totalSpend, 2) }}</p>
             <p class="text-xs text-gray-500 mt-1">Total Spend</p>
         </div>
         <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-4 text-center">
             <p class="text-2xl font-bold text-gray-700">
-                {{  }}
+                {{ $completedCount }}
             </p>
             <p class="text-xs text-gray-500 mt-1">Completed</p>
         </div>
@@ -109,7 +109,7 @@
         // Bulk Settlement State
         bulkCollectModalOpen: false,
         bulkCollectAmount: 0,
-        pendingOrdersList: @js(),
+        pendingOrdersList: @js($allPendingForBulk),
         
         openMonth: null,
         toggleMonth(ym) { this.openMonth = this.openMonth === ym ? null : ym; },
@@ -144,7 +144,7 @@
         }
     }">
     
-    @if( > 0)
+    @if($pendingCount > 0)
         <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
             <div class="flex items-center gap-3">
                 <div class="p-3 bg-red-100 rounded-lg text-red-600">
@@ -152,15 +152,15 @@
                 </div>
                 <div>
                     <h3 class="text-red-800 font-bold text-lg">Pending Clearance (Credit Due)</h3>
-                    <p class="text-red-600 text-sm mt-0.5">This customer has {{  }} unpaid order(s) requiring clearance.</p>
+                    <p class="text-red-600 text-sm mt-0.5">This customer has {{ $pendingCount }} unpaid order(s) requiring clearance.</p>
                 </div>
             </div>
             <div class="text-left md:text-right flex flex-col md:items-end gap-2">
                 <div>
                     <p class="text-xs text-red-500 font-bold uppercase tracking-wider mb-1">Total Due</p>
-                    <p class="text-2xl font-black text-red-700">Rs.{{ number_format(, 2) }}</p>
+                    <p class="text-2xl font-black text-red-700">Rs.{{ number_format($totalPending, 2) }}</p>
                 </div>
-                <button @click="openBulkCollectModal({{  }})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-xl transition-all shadow-lg shadow-red-500/30 flex items-center gap-2">
+                <button @click="openBulkCollectModal({{ $totalPending }})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-xl transition-all shadow-lg shadow-red-500/30 flex items-center gap-2">
                     <i class="fa-solid fa-coins"></i> Settle Payment
                 </button>
             </div>
@@ -170,24 +170,24 @@
     <!-- Tabs Container -->
     <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden mb-6">
         <div class="px-5 pt-3 border-b border-gray-100 bg-gray-50 flex gap-4">
-            <a href="{{ route('customers.show', ['customer' => , 'tab' => 'history']) }}" class="{{  === 'history' ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'text-gray-500 font-semibold hover:text-gray-700' }} pb-3 px-2 text-sm transition-colors outline-none block">
+            <a href="{{ route('customers.show', ['customer' => $customer, 'tab' => 'history']) }}" class="{{ $tab === 'history' ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'text-gray-500 font-semibold hover:text-gray-700' }} pb-3 px-2 text-sm transition-colors outline-none block">
                 Order History
             </a>
-            <a href="{{ route('customers.show', ['customer' => , 'tab' => 'pending']) }}" class="{{  === 'pending' ? 'border-b-2 border-red-600 text-red-600 font-bold' : 'text-gray-500 font-semibold hover:text-gray-700' }} pb-3 px-2 text-sm transition-colors outline-none flex items-center gap-2">
+            <a href="{{ route('customers.show', ['customer' => $customer, 'tab' => 'pending']) }}" class="{{ $tab === 'pending' ? 'border-b-2 border-red-600 text-red-600 font-bold' : 'text-gray-500 font-semibold hover:text-gray-700' }} pb-3 px-2 text-sm transition-colors outline-none flex items-center gap-2">
                 Pending Clearance
-                @if( > 0)
-                    <span class="bg-red-100 text-red-700 py-0.5 px-2 rounded-full text-[10px]">{{  }}</span>
+                @if($pendingCount > 0)
+                    <span class="bg-red-100 text-red-700 py-0.5 px-2 rounded-full text-[10px]">{{ $pendingCount }}</span>
                 @endif
             </a>
-            <a href="{{ route('customers.show', ['customer' => , 'tab' => 'sales']) }}" class="{{  === 'sales' ? 'border-b-2 border-emerald-600 text-emerald-600 font-bold' : 'text-gray-500 font-semibold hover:text-gray-700' }} pb-3 px-2 text-sm transition-colors outline-none block">
+            <a href="{{ route('customers.show', ['customer' => $customer, 'tab' => 'sales']) }}" class="{{ $tab === 'sales' ? 'border-b-2 border-emerald-600 text-emerald-600 font-bold' : 'text-gray-500 font-semibold hover:text-gray-700' }} pb-3 px-2 text-sm transition-colors outline-none block">
                 Sales Report
             </a>
         </div>
 
-        @if( === 'history')
+        @if($tab === 'history')
         <!-- Order History Tab -->
         <div>
-            @if(->isEmpty())
+            @if($historyOrders->isEmpty())
                 <div class="p-8 text-center text-gray-400 text-sm">No orders yet.</div>
             @else
             <table class="w-full text-sm text-left">
@@ -203,39 +203,39 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    @foreach( as )
+                    @foreach($historyOrders as $order)
                     <tr class="hover:bg-gray-50">
-                        <td class="px-5 py-3 font-mono font-bold text-blue-600 text-xs">{{ ->order_number }}</td>
+                        <td class="px-5 py-3 font-mono font-bold text-blue-600 text-xs">{{ $order->order_number }}</td>
                         <td class="px-5 py-3 text-gray-600 text-xs">
-                            {{ ->items->pluck('serviceType.name')->filter()->join(', ') ?: '—' }}
+                            {{ $order->items->pluck('serviceType.name')->filter()->join(', ') ?: '—' }}
                         </td>
-                        <td class="px-5 py-3 font-semibold">{{ ->total == 0 && ->isPackageOrder() ? 'Package' : 'Rs.' . number_format(->total, 2) }}</td>
-                        <td class="px-5 py-3 text-green-600">Rs.{{ number_format(->paid_amount, 2) }}</td>
+                        <td class="px-5 py-3 font-semibold">{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</td>
+                        <td class="px-5 py-3 text-green-600">Rs.{{ number_format($order->paid_amount, 2) }}</td>
                         <td class="px-5 py-3">
-                            @php  = ['received'=>'blue','washing'=>'indigo','ready'=>'amber','delivered'=>'green','cancelled'=>'red'];  = [->status] ?? 'gray'; @endphp
-                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-{{  }}-100 text-{{  }}-700">
-                                {{ ucfirst(->status) }}
+                            @php $colors = ['received'=>'blue','washing'=>'indigo','ready'=>'amber','delivered'=>'green','cancelled'=>'red']; $c = $colors[$order->status] ?? 'gray'; @endphp
+                            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-{{ $c }}-100 text-{{ $c }}-700">
+                                {{ ucfirst($order->status) }}
                             </span>
                         </td>
-                        <td class="px-5 py-3 text-gray-400 text-xs">{{ ->created_at->format('M d, Y') }}</td>
+                        <td class="px-5 py-3 text-gray-400 text-xs">{{ $order->created_at->format('M d, Y') }}</td>
                         <td class="px-5 py-3">
-                            <a href="{{ route('orders.show', ->order_number) }}" class="text-xs text-blue-600 hover:underline">View</a>
+                            <a href="{{ route('orders.show', $order->order_number) }}" class="text-xs text-blue-600 hover:underline">View</a>
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
             <div class="p-4 border-t border-gray-100">
-                {{ ->links() }}
+                {{ $historyOrders->links() }}
             </div>
             @endif
         </div>
         @endif
 
-        @if( === 'pending')
+        @if($tab === 'pending')
         <!-- Pending Clearance Tab -->
         <div>
-            @if(->isEmpty())
+            @if($pendingOrdersList->isEmpty())
                 <div class="p-8 text-center text-gray-400 text-sm font-semibold">No pending clearance for this customer.</div>
             @else
             <table class="w-full text-sm text-left">
@@ -250,64 +250,64 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    @foreach( as )
+                    @foreach($pendingOrdersList as $order)
                     <tr class="hover:bg-red-50/30 transition-colors">
-                        <td class="px-5 py-4 font-mono font-bold text-blue-600 text-xs">{{ ->order_number }}</td>
-                        <td class="px-5 py-4 font-semibold text-gray-700">Rs.{{ number_format(->total, 2) }}</td>
-                        <td class="px-5 py-4 font-semibold text-emerald-600">Rs.{{ number_format(->paid_amount, 2) }}</td>
-                        <td class="px-5 py-4 font-black text-red-600 text-right text-base">Rs.{{ number_format(->total - ->paid_amount, 2) }}</td>
-                        <td class="px-5 py-4 text-gray-500 text-xs font-semibold">{{ ->created_at->format('M d, Y') }}</td>
+                        <td class="px-5 py-4 font-mono font-bold text-blue-600 text-xs">{{ $order->order_number }}</td>
+                        <td class="px-5 py-4 font-semibold text-gray-700">Rs.{{ number_format($order->total, 2) }}</td>
+                        <td class="px-5 py-4 font-semibold text-emerald-600">Rs.{{ number_format($order->paid_amount, 2) }}</td>
+                        <td class="px-5 py-4 font-black text-red-600 text-right text-base">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
+                        <td class="px-5 py-4 text-gray-500 text-xs font-semibold">{{ $order->created_at->format('M d, Y') }}</td>
                         <td class="px-5 py-4 text-center">
-                            <button @click="openCollectModal({{ ->id }}, '{{ ->order_number }}', {{ ->total - ->paid_amount }})" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-lg transition-colors">Settle Now</button>
+                            <button @click="openCollectModal({{ $order->id }}, '{{ $order->order_number }}', {{ $order->total - $order->paid_amount }})" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-lg transition-colors">Settle Now</button>
                         </td>
                     </tr>
                     @endforeach
                 </tbody>
             </table>
             <div class="p-4 border-t border-gray-100">
-                {{ ->links() }}
+                {{ $pendingOrdersList->links() }}
             </div>
             @endif
         </div>
         @endif
 
-        @if( === 'sales')
+        @if($tab === 'sales')
         <!-- Sales Report Tab -->
         <div>
-            @if(->isEmpty())
+            @if($monthlySales->isEmpty())
                 <div class="p-8 text-center text-gray-400 text-sm">No orders found for this customer.</div>
             @else
             <div class="divide-y divide-gray-100">
-                @foreach( as )
+                @foreach($monthlySales as $month)
                 <div>
                     <!-- Month Header Row (clickable) -->
-                    <div @click="toggleMonth('{{ ['year_month'] }}')" class="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-emerald-50/40 transition-colors select-none">
+                    <div @click="toggleMonth('{{ $month['year_month'] }}')" class="flex items-center justify-between px-5 py-3 cursor-pointer hover:bg-emerald-50/40 transition-colors select-none">
                         <!-- Left: month name + stats -->
                         <div class="flex items-center gap-3">
                             <div class="w-7 h-7 rounded-md bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs shrink-0">📅</div>
                             <div>
-                                <div class="text-xs font-semibold text-slate-700">{{ ['label'] }}</div>
+                                <div class="text-xs font-semibold text-slate-700">{{ $month['label'] }}</div>
                                 <div class="flex items-center gap-2 mt-0.5 text-[11px] text-slate-500">
-                                    <span>{{ ['order_count'] }} order{{ ['order_count'] !== 1 ? 's' : '' }}</span>
+                                    <span>{{ $month['order_count'] }} order{{ $month['order_count'] !== 1 ? 's' : '' }}</span>
                                     <span class="text-slate-300">|</span>
-                                    <span>{{ number_format(['total_qty'], 0) }} items</span>
+                                    <span>{{ number_format($month['total_qty'], 0) }} items</span>
                                     <span class="text-slate-300">|</span>
-                                    <span class="text-emerald-600">Paid: Rs.{{ number_format(['orders']->sum('paid_amount'), 2) }}</span>
+                                    <span class="text-emerald-600">Paid: Rs.{{ number_format($month['orders']->sum('paid_amount'), 2) }}</span>
                                     <span class="text-slate-300">|</span>
-                                    <span class="text-slate-700">Bill: Rs.{{ number_format(['total_bill'], 2) }}</span>
+                                    <span class="text-slate-700">Bill: Rs.{{ number_format($month['total_bill'], 2) }}</span>
                                 </div>
                             </div>
                         </div>
                         <!-- Right: PDF + arrow -->
                         <div class="flex items-center gap-2 shrink-0">
-                            <a href="{{ route('customers.salesReport.pdf', [, 'month' => ['year_month']]) }}"
+                            <a href="{{ route('customers.salesReport.pdf', [$customer, 'month' => $month['year_month']]) }}"
                                target="_blank"
                                @click.stop
                                class="text-[10px] font-semibold px-2 py-0.5 rounded bg-slate-100 text-slate-500 hover:bg-rose-100 hover:text-rose-600 transition-colors"
                                title="Download PDF">
                                PDF
                             </a>
-                            <svg :class="openMonth === '{{ ['year_month'] }}' ? 'rotate-180' : ''"
+                            <svg :class="openMonth === '{{ $month['year_month'] }}' ? 'rotate-180' : ''"
                                  class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
                                  fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
@@ -316,7 +316,7 @@
                     </div>
 
                     <!-- Expanded Orders -->
-                    <div x-show="openMonth === '{{ ['year_month'] }}'" x-transition style="display:none;">
+                    <div x-show="openMonth === '{{ $month['year_month'] }}'" x-transition style="display:none;">
                         <div class="bg-slate-50 border-t border-slate-100">
                             <table class="w-full text-xs">
                                 <thead>
@@ -329,23 +329,23 @@
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-100">
-                                    @foreach(['orders'] as )
+                                    @foreach($month['orders'] as $ord)
                                     <tr class="hover:bg-white transition-colors">
                                         <td class="px-5 py-2.5">
-                                            <a href="{{ route('orders.show', ->order_number) }}" class="font-mono font-black text-blue-600 hover:underline">{{ ->order_number }}</a>
+                                            <a href="{{ route('orders.show', $ord->order_number) }}" class="font-mono font-black text-blue-600 hover:underline">{{ $ord->order_number }}</a>
                                         </td>
-                                        <td class="px-5 py-2.5 text-slate-500 font-semibold">{{ ->created_at->format('d M, H:i') }}</td>
+                                        <td class="px-5 py-2.5 text-slate-500 font-semibold">{{ $ord->created_at->format('d M, H:i') }}</td>
                                         <td class="px-5 py-2.5 text-center font-bold text-slate-700">
-                                            {{ number_format(->items->sum('quantity'), 0) }}
+                                            {{ number_format($ord->items->sum('quantity'), 0) }}
                                         </td>
                                         <td class="px-5 py-2.5 text-right font-black text-slate-800">
-                                            {{ ->total == 0 && ->isPackageOrder() ? 'Package' : 'Rs.'.number_format(->total, 2) }}
+                                            {{ $ord->total == 0 && $ord->isPackageOrder() ? 'Package' : 'Rs.'.number_format($ord->total, 2) }}
                                         </td>
                                         <td class="px-5 py-2.5 text-right">
                                             <span class="px-2 py-0.5 rounded-full text-[10px] font-bold
-                                                {{ in_array(->status, ['delivered','completed']) ? 'bg-emerald-100 text-emerald-700' :
-                                                   (->status === 'received' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500') }}">
-                                                {{ ucfirst(str_replace('_',' ',->status)) }}
+                                                {{ in_array($ord->status, ['delivered','completed']) ? 'bg-emerald-100 text-emerald-700' :
+                                                   ($ord->status === 'received' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-500') }}">
+                                                {{ ucfirst(str_replace('_',' ',$ord->status)) }}
                                             </span>
                                         </td>
                                     </tr>
@@ -355,8 +355,8 @@
                                 <tfoot>
                                     <tr class="border-t-2 border-emerald-200 bg-emerald-50">
                                         <td colspan="2" class="px-5 py-2.5 text-[11px] font-black text-emerald-700 uppercase tracking-wide">Month Total</td>
-                                        <td class="px-5 py-2.5 text-center font-black text-emerald-700">{{ number_format(['total_qty'], 0) }}</td>
-                                        <td class="px-5 py-2.5 text-right font-black text-emerald-700">Rs.{{ number_format(['total_bill'], 2) }}</td>
+                                        <td class="px-5 py-2.5 text-center font-black text-emerald-700">{{ number_format($month['total_qty'], 0) }}</td>
+                                        <td class="px-5 py-2.5 text-right font-black text-emerald-700">Rs.{{ number_format($month['total_bill'], 2) }}</td>
                                         <td></td>
                                     </tr>
                                 </tfoot>
@@ -367,7 +367,7 @@
                 @endforeach
             </div>
             <div class="p-4 border-t border-gray-100">
-                {{ ->links() }}
+                {{ $salesOrders->links() }}
             </div>
             @endif
         </div>
@@ -419,7 +419,7 @@
             </div>
             
             <div class="p-5 bg-white max-h-[70vh] overflow-y-auto">
-                <form action="{{ route('customers.bulkCreditPayment', ) }}" method="POST">
+                <form action="{{ route('customers.bulkCreditPayment', $customer) }}" method="POST">
                     @csrf
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                         <div>
