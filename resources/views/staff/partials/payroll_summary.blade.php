@@ -58,6 +58,13 @@
                             <span class="font-bold">- Rs. {{ number_format($payroll->advances, 2) }}</span>
                         </div>
                         @endif
+
+                        @if($payroll->already_paid > 0)
+                        <div class="flex justify-between text-orange-600 px-1 pt-1">
+                            <span class="font-semibold">Already Paid:</span>
+                            <span class="font-bold">- Rs. {{ number_format($payroll->already_paid, 2) }}</span>
+                        </div>
+                        @endif
                         
                         <!-- Payable Balance Row -->
                         <div class="pt-2 border-t border-green-200 flex justify-between items-center text-sm">
@@ -71,6 +78,7 @@
                            class="flex-1 text-center py-2 px-3 bg-white text-gray-700 text-xs font-bold rounded-lg border border-gray-200 hover:bg-gray-50 transition shadow-sm">
                            📄 PDF Payslip
                         </a>
+                        @if($payroll->net_salary > 0)
                         <form method="POST" action="{{ route('staff.paySalary') }}" class="flex-1">
                             @csrf
                             <input type="hidden" name="user_id" value="{{ $staff->id }}">
@@ -80,6 +88,7 @@
                                 💸 Pay Now
                             </button>
                         </form>
+                        @endif
                     </div>
                 </div>
 
@@ -129,8 +138,11 @@
                         @forelse($salaries as $salary)
                             <div class="p-4 flex justify-between items-center hover:bg-gray-50/50 transition">
                                 <div>
-                                    <p class="text-xs font-bold text-gray-700">{{ $salary->description }}</p>
-                                    <p class="text-[10px] text-gray-400">{{ $salary->created_at->format('M d, Y') }}</p>
+                                    <p class="text-[11px] font-bold text-gray-700">{{ $salary->description }}</p>
+                                    <p class="text-[10px] text-gray-500 mt-0.5">
+                                        Paid by: <span class="font-bold text-gray-700">{{ optional($salary->createdBy)->name ?? 'System' }}</span>
+                                    </p>
+                                    <p class="text-[10px] text-gray-400 mt-0.5">{{ $salary->created_at->format('M d, Y h:i A') }}</p>
                                 </div>
                                 <span class="text-sm font-black text-green-600">Rs. {{ number_format($salary->amount, 2) }}</span>
                             </div>

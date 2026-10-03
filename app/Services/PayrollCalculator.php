@@ -142,8 +142,15 @@ class PayrollCalculator
         // Gross Salary
         $grossSalary = max(0, $basePay + $otAmount + $allowances - $manualDeductions);
 
-        // Net Salary
-        $netSalary = max(0, $grossSalary - $advances);
+        // Fetch already paid salaries for this month to subtract from payable balance
+        $monthName = date('F Y', mktime(0, 0, 0, $month, 10, $year));
+        $alreadyPaid = (float) \App\Models\Expense::where('category', 'salary')
+            ->where('description', 'like', "%{$staff->name}%")
+            ->where('description', 'like', "%{$monthName}%")
+            ->sum('amount');
+
+        // Net Salary (Payable Balance)
+        $netSalary = max(0, $grossSalary - $advances - $alreadyPaid);
 
         return (object) [
             'month' => $month,
@@ -171,6 +178,7 @@ class PayrollCalculator
             'manual_deductions' => $manualDeductions,
             'gross_salary' => round($grossSalary, 2),
             'advances' => $advances,
+            'already_paid' => $alreadyPaid,
             'net_salary' => round($netSalary, 2),
             'adjustments' => $adjustments,
         ];
