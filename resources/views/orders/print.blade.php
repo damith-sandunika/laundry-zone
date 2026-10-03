@@ -93,7 +93,7 @@
 
         .item-details {
             font-size: 11px;
-            color: #475569;
+            color: #000;
             padding-left: 2px;
         }
 
@@ -164,7 +164,7 @@
             <span class="item-name">
                 @if($item->serviceType && $item->serviceType->name !== 'Special Service')
                     @if($item->serviceType->category)
-                        <div style="font-size: 9px; color: #475569; font-weight: 500; margin-bottom: 1px;">
+                        <div style="font-size: 9px; color: #000; font-weight: 500; margin-bottom: 1px;">
                             {{ $item->serviceType->category->parent ? $item->serviceType->category->parent->name . ' > ' : '' }}{{ $item->serviceType->category->name }}
                         </div>
                     @endif
@@ -175,7 +175,7 @@
             </span>
             <span class="bold">Rs.{{ number_format($item->unit_price * max(1, $item->quantity), 2) }}</span>
         </div>
-        <div style="font-size: 11px; margin-bottom: 2px; color:#475569;">
+        <div style="font-size: 11px; margin-bottom: 2px; color:#000;">
             {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
             @if($item->turnaroundType && !$item->turnaroundType->is_default)
                 ({{ $item->turnaroundType->name }})
@@ -184,7 +184,7 @@
             @endif
         </div>
         @if($item->turnaround_extra_charge > 0)
-            <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px; color:#d97706;">
+            <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px; color:#000;">
                 <span>⚡ Express Surcharge</span>
                 <span class="bold">+Rs.{{ number_format($item->turnaround_extra_charge, 2) }}</span>
             </div>
@@ -244,14 +244,14 @@
     <div class="divider"></div>
 
     @if($mainBranch && $mainBranch->invoice_terms)
-        <div style="font-size:10px; margin-top:8px; color:#333; text-align:justify;">
+        <div style="font-size:10px; margin-top:8px; color:#000; text-align:justify;">
             <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
             {!! nl2br(e($mainBranch->invoice_terms)) !!}
         </div>
         <div class="divider"></div>
     @endif
 
-    <div style="font-size:10px; margin-top:8px; margin-bottom:8px; color:#333; text-align:center;">
+    <div style="font-size:10px; margin-top:8px; margin-bottom:8px; color:#000; text-align:center;">
         <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
         Read our full terms at <br><strong style="font-size:11px;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</strong>
     </div>
@@ -261,11 +261,11 @@
         <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($mainBranch->invoice_footer)) !!}</div>
     @else
         <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}.</div>
-        <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
+        <div class="center" style="font-size:10px; margin-top:3px; color:#000;">If you are happy with our service, please
             leave us a Google Review!</div>
     @endif
 
-    <div class="center" style="font-size:10px; margin-top:12px; color:#666;">
+    <div class="center" style="font-size:10px; margin-top:12px; color:#000;">
         Software by DSRZone
     </div>
 
