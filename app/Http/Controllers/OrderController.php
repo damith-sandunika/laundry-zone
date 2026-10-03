@@ -605,37 +605,37 @@ class OrderController extends Controller
 
         $ordersBase = clone $statsQuery;
         
-        $totalOrderValue = $ordersBase->sum('total');
-        $walkIn = $ordersBase->where('is_delivery_order', false)->sum('total');
-        $delivery = $ordersBase->where('is_delivery_order', true)->sum('total');
+        $totalOrderValue = (clone $ordersBase)->sum('total');
+        $walkIn = (clone $ordersBase)->where('is_delivery_order', false)->sum('total');
+        $delivery = (clone $ordersBase)->where('is_delivery_order', true)->sum('total');
         
         // Pending logic (Total - Paid)
-        $pendingDue = $ordersBase->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        $pendingDue = (clone $ordersBase)->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
         
-        // Split pending by is_credit_order
-        $regularPending = $ordersBase->where('is_credit_order', false)->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
-        $creditOrders = $ordersBase->where('is_credit_order', true)->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        // Split pending by payment_method
+        $regularPending = (clone $ordersBase)->where('payment_method', '!=', 'credit')->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        $creditOrders = (clone $ordersBase)->where('payment_method', 'credit')->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
 
-        $collectedPayments = $ordersBase->sum('paid_amount');
+        $collectedPayments = (clone $ordersBase)->sum('paid_amount');
 
-        $orderIds = $ordersBase->pluck('id')->toArray();
+        $orderIds = (clone $ordersBase)->pluck('id')->toArray();
         $transactions = PaymentTransaction::whereIn('order_id', $orderIds)->get();
 
         $cashTotal = $transactions->where('payment_method', 'cash')->sum('amount');
         $cardTotal = $transactions->where('payment_method', 'card')->sum('amount');
         $bankTotal = $transactions->where('payment_method', 'bank')->sum('amount');
 
-        $directCash = $ordersBase->where('payment_method', 'cash')->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
+        $directCash = (clone $ordersBase)->where('payment_method', 'cash')->get()->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
         $cashTotal += $directCash;
         
-        $directCard = $ordersBase->where('payment_method', 'card')->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
+        $directCard = (clone $ordersBase)->where('payment_method', 'card')->get()->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
         $cardTotal += $directCard;
         
-        $directBank = $ordersBase->where('payment_method', 'bank')->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
+        $directBank = (clone $ordersBase)->where('payment_method', 'bank')->get()->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
         $bankTotal += $directBank;
 
-        $orderQty = $ordersBase->count();
-        $totalCustomerCount = $ordersBase->pluck('customer_id')->unique()->count();
+        $orderQty = (clone $ordersBase)->count();
+        $totalCustomerCount = (clone $ordersBase)->pluck('customer_id')->unique()->count();
         $itemQty = \App\Models\OrderItem::whereIn('order_id', $orderIds)->sum('quantity');
 
         $stats = [

@@ -158,7 +158,7 @@
                                                     {{ $service->is_active ? 'Active' : 'Inactive' }}
                                                 </span>
                                                 @if($service->is_visible_on_website)
-                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Ã°Å¸Å’Â Website</span>
+                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Show in Website</span>
                                                 @endif
                                             </div>
                                         </div>
@@ -219,7 +219,7 @@
                                                     {{ $service->is_active ? 'Active' : 'Inactive' }}
                                                 </span>
                                                 @if($service->is_visible_on_website)
-                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Ã°Å¸Å’Â Website</span>
+                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Show in Website</span>
                                                 @endif
                                             </div>
                                         </div>
