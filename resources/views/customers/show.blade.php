@@ -120,7 +120,7 @@
         // Bulk Settlement State
         bulkCollectModalOpen: false,
         bulkCollectAmount: 0,
-        pendingOrdersList: {{ json_encode($pendingOrders->map(fn($o) => ['id' => $o->id, 'number' => $o->order_number, 'due' => $o->total - $o->paid_amount])->values()) }},
+        pendingOrdersList: {{ json_encode($pendingOrders->reverse()->map(fn($o) => ['id' => $o->id, 'number' => $o->order_number, 'due' => $o->total - $o->paid_amount])->values()) }},
         
         openMonth: null,
         toggleMonth(ym) { this.openMonth = this.openMonth === ym ? null : ym; },
@@ -251,7 +251,7 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gray-50">
-                    @foreach($pendingOrders as $order)
+                    @foreach($pendingOrders->reverse() as $order)
                     <tr class="hover:bg-red-50/30 transition-colors">
                         <td class="px-5 py-4 font-mono font-bold text-blue-600 text-xs">{{ $order->order_number }}</td>
                         <td class="px-5 py-4 font-semibold text-gray-700">Rs.{{ number_format($order->total, 2) }}</td>
