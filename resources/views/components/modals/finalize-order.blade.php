@@ -1,4 +1,4 @@
-<template x-teleport="body">
+﻿<template x-teleport="body">
     <div x-data="finalizeOrderModal()" x-cloak x-show="showFinalizeModal"
         @open-finalize-modal.window="openModal($event.detail)"
         class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">
@@ -10,7 +10,7 @@
                 <h3 class="text-lg font-black text-slate-800">Finalize Bill - <span
                         x-text="orderData ? 'Order #' + orderData.order_number : ''"></span></h3>
                 <button @click="showFinalizeModal = false"
-                    style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;">Γ£ò</button>
+                    style="background:none;border:none;cursor:pointer;color:#94a3b8;font-size:20px;">Î“Â£Ã²</button>
             </div>
 
             <div class="flex flex-col lg:flex-row h-full overflow-hidden"
@@ -53,7 +53,7 @@
                                     <span class="text-sm font-black text-blue-600"
                                         x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
                                     <span class="text-[10px] font-bold text-slate-400"
-                                        x-text="service.price_type === 'per_kg' ? '/KG' : '/ITEM'"></span>
+                                        x-text="service.price_type === 'per_kg' ? '/KG' : (service.price_type === 'per_sqft' ? '/SQFT' : (service.price_type === 'per_pair' ? '/PAIR' : '/ITEM'))"></span>
                                 </div>
                             </button>
                         </template>

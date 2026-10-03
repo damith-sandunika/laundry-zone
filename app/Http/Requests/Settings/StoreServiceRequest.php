@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Requests\Settings;
 
@@ -25,7 +25,7 @@ class StoreServiceRequest extends FormRequest
             'item_code' => 'nullable|string|max:50',
             'category_id' => 'nullable|exists:service_categories,id',
             'base_price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:per_kg,per_item,per_sqft',
+            'price_type' => 'required|in:per_kg,per_item,per_sqft,per_pair',
             'inventory' => 'nullable|array',
             'is_visible_on_website' => 'nullable',
             'icon' => 'nullable|string|max:10',
@@ -33,3 +33,4 @@ class StoreServiceRequest extends FormRequest
         ];
     }
 }
+

@@ -1,4 +1,4 @@
-<!-- ===================== Right: Order Panel ===================== -->
+﻿<!-- ===================== Right: Order Panel ===================== -->
             <div class="flex-1 lg:flex-[0.8] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
                 
                 <!-- Customer Section -->
@@ -19,7 +19,7 @@
                         </svg>
                         <input type="text" x-model="customerSearch" @input="filterCustomers"
                             @focus="showCustDropdown = true" @click.away="showCustDropdown = false"
-                            :placeholder="selectedCustomer ? 'Change customer…' : 'Search by name or phone…'"
+                            :placeholder="selectedCustomer ? 'Change customerâ€¦' : 'Search by name or phoneâ€¦'"
                             class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
 
                         <!-- Dropdown -->
@@ -105,7 +105,7 @@
                                 <div class="flex items-center gap-0.5 bg-slate-50 px-1.5 py-1 rounded border border-slate-100 shrink-0">
                                     <span class="text-[10px] font-bold text-slate-400">Rs.</span>
                                     <input type="number" x-model.number="item.base_price" class="w-14 sm:w-16 text-[12px] font-black text-slate-700 bg-transparent border-none focus:ring-0 outline-none p-0 hide-arrows text-center" min="0" step="0.01">
-                                    <span class="text-[9px] font-extrabold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : (item.price_type === 'per_sqft' ? '/SQFT' : '')"></span>
+                                    <span class="text-[9px] font-extrabold text-slate-400" x-text="item.price_type === 'per_kg' ? '/KG' : (item.price_type === 'per_sqft' ? '/SQFT' : (item.price_type === 'per_pair' ? '/PAIR' : ''))"></span>
                                 </div>
                                 
                                 <!-- Total -->
@@ -216,3 +216,4 @@
                     </div>
                 </div>
             </div>
+

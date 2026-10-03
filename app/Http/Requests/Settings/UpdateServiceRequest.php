@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Requests\Settings;
 
@@ -25,7 +25,7 @@ class UpdateServiceRequest extends FormRequest
             'item_code' => 'nullable|string|max:50',
             'category_id' => 'nullable|exists:service_categories,id',
             'base_price' => 'required|numeric|min:0',
-            'price_type' => 'required|in:per_kg,per_item,per_sqft',
+            'price_type' => 'required|in:per_kg,per_item,per_sqft,per_pair',
             'is_active' => 'boolean',
             'inventory' => 'nullable|array',
             'is_visible_on_website' => 'nullable',
@@ -34,3 +34,4 @@ class UpdateServiceRequest extends FormRequest
         ];
     }
 }
+

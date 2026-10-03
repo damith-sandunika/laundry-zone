@@ -1,4 +1,4 @@
-            @if($canManageConfig)
+﻿            @if($canManageConfig)
             <!-- PACKAGES TAB -->
             <div style="display: block;" x-data="{ packageModalOpen: false }">
                 <div class="flex justify-between items-center mb-4">
@@ -138,7 +138,7 @@
                                                                                         <span
                                                                                             class="text-sm font-semibold text-gray-700">{{ $service->name }}
                                                                                             <span
-                                                                                                class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
+                                                                                                class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : ($service->price_type === 'per_sqft' ? 'SqFt' : ($service->price_type === 'per_pair' ? 'Pairs' : 'Items')) }})</span></span>
                                                                                         <input type="number" step="any"
                                                                                             name="services[{{ $service->id }}]"
                                                                                             value="{{ $qty }}"
@@ -258,7 +258,7 @@
                                                                         <span
                                                                             class="text-sm font-semibold text-gray-700">{{ $service->name }}
                                                                             <span
-                                                                                class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : 'Items' }})</span></span>
+                                                                                class="text-[10px] text-gray-400 font-normal ml-1">({{ $service->price_type === 'per_kg' ? 'KG' : ($service->price_type === 'per_sqft' ? 'SqFt' : ($service->price_type === 'per_pair' ? 'Pairs' : 'Items')) }})</span></span>
                                                                         <input type="number" step="any"
                                                                             name="services[{{ $service->id }}]" placeholder="0"
                                                                             class="w-24 text-sm border-gray-200 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500 text-center font-bold">
@@ -289,3 +289,4 @@
                 </div>
             </div>
             @endif
+

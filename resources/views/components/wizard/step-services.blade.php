@@ -1,4 +1,4 @@
-            <!-- Step 1/3: Services (Drill-Down UI) -->
+﻿            <!-- Step 1/3: Services (Drill-Down UI) -->
             <div x-show="currentView === 'services'" x-transition.opacity.duration.300ms class="pb-12">
                 @if(!$isHomepage)
                 <div class="mb-6">
@@ -90,7 +90,7 @@
                                         <div class="text-[10px] text-slate-500 font-medium mt-0.5 leading-tight" x-text="service.description || 'Professional cleaning'"></div>
                                         <div class="flex items-center gap-2 mt-2">
                                             <div class="text-blue-600 font-bold text-sm">LKR <span x-text="service.base_price"></span></div>
-                                            <div class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" x-text="service.price_type === 'per_kg' ? 'Per KG' : 'Per Item'"></div>
+                                            <div class="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : (service.price_type === 'per_pair' ? 'Per Pair' : 'Per Item'))"></div>
                                         </div>
                                     </div>
                                     <div class="shrink-0 flex items-center">
@@ -242,4 +242,5 @@
                     </div>
                 </div>
             </div>
+
 

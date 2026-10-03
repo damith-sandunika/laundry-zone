@@ -1,4 +1,4 @@
-<!-- ===================== Left: Services ===================== -->
+﻿<!-- ===================== Left: Services ===================== -->
             <div class="flex-1 lg:flex-[1.2] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
                 
                 <!-- Background Decoration -->
@@ -46,7 +46,7 @@
                                                 :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
                                                 <div class="flex flex-col items-start mr-3">
                                                     <span class="text-[11px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
-                                                    <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : 'Per Item')"></span>
+                                                    <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : (service.price_type === 'per_pair' ? 'Per Pair' : 'Per Item'))"></span>
                                                 </div>
                                                 <span class="text-[13px] font-black text-blue-700 shrink-0" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
                                             </button>
@@ -74,7 +74,7 @@
                                     :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
                                     <div class="flex flex-col items-start mr-3">
                                         <span class="text-[11px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
-                                        <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : 'Per Item')"></span>
+                                        <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : (service.price_type === 'per_pair' ? 'Per Pair' : 'Per Item'))"></span>
                                     </div>
                                     <span class="text-[12px] font-black text-blue-600 shrink-0" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
                                 </button>
@@ -166,3 +166,4 @@
                     </button>
                 </div>
             </div>
+

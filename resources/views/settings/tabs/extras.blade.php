@@ -1,4 +1,4 @@
-            <div style="display: block;">
+﻿            <div style="display: block;">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-sm font-semibold text-gray-800">Extras (e.g., Hangers, Special Detergent)</h3>
                     <button onclick="document.getElementById('add-extra-modal').style.display='flex'"
@@ -38,9 +38,9 @@
                             <div x-show="!editing">
                                 <h4 class="font-bold text-gray-800 mt-2">{{ $extra->name }}</h4>
                                 <p class="text-xs text-gray-500 mt-1">Rs. {{ number_format($extra->price, 2) }}
-                                    ({{ $extra->price_type == 'per_piece' ? 'Per Piece' : ($extra->price_type == 'per_sqft' ? 'Per SqFt' : 'Per KG') }})</p>
+                                    ({{ $extra->price_type == 'per_piece' ? 'Per Piece' : ($extra->price_type == 'per_sqft' ? 'Per SqFt' : ($extra->price_type == 'per_pair' ? 'Per Pair' : 'Per KG')) }})</p>
                                 @if(is_null($extra->branch_id))
-                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded mt-1 inline-block bg-purple-100 text-purple-700 border border-purple-200">🌐 Global</span>
+                                    <span class="text-[10px] font-bold px-2 py-0.5 rounded mt-1 inline-block bg-purple-100 text-purple-700 border border-purple-200">ðŸŒ Global</span>
                                 @endif
                                 <span
                                     class="text-xs font-semibold px-2 py-0.5 rounded mt-1 inline-block {{ $extra->is_active ? 'bg-green-100 text-green-700' : 'bg-gray-200 text-gray-700' }}">
@@ -60,6 +60,7 @@
                                         <option value="per_piece">Per Piece</option>
                                         <option value="per_kg">Per KG</option>
                                         <option value="per_sqft">Per SqFt</option>
+                                        <option value="per_pair">Per Pair</option>
                                     </select>
                                     <input type="number" step="0.01" name="price" x-model="newPrice"
                                         class="w-full text-xs border-gray-300 rounded px-2 py-1" required
@@ -85,3 +86,5 @@
                     @endforelse
                 </div>
             </div>
+
+

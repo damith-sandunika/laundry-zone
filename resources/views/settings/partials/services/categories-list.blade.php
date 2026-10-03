@@ -1,4 +1,4 @@
-            <div id="categories-sortable" class="space-y-4">
+﻿            <div id="categories-sortable" class="space-y-4">
                 @foreach($mainCategories as $category)
                     <div x-data="{ expanded: false }" class="category-item bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
                         data-id="{{ $category->id }}">
@@ -153,12 +153,12 @@
                                             <div>
                                                 <span class="font-bold text-gray-800 text-sm">{{ $service->name }}</span>
                                                 <span class="text-xs text-gray-500 ml-2">Rs.{{ number_format($service->base_price, 2) }}
-                                                    ({{ $service->price_type === 'per_kg' ? 'Per KG' : 'Per Item' }})</span>
+                                                    ({{ $service->price_type === 'per_kg' ? 'Per KG' : ($service->price_type === 'per_sqft' ? 'Per SqFt' : ($service->price_type === 'per_pair' ? 'Per Pair' : 'Per Item')) }})</span>
                                                 <span class="ml-2 text-[10px] font-bold uppercase {{ $service->is_active ? 'text-green-600' : 'text-red-600' }}">
                                                     {{ $service->is_active ? 'Active' : 'Inactive' }}
                                                 </span>
                                                 @if($service->is_visible_on_website)
-                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">ðŸŒ Website</span>
+                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Ã°Å¸Å’Â Website</span>
                                                 @endif
                                             </div>
                                         </div>
@@ -214,12 +214,12 @@
                                             <div>
                                                 <span class="font-bold text-gray-800 text-sm">{{ $service->name }}</span>
                                                 <span class="text-xs text-gray-500 ml-2">Rs.{{ number_format($service->base_price, 2) }}
-                                                    ({{ $service->price_type === 'per_kg' ? 'Per KG' : 'Per Item' }})</span>
+                                                    ({{ $service->price_type === 'per_kg' ? 'Per KG' : ($service->price_type === 'per_sqft' ? 'Per SqFt' : ($service->price_type === 'per_pair' ? 'Per Pair' : 'Per Item')) }})</span>
                                                 <span class="ml-2 text-[10px] font-bold uppercase {{ $service->is_active ? 'text-green-600' : 'text-red-600' }}">
                                                     {{ $service->is_active ? 'Active' : 'Inactive' }}
                                                 </span>
                                                 @if($service->is_visible_on_website)
-                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">ðŸŒ Website</span>
+                                                    <span class="ml-2 px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded text-[10px] font-bold border border-blue-100">Ã°Å¸Å’Â Website</span>
                                                 @endif
                                             </div>
                                         </div>
@@ -247,3 +247,4 @@
                     </div>
                 @endif
             </div>
+

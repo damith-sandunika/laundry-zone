@@ -1,4 +1,4 @@
-<!-- Add Service Modal -->
+﻿<!-- Add Service Modal -->
 <div x-data="{ serviceModalOpen: false }" @open-service-modal.window="serviceModalOpen = true">
 <div x-show="serviceModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
     <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">
@@ -109,7 +109,7 @@
 </div>
 </div>
 
-<!-- ── Add Delivery Range Modal ── -->
+<!-- â”€â”€ Add Delivery Range Modal â”€â”€ -->
 <div id="add-delivery-range-modal"
     style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
     <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;"
@@ -166,7 +166,7 @@
     </div>
 </div>
 
-<!-- ── Add Pickup Time Modal ── -->
+<!-- â”€â”€ Add Pickup Time Modal â”€â”€ -->
 <div id="add-pickup-time-modal"
     style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
     <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;"
@@ -260,6 +260,7 @@
                     <option value="per_piece">Per Piece</option>
                     <option value="per_kg">Per KG</option>
                     <option value="per_sqft">Per SqFt</option>
+                                    <option value="per_pair">Per Pair</option>
                 </select>
             </div>
             <div>
@@ -390,3 +391,4 @@
         if (e.target === this) this.style.display = 'none';
     });
 </script>
+

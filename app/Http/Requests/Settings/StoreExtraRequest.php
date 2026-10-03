@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Http\Requests\Settings;
 
@@ -22,8 +22,9 @@ class StoreExtraRequest extends FormRequest
     public function rules(): array {
         return [
             'name' => 'required|string|max:255',
-            'price_type' => 'required|in:per_piece,per_kg,per_sqft',
+            'price_type' => 'required|in:per_piece,per_kg,per_sqft,per_pair',
             'price' => 'required|numeric|min:0',
         ];
     }
 }
+
