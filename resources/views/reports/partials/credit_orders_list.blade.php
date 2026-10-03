@@ -27,7 +27,7 @@
                     <td class="px-4 py-2 text-right font-bold text-emerald-600">Rs.{{ number_format($order->paid_amount, 2) }}</td>
                     <td class="px-4 py-2 text-right font-black text-red-600">Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</td>
                     <td class="px-4 py-2 text-center">
-                        <a href="{{ route('pos.index', ['order' => $order->id]) }}" class="inline-block px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 rounded font-bold transition-colors shadow-sm">Pay</a>
+                        <button type="button" onclick="window.dispatchEvent(new CustomEvent('open-collect-modal', { detail: { id: {{ $order->id }}, number: '{{ $order->order_number }}', amount: {{ $order->total - $order->paid_amount }} } }))" class="inline-block px-2 py-1 bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:border-emerald-300 rounded font-bold transition-colors shadow-sm">Pay</button>
                     </td>
                 </tr>
             @empty
