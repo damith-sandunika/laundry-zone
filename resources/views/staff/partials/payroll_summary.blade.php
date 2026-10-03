@@ -123,7 +123,7 @@
                 <!-- Recent Payslips -->
                 <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
                     <div class="p-5 border-b border-gray-100 bg-gray-50/50">
-                        <h3 class="font-bold text-gray-800">Recent Basic Salaries Paid</h3>
+                        <h3 class="font-bold text-gray-800">Salary Payment Status</h3>
                     </div>
                     <div class="p-0 divide-y divide-gray-50">
                         @forelse($salaries as $salary)

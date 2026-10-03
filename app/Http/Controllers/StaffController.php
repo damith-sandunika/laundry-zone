@@ -107,12 +107,14 @@ class StaffController extends Controller
 
     public function show(User $staff)
     {
-        $salaries = Expense::where('category', 'salary')
-            ->where('description', 'like', "%{$staff->name}%")
-            ->latest()->get();
-
         $month = (int) request('month', now()->month);
         $year = (int) request('year', now()->year);
+        $monthName = date('F Y', mktime(0, 0, 0, $month, 10, $year));
+
+        $salaries = Expense::where('category', 'salary')
+            ->where('description', 'like', "%{$staff->name}%")
+            ->where('description', 'like', "%{$monthName}%")
+            ->latest()->get();
         
         $attendancesThisMonth = \App\Models\Attendance::where('user_id', $staff->id)
             ->whereMonth('date', $month)
@@ -126,9 +128,18 @@ class StaffController extends Controller
             ->where('month', $month)
             ->first();
             
+        $leavesThisMonth = \App\Models\Leave::where('user_id', $staff->id)
+            ->where(function ($q) use ($month, $year) {
+                $q->whereMonth('start_date', $month)->whereYear('start_date', $year)
+                    ->orWhere(function ($q2) use ($month, $year) {
+                        $q2->whereMonth('end_date', $month)->whereYear('end_date', $year);
+                    });
+            })
+            ->latest('start_date')->get();
+
         $payroll = \App\Services\PayrollCalculator::calculate($staff, $month, $year);
 
-        return view('staff.show', compact('staff', 'salaries', 'payroll', 'attendancesThisMonth', 'branchPlan'));
+        return view('staff.show', compact('staff', 'salaries', 'payroll', 'attendancesThisMonth', 'branchPlan', 'leavesThisMonth'));
     }
 
     public function edit(User $staff)

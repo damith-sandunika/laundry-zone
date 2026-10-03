@@ -7,7 +7,7 @@
                         </button>
                     </div>
                     <div class="p-0 divide-y divide-gray-50">
-                        @forelse($staff->leaves()->latest('start_date')->get() as $leave)
+                        @forelse($leavesThisMonth as $leave)
                             <div class="p-4 hover:bg-gray-50/50 transition">
                                 <div class="flex justify-between items-start mb-2">
                                     <div>
