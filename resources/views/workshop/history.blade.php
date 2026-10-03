@@ -11,20 +11,25 @@
         </div>
     </x-slot>
 
-    <div class="mb-6 flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-100">
-        <form method="GET" class="flex flex-wrap items-center gap-3">
+    <div class="mb-4 flex flex-wrap gap-3 items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-slate-100">
+        <form method="GET" class="flex flex-wrap items-center gap-2">
             <div>
-                <input type="text" name="date_range" id="date_range"
-                    value="{{ request('date_range') }}" placeholder="Filter by Date"
-                    class="border-slate-200 rounded-lg text-sm font-bold w-[250px] shadow-sm">
+                <input type="text" name="start_date" id="start_date"
+                    value="{{ request('start_date') }}" placeholder="Start Date"
+                    class="border-slate-200 rounded-md text-xs font-bold w-[120px] shadow-sm py-1.5">
+            </div>
+            <div>
+                <input type="text" name="end_date" id="end_date"
+                    value="{{ request('end_date') }}" placeholder="End Date"
+                    class="border-slate-200 rounded-md text-xs font-bold w-[120px] shadow-sm py-1.5">
             </div>
             <button type="submit"
-                class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition-colors">
+                class="px-3 py-1.5 bg-slate-800 text-white rounded-md text-xs font-bold shadow-sm hover:bg-slate-700 transition-colors">
                 Filter
             </button>
-            @if (request('date_range'))
-                <a href="{{ route('history') }}"
-                    class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200 transition-colors">
+            @if (request('start_date') || request('end_date'))
+                <a href="{{ route('workshop.history') }}"
+                    class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-md text-xs font-bold hover:bg-slate-200 transition-colors">
                     Clear
                 </a>
             @endif
@@ -32,68 +37,67 @@
     </div>
 
     <!-- Summary Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Order Value</span>
-            <span class="text-2xl font-black text-slate-800 mt-2">Rs.{{ number_format($stats['total_order_value'], 2) }}</span>
-            <div class="mt-4 flex flex-col gap-2 pt-3 border-t border-slate-50">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Order Value</span>
+            <span class="text-lg font-black text-slate-800 mt-1">Rs.{{ number_format($stats['total_order_value'], 2) }}</span>
+            <div class="mt-2 flex flex-col gap-1 pt-2 border-t border-slate-50">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600">🚶 Walk-in</span>
-                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['walk_in'], 2) }}</span>
+                    <span class="text-[11px] font-bold text-slate-500">🚶 Walk-in</span>
+                    <span class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['walk_in'], 2) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600">🚚 Delivery</span>
-                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['delivery'], 2) }}</span>
+                    <span class="text-[11px] font-bold text-slate-500">🚚 Delivery</span>
+                    <span class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['delivery'], 2) }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending / Due</span>
-            <span class="text-2xl font-black text-amber-600 mt-2">Rs.{{ number_format($stats['pending_due'], 2) }}</span>
-            <div class="mt-4 flex flex-col gap-2 pt-3 border-t border-slate-50">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Pending / Due</span>
+            <span class="text-lg font-black text-amber-600 mt-1">Rs.{{ number_format($stats['pending_due'], 2) }}</span>
+            <div class="mt-2 flex flex-col gap-1 pt-2 border-t border-slate-50">
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600">Regular Pending</span>
-                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['regular_pending'], 2) }}</span>
+                    <span class="text-[11px] font-bold text-slate-500">Regular</span>
+                    <span class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['regular_pending'], 2) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600">Credit Orders</span>
-                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['credit_orders'], 2) }}</span>
+                    <span class="text-[11px] font-bold text-slate-500">Credit</span>
+                    <span class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['credit_orders'], 2) }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
-            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Collected Payments</span>
-            <span class="text-2xl font-black text-emerald-600 mt-2">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
-            <div class="mt-4 flex flex-col gap-2 pt-3 border-t border-slate-50">
-                <div class="flex justify-between items-center mb-1">
-                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">From These Orders</span>
-                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Collected Payments</span>
+            <span class="text-lg font-black text-emerald-600 mt-1">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
+            <div class="mt-2 flex flex-col gap-1 pt-2 border-t border-slate-50">
+                <div class="flex justify-between items-center mb-0.5">
+                    <span class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase">From These Orders</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600">💵 Cash</span>
-                    <span class="text-xs font-black text-slate-800">{{ number_format($stats['cash'], 0) }}</span>
+                    <span class="text-[11px] font-bold text-slate-500">💵 Cash</span>
+                    <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['cash'], 0) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600">💳 Card</span>
-                    <span class="text-xs font-black text-slate-800">{{ number_format($stats['card'], 0) }}</span>
+                    <span class="text-[11px] font-bold text-slate-500">💳 Card</span>
+                    <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['card'], 0) }}</span>
                 </div>
                 <div class="flex justify-between items-center">
-                    <span class="text-xs font-bold text-slate-600">🏦 Bank</span>
-                    <span class="text-xs font-black text-slate-800">{{ number_format($stats['bank'], 0) }}</span>
+                    <span class="text-[11px] font-bold text-slate-500">🏦 Bank</span>
+                    <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['bank'], 0) }}</span>
                 </div>
             </div>
         </div>
 
-        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-start gap-4">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-start gap-3">
             <div>
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Order Qty</span>
-                <span class="text-3xl font-black text-indigo-600">{{ $stats['order_qty'] }}</span>
+                <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest block">Total Order Qty</span>
+                <span class="text-2xl font-black text-indigo-600">{{ $stats['order_qty'] }}</span>
             </div>
             <div>
-                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Customers</span>
-                <span class="text-3xl font-black text-indigo-600">{{ $stats['total_customer_count'] }}</span>
+                <span class="text-[10px] font-black text-indigo-400 uppercase tracking-widest block">Total Customers</span>
+                <span class="text-2xl font-black text-indigo-600">{{ $stats['total_customer_count'] }}</span>
             </div>
         </div>
     </div>
@@ -276,8 +280,11 @@
         <script>
             document.addEventListener('DOMContentLoaded', function() {
                 if(typeof flatpickr !== 'undefined') {
-                    flatpickr("#date_range", {
-                        mode: "range",
+                    flatpickr("#start_date", {
+                        dateFormat: "Y-m-d",
+                        maxDate: "today"
+                    });
+                    flatpickr("#end_date", {
                         dateFormat: "Y-m-d",
                         maxDate: "today"
                     });

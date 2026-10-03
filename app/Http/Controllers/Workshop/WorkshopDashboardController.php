@@ -363,16 +363,15 @@ class WorkshopDashboardController extends Controller
         $statsQuery = WorkshopDispatch::join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_dispatches.workshop_branch_id', $branchId));
 
-        if ($request->filled('date_range')) {
-            $dates = explode(' to ', $request->date_range);
-            if (count($dates) === 2) {
-                $query->whereHas('order', function($q) use ($dates) {
-                    $q->whereDate('created_at', '>=', $dates[0])
-                      ->whereDate('created_at', '<=', $dates[1]);
-                });
-                $statsQuery->whereDate('orders.created_at', '>=', $dates[0])
-                           ->whereDate('orders.created_at', '<=', $dates[1]);
-            }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = $request->start_date;
+            $endDate = $request->end_date;
+            $query->whereHas('order', function($q) use ($startDate, $endDate) {
+                $q->whereDate('created_at', '>=', $startDate)
+                  ->whereDate('created_at', '<=', $endDate);
+            });
+            $statsQuery->whereDate('orders.created_at', '>=', $startDate)
+                       ->whereDate('orders.created_at', '<=', $endDate);
         }
 
         $ordersBase = $statsQuery->select('orders.*')->get();
