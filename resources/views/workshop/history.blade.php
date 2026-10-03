@@ -13,6 +13,18 @@
 
     <div class="mb-4 flex flex-wrap gap-3 items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-slate-100">
         <form method="GET" class="flex flex-wrap items-center gap-2">
+            @if(auth()->user()->isSuperAdmin())
+            <div>
+                <select name="branch_id" class="border-slate-200 rounded-md text-xs font-bold w-[150px] shadow-sm py-1.5 text-slate-600">
+                    <option value="">All Workshops</option>
+                    @foreach($allBranches as $branch)
+                        <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
+                            {{ $branch->name }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+            @endif
             <div>
                 <input type="date" name="start_date" id="start_date"
                     value="{{ request('start_date') }}"
@@ -27,9 +39,25 @@
                 class="px-3 py-1.5 bg-slate-800 text-white rounded-md text-xs font-bold shadow-sm hover:bg-slate-700 transition-colors">
                 Filter
             </button>
+            
+            <div class="flex items-center gap-1.5 ml-2 border-l border-slate-200 pl-3">
+                @php 
+                    $isToday = request('start_date') == now()->format('Y-m-d') && request('end_date') == now()->format('Y-m-d'); 
+                    $isYesterday = request('start_date') == now()->subDay()->format('Y-m-d') && request('end_date') == now()->subDay()->format('Y-m-d');
+                @endphp
+                <a href="{{ route('workshop.history', ['start_date' => now()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
+                    class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors {{ $isToday ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' }}">
+                    Today
+                </a>
+                <a href="{{ route('workshop.history', ['start_date' => now()->subDay()->format('Y-m-d'), 'end_date' => now()->subDay()->format('Y-m-d')]) }}"
+                    class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors {{ $isYesterday ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' }}">
+                    Yesterday
+                </a>
+            </div>
+
             @if (request('start_date') || request('end_date'))
                 <a href="{{ route('workshop.history') }}"
-                    class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-md text-xs font-bold hover:bg-slate-200 transition-colors">
+                    class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-md text-xs font-bold hover:bg-slate-200 transition-colors ml-1">
                     Clear
                 </a>
             @endif
@@ -91,14 +119,18 @@
             </div>
         </div>
 
-        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between gap-2">
-            <div class="bg-indigo-50/70 rounded-lg p-2.5 flex items-center justify-between border border-indigo-100/50 flex-1">
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between gap-1.5">
+            <div class="bg-indigo-50/70 rounded-lg px-2.5 py-1.5 flex items-center justify-between border border-indigo-100/50 flex-1">
                 <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Total Orders</span>
-                <span class="text-xl font-black text-indigo-700">{{ $stats['order_qty'] }}</span>
+                <span class="text-lg font-black text-indigo-700">{{ $stats['order_qty'] }}</span>
             </div>
-            <div class="bg-blue-50/70 rounded-lg p-2.5 flex items-center justify-between border border-blue-100/50 flex-1">
+            <div class="bg-violet-50/70 rounded-lg px-2.5 py-1.5 flex items-center justify-between border border-violet-100/50 flex-1">
+                <span class="text-[10px] font-black text-violet-500 uppercase tracking-widest">Total Qty</span>
+                <span class="text-lg font-black text-violet-700">{{ $stats['item_qty'] + 0 }}</span>
+            </div>
+            <div class="bg-blue-50/70 rounded-lg px-2.5 py-1.5 flex items-center justify-between border border-blue-100/50 flex-1">
                 <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Customers</span>
-                <span class="text-xl font-black text-blue-700">{{ $stats['total_customer_count'] }}</span>
+                <span class="text-lg font-black text-blue-700">{{ $stats['total_customer_count'] }}</span>
             </div>
         </div>
     </div>

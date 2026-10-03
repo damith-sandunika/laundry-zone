@@ -363,6 +363,12 @@ class WorkshopDashboardController extends Controller
         $statsQuery = WorkshopDispatch::join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_dispatches.workshop_branch_id', $branchId));
 
+        if ($user->isSuperAdmin() && $request->filled('branch_id')) {
+            $branchIdFilter = $request->branch_id;
+            $query->where('workshop_branch_id', $branchIdFilter);
+            $statsQuery->where('workshop_dispatches.workshop_branch_id', $branchIdFilter);
+        }
+
         if ($request->filled('start_date') && $request->filled('end_date')) {
             $startDate = $request->start_date;
             $endDate = $request->end_date;
@@ -404,6 +410,7 @@ class WorkshopDashboardController extends Controller
 
         $orderQty = $ordersBase->count();
         $totalCustomerCount = $ordersBase->pluck('customer_id')->unique()->count();
+        $itemQty = \App\Models\OrderItem::whereIn('order_id', $orderIds)->sum('quantity');
 
         $stats = [
             'total_order_value' => $totalOrderValue,
@@ -418,6 +425,7 @@ class WorkshopDashboardController extends Controller
             'bank' => $bankTotal,
             'order_qty' => $orderQty,
             'total_customer_count' => $totalCustomerCount,
+            'item_qty' => $itemQty,
         ];
 
         $dispatches = $query->orderByDesc('order_id')->paginate(15);
@@ -427,7 +435,12 @@ class WorkshopDashboardController extends Controller
             ->where('status', 'cancelled')
             ->orderByDesc('updated_at')
             ->paginate(15);
+            
+        $allBranches = collect();
+        if ($user->isSuperAdmin()) {
+            $allBranches = \App\Models\Branch::where('type', 'workshop')->get();
+        }
 
-        return view('workshop.history', compact('dispatches', 'cancelledBookings', 'stats'));
+        return view('workshop.history', compact('dispatches', 'cancelledBookings', 'stats', 'allBranches'));
     }
 }
