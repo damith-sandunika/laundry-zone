@@ -1,4 +1,4 @@
-﻿<template x-teleport="body">
+<template x-teleport="body">
     <div x-data="finalizeOrderModal()" x-cloak x-show="showFinalizeModal"
         @open-finalize-modal.window="openModal($event.detail)"
         class="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-900/60 backdrop-blur-[6px] p-4">

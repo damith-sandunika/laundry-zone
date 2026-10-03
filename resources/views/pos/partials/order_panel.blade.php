@@ -1,4 +1,4 @@
-﻿<!-- ===================== Right: Order Panel ===================== -->
+<!-- ===================== Right: Order Panel ===================== -->
             <div class="flex-1 lg:flex-[0.8] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
                 
                 <!-- Customer Section -->

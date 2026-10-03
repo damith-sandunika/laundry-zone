@@ -1,4 +1,4 @@
-﻿            <div id="categories-sortable" class="space-y-4">
+            <div id="categories-sortable" class="space-y-4">
                 @foreach($mainCategories as $category)
                     <div x-data="{ expanded: false }" class="category-item bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
                         data-id="{{ $category->id }}">

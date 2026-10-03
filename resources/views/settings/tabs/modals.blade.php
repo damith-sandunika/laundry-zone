@@ -1,4 +1,4 @@
-﻿<!-- Add Service Modal -->
+<!-- Add Service Modal -->
 <div x-data="{ serviceModalOpen: false }" @open-service-modal.window="serviceModalOpen = true">
 <div x-show="serviceModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;" x-cloak>
     <div class="flex items-center justify-center min-h-screen px-4 text-center sm:block sm:p-0">

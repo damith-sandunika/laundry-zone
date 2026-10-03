@@ -1,4 +1,4 @@
-﻿            <!-- ===================== Left: Services ===================== -->
+            <!-- ===================== Left: Services ===================== -->
             <div class="flex-1 lg:flex-[1.2] bg-white rounded-[24px] border border-slate-200/60 shadow-sm flex flex-col overflow-hidden relative">
                 
                 <!-- Background Decoration -->

@@ -1,4 +1,4 @@
-﻿            @if($canManageConfig)
+            @if($canManageConfig)
             <!-- PACKAGES TAB -->
             <div style="display: block;" x-data="{ packageModalOpen: false }">
                 <div class="flex justify-between items-center mb-4">

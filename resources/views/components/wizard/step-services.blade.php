@@ -1,4 +1,4 @@
-﻿            <!-- Step 1/3: Services (Drill-Down UI) -->
+            <!-- Step 1/3: Services (Drill-Down UI) -->
             <div x-show="currentView === 'services'" x-transition.opacity.duration.300ms class="pb-12">
                 @if(!$isHomepage)
                 <div class="mb-6">
