@@ -130,12 +130,12 @@
             <tr>
                 <td class="text-center">{{ $index + 1 }}</td>
                 @if($isSuperAdmin && !$branchId)
-                    <td>{{ $activity->order->branch->name ?? 'Unknown' }}</td>
+                    <td>{{ optional(optional($activity->order)->branch)->name ?? 'Unknown' }}</td>
                 @endif
                 <td>{{ \Carbon\Carbon::parse($activity->date)->format('Y-m-d') }}</td>
-                <td style="font-weight: bold; color: #1e40af;">{{ $activity->order->order_number }}</td>
-                <td>{{ $activity->order->customer->name ?? 'Walk-in' }}</td>
-                <td class="text-center">{{ number_format($activity->total_qty, 1) }}</td>
+                <td style="font-weight: bold; color: #1e40af;">{{ optional($activity->order)->order_number ?? '-' }}</td>
+                <td>{{ optional(optional($activity->order)->customer)->name ?? 'Walk-in' }}</td>
+                <td class="text-center">{{ number_format($activity->total_qty ?? 0, 1) }}</td>
                 <td style="text-transform: uppercase;">
                     @php
                         $pm = $activity->payment_method ?? '';

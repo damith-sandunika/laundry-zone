@@ -115,7 +115,7 @@ class SalesReportController extends Controller
         $paginatedRecords = $query->paginate(15)->withQueryString();
 
         $orderIds = collect($paginatedRecords->items())->pluck('order_id')->unique();
-        $ordersMap = Order::with(['customer', 'branch', 'items'])->whereIn('id', $orderIds)->get()->keyBy('id');
+        $ordersMap = Order::withTrashed()->with(['customer', 'branch', 'items'])->whereIn('id', $orderIds)->get()->keyBy('id');
 
         $paginatedRecords->getCollection()->transform(function ($activity) use ($ordersMap) {
             $activity->order = $ordersMap->get($activity->order_id);
@@ -152,7 +152,7 @@ class SalesReportController extends Controller
         $paginatedRecords = $query->paginate(2000); // 7 days max, 2000 is safe
         
         $orderIds = collect($paginatedRecords->items())->pluck('order_id')->unique();
-        $ordersMap = Order::with(['customer', 'branch', 'items'])->whereIn('id', $orderIds)->get()->keyBy('id');
+        $ordersMap = Order::withTrashed()->with(['customer', 'branch', 'items'])->whereIn('id', $orderIds)->get()->keyBy('id');
 
         $paginatedRecords->getCollection()->transform(function ($activity) use ($ordersMap) {
             $activity->order = $ordersMap->get($activity->order_id);
@@ -193,7 +193,7 @@ class SalesReportController extends Controller
                 // To avoid N+1 inside cursor, we query Order in chunks, but for streaming, 
                 // simply fetching Order is fine if we cache it or fetch simply.
                 // Actually, best is to chunk the cursor.
-                $order = Order::with('customer', 'branch')->find($activity->order_id);
+                $order = Order::withTrashed()->with('customer', 'branch')->find($activity->order_id);
                 
                 fputcsv($handle, [
                     \Carbon\Carbon::parse($activity->date)->format('Y-m-d H:i'),

@@ -71,16 +71,20 @@
                         <tr class="hover:bg-slate-50 transition-colors">
                             <td class="px-2 py-2 md:px-6 md:py-4 text-center font-bold text-slate-400">{{ $orders->firstItem() + $index }}</td>
                             @if($isSuperAdmin && !$branchId)
-                                <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $activity->order->branch->name ?? 'Unknown' }}</td>
+                                <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ optional(optional($activity->order)->branch)->name ?? 'Unknown' }}</td>
                             @endif
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ \Carbon\Carbon::parse($activity->date)->format('Y-m-d') }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">
-                                <a href="{{ route('orders.show', $activity->order->order_number) }}" class="text-blue-600 hover:underline">
-                                    {{ $activity->order->order_number }}
+                                @if(optional($activity->order)->order_number)
+                                <a href="{{ route('orders.show', optional($activity->order)->order_number) }}" class="text-blue-600 hover:underline">
+                                    {{ optional($activity->order)->order_number }}
                                 </a>
+                                @else
+                                -
+                                @endif
                             </td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $activity->order->customer->name ?? 'Walk-in' }}</td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($activity->total_qty, 1) }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ optional(optional($activity->order)->customer)->name ?? 'Walk-in' }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($activity->total_qty ?? 0, 1) }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 font-bold uppercase">
                                 @php
                                     $pm = $activity->payment_method ?? '';
