@@ -94,32 +94,89 @@ class CustomerController extends Controller
         return response()->json($query->limit(20)->get(['id', 'name', 'phone', 'address', 'default_discount']));
     }
 
-    public function show(Customer $customer)
+    public function show(Request $request, Customer $customer)
     {
-        $customer->load([
-            'orders' => fn($q) => $q->latest(),
-            'orders.items.serviceType',
-        ]);
-        $totalSpend = $customer->orders->sum('total');
-        $totalOrders = $customer->orders->count();
+        $tab = $request->input('tab', 'history');
 
-        // Build monthly sales report grouped by year-month descending
-        $monthlySales = $customer->orders
-            ->groupBy(fn($o) => $o->created_at->format('Y-m'))
-            ->sortKeysDesc()
-            ->map(function ($orders, $yearMonth) {
-                $totalQty = $orders->sum(fn($o) => $o->items->sum('quantity'));
-                return [
-                    'label'       => \Carbon\Carbon::parse($yearMonth . '-01')->format('F Y'),
-                    'year_month'  => $yearMonth,
-                    'order_count' => $orders->count(),
-                    'total_qty'   => $totalQty,
-                    'total_bill'  => $orders->sum('total'),
-                    'orders'      => $orders->sortByDesc('created_at')->values(),
-                ];
-            })->values();
+        // Global stats (optimized, without loading all orders)
+        $totalOrders = $customer->orders()->count();
+        $totalSpend = $customer->orders()->sum('total');
+        $completedCount = $customer->orders()->where('status', 'delivered')->count();
 
-        return view('customers.show', compact('customer', 'totalSpend', 'totalOrders', 'monthlySales'));
+        $pendingStats = $customer->orders()
+            ->where('payment_method', 'credit')
+            ->where('status', '!=', 'cancelled')
+            ->whereColumn('paid_amount', '<', 'total')
+            ->selectRaw('COUNT(*) as count, SUM(total - paid_amount) as total')
+            ->first();
+            
+        $pendingCount = $pendingStats->count ?? 0;
+        $totalPending = $pendingStats->total ?? 0;
+        
+        $historyOrders = null;
+        $pendingOrdersList = null;
+        $monthlySales = null;
+        $salesOrders = null;
+        $allPendingForBulk = [];
+
+        // For Bulk Payment preview, load only the pending IDs/Amounts
+        if ($pendingCount > 0) {
+            $allPendingForBulk = $customer->orders()
+                ->where('payment_method', 'credit')
+                ->where('status', '!=', 'cancelled')
+                ->whereColumn('paid_amount', '<', 'total')
+                ->orderBy('created_at', 'asc')
+                ->get(['id', 'order_number', 'total', 'paid_amount'])
+                ->map(fn($o) => [
+                    'id' => $o->id, 
+                    'number' => $o->order_number, 
+                    'due' => $o->total - $o->paid_amount
+                ])->values();
+        }
+
+        if ($tab === 'history') {
+            $historyOrders = $customer->orders()
+                ->with('items.serviceType')
+                ->latest()
+                ->paginate(15)
+                ->withQueryString();
+        } elseif ($tab === 'pending') {
+            $pendingOrdersList = $customer->orders()
+                ->where('payment_method', 'credit')
+                ->where('status', '!=', 'cancelled')
+                ->whereColumn('paid_amount', '<', 'total')
+                ->orderBy('created_at', 'asc')
+                ->paginate(15)
+                ->withQueryString();
+        } elseif ($tab === 'sales') {
+            // Paginate orders to prevent memory exhaustion, then group by month for the current page
+            $salesOrders = $customer->orders()
+                ->with('items.serviceType')
+                ->latest()
+                ->paginate(30)
+                ->withQueryString();
+                
+            $monthlySales = collect($salesOrders->items())
+                ->groupBy(fn($o) => $o->created_at->format('Y-m'))
+                ->map(function ($orders, $yearMonth) {
+                    $orders = collect($orders);
+                    $totalQty = $orders->sum(fn($o) => $o->items->sum('quantity'));
+                    return [
+                        'label'       => \Carbon\Carbon::parse($yearMonth . '-01')->format('F Y'),
+                        'year_month'  => $yearMonth,
+                        'order_count' => $orders->count(),
+                        'total_qty'   => $totalQty,
+                        'total_bill'  => $orders->sum('total'),
+                        'orders'      => $orders->sortByDesc('created_at')->values(),
+                    ];
+                });
+        }
+
+        return view('customers.show', compact(
+            'customer', 'tab', 'totalSpend', 'totalOrders', 'completedCount', 
+            'pendingCount', 'totalPending', 'allPendingForBulk', 
+            'historyOrders', 'pendingOrdersList', 'monthlySales', 'salesOrders'
+        ));
     }
 
     public function salesReportPdf(Customer $customer, \Illuminate\Http\Request $request)
