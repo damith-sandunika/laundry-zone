@@ -255,6 +255,10 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/settings/cubbies', [GeneralSettingsController::class, 'cubbies'])->name('settings.cubbies');
         Route::get('/settings/delivery', [GeneralSettingsController::class, 'delivery'])->name('settings.delivery');
         Route::get('/settings/pickup-times', [GeneralSettingsController::class, 'pickupTimes'])->name('settings.pickup-times');
+        Route::get('/settings/expense-categories', [\App\Http\Controllers\Settings\ExpenseSettingsController::class, 'index'])->name('settings.expense_categories');
+        Route::post('/settings/expense-categories', [\App\Http\Controllers\Settings\ExpenseSettingsController::class, 'store'])->name('settings.expense_categories.store');
+        Route::put('/settings/expense-categories/{category}', [\App\Http\Controllers\Settings\ExpenseSettingsController::class, 'update'])->name('settings.expense_categories.update');
+        Route::delete('/settings/expense-categories/{category}', [\App\Http\Controllers\Settings\ExpenseSettingsController::class, 'destroy'])->name('settings.expense_categories.destroy');
 
         Route::redirect('/settings', '/settings/general')->name('settings.index');
         Route::post('/settings/general', [GeneralSettingsController::class, 'updateGeneral'])->name('settings.updateGeneral');

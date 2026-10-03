@@ -79,9 +79,18 @@ class ExpenseController extends Controller
         // Petty cash balance for current branch (only relevant for non-super-admin or filtered branch)
         $currentBranch = $branchId ? \App\Models\Branch::find($branchId) : ($isSuperAdmin ? null : \App\Models\Branch::find($resolvedBranchId));
 
+        $isGlobalMode = \App\Models\Setting::get('centralized_management', '1') == '1';
+        $expenseCategories = \App\Models\ExpenseCategory::where(function ($q) use ($resolvedBranchId, $isGlobalMode) {
+            if (!$isGlobalMode) {
+                $q->whereNull('branch_id')->orWhere('branch_id', $resolvedBranchId);
+            } else {
+                $q->whereNull('branch_id');
+            }
+        })->orderBy('name')->get();
+
         return view('expenses.index', compact(
             'expenses', 'topups', 'activeSession', 'period', 'category',
-            'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'currentBranch'
+            'startDate', 'endDate', 'branches', 'branchId', 'isSuperAdmin', 'currentBranch', 'expenseCategories'
         ));
     }
 
@@ -110,7 +119,17 @@ class ExpenseController extends Controller
 
     public function edit(Expense $expense)
     {
-        return view('expenses.edit', compact('expense'));
+        $isGlobalMode = \App\Models\Setting::get('centralized_management', '1') == '1';
+        $branchId = $expense->branch_id;
+        $expenseCategories = \App\Models\ExpenseCategory::where(function ($q) use ($branchId, $isGlobalMode) {
+            if (!$isGlobalMode) {
+                $q->whereNull('branch_id')->orWhere('branch_id', $branchId);
+            } else {
+                $q->whereNull('branch_id');
+            }
+        })->orderBy('name')->get();
+
+        return view('expenses.edit', compact('expense', 'expenseCategories'));
     }
 
     public function update(Request $request, Expense $expense)

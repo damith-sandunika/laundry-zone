@@ -220,6 +220,9 @@
                 <a href="{{ route('settings.pickup-times') }}"
                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.pickup-times') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Pickup
                     Times</a>
+                <a href="{{ route('settings.expense_categories') }}"
+                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.expense_categories') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Expense
+                    Categories</a>
             @endif
             @if($role !== 'super_admin')
                 <a href="{{ route('settings.cubbies') }}"

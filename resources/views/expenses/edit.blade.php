@@ -14,12 +14,9 @@
                 <div>
                     <label class="block text-xs font-semibold text-gray-700 uppercase mb-1">Expense Category</label>
                     <select name="category" class="w-full text-sm border-gray-200 rounded focus:border-blue-500 focus:ring-blue-500">
-                        <option value="salary" {{ $expense->category === 'salary' ? 'selected' : '' }}>Salary</option>
-                        <option value="utilities" {{ $expense->category === 'utilities' ? 'selected' : '' }}>Utilities (Water, Electricity)</option>
-                        <option value="supplies" {{ $expense->category === 'supplies' ? 'selected' : '' }}>Laundry Supplies (Detergent etc)</option>
-                        <option value="rent" {{ $expense->category === 'rent' ? 'selected' : '' }}>Shop Rent</option>
-                        <option value="PickMe" {{ $expense->category === 'PickMe' ? 'selected' : '' }}>PickMe Delivery</option>
-                        <option value="other" {{ $expense->category === 'other' ? 'selected' : '' }}>Other Miscellaneous</option>
+                        @foreach($expenseCategories as $cat)
+                            <option value="{{ $cat->name }}" {{ $expense->category === $cat->name ? 'selected' : '' }}>{{ $cat->name }}</option>
+                        @endforeach
                     </select>
                 </div>
 

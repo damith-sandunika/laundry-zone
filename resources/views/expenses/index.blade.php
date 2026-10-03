@@ -93,12 +93,9 @@
                     <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Category</label>
                     <select name="category" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;color:#0f172a;background:#f8fafc;outline:none;">
                         <option value="">All Categories</option>
-                        <option value="salary" {{ $category === 'salary' ? 'selected' : '' }}>Salary</option>
-                        <option value="utilities" {{ $category === 'utilities' ? 'selected' : '' }}>Utilities (Water, Electricity)</option>
-                        <option value="supplies" {{ $category === 'supplies' ? 'selected' : '' }}>Laundry Supplies (Detergent etc)</option>
-                        <option value="rent" {{ $category === 'rent' ? 'selected' : '' }}>Shop Rent</option>
-                        <option value="PickMe" {{ $category === 'PickMe' ? 'selected' : '' }}>PickMe Delivery</option>
-                        <option value="other" {{ $category === 'other' ? 'selected' : '' }}>Other Miscellaneous</option>
+                        @foreach($expenseCategories as $cat)
+                            <option value="{{ $cat->name }}" {{ $category === $cat->name ? 'selected' : '' }}>{{ $cat->name }}</option>
+                        @endforeach
                     </select>
                 </div>
                 <div>
@@ -289,11 +286,9 @@
                             <div>
                                 <label style="display:block;font-size:11px;font-weight:700;color:#374151;text-transform:uppercase;letter-spacing:0.07em;margin-bottom:6px;">Petty Cash Category</label>
                                 <select name="category" style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13.5px;font-weight:500;color:#0f172a;background:#f8fafc;outline:none;">
-                                    <option value="utilities">Utilities (Water, Electricity)</option>
-                                    <option value="supplies">Laundry Supplies (Detergent etc)</option>
-                                    <option value="rent">Shop Rent</option>
-                                    <option value="PickMe">PickMe Delivery</option>
-                                    <option value="other">Other Miscellaneous</option>
+                                    @foreach($expenseCategories as $cat)
+                                        <option value="{{ $cat->name }}">{{ $cat->name }}</option>
+                                    @endforeach
                                 </select>
                             </div>
                             
