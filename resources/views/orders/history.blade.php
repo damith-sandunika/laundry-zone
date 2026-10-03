@@ -11,6 +11,141 @@
         </div>
     </x-slot>
 
+    <div class="mb-4 flex flex-wrap gap-3 items-center justify-between bg-white p-3 rounded-lg shadow-sm border border-slate-100">
+        <form method="GET" class="flex flex-wrap items-center gap-2">
+            @if(auth()->user()->isSuperAdmin())
+                <div>
+                    <select name="branch_id"
+                        class="border-slate-200 rounded-md text-xs font-bold w-[150px] shadow-sm py-1.5 text-slate-600">
+                        <option value="">All Branches</option>
+                        @foreach($allBranches as $branch)
+                            <option value="{{ $branch->id }}" {{ request('branch_id') == $branch->id ? 'selected' : '' }}>
+                                {{ $branch->name }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+            @endif
+            <div>
+                <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}"
+                    class="border-slate-200 rounded-md text-xs font-bold w-[130px] shadow-sm py-1.5 text-slate-600">
+            </div>
+            <div>
+                <input type="date" name="end_date" id="end_date" value="{{ request('end_date') }}"
+                    class="border-slate-200 rounded-md text-xs font-bold w-[130px] shadow-sm py-1.5 text-slate-600">
+            </div>
+            <button type="submit"
+                class="px-3 py-1.5 bg-slate-800 text-white rounded-md text-xs font-bold shadow-sm hover:bg-slate-700 transition-colors">
+                Filter
+            </button>
+
+            <div class="flex items-center gap-1.5 ml-2 border-l border-slate-200 pl-3">
+                @php 
+                    $isToday = request('start_date') == now()->format('Y-m-d') && request('end_date') == now()->format('Y-m-d');
+                    $isYesterday = request('start_date') == now()->subDay()->format('Y-m-d') && request('end_date') == now()->subDay()->format('Y-m-d');
+                @endphp
+                <a href="{{ route('orders.history', ['start_date' => now()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
+                    class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors {{ $isToday ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' }}">
+                    Today
+                </a>
+                <a href="{{ route('orders.history', ['start_date' => now()->subDay()->format('Y-m-d'), 'end_date' => now()->subDay()->format('Y-m-d')]) }}"
+                    class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors {{ $isYesterday ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' }}">
+                    Yesterday
+                </a>
+            </div>
+
+            @if (request('start_date') || request('end_date') || request('branch_id'))
+                <a href="{{ route('orders.history') }}"
+                    class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-md text-xs font-bold hover:bg-slate-200 transition-colors ml-1">
+                    Clear
+                </a>
+            @endif
+        </form>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Total Order Value</span>
+            <span
+                class="text-lg font-black text-slate-800 mt-1">Rs.{{ number_format($stats['total_order_value'], 2) }}</span>
+            <div class="mt-2 flex flex-col gap-1 pt-2 border-t border-slate-50">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-500">🚶 Walk-in</span>
+                    <span
+                        class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['walk_in'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-500">🚚 Delivery</span>
+                    <span
+                        class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['delivery'], 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest">Pending / Due</span>
+            <span class="text-lg font-black text-amber-600 mt-1">Rs.{{ number_format($stats['pending_due'], 2) }}</span>
+            <div class="mt-2 flex flex-col gap-1 pt-2 border-t border-slate-50">
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-500">Regular</span>
+                    <span
+                        class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['regular_pending'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-500">Credit</span>
+                    <span
+                        class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['credit_orders'], 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-3.5 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Collected Payments</span>
+            <span
+                class="text-lg font-black text-emerald-600 mt-1">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
+            <div class="mt-2 flex flex-col gap-1 pt-2 border-t border-slate-50">
+                <div class="flex justify-between items-center mb-0.5">
+                    <span
+                        class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase">From
+                        These Orders</span>
+                    <span
+                        class="text-[10px] font-black text-emerald-600">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-500">💵 Cash</span>
+                    <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['cash'], 0) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-500">💳 Card</span>
+                    <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['card'], 0) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-[11px] font-bold text-slate-500">🏦 Bank</span>
+                    <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['bank'], 0) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl shadow-sm border border-slate-100 flex flex-col justify-between gap-1.5">
+            <div
+                class="bg-indigo-50/70 rounded-lg px-2.5 py-1.5 flex items-center justify-between border border-indigo-100/50 flex-1">
+                <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Total Orders</span>
+                <span class="text-lg font-black text-indigo-700">{{ $stats['order_qty'] }}</span>
+            </div>
+            <div
+                class="bg-violet-50/70 rounded-lg px-2.5 py-1.5 flex items-center justify-between border border-violet-100/50 flex-1">
+                <span class="text-[10px] font-black text-violet-500 uppercase tracking-widest">Total Qty</span>
+                <span class="text-lg font-black text-violet-700">{{ $stats['item_qty'] + 0 }}</span>
+            </div>
+            <div
+                class="bg-blue-50/70 rounded-lg px-2.5 py-1.5 flex items-center justify-between border border-blue-100/50 flex-1">
+                <span class="text-[10px] font-black text-blue-500 uppercase tracking-widest">Customers</span>
+                <span class="text-lg font-black text-blue-700">{{ $stats['total_customer_count'] }}</span>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden mb-8">
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left" style="border-collapse:collapse;">
