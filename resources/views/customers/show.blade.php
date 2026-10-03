@@ -17,89 +17,7 @@
         <div class="bg-green-50 text-green-700 p-3 mb-4 text-sm font-bold border border-green-100 rounded-xl">{{ session('success') }}</div>
     @endif
 
-    <!-- Profile Card -->
-    <div class="bg-white rounded-[24px] border border-slate-100 shadow-sm p-6 mb-6 relative overflow-hidden">
-        <!-- Background decorative blob -->
-        <div class="absolute -top-10 -right-10 w-40 h-40 bg-blue-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-        <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-50 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
-        
-        <div class="relative flex flex-col md:flex-row gap-6 items-start md:items-center">
-            <!-- Avatar / Initial -->
-            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-3xl font-black shadow-lg shadow-blue-500/30 shrink-0">
-                {{ substr($customer->name, 0, 1) }}
-            </div>
-            
-            <!-- Details -->
-            <div class="flex-1">
-                <div class="flex items-center gap-3 mb-1">
-                    <h2 class="text-2xl font-black text-slate-800">
-                        {{ $customer->title ? $customer->title . ' ' : '' }}{{ $customer->name }}
-                    </h2>
-                    @if($customer->customer_mark)
-                        <span class="px-3 py-1 bg-amber-100 text-amber-700 font-bold text-[10px] rounded-lg border border-amber-200 uppercase tracking-widest shadow-sm">
-                            {{ $customer->customer_mark }}
-                        </span>
-                    @endif
-                </div>
-                
-                <div class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm font-semibold text-slate-500 mt-2">
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center text-slate-400">
-                            <i class="fa-solid fa-phone text-[10px]"></i>
-                        </div>
-                        <span class="text-slate-700">{{ $customer->phone }}</span>
-                    </div>
-                    
-                    @if($customer->address)
-                    <div class="flex items-center gap-2">
-                        <div class="w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center text-slate-400">
-                            <i class="fa-solid fa-location-dot text-[10px]"></i>
-                        </div>
-                        <span class="text-slate-600">{{ $customer->address }}</span>
-                    </div>
-                    @endif
-                </div>
-                
-                @if($customer->date_of_birth || $customer->nic)
-                <div class="flex flex-wrap items-center gap-x-4 gap-y-2 mt-4 pt-4 border-t border-slate-100/60">
-                    @if($customer->date_of_birth)
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100">
-                        <i class="fa-solid fa-cake-candles"></i> 
-                        {{ \Carbon\Carbon::parse($customer->date_of_birth)->format('M d, Y') }}
-                    </div>
-                    @endif
-                    
-                    @if($customer->nic)
-                    <div class="flex items-center gap-1.5 px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg text-xs font-bold border border-purple-100">
-                        <i class="fa-solid fa-id-card"></i> 
-                        NIC: {{ $customer->nic }}
-                    </div>
-                    @endif
-                </div>
-                @endif
-            </div>
-        </div>
-    </div>
-
-    <!-- Stats Row -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-blue-600">{{ $totalOrders }}</p>
-            <p class="text-xs text-gray-500 mt-1">Total Orders</p>
-        </div>
-        <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-green-600">Rs.{{ number_format($totalSpend, 2) }}</p>
-            <p class="text-xs text-gray-500 mt-1">Total Spend</p>
-        </div>
-        <div class="bg-white rounded-lg border border-gray-100 shadow-sm p-4 text-center">
-            <p class="text-2xl font-bold text-gray-700">
-                {{ $completedCount }}
-            </p>
-            <p class="text-xs text-gray-500 mt-1">Completed</p>
-        </div>
-    </div>
-
-    <!-- Alpine App Wrapper -->
+        <!-- Alpine App Wrapper -->
     <div x-data="{ 
         collectModalOpen: false,
         collectOrderId: null,
@@ -143,31 +61,67 @@
             return preview;
         }
     }">
-    
-    @if($pendingCount > 0)
-        <div class="bg-red-50 border border-red-200 rounded-xl p-5 mb-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 shadow-sm">
-            <div class="flex items-center gap-3">
-                <div class="p-3 bg-red-100 rounded-lg text-red-600">
-                    <i class="fa-solid fa-triangle-exclamation text-xl"></i>
-                </div>
-                <div>
-                    <h3 class="text-red-800 font-bold text-lg">Pending Clearance (Credit Due)</h3>
-                    <p class="text-red-600 text-sm mt-0.5">This customer has {{ $pendingCount }} unpaid order(s) requiring clearance.</p>
-                </div>
+
+    <!-- Compact Profile & Stats Header -->
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-5 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
+        
+        <!-- Left: Avatar & Info -->
+        <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center text-2xl font-black shadow-md shadow-blue-500/20 shrink-0">
+                {{ substr($customer->name, 0, 1) }}
             </div>
-            <div class="text-left md:text-right flex flex-col md:items-end gap-2">
-                <div>
-                    <p class="text-xs text-red-500 font-bold uppercase tracking-wider mb-1">Total Due</p>
-                    <p class="text-2xl font-black text-red-700">Rs.{{ number_format($totalPending, 2) }}</p>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h2 class="text-lg font-black text-slate-800">
+                        {{ $customer->title ? $customer->title . ' ' : '' }}{{ $customer->name }}
+                    </h2>
+                    @if($customer->customer_mark)
+                        <span class="px-2 py-0.5 bg-amber-100 text-amber-700 font-bold text-[10px] rounded border border-amber-200 uppercase">
+                            {{ $customer->customer_mark }}
+                        </span>
+                    @endif
                 </div>
-                <button @click="openBulkCollectModal({{ $totalPending }})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-sm rounded-xl transition-all shadow-lg shadow-red-500/30 flex items-center gap-2">
-                    <i class="fa-solid fa-coins"></i> Settle Payment
-                </button>
+                <div class="flex items-center gap-4 text-xs font-semibold text-slate-500 mt-1">
+                    <span><i class="fa-solid fa-phone mr-1 text-slate-400"></i> {{ $customer->phone }}</span>
+                    @if($customer->address)
+                    <span><i class="fa-solid fa-location-dot mr-1 text-slate-400"></i> {{ $customer->address }}</span>
+                    @endif
+                </div>
             </div>
         </div>
-    @endif
+        
+        <!-- Center/Right: Stats & Pending -->
+        <div class="flex flex-wrap items-center gap-4 lg:gap-6 w-full lg:w-auto mt-2 lg:mt-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+            
+            <!-- Stats mini -->
+            <div class="flex gap-5 text-center">
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Orders</p>
+                    <p class="text-lg font-black text-slate-700 leading-none">{{ $totalOrders }}</p>
+                </div>
+                <div class="w-px bg-slate-200"></div>
+                <div>
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Spend</p>
+                    <p class="text-lg font-black text-emerald-600 leading-none">Rs.{{ number_format($totalSpend, 0) }}</p>
+                </div>
+            </div>
 
-    <!-- Tabs Container -->
+            <!-- Pending Alert & Button -->
+            @if($pendingCount > 0)
+            <div class="hidden lg:block w-px h-8 bg-slate-200"></div>
+            <div class="flex items-center gap-4 bg-red-50 border border-red-100 rounded-xl px-4 py-2 ml-auto lg:ml-0">
+                <div class="text-right">
+                    <p class="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-0.5">Due ({{ $pendingCount }})</p>
+                    <p class="text-lg font-black text-red-700 leading-none">Rs.{{ number_format($totalPending, 2) }}</p>
+                </div>
+                <button @click="openBulkCollectModal({{ $totalPending }})" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-black text-xs rounded-lg transition-all shadow-md shadow-red-500/20 flex items-center gap-1.5 whitespace-nowrap">
+                    <i class="fa-solid fa-coins"></i> Settle
+                </button>
+            </div>
+            @endif
+            
+        </div>
+    </div><!-- Tabs Container -->
     <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden mb-6">
         <div class="px-5 pt-3 border-b border-gray-100 bg-gray-50 flex gap-4">
             <a href="{{ route('customers.show', ['customer' => $customer, 'tab' => 'history']) }}" class="{{ $tab === 'history' ? 'border-b-2 border-blue-600 text-blue-600 font-bold' : 'text-gray-500 font-semibold hover:text-gray-700' }} pb-3 px-2 text-sm transition-colors outline-none block">
@@ -482,3 +436,4 @@
     
     </div> <!-- Close Alpine Wrapper -->
 </x-app-layout>
+
