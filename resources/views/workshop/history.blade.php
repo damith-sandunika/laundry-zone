@@ -11,6 +11,93 @@
         </div>
     </x-slot>
 
+    <div class="mb-6 flex flex-wrap gap-4 items-center justify-between bg-white p-4 rounded-xl shadow-sm border border-slate-100">
+        <form method="GET" class="flex flex-wrap items-center gap-3">
+            <div>
+                <input type="text" name="date_range" id="date_range"
+                    value="{{ request('date_range') }}" placeholder="Filter by Date"
+                    class="border-slate-200 rounded-lg text-sm font-bold w-[250px] shadow-sm">
+            </div>
+            <button type="submit"
+                class="px-4 py-2 bg-slate-900 text-white rounded-lg text-sm font-bold shadow-sm hover:bg-slate-800 transition-colors">
+                Filter
+            </button>
+            @if (request('date_range'))
+                <a href="{{ route('history') }}"
+                    class="px-4 py-2 bg-slate-100 text-slate-600 rounded-lg text-sm font-bold hover:bg-slate-200 transition-colors">
+                    Clear
+                </a>
+            @endif
+        </form>
+    </div>
+
+    <!-- Summary Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Order Value</span>
+            <span class="text-2xl font-black text-slate-800 mt-2">Rs.{{ number_format($stats['total_order_value'], 2) }}</span>
+            <div class="mt-4 flex flex-col gap-2 pt-3 border-t border-slate-50">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600">🚶 Walk-in</span>
+                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['walk_in'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600">🚚 Delivery</span>
+                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['delivery'], 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Pending / Due</span>
+            <span class="text-2xl font-black text-amber-600 mt-2">Rs.{{ number_format($stats['pending_due'], 2) }}</span>
+            <div class="mt-4 flex flex-col gap-2 pt-3 border-t border-slate-50">
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600">Regular Pending</span>
+                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['regular_pending'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600">Credit Orders</span>
+                    <span class="text-xs font-black text-slate-800">Rs.{{ number_format($stats['credit_orders'], 2) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-between">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Collected Payments</span>
+            <span class="text-2xl font-black text-emerald-600 mt-2">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
+            <div class="mt-4 flex flex-col gap-2 pt-3 border-t border-slate-50">
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">From These Orders</span>
+                    <span class="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full uppercase tracking-wider">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600">💵 Cash</span>
+                    <span class="text-xs font-black text-slate-800">{{ number_format($stats['cash'], 0) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600">💳 Card</span>
+                    <span class="text-xs font-black text-slate-800">{{ number_format($stats['card'], 0) }}</span>
+                </div>
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-slate-600">🏦 Bank</span>
+                    <span class="text-xs font-black text-slate-800">{{ number_format($stats['bank'], 0) }}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 flex flex-col justify-start gap-4">
+            <div>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Order Qty</span>
+                <span class="text-3xl font-black text-indigo-600">{{ $stats['order_qty'] }}</span>
+            </div>
+            <div>
+                <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block">Total Customers</span>
+                <span class="text-3xl font-black text-indigo-600">{{ $stats['total_customer_count'] }}</span>
+            </div>
+        </div>
+    </div>
+
     <div class="bg-white rounded-md border border-gray-100 shadow-sm overflow-hidden mb-8">
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left" style="border-collapse:collapse;">
@@ -185,6 +272,19 @@
         @endif
     </div>
     @endif
+    <x-slot name="scripts">
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                if(typeof flatpickr !== 'undefined') {
+                    flatpickr("#date_range", {
+                        mode: "range",
+                        dateFormat: "Y-m-d",
+                        maxDate: "today"
+                    });
+                }
+            });
+        </script>
+    </x-slot>
 </x-app-layout>
 
 

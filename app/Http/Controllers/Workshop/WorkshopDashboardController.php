@@ -352,21 +352,83 @@ class WorkshopDashboardController extends Controller
         return view('workshop.dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'suggestedOpeningCash', 'branchName', 'chartData', 'currentBranch', 'branchStaff', 'activeAttendances'));
     }
 
-    public function history()
+    public function history(Request $request)
     {
         $user = auth()->user();
+        $branchId = $this->getActiveBranchId();
 
-        $dispatches = WorkshopDispatch::with(['order' => fn($q) => $q->withTrashed()->with(['customer', 'deletedBy']), 'branch'])
-            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $this->getActiveBranchId()))
-            ->orderByDesc('order_id')
-            ->paginate(15);
+        $query = WorkshopDispatch::with(['order' => fn($q) => $q->withTrashed()->with(['customer', 'deletedBy']), 'branch'])
+            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId));
+
+        $statsQuery = WorkshopDispatch::join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
+            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_dispatches.workshop_branch_id', $branchId));
+
+        if ($request->filled('date_range')) {
+            $dates = explode(' to ', $request->date_range);
+            if (count($dates) === 2) {
+                $query->whereHas('order', function($q) use ($dates) {
+                    $q->whereDate('created_at', '>=', $dates[0])
+                      ->whereDate('created_at', '<=', $dates[1]);
+                });
+                $statsQuery->whereDate('orders.created_at', '>=', $dates[0])
+                           ->whereDate('orders.created_at', '<=', $dates[1]);
+            }
+        }
+
+        $ordersBase = $statsQuery->select('orders.*')->get();
+
+        $totalOrderValue = $ordersBase->sum('total');
+        $walkIn = $ordersBase->where('delivery_method', 'pickup')->sum('total');
+        $delivery = $ordersBase->where('delivery_method', 'delivery')->sum('total');
+        
+        $pendingDue = $ordersBase->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        $regularPending = $ordersBase->where('payment_method', '!=', 'credit')->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        $creditOrders = $ordersBase->where('payment_method', 'credit')->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        
+        $collectedPayments = $ordersBase->sum('paid_amount');
+
+        $orderIds = $ordersBase->pluck('id')->toArray();
+        $transactions = \App\Models\PaymentTransaction::whereIn('order_id', $orderIds)->get();
+        
+        $cashTotal = $transactions->where('payment_method', 'cash')->sum('amount');
+        $cardTotal = $transactions->where('payment_method', 'card')->sum('amount');
+        $bankTotal = $transactions->where('payment_method', 'bank')->sum('amount');
+        
+        $directCash = $ordersBase->where('payment_method', 'cash')->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
+        $cashTotal += $directCash;
+        
+        $directCard = $ordersBase->where('payment_method', 'card')->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
+        $cardTotal += $directCard;
+        
+        $directBank = $ordersBase->where('payment_method', 'bank')->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
+        $bankTotal += $directBank;
+
+        $orderQty = $ordersBase->count();
+        $totalCustomerCount = $ordersBase->pluck('customer_id')->unique()->count();
+
+        $stats = [
+            'total_order_value' => $totalOrderValue,
+            'walk_in' => $walkIn,
+            'delivery' => $delivery,
+            'pending_due' => $pendingDue,
+            'regular_pending' => $regularPending,
+            'credit_orders' => $creditOrders,
+            'collected_payments' => $collectedPayments,
+            'cash' => $cashTotal,
+            'card' => $cardTotal,
+            'bank' => $bankTotal,
+            'order_qty' => $orderQty,
+            'total_customer_count' => $totalCustomerCount,
+        ];
+
+        $dispatches = $query->orderByDesc('order_id')->paginate(15);
 
         $cancelledBookings = \App\Models\DeliveryAppointment::with(['customer', 'cancelledBy'])
-            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('branch_id', $this->getActiveBranchId()))
+            ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('branch_id', $branchId))
             ->where('status', 'cancelled')
             ->orderByDesc('updated_at')
             ->paginate(15);
 
-        return view('workshop.history', compact('dispatches', 'cancelledBookings'));
+        return view('workshop.history', compact('dispatches', 'cancelledBookings', 'stats'));
     }
 }
