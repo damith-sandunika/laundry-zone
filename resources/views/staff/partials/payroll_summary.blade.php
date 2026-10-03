@@ -144,7 +144,13 @@
                                     </p>
                                     <p class="text-[10px] text-gray-400 mt-0.5">{{ $salary->created_at->format('M d, Y h:i A') }}</p>
                                 </div>
-                                <span class="text-sm font-black text-green-600">Rs. {{ number_format($salary->amount, 2) }}</span>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-sm font-black text-green-600">Rs. {{ number_format($salary->amount, 2) }}</span>
+                                    <form method="POST" action="{{ route('expenses.destroy', $salary->id) }}" onsubmit="return confirm('Remove this salary payment record?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-gray-300 hover:text-red-500 font-bold text-xs">&times;</button>
+                                    </form>
+                                </div>
                             </div>
                         @empty
                             <div class="p-6 text-center">

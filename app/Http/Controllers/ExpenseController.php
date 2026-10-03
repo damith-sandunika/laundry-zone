@@ -131,7 +131,7 @@ class ExpenseController extends Controller
     {
         $expense->delete();
 
-        return redirect()->route('expenses.index')->with('success', 'Petty Cash expense deleted successfully.');
+        return back()->with('success', 'Petty Cash expense deleted successfully.');
     }
 
     public function topup(Request $request)

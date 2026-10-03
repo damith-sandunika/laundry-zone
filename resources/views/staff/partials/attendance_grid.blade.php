@@ -7,12 +7,12 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <form action="{{ route('staff.show', $staff->id) }}" method="GET" class="flex gap-2">
-                                <select name="month" class="text-xs border-gray-200 rounded-lg py-1.5 px-3">
+                                <select name="month" class="text-xs border-gray-200 rounded-lg py-1.5 px-3 appearance-none">
                                     @for($m = 1; $m <= 12; $m++)
                                         <option value="{{ $m }}" {{ $payroll->month == $m ? 'selected' : '' }}>{{ date('M', mktime(0, 0, 0, $m, 10)) }}</option>
                                     @endfor
                                 </select>
-                                <select name="year" class="text-xs border-gray-200 rounded-lg py-1.5 px-3">
+                                <select name="year" class="text-xs border-gray-200 rounded-lg py-1.5 px-3 appearance-none">
                                     @for($y = now()->year - 1; $y <= now()->year + 1; $y++)
                                         <option value="{{ $y }}" {{ $payroll->year == $y ? 'selected' : '' }}>{{ $y }}</option>
                                     @endfor
