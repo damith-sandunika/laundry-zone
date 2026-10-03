@@ -43,7 +43,7 @@
                     <p class="text-[10px] uppercase font-bold text-gray-400 mb-1">Residential Address</p>
                     <p class="text-sm font-semibold text-gray-800">{{ $staff->profile->address ?? 'Not Provided' }}</p>
                 </div>
-                <div class="md:col-span-2 pt-4 border-t border-gray-100 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="md:col-span-2 pt-4 border-t border-gray-100 grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div>
                         <p class="text-[10px] uppercase font-bold text-red-400 mb-1 flex items-center gap-1">
                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
@@ -87,6 +87,10 @@
                     <div>
                         <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Hourly Rate</p>
                         <p class="text-lg font-black text-gray-800">Rs. {{ number_format($staff->profile->hourly_rate ?? 0, 2) }}</p>
+                    </div>
+                    <div>
+                        <p class="text-[10px] uppercase font-bold text-gray-500 mb-1">Basic Salary</p>
+                        <p class="text-lg font-black text-gray-800">Rs. {{ number_format($staff->profile->basic_salary ?? 0, 2) }}</p>
                     </div>
                     <div>
                         <p class="text-[10px] uppercase font-bold text-green-500 mb-1">Net Salary ({{ date('M') }})</p>

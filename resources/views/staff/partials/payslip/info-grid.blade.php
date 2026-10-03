@@ -19,6 +19,10 @@
                     <span class="info-label">NIC Number:</span>
                     <span class="info-value">{{ $staff->profile->nic ?? 'N/A' }}</span>
                 </div>
+                <div class="info-row">
+                    <span class="info-label">Basic Salary:</span>
+                    <span class="info-value text-indigo font-bold">Rs. {{ number_format($staff->profile->basic_salary ?? 0, 2) }}</span>
+                </div>
             </div>
 
             <!-- Attendance & Work Summary -->

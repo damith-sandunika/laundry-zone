@@ -108,6 +108,12 @@
                         <div class="p-6 grid grid-cols-2 md:grid-cols-3 gap-5">
 
                             <div>
+                                <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Basic Salary (Rs.)</label>
+                                <input type="number" step="0.01" name="basic_salary" value="{{ old('basic_salary', 0) }}"
+                                    class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5" placeholder="0.00">
+                            </div>
+
+                            <div>
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Hourly Rate (Rs.)</label>
                                 <input type="number" step="0.01" name="hourly_rate" value="{{ old('hourly_rate', 0) }}"
                                     class="w-full text-sm border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5" placeholder="0.00">
