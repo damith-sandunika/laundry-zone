@@ -146,6 +146,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/customers/pos', [CustomerController::class, 'store'])->name('customers.store.pos');
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
     Route::get('/customers/{customer}/sales-report/pdf', [CustomerController::class, 'salesReportPdf'])->name('customers.salesReport.pdf');
+    Route::post('/customers/{customer}/bulk-credit-payment', [CustomerController::class, 'bulkCreditPayment'])->name('customers.bulkCreditPayment');
     Route::get('/customers/top', [\App\Http\Controllers\TopCustomersController::class, 'index'])->name('customers.top');
     Route::resource('customers', CustomerController::class);
     Route::resource('campaigns', \App\Http\Controllers\PromotionalCampaignController::class);

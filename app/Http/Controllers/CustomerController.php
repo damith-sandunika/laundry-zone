@@ -172,6 +172,39 @@ class CustomerController extends Controller
         return redirect()->route('customers.show', $customer)->with('success', 'Customer updated successfully.');
     }
 
+    public function bulkCreditPayment(Request $request, Customer $customer, \App\Actions\Customer\CollectBulkCreditPaymentAction $action)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'payment_method' => 'required|string|in:cash,card,bank_transfer',
+        ]);
+
+        try {
+            $result = $action->execute($customer, $request->only(['amount', 'payment_method']), auth()->id());
+            
+            $message = "Successfully collected Rs. " . number_format($result['total_paid'], 2) . ". ";
+            
+            $settledCounts = count($result['settled_orders']);
+            if ($settledCounts > 0) {
+                $message .= "Applied to {$settledCounts} order(s). ";
+                // Could append the order numbers if needed, but summary is usually enough for toast
+            }
+            
+            if ($result['unused_amount'] > 0) {
+                $message .= "Note: Rs. " . number_format($result['unused_amount'], 2) . " was excess and not applied to any order.";
+            }
+
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Bulk Credit Payment Failed', [
+                'customer_id' => $customer->id,
+                'user_id' => auth()->id(),
+                'error' => $e->getMessage()
+            ]);
+            return redirect()->back()->with('error', $e->getMessage());
+        }
+    }
+
     public function destroy(Customer $customer)
     {
         $this->authorize('viewAny', \App\Models\Customer::class);
