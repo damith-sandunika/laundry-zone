@@ -149,12 +149,22 @@ class CustomerController extends Controller
                 ->paginate(15)
                 ->withQueryString();
         } elseif ($tab === 'sales') {
-            // Paginate orders to prevent memory exhaustion, then group by month for the current page
-            $salesOrders = $customer->orders()
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
+
+            $query = $customer->orders()
                 ->with('items.serviceType')
-                ->latest()
-                ->paginate(30)
-                ->withQueryString();
+                ->latest();
+
+            if ($startDate) {
+                $query->whereDate('created_at', '>=', $startDate);
+            }
+            if ($endDate) {
+                $query->whereDate('created_at', '<=', $endDate);
+            }
+
+            // Paginate orders to prevent memory exhaustion, then group by month for the current page
+            $salesOrders = $query->paginate(30)->withQueryString();
                 
             $monthlySales = collect($salesOrders->items())
                 ->groupBy(fn($o) => $o->created_at->format('Y-m'))
@@ -182,15 +192,25 @@ class CustomerController extends Controller
     public function salesReportPdf(Customer $customer, \Illuminate\Http\Request $request)
     {
         $yearMonth = $request->input('month'); // e.g. "2026-09"
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
 
         $query = $customer->orders()->with('items.serviceType')->latest();
+        
         if ($yearMonth) {
             [$y, $m] = explode('-', $yearMonth);
             $query->whereYear('created_at', $y)->whereMonth('created_at', $m);
+            $label = \Carbon\Carbon::parse($yearMonth . '-01')->format('F Y');
+        } elseif ($startDate || $endDate) {
+            if ($startDate) $query->whereDate('created_at', '>=', $startDate);
+            if ($endDate) $query->whereDate('created_at', '<=', $endDate);
+            $label = ($startDate ?: 'Start') . ' to ' . ($endDate ?: 'End');
+        } else {
+            $label = 'All Time';
         }
+
         $orders = $query->get();
 
-        $label     = $yearMonth ? \Carbon\Carbon::parse($yearMonth . '-01')->format('F Y') : 'All Time';
         $totalQty  = $orders->sum(fn($o) => $o->items->sum('quantity'));
         $totalBill = $orders->sum('total');
 
