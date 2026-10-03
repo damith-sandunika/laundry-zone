@@ -78,9 +78,13 @@ class HRController extends Controller
         }
 
         foreach ($data as $dateStr => $dayInfo) {
-            // Only update if there is meaningful data or if we are explicitly marking absent/leave
             $status = $dayInfo['status'] ?? null;
-            if (!$status) continue;
+            
+            // If status is empty, it means the user cleared it from the UI. Remove the record if it exists.
+            if (!$status) {
+                $staff->attendances()->where('date', $dateStr)->delete();
+                continue;
+            }
 
             $clockIn = !empty($dayInfo['clock_in']) ? $dayInfo['clock_in'] : null;
             $clockOut = !empty($dayInfo['clock_out']) ? $dayInfo['clock_out'] : null;
