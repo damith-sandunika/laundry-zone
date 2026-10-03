@@ -174,8 +174,6 @@
                 </button>
             </div>
         </div>
-    @endif
-
     <!-- Tabs Container -->
     <div class="bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden">
         <div class="px-5 pt-3 border-b border-gray-100 bg-gray-50 flex gap-4">
