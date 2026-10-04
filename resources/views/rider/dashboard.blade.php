@@ -171,7 +171,6 @@
                 </tbody>
             </table>
         </div>
-        </div>
 
         <!-- PAYMENT MODAL -->
         <div x-cloak x-show="isPaymentModalOpen"
@@ -250,7 +249,7 @@
 
     <x-slot name="scripts">
         <script>
-            function riderTasks() {
+            window.riderTasks = function() {
                 return {
                     isPaymentModalOpen: false,
                     currentTaskId: null,

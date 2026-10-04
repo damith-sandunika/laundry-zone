@@ -208,12 +208,13 @@
     @endif
 
     <script>
-        NProgress.configure({ showSpinner: false, speed: 400, minimum: 0.1 });
+        const np = (typeof NProgress !== 'undefined') ? NProgress : { start: () => {}, done: () => {}, configure: () => {} };
+        np.configure({ showSpinner: false, speed: 400, minimum: 0.1 });
 
         document.addEventListener('click', function (e) {
             let target = e.target.closest('a');
             if (target && target.href && !target.href.startsWith('javascript:') && !target.href.includes('#') && target.target !== '_blank') {
-                NProgress.start();
+                np.start();
             }
         });
 
@@ -237,7 +238,7 @@
                 }
             });
             
-            NProgress.start();
+            np.start();
         });
 
         const originalFetch = window.fetch;
@@ -256,7 +257,7 @@
                 activeEl.style.cursor = 'wait';
             }
             
-            NProgress.start();
+            np.start();
             try {
                 const response = await originalFetch.apply(this, args);
                 return response;
@@ -267,13 +268,13 @@
                     activeEl.style.opacity = '1';
                     activeEl.style.cursor = 'pointer';
                 }
-                NProgress.done();
+                np.done();
             }
         };
 
-        window.addEventListener('load', () => NProgress.done());
+        window.addEventListener('load', () => np.done());
         window.addEventListener('pageshow', (e) => {
-            if (e.persisted) NProgress.done();
+            if (e.persisted) np.done();
         });
 
         // â”€â”€â”€ Order Quick Search Alpine Component â”€â”€â”€
@@ -317,7 +318,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            const Toast = Swal.mixin({
+            if(typeof Swal === "undefined") return; const Toast = Swal.mixin({
                 toast: true,
                 position: 'top-end',
                 showConfirmButton: false,

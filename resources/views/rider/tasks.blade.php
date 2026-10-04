@@ -241,7 +241,7 @@
                     });
             }
 
-            function riderTasks() {
+            window.riderTasks = function() {
                 return {
                     isPaymentModalOpen: false,
                     currentTaskId: null,

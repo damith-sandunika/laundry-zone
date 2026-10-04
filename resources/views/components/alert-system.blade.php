@@ -76,7 +76,14 @@
                         'X-Requested-With': 'XMLHttpRequest'
                     }
                 })
-                .then(response => response.json())
+                .then(response => {
+                    const contentType = response.headers.get("content-type");
+                    if (contentType && contentType.indexOf("application/json") !== -1) {
+                        return response.json();
+                    } else {
+                        throw new Error("Received non-JSON response");
+                    }
+                })
                 .then(data => {
                     // Map new alerts but keep open state
                     let newAlerts = data.alerts || [];
@@ -136,7 +143,9 @@
                     }
                     this.lastCount = this.count;
                 })
-                .catch(error => console.error('Error fetching alerts:', error));
+                .catch(error => {
+                    // Fail silently to prevent console spam on network drops or non-JSON responses
+                });
             },
             playSound() {
                 const audio = document.getElementById('notification-sound');
