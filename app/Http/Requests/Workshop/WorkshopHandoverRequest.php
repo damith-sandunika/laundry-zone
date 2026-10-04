@@ -14,8 +14,9 @@ class WorkshopHandoverRequest extends FormRequest
     public function rules()
     {
         return [
-            'payment_method' => 'nullable|string',
-            'amount_paid'    => 'nullable|numeric|min:0',
+            'payment_method'     => 'nullable|string',
+            'amount_paid'        => 'nullable|numeric|min:0',
+            'refund_overpayment' => 'nullable|boolean',
         ];
     }
 }

@@ -111,7 +111,7 @@ class CreatePosDeliveryOrderAction
                 }
 
                 $paymentMode = $data['payment_mode'] ?? 'pay_on_pickup';
-                $paidAmount  = $paymentMode === 'pay_now' ? $subtotal : 0;
+                $paidAmount  = $paymentMode === 'pay_now' ? (isset($data['advance_amount']) && $data['advance_amount'] !== null ? (float)$data['advance_amount'] : $subtotal) : 0;
 
                 $isPickupFromBranch = ($data['delivery_preference'] ?? 'deliver_to_address') === 'pickup_from_branch';
 

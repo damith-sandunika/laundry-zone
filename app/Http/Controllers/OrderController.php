@@ -578,7 +578,7 @@ class OrderController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $query = Order::withTrashed()->with('customer', 'branch', 'deletedBy')
+        $query = Order::with('customer', 'branch', 'deletedBy')
             ->orderByDesc('id');
             
         $statsQuery = Order::query()
@@ -674,6 +674,12 @@ class OrderController extends Controller
         try {
             $order->deleted_by = $user->id;
             $order->saveQuietly();
+            
+            // Delete all payment transactions to reverse cash drawer and remove from revenue reports
+            $order->paymentTransactions->each(function($tx) {
+                $tx->delete();
+            });
+
             $order->delete();
             
             OrderStatusHistory::create([

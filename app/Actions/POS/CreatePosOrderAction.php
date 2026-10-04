@@ -137,7 +137,7 @@ class CreatePosOrderAction
         $paidAmount = 0;
         if ($paymentMode === 'pay_now') {
             if (isset($data['advance_amount']) && $data['advance_amount'] !== null) {
-                $paidAmount = min($total, (float) $data['advance_amount']);
+                $paidAmount = (float) $data['advance_amount'];
             } else {
                 $paidAmount = $total;
             }

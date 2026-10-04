@@ -193,6 +193,23 @@
                         </div>
                     </div>
                 </template>
+
+                <template x-if="dispatch && (parseFloat(dispatch?.order?.paid_amount||0) - parseFloat(dispatch?.order?.total||0)) > 0">
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Overpayment / Return Change</label>
+                        <div style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;padding:12px;display:flex;justify-content:space-between;align-items:center;">
+                            <div>
+                                <span style="font-size:13px;font-weight:800;color:#92400e;">Change to Return</span>
+                                <p style="font-size:11px;color:#b45309;margin:2px 0 0;font-weight:600;">Refund will be processed from cash drawer.</p>
+                            </div>
+                            <span style="font-size:16px;font-weight:900;color:#ea580c;" x-text="'Rs. ' + (parseFloat(dispatch?.order?.paid_amount||0) - parseFloat(dispatch?.order?.total||0)).toFixed(2)"></span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+                            <input type="checkbox" id="refundHandover" x-model="handoverRefundOverpayment" style="width:16px;height:16px;accent-color:#ea580c;cursor:pointer;">
+                            <label for="refundHandover" style="font-size:12px;font-weight:700;color:#92400e;cursor:pointer;user-select:none;">Process refund automatically upon handover</label>
+                        </div>
+                    </div>
+                </template>
                 
                 <div style="display:flex;align-items:center;gap:10px;margin-top:5px;background:#f8fafc;padding:12px;border-radius:10px;border:1px solid #e2e8f0;">
                     <input type="checkbox" id="printReceiptHandover2" x-model="handoverPrintReceipt" style="width:18px;height:18px;accent-color:#10b981;cursor:pointer;">

@@ -153,6 +153,19 @@
                                         <span
                                             style="font-weight:900;color:#dc2626;">Rs.{{ number_format(max(0, $order->total - $order->paid_amount), 2) }}</span>
                                     </div>
+                                    @if($order->paid_amount > $order->total)
+                                        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:6px;padding-bottom:6px;">
+                                            <span style="color:#f97316;font-weight:800;">Overpaid (Change)</span>
+                                            <span
+                                                style="font-weight:900;color:#ea580c;">Rs.{{ number_format($order->paid_amount - $order->total, 2) }}</span>
+                                        </div>
+                                        <div style="margin-top:2px;" x-data>
+                                            <button @click="$dispatch('open-overpayment-modal', {{ $order->paid_amount - $order->total }})"
+                                                style="width:100%;padding:6px;background:#f97316;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+                                                <i class="fa-solid fa-coins"></i> Return Change
+                                            </button>
+                                        </div>
+                                    @endif
                                     <div
                                         style="display:flex;justify-content:space-between;align-items:center;margin-top:2px;">
                                         <span style="color:#64748b;font-weight:600;">Status</span>

@@ -35,16 +35,29 @@ class WorkshopHandoverAction
 
             $newPaid = $order->paid_amount + $amountPaid;
             
+            if ($newPaid < $order->total && $paymentMethod !== 'credit') {
+                throw new Exception('Balance due: Rs. ' . number_format($order->total - $newPaid, 2) . '. Collect full payment before handover.');
+            }
+
+            if ($newPaid > $order->total && !empty($data['refund_overpayment'])) {
+                $refundAmount = $newPaid - $order->total;
+                PaymentTransaction::create([
+                    'order_id'       => $order->id,
+                    'amount'         => -$refundAmount,
+                    'payment_method' => 'cash',
+                    'created_by'     => $userId,
+                    'status'         => 'completed',
+                    'transaction_id' => 'REFUND-' . strtoupper(uniqid()),
+                ]);
+                $newPaid -= $refundAmount;
+            }
+
             $order->update([
                 'paid_amount'    => $newPaid,
                 'payment_method' => $paymentMethod,
                 'payment_status' => $paymentMethod === 'credit' ? 'pending' : ($newPaid >= $order->total ? 'paid' : 'partial'),
             ]);
             $order = $order->fresh();
-
-            if ($order->paid_amount < $order->total && $paymentMethod !== 'credit') {
-                throw new Exception('Balance due: Rs. ' . number_format($order->total - $order->paid_amount, 2) . '. Collect full payment before handover.');
-            }
 
             $order->update([
                 'status'       => 'delivered',

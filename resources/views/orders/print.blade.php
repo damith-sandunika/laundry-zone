@@ -146,7 +146,8 @@
     <div class="row" style="font-size: 12px;"><span>Order Create Date:</span><span
             class="bold">{{ $order->created_at->format('d M Y h:i A') }}</span></div>
     @if($order->due_date)
-        <div class="row" style="font-size: 12px;"><span>Delivery Date:</span><span>{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') }}</span></div>
+        <div class="row" style="font-size: 12px;"><span>Delivery
+                Date:</span><span>{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') }}</span></div>
     @endif
     <div class="row" style="font-size: 12px;"><span>Customer:</span><span
             class="bold">{{ $order->customer->title ? $order->customer->title . ' ' : '' }}{{ $order->customer->name }}</span>
@@ -178,8 +179,8 @@
             {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
             @if($item->turnaroundType && !$item->turnaroundType->is_default)
                 ({{ $item->turnaroundType->name }})
-            @elseif((float)$item->custom_turnaround_percentage > 0)
-                (Express ({{ (float)$item->custom_turnaround_percentage }}%))
+            @elseif((float) $item->custom_turnaround_percentage > 0)
+                (Express ({{ (float) $item->custom_turnaround_percentage }}%))
             @endif
         </div>
         @if($item->turnaround_extra_charge > 0)
@@ -205,7 +206,8 @@
         <div class="row"><span>Subtotal</span><span>Rs.{{ number_format($order->subtotal, 2) }}</span></div>
         @if($order->discount > 0)
             @php $discountPct = ($order->subtotal > 0) ? round(($order->discount / $order->subtotal) * 100, 1) : 0; @endphp
-            <div class="row"><span>Discount{{ $discountPct > 0 ? ' (' . $discountPct . '%)' : '' }}</span><span>- Rs.{{ number_format($order->discount, 2) }}</span></div>
+            <div class="row"><span>Discount{{ $discountPct > 0 ? ' (' . $discountPct . '%)' : '' }}</span><span>-
+                    Rs.{{ number_format($order->discount, 2) }}</span></div>
         @endif
         @if($order->delivery_fee > 0)
             <div class="row"><span>Delivery Fee</span><span>Rs.{{ number_format($order->delivery_fee, 2) }}</span></div>
@@ -220,15 +222,33 @@
         <span>{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</span>
     </div>
 
+    @php
+        $refundAmount = abs($order->paymentTransactions()->where('amount', '<', 0)->sum('amount') ?? 0);
+        $totalPaidByCustomer = $order->paid_amount + $refundAmount;
+    @endphp
+
     <div class="row" style="margin-top:4px;">
-        <span>Paid</span>
-        <span>Rs.{{ number_format($order->paid_amount, 2) }}</span>
+        <span>Amount Received</span>
+        <span>Rs.{{ number_format($totalPaidByCustomer, 2) }}</span>
     </div>
     @if($order->total - $order->paid_amount > 0)
         <div class="row bold">
             <span>Balance Due</span>
             <span>Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</span>
         </div>
+    @endif
+    @if($totalPaidByCustomer > $order->total)
+        @if($refundAmount > 0)
+            <div class="row bold" style="color: #000000ff;">
+                <span>Change Returned</span>
+                <span>Rs.{{ number_format($refundAmount, 2) }}</span>
+            </div>
+        @else
+            <div class="row bold" style="color: #000000ff;">
+                <span>Change to Return</span>
+                <span>Rs.{{ number_format($totalPaidByCustomer - $order->total, 2) }}</span>
+            </div>
+        @endif
     @endif
 
     <div class="divider"></div>
@@ -252,14 +272,16 @@
 
     <div style="font-size:10px; margin-top:8px; margin-bottom:8px; color:#333; text-align:center;">
         <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
-        Read our full terms at <br><strong style="font-size:11px;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</strong>
+        Read our full terms at <br><strong
+            style="font-size:11px;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</strong>
     </div>
     <div class="divider"></div>
 
     @if($mainBranch && $mainBranch->invoice_footer)
         <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($mainBranch->invoice_footer)) !!}</div>
     @else
-        <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}.</div>
+        <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing
+            {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}.</div>
         <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
             leave us a Google Review!</div>
     @endif
@@ -281,7 +303,7 @@
     <script>
         window.onload = function () {
             if (window.location.search.includes('auto_print=1')) {
-                setTimeout(function() { window.print(); }, 500);
+                setTimeout(function () { window.print(); }, 500);
             }
         }
     </script>

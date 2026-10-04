@@ -30,22 +30,22 @@
                             
                             <!-- Loop through all subcategories -->
                             <template x-for="sub in activeCategoryData.children" :key="sub.id">
-                                <div class="flex flex-col md:flex-row gap-3 sm:gap-4 bg-slate-50/50 rounded-[16px] p-3 sm:p-4 border border-slate-100">
+                                <div class="flex flex-col md:flex-row gap-2 bg-slate-50/50 rounded-lg p-2 border border-slate-100">
                                     
                                     <!-- Subcategory Name (Left Side) -->
-                                    <div class="flex flex-col items-start justify-center p-1 sm:p-2 shrink-0 w-full md:w-[100px]">
-                                        <span class="text-[11px] sm:text-[12px] font-black text-black uppercase tracking-widest break-words whitespace-normal leading-tight w-full" x-text="sub.name"></span>
+                                    <div class="flex flex-col items-start justify-center p-1 shrink-0 w-full md:w-[80px]">
+                                        <span class="text-[10px] font-black text-black uppercase tracking-widest break-words whitespace-normal leading-tight w-full" x-text="sub.name"></span>
                                     </div>
 
                                     <!-- Services List (Right Side) -->
-                                    <div class="flex flex-wrap gap-2 lg:gap-2.5 flex-1 items-start">
+                                    <div class="flex flex-wrap gap-1.5 flex-1 items-start">
                                         <template x-for="service in services.filter(s => s.category_id === sub.id)" :key="service.id">
                                             <!-- SMALL Service Card -->
                                             <button @click="addToCart(service)"
-                                                class="flex flex-row items-center justify-between px-3 py-2 sm:px-3 sm:py-2.5 rounded-[12px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md transition-all hover:-translate-y-0.5 group shrink-0 w-[calc(50%-0.3rem)] sm:w-auto sm:min-w-[140px]"
+                                                class="flex flex-row items-center justify-between px-2 py-1.5 rounded-lg bg-white border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md transition-all hover:-translate-y-0.5 group shrink-0 w-[calc(50%-0.2rem)] sm:w-auto sm:min-w-[120px]"
                                                 :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
-                                                <div class="flex flex-col items-start mr-3">
-                                                    <span class="text-[11px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
+                                                <div class="flex flex-col items-start mr-2">
+                                                    <span class="text-[10px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
                                                     <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : (service.price_type === 'per_pair' ? 'Per Pair' : 'Per Item'))"></span>
                                                 </div>
                                                 <span class="text-[13px] font-black text-blue-700 shrink-0" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>
@@ -67,13 +67,13 @@
                         <template x-if="activeCategoryData && activeCategoryData.children && activeCategoryData.children.length > 0 && services.filter(s => s.category_id === activeCategory).length > 0">
                             <h3 class="text-[13px] font-black text-slate-700 tracking-wider uppercase border-b-2 border-slate-100 pb-1.5 mt-2">Other Services</h3>
                         </template>
-                        <div class="flex flex-wrap gap-2 lg:gap-3">
+                        <div class="flex flex-wrap gap-1.5">
                             <template x-for="service in (activeCategory === 'uncategorized' ? services.filter(s => s.category_id === null) : services.filter(s => s.category_id === activeCategory))" :key="service.id">
                                 <button @click="addToCart(service)"
-                                    class="flex flex-row items-center justify-between px-3 py-2 sm:px-3 sm:py-2.5 rounded-[12px] bg-white border-2 border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md transition-all hover:-translate-y-0.5 group shrink-0 w-[calc(50%-0.3rem)] sm:w-auto sm:min-w-[140px]"
+                                    class="flex flex-row items-center justify-between px-2 py-1.5 rounded-lg bg-white border border-slate-100 shadow-[0_2px_8px_rgba(0,0,0,0.02)] hover:shadow-md transition-all hover:-translate-y-0.5 group shrink-0 w-[calc(50%-0.2rem)] sm:w-auto sm:min-w-[120px]"
                                     :class="{'hover:border-blue-300': service.color === 'blue', 'hover:border-green-300': service.color === 'green', 'hover:border-purple-300': service.color === 'purple', 'hover:border-orange-300': service.color === 'orange', 'hover:border-teal-300': service.color === 'teal', 'hover:border-red-300': service.color === 'red'}">
-                                    <div class="flex flex-col items-start mr-3">
-                                        <span class="text-[11px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
+                                    <div class="flex flex-col items-start mr-2">
+                                        <span class="text-[10px] font-black text-slate-700 leading-tight text-left" x-text="service.name"></span>
                                         <span class="text-[8px] font-extrabold text-slate-400 uppercase tracking-widest mt-0.5" x-text="service.price_type === 'per_kg' ? 'Per KG' : (service.price_type === 'per_sqft' ? 'Per SQFT' : (service.price_type === 'per_pair' ? 'Per Pair' : 'Per Item'))"></span>
                                     </div>
                                     <span class="text-[12px] font-black text-blue-600 shrink-0" x-text="'Rs.' + parseFloat(service.base_price).toFixed(0)"></span>

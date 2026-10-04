@@ -134,7 +134,7 @@
                         </div>
 
                         <!-- Delivery Date & Time -->
-                        <div>
+                        <div x-show="!customerWillPickup">
                             <label
                                 class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Delivery
                                 Date <span class="text-slate-400 font-semibold normal-case">(optional)</span></label>

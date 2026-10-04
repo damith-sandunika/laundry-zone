@@ -357,10 +357,12 @@ class WorkshopDashboardController extends Controller
         $user = auth()->user();
         $branchId = $this->getActiveBranchId();
 
-        $query = WorkshopDispatch::with(['order' => fn($q) => $q->withTrashed()->with(['customer', 'deletedBy']), 'branch'])
+        $query = WorkshopDispatch::with(['order' => fn($q) => $q->with(['customer', 'deletedBy']), 'branch'])
+            ->whereHas('order')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_branch_id', $branchId));
 
         $statsQuery = WorkshopDispatch::join('orders', 'workshop_dispatches.order_id', '=', 'orders.id')
+            ->whereNull('orders.deleted_at')
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('workshop_dispatches.workshop_branch_id', $branchId));
 
         if ($user->isSuperAdmin() && $request->filled('branch_id')) {

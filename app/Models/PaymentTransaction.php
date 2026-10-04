@@ -25,7 +25,11 @@ class PaymentTransaction extends Model
         static::created(function ($transaction) {
             if ($transaction->payment_method === 'cash' && $transaction->status !== 'rejected') {
                 if ($transaction->order && $transaction->order->branch_id) {
-                    app(\App\Services\CashBalanceService::class)->incrementCashBalance($transaction->order->branch_id, $transaction->amount);
+                    if ($transaction->amount > 0) {
+                        app(\App\Services\CashBalanceService::class)->incrementCashBalance($transaction->order->branch_id, $transaction->amount);
+                    } elseif ($transaction->amount < 0) {
+                        app(\App\Services\CashBalanceService::class)->decrementCashBalance($transaction->order->branch_id, abs($transaction->amount));
+                    }
                 }
             }
         });
@@ -43,7 +47,11 @@ class PaymentTransaction extends Model
         static::deleted(function ($transaction) {
             if ($transaction->payment_method === 'cash' && $transaction->status !== 'rejected') {
                 if ($transaction->order && $transaction->order->branch_id) {
-                    app(\App\Services\CashBalanceService::class)->decrementCashBalance($transaction->order->branch_id, $transaction->amount);
+                    if ($transaction->amount > 0) {
+                        app(\App\Services\CashBalanceService::class)->decrementCashBalance($transaction->order->branch_id, $transaction->amount);
+                    } elseif ($transaction->amount < 0) {
+                        app(\App\Services\CashBalanceService::class)->incrementCashBalance($transaction->order->branch_id, abs($transaction->amount));
+                    }
                 }
             }
         });

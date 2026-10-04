@@ -19,6 +19,7 @@
                 handoverPaymentMethod: 'cash',
                 handoverAmountPaid: '',
                 handoverPrintReceipt: true,
+                handoverRefundOverpayment: true,
                 isHandoverSubmitting: false,
 
                 showBranchArrivalModal: false,
@@ -192,14 +193,16 @@
                         let url = `/workshop/dispatches/${this.dispatch.id}/handover`;
                         let body = {
                             payment_method: this.handoverPaymentMethod,
-                            amount_paid: this.handoverAmountPaid ? parseFloat(this.handoverAmountPaid) : 0
+                            amount_paid: this.handoverAmountPaid ? parseFloat(this.handoverAmountPaid) : 0,
+                            refund_overpayment: this.handoverRefundOverpayment ? 1 : 0
                         };
 
                         if (this.dispatch.status === 'received_at_branch') {
                             url = `/orders/${this.dispatch.order.id}/status`;
                             body = {
                                 status: 'delivered',
-                                payment_method: this.handoverPaymentMethod
+                                payment_method: this.handoverPaymentMethod,
+                                refund_overpayment: this.handoverRefundOverpayment ? 1 : 0
                             };
                         }
 

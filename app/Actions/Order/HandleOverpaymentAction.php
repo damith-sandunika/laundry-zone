@@ -22,7 +22,6 @@ class HandleOverpaymentAction
                 'status'         => 'completed',
                 'transaction_id' => 'REFUND-' . strtoupper(uniqid()),
             ]);
-            app(CashBalanceService::class)->decrementCashBalance($order->branch_id, $overpayment);
 
             $order->paid_amount -= $overpayment;
             $order->payment_status = $order->paid_amount >= $order->total ? 'paid' : ($order->paid_amount > 0 ? 'partial' : 'unpaid');

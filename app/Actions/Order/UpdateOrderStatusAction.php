@@ -69,11 +69,20 @@ class UpdateOrderStatusAction
                             'payment_method' => $order->payment_method ?? 'cash',
                             'created_by'     => $userId,
                         ]);
+                        $order->paid_amount += $amountToPay;
+                    } elseif ($amountToPay < 0 && !empty($data['refund_overpayment'])) {
+                        $refundAmount = abs($amountToPay);
+                        PaymentTransaction::create([
+                            'order_id'       => $order->id,
+                            'amount'         => -$refundAmount,
+                            'payment_method' => 'cash',
+                            'created_by'     => $userId,
+                            'status'         => 'completed',
+                            'transaction_id' => 'REFUND-' . strtoupper(uniqid()),
+                        ]);
+                        $order->paid_amount -= $refundAmount;
                     }
                     $order->payment_status = 'paid';
-                    if ($amountToPay > 0) {
-                        $order->paid_amount += $amountToPay;
-                    }
                 }
 
                 $orderCubby = $order->cubbies()->whereNull('released_at')->first();
