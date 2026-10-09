@@ -8,6 +8,14 @@ class Branch extends Model
 {
     protected $guarded = ['id'];
 
+    public function getIsDeliveryEnabledAttribute($value)
+    {
+        if (!config('app.delivery_enabled')) {
+            return false;
+        }
+        return (bool) $value;
+    }
+
     public function scopeWorkshops($query)
     {
         return $query->where('type', 'workshop');

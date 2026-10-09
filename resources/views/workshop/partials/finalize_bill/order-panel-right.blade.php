@@ -92,7 +92,7 @@
                                         </button>
                                     </div>
                                     <div class="flex items-center gap-1 shrink-0">
-                                        <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
+                                        <select x-model="item.turnaround_type_id" class="!appearance-none !bg-none text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
                                             <option value="">Standard</option>
                                             @foreach($turnaroundTypes as $tt)
                                                 <option value="{{ $tt->id }}">{{ $tt->name }} ({{ $tt->markup_type == 'percentage' ? $tt->markup_value.'%' : 'Rs. '.$tt->markup_value }})</option>
@@ -197,6 +197,7 @@
                             <!-- Delivery Fee & Save Button Row -->
                             <div class="col-span-2 grid grid-cols-2 gap-x-2 items-center mt-1">
                                 <!-- Delivery Fee -->
+                                @if(config('app.delivery_enabled'))
                                 <div
                                     class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded-md group">
                                     <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">Delivery Fee
@@ -207,6 +208,9 @@
                                             placeholder="0">
                                     </div>
                                 </div>
+                                @else
+                                <div></div>
+                                @endif
 
                                 <!-- Save & Request Button -->
                                 <button @click="saveOrder('request_payment')" :disabled="cart.length === 0 || isSaving"

@@ -194,7 +194,7 @@
                 @endif
 
                 {{-- 🚚 Convert to Delivery --}}
-                @if(!$order->is_delivery_order && !in_array($order->status, ['delivered', 'completed']) && $order->branch?->is_delivery_enabled)
+                @if(config('app.delivery_enabled') && !$order->is_delivery_order && !in_array($order->status, ['delivered', 'completed']) && $order->branch?->is_delivery_enabled)
                 <div class="ord-btn-wrap" x-data="{}">
                     <button type="button" @click="$dispatch('open-convert-delivery-modal')" class="ord-btn" style="color: #ea580c; border-color: #fed7aa;" title="Convert to Delivery" onmouseover="this.style.background='#fff7ed'" onmouseout="this.style.background='white'">
                         🚚
@@ -204,7 +204,7 @@
                 @endif
 
                 {{-- 🏠 Convert to Customer Pickup --}}
-                @if($order->is_delivery_order && !in_array($order->status, ['delivered', 'completed']) && $order->deliveryAppointment && $order->deliveryAppointment->delivery_preference !== 'pickup_from_branch')
+                @if(config('app.delivery_enabled') && $order->is_delivery_order && !in_array($order->status, ['delivered', 'completed']) && $order->deliveryAppointment && $order->deliveryAppointment->delivery_preference !== 'pickup_from_branch')
                 <div class="ord-btn-wrap" x-data="{}">
                     <button type="button"
                         @click="$dispatch('open-convert-pickup-modal')"

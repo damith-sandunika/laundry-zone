@@ -179,10 +179,26 @@
                 </thead>
                 <tbody>
                     @forelse($dispatches as $dispatch)
-                        @php $isDeleted = $dispatch->order && $dispatch->order->trashed(); @endphp
-                        <tr style="background:{{ $isDeleted ? '#fef2f2' : 'white' }};border-bottom:1px solid #f1f5f9;transition:all 0.1s; {{ $isDeleted ? 'opacity: 0.8;' : '' }}"
-                            onmouseover="this.style.background='{{ $isDeleted ? '#fee2e2' : '#f8fafc' }}'"
-                            onmouseout="this.style.background='{{ $isDeleted ? '#fef2f2' : 'white' }}'">
+                        @php 
+                            $isDeleted = $dispatch->order && $dispatch->order->trashed(); 
+                            $statusColors = [
+                                'dispatched_to_workshop' => ['bg' => '#fef3c7', 'text' => '#b45309', 'label' => 'Pending receipt'],
+                                'received_at_workshop' => ['bg' => '#dbeafe', 'text' => '#1d4ed8', 'label' => 'Received'],
+                                'processing' => ['bg' => '#e0e7ff', 'text' => '#4338ca', 'label' => 'Processing'],
+                                'completed_at_workshop' => ['bg' => '#dcfce7', 'text' => '#15803d', 'label' => 'Completed'],
+                                'handed_over_to_delivery' => ['bg' => '#f3e8ff', 'text' => '#7e22ce', 'label' => 'With Rider'],
+                                'received_at_branch' => ['bg' => '#f1f5f9', 'text' => '#475569', 'label' => 'At Branch'],
+                                'returned_to_branch' => ['bg' => '#f3e8ff', 'text' => '#6b21a8', 'label' => 'Returned to Branch'],
+                            ];
+                            $st = $statusColors[$dispatch->status] ?? ['bg' => '#f1f5f9', 'text' => '#475569', 'label' => ucfirst(str_replace('_', ' ', $dispatch->status))];
+                            if ($dispatch->order && in_array($dispatch->order->status, ['delivered', 'completed'])) {
+                                $st = ['bg' => '#dcfce7', 'text' => '#15803d', 'label' => 'Handed Over'];
+                            }
+                            $rowBg = $isDeleted ? '#fef2f2' : $st['bg'];
+                        @endphp
+                        <tr style="background:{{ $rowBg }};border-bottom:1px solid #f1f5f9;transition:all 0.1s; {{ $isDeleted ? 'opacity: 0.8;' : '' }}"
+                            onmouseover="this.style.filter='brightness(0.96)'"
+                            onmouseout="this.style.filter='brightness(1)'">
                             <td style="padding:12px 20px;">
                                 <a href="{{ route('orders.show', $dispatch->order->order_number ?? $dispatch->order->id) }}"
                                     style="font-size:13px;font-weight:800;color:#1d4ed8;text-decoration:{{ $isDeleted ? 'line-through' : 'underline' }};">
@@ -204,18 +220,6 @@
                                     style="font-size:11px;color:#94a3b8;font-weight:500;">{{ $dispatch->dispatched_at?->format('h:i A') }}</span>
                             </td>
                             <td style="padding:12px 20px;font-weight:600;color:#475569;">
-                                @php
-                                    $statusColors = [
-                                        'dispatched_to_workshop' => ['bg' => '#fef3c7', 'text' => '#b45309', 'label' => 'Pending receipt'],
-                                        'received_at_workshop' => ['bg' => '#dbeafe', 'text' => '#1d4ed8', 'label' => 'Received'],
-                                        'processing' => ['bg' => '#e0e7ff', 'text' => '#4338ca', 'label' => 'Processing'],
-                                        'completed_at_workshop' => ['bg' => '#dcfce7', 'text' => '#15803d', 'label' => 'Completed'],
-                                        'handed_over_to_delivery' => ['bg' => '#f3e8ff', 'text' => '#7e22ce', 'label' => 'With Rider'],
-                                        'received_at_branch' => ['bg' => '#f1f5f9', 'text' => '#475569', 'label' => 'At Branch'],
-                                        'returned_to_branch' => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'label' => 'Returned'],
-                                    ];
-                                    $st = $statusColors[$dispatch->status] ?? ['bg' => '#f1f5f9', 'text' => '#475569', 'label' => ucfirst(str_replace('_', ' ', $dispatch->status))];
-                                @endphp
                                 <span
                                     style="display:inline-block;padding:4px 10px;background:{{ $st['bg'] }};color:{{ $st['text'] }};border-radius:9999px;font-size:11px;font-weight:700;">
                                     @if($isDeleted) DELETED @else {{ $st['label'] }} @endif

@@ -126,6 +126,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Delivery Feature Switch
+    |--------------------------------------------------------------------------
+    |
+    | Global switch to turn the entire delivery feature on or off.
+    | When false, it disables delivery everywhere regardless of branch settings.
+    |
+    */
+    'delivery_enabled' => env('DELIVERY_ENABLED', true),
+
 ];
 
 

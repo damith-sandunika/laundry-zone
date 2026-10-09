@@ -52,7 +52,11 @@ class BranchController extends Controller
 
         $data = $request->only(['name', 'type', 'address', 'phone', 'whatsapp_number', 'tagline', 'logo_size', 'latitude', 'longitude', 'invoice_header', 'invoice_footer', 'invoice_terms']);
         $data['is_active'] = $request->has('is_active');
-        $data['is_delivery_enabled'] = $request->has('is_delivery_enabled');
+        if (config('app.delivery_enabled')) {
+            $data['is_delivery_enabled'] = $request->has('is_delivery_enabled');
+        } else {
+            $data['is_delivery_enabled'] = false;
+        }
         $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {
@@ -103,7 +107,9 @@ class BranchController extends Controller
 
         // Ensure is_active defaults to false if not present, true if present
         $data['is_active'] = $request->has('is_active');
-        $data['is_delivery_enabled'] = $request->has('is_delivery_enabled');
+        if (config('app.delivery_enabled')) {
+            $data['is_delivery_enabled'] = $request->has('is_delivery_enabled');
+        }
         $data['branch_profit_percentage'] = $request->input('branch_profit_percentage', 0);
 
         if ($request->hasFile('logo')) {

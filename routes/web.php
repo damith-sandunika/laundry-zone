@@ -76,49 +76,51 @@ Route::get('/storage/receipts/{filename}', function ($filename) {
 
 
 // ─── Customer Auth & Dashboard Routes ───
-Route::get('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'showLogin'])->name('customer.login');
-Route::post('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'login'])->name('customer.login.submit');
-Route::get('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'showRegister'])->name('customer.register');
-Route::post('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'register'])->name('customer.register.submit');
-Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('customer.logout');
+Route::middleware([\App\Http\Middleware\CheckDeliveryEnabled::class])->group(function () {
+    Route::get('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'showLogin'])->name('customer.login');
+    Route::post('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'login'])->name('customer.login.submit');
+    Route::get('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'showRegister'])->name('customer.register');
+    Route::post('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'register'])->name('customer.register.submit');
+    Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('customer.logout');
 
-// Forgot Password (OTP via Phone)
-Route::get('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showPhoneForm'])->name('customer.password.request');
-Route::post('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'sendOtp'])->name('customer.password.email');
-Route::get('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showOtpForm'])->name('customer.password.verifyForm');
-Route::post('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'verifyOtp'])->name('customer.password.verifyOtp');
-Route::get('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showResetForm'])->name('customer.password.resetForm');
-Route::post('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'resetPassword'])->name('customer.password.update');
+    // Forgot Password (OTP via Phone)
+    Route::get('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showPhoneForm'])->name('customer.password.request');
+    Route::post('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'sendOtp'])->name('customer.password.email');
+    Route::get('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showOtpForm'])->name('customer.password.verifyForm');
+    Route::post('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'verifyOtp'])->name('customer.password.verifyOtp');
+    Route::get('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showResetForm'])->name('customer.password.resetForm');
+    Route::post('/customer/reset-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'resetPassword'])->name('customer.password.update');
 
-// AJAX Auth for Wizard — rate limited to prevent brute force
-Route::post('/customer/ajax-login', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxLogin'])->name('customer.ajax.login')->middleware('throttle:10,1');
-Route::post('/customer/ajax-register', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxRegister'])->name('customer.ajax.register')->middleware('throttle:5,1');
+    // AJAX Auth for Wizard — rate limited to prevent brute force
+    Route::post('/customer/ajax-login', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxLogin'])->name('customer.ajax.login')->middleware('throttle:10,1');
+    Route::post('/customer/ajax-register', [\App\Http\Controllers\Customer\AuthController::class, 'ajaxRegister'])->name('customer.ajax.register')->middleware('throttle:5,1');
 
-// Public Booking Wizard
-Route::get('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('customer.booking');
-Route::post('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'store'])->name('customer.booking.store');
-Route::get('/customer/book/success/{order:order_number}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('customer.booking.success');
-Route::get('/customer/branch-services/{branch}', [\App\Http\Controllers\CustomerSiteController::class, 'getBranchServices'])->name('customer.branch_services');
+    // Public Booking Wizard
+    Route::get('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'booking'])->name('customer.booking');
+    Route::post('/customer/book', [\App\Http\Controllers\CustomerSiteController::class, 'store'])->name('customer.booking.store');
+    Route::get('/customer/book/success/{order:order_number}', [\App\Http\Controllers\CustomerSiteController::class, 'success'])->name('customer.booking.success');
+    Route::get('/customer/branch-services/{branch}', [\App\Http\Controllers\CustomerSiteController::class, 'getBranchServices'])->name('customer.branch_services');
 
-Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
-    Route::get('/orders/{order:order_number}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
-    Route::post('/orders/{order:order_number}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
-    Route::get('/orders/{order:order_number}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
+    Route::middleware('auth:customer')->prefix('customer')->name('customer.')->group(function () {
+        Route::get('/dashboard', [\App\Http\Controllers\Customer\DashboardController::class, 'index'])->name('dashboard');
+        Route::get('/orders', [\App\Http\Controllers\Customer\DashboardController::class, 'orders'])->name('orders');
+        Route::get('/orders/{order:order_number}', [\App\Http\Controllers\Customer\DashboardController::class, 'showOrder'])->name('orders.show');
+        Route::post('/orders/{order:order_number}/payment', [\App\Http\Controllers\Customer\DashboardController::class, 'submitPayment'])->name('orders.submitPayment');
+        Route::get('/orders/{order:order_number}/pay', [\App\Http\Controllers\Customer\DashboardController::class, 'pay'])->name('orders.pay');
 
-    // Appointments
-    Route::get('/appointments/{appointment}', function (\App\Models\Appointment $appointment) {
-        if (!$appointment->order_number) {
-            return redirect()->route('customer.booking.success', $appointment->id);
-        }
-        return app(\App\Http\Controllers\Customer\DashboardController::class)->showAppointment($appointment);
-    })->name('appointments.show');
+        // Appointments
+        Route::get('/appointments/{appointment}', function (\App\Models\Appointment $appointment) {
+            if (!$appointment->order_number) {
+                return redirect()->route('customer.booking.success', $appointment->id);
+            }
+            return app(\App\Http\Controllers\Customer\DashboardController::class)->showAppointment($appointment);
+        })->name('appointments.show');
 
-    // Payment Gateway Routes
-    Route::get('/orders/{order:order_number}/pay-gateway', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
-    Route::post('/payment/webhook', [\App\Http\Controllers\PaymentController::class, 'webhook'])->name('payment.webhook');
-    Route::get('/orders/{order:order_number}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
+        // Payment Gateway Routes
+        Route::get('/orders/{order:order_number}/pay-gateway', [\App\Http\Controllers\PaymentController::class, 'checkout'])->name('payment.checkout');
+        Route::post('/payment/webhook', [\App\Http\Controllers\PaymentController::class, 'webhook'])->name('payment.webhook');
+        Route::get('/orders/{order:order_number}/payment-success', [\App\Http\Controllers\PaymentController::class, 'success'])->name('payment.success');
+    });
 });
 
 // ─── Public Order Tracking (QR Code link) ───

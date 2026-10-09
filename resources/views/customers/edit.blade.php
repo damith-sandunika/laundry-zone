@@ -109,6 +109,7 @@
         </div>
 
         {{-- Change Password --}}
+        @if(config('app.delivery_enabled'))
         <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
             <div class="p-6 border-b border-gray-100 bg-amber-50/50">
                 <h3 class="text-lg font-bold text-gray-800 flex items-center gap-2">
@@ -157,6 +158,7 @@
                 </div>
             </form>
         </div>
+        @endif
     </div>
 </x-app-layout>
 

@@ -30,8 +30,10 @@ class CustomerSiteController extends Controller
         // Include both workshop branches and delivery-enabled branches on the map
         $branches = Branch::where('is_active', true)
             ->where(function($q) {
-                $q->where('type', 'workshop')
-                  ->orWhere('is_delivery_enabled', true);
+                $q->where('type', 'workshop');
+                if (config('app.delivery_enabled')) {
+                    $q->orWhere('is_delivery_enabled', true);
+                }
             })
             ->get();
         $categories = ServiceCategory::with([
@@ -58,8 +60,10 @@ class CustomerSiteController extends Controller
 
         $workshops = \App\Models\Branch::where('is_active', true)
             ->where(function($q) {
-                $q->where('type', 'workshop')
-                  ->orWhere('is_delivery_enabled', true);
+                $q->where('type', 'workshop');
+                if (config('app.delivery_enabled')) {
+                    $q->orWhere('is_delivery_enabled', true);
+                }
             })
             ->get();
         if ($workshops->isEmpty()) {
@@ -131,8 +135,10 @@ class CustomerSiteController extends Controller
         // Fetch all active workshops AND delivery-enabled branches for map markers & distance calculation
         $workshops = \App\Models\Branch::where('is_active', true)
             ->where(function($q) {
-                $q->where('type', 'workshop')
-                  ->orWhere('is_delivery_enabled', true);
+                $q->where('type', 'workshop');
+                if (config('app.delivery_enabled')) {
+                    $q->orWhere('is_delivery_enabled', true);
+                }
             })
             ->get();
         // Fallback to first branch if none exist

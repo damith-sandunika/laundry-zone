@@ -158,6 +158,7 @@
                                         <span class="text-xs text-gray-500">Branch is visible and operational</span>
                                     </div>
                                 </label>
+                                @if(config('app.delivery_enabled'))
                                 <label class="flex items-center gap-3 cursor-pointer">
                                     <input type="checkbox" name="is_delivery_enabled" value="1" {{ old('is_delivery_enabled', $branch->is_delivery_enabled) ? 'checked' : '' }}
                                         class="w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500">
@@ -166,6 +167,7 @@
                                         <span class="text-xs text-gray-500">Allow delivery orders for this branch</span>
                                     </div>
                                 </label>
+                                @endif
                             </div>
                         </div>
                     </div>

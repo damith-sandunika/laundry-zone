@@ -228,8 +228,10 @@
                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.extras') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Extras</a>
                 <a href="{{ route('settings.turnarounds') }}"
                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.turnarounds') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Turnarounds</a>
+                @if(config('app.delivery_enabled'))
                 <a href="{{ route('settings.delivery') }}"
                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.delivery') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Delivery</a>
+                @endif
                 <a href="{{ route('settings.pickup-times') }}"
                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.pickup-times') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Pickup
                     Times</a>

@@ -237,6 +237,7 @@
                             </div>
 
                             <!-- Delivery Fee -->
+                            @if(config('app.delivery_enabled'))
                             <div
                                 class="flex justify-between items-center bg-slate-800/50 p-2 rounded-lg group col-span-2">
                                 <span class="text-slate-400 text-[11px] font-bold uppercase tracking-wide">Delivery Fee
@@ -247,6 +248,7 @@
                                         placeholder="0">
                                 </div>
                             </div>
+                            @endif
 
                         </div>
                     </div>

@@ -9,6 +9,7 @@
                         </svg>
                         POS System
                     </a>
+                    @if(config('app.delivery_enabled'))
                     <a href="{{ route('delivery.index') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('delivery.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -18,6 +19,7 @@
                         </svg>
                         Deliveries
                     </a>
+                    @endif
                     <a href="{{ route('workshop.operations') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('workshop.operations') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -159,8 +161,10 @@
                                 @if($canManageConfig)
                                     <a href="{{ route('settings.extras') }}" class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.extras') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Extras</a>
                                     <a href="{{ route('settings.turnarounds') }}" class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.turnarounds') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Turnarounds</a>
+                                    @if(config('app.delivery_enabled'))
                                     <a href="{{ route('settings.delivery') }}" class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.delivery') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Delivery</a>
                                     <a href="{{ route('settings.pickup-times') }}" class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.pickup-times') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Pickup Times</a>
+                                    @endif
                                     <a href="{{ route('settings.expense_categories') }}" class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.expense_categories') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Expense Categories</a>
                                 @endif
                                 @if($role !== 'super_admin')

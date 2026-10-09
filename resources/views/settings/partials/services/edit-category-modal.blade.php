@@ -24,10 +24,12 @@
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category Name</label>
                     <input type="text" id="edit-cat-name" name="name" required style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;">
                 </div>
+                @if(config('app.delivery_enabled'))
                 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Update Image (Optional)</label>
                     <input type="file" name="image" accept="image/*" style="width:100%;font-size:13px;color:#64748b;background:#f8fafc;padding:10px;border-radius:8px;border:1px dashed #cbd5e1;cursor:pointer;">
                 </div>
+                @endif
                 <div>
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Status</label>
                     <select id="edit-cat-active" name="is_active" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
@@ -35,10 +37,12 @@
                         <option value="0">Inactive</option>
                     </select>
                 </div>
+                @if(config('app.delivery_enabled'))
                 <div style="display:flex;align-items:center;gap:8px;">
                     <input type="checkbox" name="is_visible_on_website" id="edit-cat-website-visible" value="1" style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
                     <label for="edit-cat-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website</label>
                 </div>
+                @endif
                 <div style="display:flex;gap:10px;margin-top:4px;">
                     <button type="button" onclick="document.getElementById('edit-category-modal').style.display='none'" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
                     <button type="submit" style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Update Category</button>

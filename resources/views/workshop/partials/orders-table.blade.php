@@ -13,7 +13,16 @@
                     </thead>
                     <tbody>
                         <template x-for="dispatch in filteredDispatches" :key="dispatch.id">
-                            <tr style="background:white;border-bottom:1px solid #f1f5f9;transition:all 0.1s;" onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">
+                            <tr :style="'border-bottom:1px solid #f1f5f9;transition:all 0.1s; background:' + (
+                                (dispatch.order && (dispatch.order.status === 'delivered' || dispatch.order.status === 'completed')) ? '#dcfce7' :
+                                dispatch.status === 'dispatched_to_workshop' ? '#fef3c7' :
+                                dispatch.status === 'received_at_workshop' ? '#eff6ff' :
+                                dispatch.status === 'processing' ? '#e0e7ff' :
+                                dispatch.status === 'completed_at_workshop' ? '#dcfce7' :
+                                dispatch.status === 'returned_to_branch' ? '#f3e8ff' :
+                                dispatch.status === 'received_at_branch' ? '#f1f5f9' :
+                                '#fef2f2'
+                            )" onmouseover="this.style.filter='brightness(0.96)'" onmouseout="this.style.filter='brightness(1)'">
                                 <td style="padding:12px 20px;">
                                     <a :href="dispatch.order ? '/orders/view/' + dispatch.order.order_number : '#'" style="font-size:13px;font-weight:800;color:#1d4ed8;display:block;text-decoration:none;" x-text="(dispatch.order.is_delivery_order ? '[D] ' : '') + '#' + dispatch.order.order_number" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'"></a>
                                     <div style="margin-top:2px;display:flex;flex-direction:column;gap:1px;">
@@ -46,14 +55,16 @@
                                 </td>
                                 <td style="padding:12px 20px;">
                                     <span :style="
+                                        (dispatch.order && (dispatch.order.status === 'delivered' || dispatch.order.status === 'completed')) ? 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;' :
                                         dispatch.status === 'dispatched_to_workshop' ? 'background:#fef3c7;color:#d97706;border:1px solid #fde68a;' :
                                         dispatch.status === 'received_at_workshop' ? 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;' :
-                                        dispatch.status === 'processing' ? 'background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe;' :
+                                        dispatch.status === 'processing' ? 'background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe;' :
                                         dispatch.status === 'completed_at_workshop' ? 'background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;' :
                                         dispatch.status === 'returned_to_branch' ? 'background:#f3e8ff;color:#7e22ce;border:1px solid #e9d5ff;' :
+                                        dispatch.status === 'received_at_branch' ? 'background:#f1f5f9;color:#475569;border:1px solid #e2e8f0;' :
                                         'background:#fef2f2;color:#dc2626;border:1px solid #fecaca;'
                                     " style="font-size:11px;font-weight:800;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.04em;">
-                                        <span x-text="dispatch.status.replace(/_/g, ' ')"></span>
+                                        <span x-text="(dispatch.order && (dispatch.order.status === 'delivered' || dispatch.order.status === 'completed')) ? 'Handed Over' : dispatch.status.replace(/_/g, ' ')"></span>
                                     </span>
                                 </td>
                                 <td style="padding:12px 20px;text-align:center;">

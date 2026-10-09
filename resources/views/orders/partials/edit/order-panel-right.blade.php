@@ -98,7 +98,7 @@
                                         </button>
                                     </div>
                                     <div class="flex items-center gap-1 shrink-0">
-                                        <select x-model="item.turnaround_type_id" class="text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
+                                        <select x-model="item.turnaround_type_id" class="!appearance-none !bg-none text-[10px] font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-md p-1 outline-none max-w-[120px] truncate">
                                             <option value="">Standard</option>
                                             @foreach($turnaroundTypes as $tt)
                                                 <option value="{{ $tt->id }}">{{ $tt->name }} ({{ $tt->markup_type == 'percentage' ? $tt->markup_value.'%' : 'Rs. '.$tt->markup_value }})</option>
@@ -187,12 +187,14 @@
                             </div>
 
                             <!-- Delivery Fee -->
+                            @if(config('app.delivery_enabled'))
                             <div class="flex flex-col justify-center bg-slate-800/50 px-2 py-1 rounded-md group">
                                 <span class="text-slate-400 text-[9px] font-bold uppercase tracking-wide">Delivery (Rs)</span>
                                 <input type="number" x-model.number="deliveryFee"
                                     class="w-full bg-slate-800 border border-slate-700/50 rounded text-right text-emerald-400 text-[11px] font-black py-0.5 px-1 hide-arrows focus:ring-1 focus:ring-blue-500"
                                     placeholder="0">
                             </div>
+                            @endif
 
                         </div>
                     </div>
