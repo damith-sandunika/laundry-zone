@@ -430,13 +430,13 @@ class WorkshopDashboardController extends Controller
             'item_qty' => $itemQty,
         ];
 
-        $dispatches = $query->orderByDesc('order_id')->paginate(15);
+        $dispatches = $query->orderByDesc('order_id')->paginate(15, ['*'], 'dispatch_page');
 
         $cancelledBookings = \App\Models\DeliveryAppointment::with(['customer', 'cancelledBy'])
             ->when(! $user->isSuperAdmin(), fn ($q) => $q->where('branch_id', $branchId))
             ->where('status', 'cancelled')
             ->orderByDesc('updated_at')
-            ->paginate(15);
+            ->paginate(15, ['*'], 'cancelled_page');
             
         $allBranches = collect();
         if ($user->isSuperAdmin()) {
