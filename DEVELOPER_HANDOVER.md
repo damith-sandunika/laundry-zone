@@ -1,6 +1,6 @@
-# 360 Laundry - Developer Handover Guide
+# Laundry Zone - Developer Handover Guide
 
-Welcome to the **360 Laundry** project. This document is a comprehensive guide to understanding the system architecture, workflows, database schema, and custom features implemented so far. It is designed to help a new developer take over and continue development seamlessly.
+Welcome to the **Laundry Zone** project. This document is a comprehensive guide to understanding the system architecture, workflows, database schema, and custom features implemented so far. It is designed to help a new developer take over and continue development seamlessly.
 
 ---
 

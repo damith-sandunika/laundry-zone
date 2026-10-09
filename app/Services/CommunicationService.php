@@ -331,7 +331,7 @@ class CommunicationService
             ])->post('https://api.textware.lk/sms/send', [
                 'to' => $formattedPhone,
                 'message' => $message,
-                'sender' => \App\Models\Setting::get('sms_sender_id', '360Laundry'),
+                'sender' => \App\Models\Setting::get('sms_sender_id', 'LaundryZone'),
             ]);
 
             return $response->successful();

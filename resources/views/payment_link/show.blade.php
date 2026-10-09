@@ -281,7 +281,7 @@
         @endif
         
         <div class="text-center mt-4 mb-2">
-            <p class="text-[9px] font-bold text-blue-300 uppercase tracking-[0.1em]">Powered by 360 Laundry Management System</p>
+            <p class="text-[9px] font-bold text-blue-300 uppercase tracking-[0.1em]">Powered by {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }} Management System</p>
         </div>
     </div>
 </body>

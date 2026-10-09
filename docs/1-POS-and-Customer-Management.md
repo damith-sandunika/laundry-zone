@@ -1,6 +1,6 @@
 # 1. POS සහ Customer Management (පාරිභෝගික කළමනාකරණය) - Developer Guide
 
-මේ Document එකෙන් පැහැදිලි කරන්නේ අපේ 360 Laundry System එකේ Point of Sale (POS) එකයි, Customers ලව manage කරන විදිහයි.
+මේ Document එකෙන් පැහැදිලි කරන්නේ අපේ Laundry Zone System එකේ Point of Sale (POS) එකයි, Customers ලව manage කරන විදිහයි.
 
 ## 1. Point of Sale (POS) Module එක
 **Path:** `resources/views/pos/index.blade.php`
