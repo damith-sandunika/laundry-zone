@@ -1,6 +1,6 @@
     @php
-        $isWorkshopUser = auth()->user()->role === 'super_admin' || ($dispatch && auth()->user()->branch_id == $dispatch->workshop_branch_id);
-        $isBranchUser = auth()->user()->role === 'super_admin' || (auth()->user()->branch_id == $order->branch_id);
+        $isWorkshopUser = !auth()->user()->isSuperAdmin() && ($dispatch && auth()->user()->branch_id == $dispatch->workshop_branch_id);
+        $isBranchUser = !auth()->user()->isSuperAdmin() && (auth()->user()->branch_id == $order->branch_id);
     @endphp
     <!-- Status Banner -->
     <div style="margin-bottom:16px;padding:12px 20px;border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;
