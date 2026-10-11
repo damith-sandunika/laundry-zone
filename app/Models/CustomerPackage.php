@@ -9,7 +9,7 @@ class CustomerPackage extends Model
 {
     use BelongsToBranch;
 
-    protected $guarded = [];
+    protected $guarded = ['id'];
 
     protected $casts = [
         'start_date' => 'date',

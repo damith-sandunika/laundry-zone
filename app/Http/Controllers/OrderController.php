@@ -15,6 +15,7 @@ use App\Models\User;
 use App\Services\CommunicationService;
 use App\Models\WorkshopDispatch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class OrderController extends Controller
@@ -131,6 +132,11 @@ class OrderController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
+
+        // Super admins use the unified history page to view and manage all orders across branches
+        if ($user->isSuperAdmin()) {
+            return redirect()->route('orders.history');
+        }
 
         // Workshop admins don't use the branch orders page — redirect to their operations page
         if ($user->role === 'workshop_admin') {
@@ -577,35 +583,60 @@ class OrderController extends Controller
     {
         $user = auth()->user();
         $branchId = $user->branch_id;
+        $isSuperAdmin = $user->isSuperAdmin();
+        $isWorkshop = $user->isWorkshopAdmin() || ($user->branch && $user->branch->type === 'workshop');
 
-        $query = Order::withTrashed()->with('customer', 'branch', 'deletedBy')
+        $query = Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->withTrashed()
+            ->with(['customer', 'branch', 'workshop', 'latestWorkshopDispatch.workshopBranch', 'deletedBy'])
             ->orderByDesc('id');
             
-        $statsQuery = Order::query()
-            ->when(!$user->isSuperAdmin() && $branchId, function ($q) use ($branchId) {
-                $q->where(function ($sub) use ($branchId) {
-                    $sub->where('branch_id', $branchId)
-                        ->orWhere('workshop_id', $branchId);
-                });
-            });
+        $statsQuery = Order::withoutGlobalScope(\App\Models\Scopes\BranchScope::class);
 
-        if (!$user->isSuperAdmin() && $branchId) {
-            $query->where(function ($q) use ($branchId) {
-                $q->where('branch_id', $branchId)
-                    ->orWhere('workshop_id', $branchId);
-            });
+        if (!$isSuperAdmin && $branchId) {
+            if ($isWorkshop) {
+                // Workshop Admin / Staff: Orders assigned or dispatched to their workshop, or created directly at their workshop
+                $workshopCondition = function ($q) use ($branchId) {
+                    $q->where('orders.workshop_id', $branchId)
+                      ->orWhere('orders.branch_id', $branchId)
+                      ->orWhereExists(function ($sub) use ($branchId) {
+                          $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                              ->from('workshop_dispatches')
+                              ->whereColumn('workshop_dispatches.order_id', 'orders.id')
+                              ->where('workshop_dispatches.workshop_branch_id', $branchId);
+                      });
+                };
+                $query->where($workshopCondition);
+                $statsQuery->where($workshopCondition);
+            } else {
+                // Branch Admin / Staff: Only their own branch's orders (including any they dispatched to workshop)
+                $query->where('orders.branch_id', $branchId);
+                $statsQuery->where('orders.branch_id', $branchId);
+            }
         }
 
-        if ($user->isSuperAdmin() && $request->filled('branch_id')) {
+        // Branch filter for Super Admin
+        if ($isSuperAdmin && $request->filled('branch_id')) {
             $branchIdFilter = $request->branch_id;
-            $query->where(function ($q) use ($branchIdFilter) {
-                $q->where('branch_id', $branchIdFilter)
-                    ->orWhere('workshop_id', $branchIdFilter);
-            });
-            $statsQuery->where(function ($q) use ($branchIdFilter) {
-                $q->where('branch_id', $branchIdFilter)
-                    ->orWhere('workshop_id', $branchIdFilter);
-            });
+            $query->where('orders.branch_id', $branchIdFilter);
+            $statsQuery->where('orders.branch_id', $branchIdFilter);
+        }
+
+        // Workshop filter for Super Admin
+        if ($isSuperAdmin && $request->filled('workshop_id')) {
+            $workshopIdFilter = $request->workshop_id;
+            $workshopSuperCondition = function ($q) use ($workshopIdFilter) {
+                $q->where('orders.workshop_id', $workshopIdFilter)
+                  ->orWhere('orders.branch_id', $workshopIdFilter)
+                  ->orWhereExists(function ($sub) use ($workshopIdFilter) {
+                      $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                          ->from('workshop_dispatches')
+                          ->whereColumn('workshop_dispatches.order_id', 'orders.id')
+                          ->where('workshop_dispatches.workshop_branch_id', $workshopIdFilter);
+                  });
+            };
+            $query->where($workshopSuperCondition);
+            $statsQuery->where($workshopSuperCondition);
         }
 
         if ($request->filled('status')) {
@@ -614,9 +645,16 @@ class OrderController extends Controller
             $statsQuery->where('status', $statusFilter);
         }
 
-        if ($request->filled('start_date') && $request->filled('end_date')) {
-            $startDate = $request->start_date;
-            $endDate = $request->end_date;
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Default to current month on initial page load if no date parameters were provided
+        if (!$request->has('start_date') && !$request->has('end_date')) {
+            $startDate = now()->startOfMonth()->toDateString();
+            $endDate = now()->toDateString();
+        }
+
+        if (!empty($startDate) && !empty($endDate)) {
             $query->whereDate('created_at', '>=', $startDate)
                   ->whereDate('created_at', '<=', $endDate);
             $statsQuery->whereDate('created_at', '>=', $startDate)
@@ -625,38 +663,42 @@ class OrderController extends Controller
 
         $ordersBase = clone $statsQuery;
         
-        $totalOrderValue = (clone $ordersBase)->sum('total');
-        $walkIn = (clone $ordersBase)->where('is_delivery_order', false)->sum('total');
-        $delivery = (clone $ordersBase)->where('is_delivery_order', true)->sum('total');
+        $totalOrderValue = (float) ((clone $ordersBase)->sum('total') ?? 0);
+        $walkIn = (float) ((clone $ordersBase)->where('is_delivery_order', false)->sum('total') ?? 0);
+        $delivery = (float) ((clone $ordersBase)->where('is_delivery_order', true)->sum('total') ?? 0);
         
-        // Pending logic (Total - Paid)
-        $pendingDue = (clone $ordersBase)->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        // Zero-RAM SQL aggregations for pending amounts
+        $pendingDue = (float) ((clone $ordersBase)->selectRaw('SUM(GREATEST(0, total - COALESCE(paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
         
-        // Split pending by payment_method
-        $regularPending = (clone $ordersBase)->where('payment_method', '!=', 'credit')->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
-        $creditOrders = (clone $ordersBase)->where('payment_method', 'credit')->get()->sum(fn($o) => max(0, $o->total - $o->paid_amount));
+        $regularPending = (float) ((clone $ordersBase)->where(function($q) {
+            $q->where('payment_method', '!=', 'credit')->orWhereNull('payment_method');
+        })->selectRaw('SUM(GREATEST(0, total - COALESCE(paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
 
-        $collectedPayments = (clone $ordersBase)->sum('paid_amount');
+        $creditOrders = (float) ((clone $ordersBase)->where('payment_method', 'credit')->selectRaw('SUM(GREATEST(0, total - COALESCE(paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
 
-        $orderIds = (clone $ordersBase)->pluck('id')->toArray();
-        $transactions = PaymentTransaction::whereIn('order_id', $orderIds)->get();
+        $collectedPayments = (float) ((clone $ordersBase)->sum('paid_amount') ?? 0);
 
-        $cashTotal = $transactions->where('payment_method', 'cash')->sum('amount');
-        $cardTotal = $transactions->where('payment_method', 'card')->sum('amount');
-        $bankTotal = $transactions->where('payment_method', 'bank')->sum('amount');
+        // SQL aggregations for payment totals using subquery
+        $orderIdsSubquery = (clone $ordersBase)->select('orders.id');
 
-        $directCash = (clone $ordersBase)->where('payment_method', 'cash')->get()->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
-        $cashTotal += $directCash;
-        
-        $directCard = (clone $ordersBase)->where('payment_method', 'card')->get()->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
-        $cardTotal += $directCard;
-        
-        $directBank = (clone $ordersBase)->where('payment_method', 'bank')->get()->filter(fn($o) => !$transactions->where('order_id', $o->id)->count())->sum('paid_amount');
-        $bankTotal += $directBank;
+        $directCash = (float) ((clone $ordersBase)->where('payment_method', 'cash')->whereDoesntHave('paymentTransactions')->sum('paid_amount') ?? 0);
+        $directCard = (float) ((clone $ordersBase)->where('payment_method', 'card')->whereDoesntHave('paymentTransactions')->sum('paid_amount') ?? 0);
+        $directBank = (float) ((clone $ordersBase)->where('payment_method', 'bank')->whereDoesntHave('paymentTransactions')->sum('paid_amount') ?? 0);
 
-        $orderQty = (clone $ordersBase)->count();
-        $totalCustomerCount = (clone $ordersBase)->pluck('customer_id')->unique()->count();
-        $itemQty = \App\Models\OrderItem::whereIn('order_id', $orderIds)->sum('quantity');
+        $txSums = PaymentTransaction::whereIn('order_id', $orderIdsSubquery)
+            ->selectRaw("
+                COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as cash_sum,
+                COALESCE(SUM(CASE WHEN payment_method = 'card' THEN amount ELSE 0 END), 0) as card_sum,
+                COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN amount ELSE 0 END), 0) as bank_sum
+            ")->first();
+
+        $cashTotal = (float) (($txSums->cash_sum ?? 0) + $directCash);
+        $cardTotal = (float) (($txSums->card_sum ?? 0) + $directCard);
+        $bankTotal = (float) (($txSums->bank_sum ?? 0) + $directBank);
+
+        $orderQty = (int) (clone $ordersBase)->count();
+        $totalCustomerCount = (int) (clone $ordersBase)->distinct()->count('customer_id');
+        $itemQty = (int) (\App\Models\OrderItem::whereIn('order_id', $orderIdsSubquery)->sum('quantity') ?? 0);
 
         $stats = [
             'total_order_value' => $totalOrderValue,
@@ -675,13 +717,24 @@ class OrderController extends Controller
         ];
 
         $completedOrders = $query->paginate(15);
+
+        // Cancelled / Rejected Online Bookings Log
+        $cancelledBookings = \App\Models\DeliveryAppointment::with(['customer', 'cancelledBy', 'branch'])
+            ->when(!$user->isSuperAdmin(), fn($q) => $q->where('branch_id', $branchId))
+            ->when($user->isSuperAdmin() && $request->filled('branch_id'), fn($q) => $q->where('branch_id', $request->branch_id))
+            ->when($user->isSuperAdmin() && $request->filled('workshop_id'), fn($q) => $q->where('branch_id', $request->workshop_id))
+            ->where('status', 'cancelled')
+            ->orderByDesc('updated_at')
+            ->paginate(15, ['*'], 'cancelled_page');
         
         $allBranches = collect();
+        $allWorkshops = collect();
         if ($user->isSuperAdmin()) {
-            $allBranches = \App\Models\Branch::orderBy('name')->get();
+            $allBranches = \App\Models\Branch::where('type', 'branch')->orWhereNull('type')->orderBy('name')->get();
+            $allWorkshops = \App\Models\Branch::where('type', 'workshop')->orderBy('name')->get();
         }
 
-        return view('orders.history', compact('completedOrders', 'stats', 'allBranches'));
+        return view('orders.history', compact('completedOrders', 'cancelledBookings', 'stats', 'allBranches', 'allWorkshops', 'startDate', 'endDate', 'isWorkshop'));
     }
 
     public function destroy(Order $order)
@@ -691,23 +744,30 @@ class OrderController extends Controller
             return response()->json(['success' => false, 'message' => 'Unauthorized action. Order deletion is restricted.'], 403);
         }
 
-        try {
-            $order->deleted_by = $user->id;
-            $order->saveQuietly();
-            
-            // Delete all payment transactions to reverse cash drawer and remove from revenue reports
-            $order->paymentTransactions->each(function($tx) {
-                $tx->delete();
-            });
+        // Cross-branch authorization guard
+        if (!$user->isSuperAdmin() && (int)$order->branch_id !== (int)$user->branch_id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action: Cannot delete orders belonging to another branch.'], 403);
+        }
 
-            $order->delete();
-            
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'deleted',
-                'changed_by' => $user->id,
-                'note' => "Order deleted by Admin.",
-            ]);
+        try {
+            DB::transaction(function () use ($order, $user) {
+                $order->deleted_by = $user->id;
+                $order->saveQuietly();
+                
+                // Delete all payment transactions to reverse cash drawer and remove from revenue reports
+                $order->paymentTransactions->each(function($tx) {
+                    $tx->delete();
+                });
+
+                $order->delete();
+                
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => 'deleted',
+                    'changed_by' => $user->id,
+                    'note' => "Order deleted by Admin.",
+                ]);
+            });
 
             return response()->json(['success' => true, 'message' => 'Order deleted successfully.']);
         } catch (\Exception $e) {

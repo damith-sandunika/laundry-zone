@@ -5,7 +5,7 @@
                 <h2 class="ph-title">Workshop Dashboard</h2>
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage incoming orders, processing, and dispatches</p>
             </div>
-            <a href="{{ route('workshop.history') }}" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200">View History</a>
+            <a href="{{ route('orders.history') }}" class="px-4 py-2 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200">View History</a>
         </div>
     </x-slot>
 

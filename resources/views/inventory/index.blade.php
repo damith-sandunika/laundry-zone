@@ -68,11 +68,38 @@
                         <td style="padding:14px 24px;text-align:center;font-size:13px;font-weight:500;color:#64748b;">{{ $item->unit }}</td>
                         <td style="padding:14px 24px;font-size:12px;font-weight:500;color:#94a3b8;">{{ $item->updated_at->diffForHumans() }}</td>
                         <td style="padding:14px 24px;text-align:center;">
-                            @if(auth()->user()->role === 'admin' || auth()->user()->role === 'super_admin')
-                            <div style="display:flex;gap:4px;justify-content:center;">
+                            @if(auth()->user()->hasAdminAccess() || auth()->user()->isWorkshopAdmin())
+                            <div style="display:flex;gap:6px;justify-content:center;align-items:center;">
+                                {{-- Edit Button --}}
+                                <button type="button" title="Edit Item" 
+                                    onclick="openEditModal({{ $item->id }}, '{{ addslashes($item->name) }}', '{{ addslashes($item->unit) }}', {{ $item->low_stock_threshold ?? 0 }}, '{{ addslashes($item->location) }}')" 
+                                    style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:#f0f9ff;color:#0ea5e9;border:1px solid #bae6fd;border-radius:8px;cursor:pointer;transition:background 0.1s;" 
+                                    onmouseover="this.style.background='#e0f2fe'" onmouseout="this.style.background='#f0f9ff'">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                                    </svg>
+                                </button>
+                                
+                                {{-- Stock Out Button --}}
+                                <button type="button" title="Stock Out" 
+                                    onclick="openStockOutModal({{ $item->id }}, '{{ addslashes($item->name) }}', '{{ addslashes($item->unit) }}')" 
+                                    style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:#fffbeb;color:#d97706;border:1px solid #fde68a;border-radius:8px;cursor:pointer;transition:background 0.1s;" 
+                                    onmouseover="this.style.background='#fef3c7'" onmouseout="this.style.background='#fffbeb'">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="8" y1="12" x2="16" y2="12"></line>
+                                    </svg>
+                                </button>
+                                
+                                {{-- Delete Button --}}
                                 <form method="POST" action="{{ route('inventory.destroy', $item) }}" onsubmit="return confirm('Delete this inventory item?')" style="margin:0;">
                                     @csrf @method('DELETE')
-                                    <button type="submit" style="font-size:11px;font-weight:700;padding:5px 12px;background:#fef2f2;color:#dc2626;border:1.5px solid #fecaca;border-radius:7px;cursor:pointer;transition:background 0.1s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">Delete</button>
+                                    <button type="submit" title="Delete Item"
+                                        style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border:1px solid #fecaca;border-radius:8px;cursor:pointer;transition:background 0.1s;" 
+                                        onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                    </button>
                                 </form>
                             </div>
                             @endif
@@ -261,7 +288,7 @@
         </div>
     </div>
     <!-- ── Stock Out Modal ── -->
-    <div id="stock-out-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+    <div id="stock-out-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);;">
         <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;" onclick="event.stopPropagation()">
             <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
                 <div>
@@ -304,6 +331,59 @@
         </div>
     </div>
 
+    <!-- ── Edit Inventory Modal ── -->
+    <div id="edit-inventory-modal" style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
+        <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:460px;overflow:hidden;" onclick="event.stopPropagation()">
+            <div style="padding:24px 28px;border-bottom:1px solid #f1f5f9;display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <h3 style="font-size:17px;font-weight:900;color:#0f172a;margin:0 0 3px;">Edit Inventory Item</h3>
+                    <p style="font-size:12px;color:#94a3b8;margin:0;font-weight:500;">Update item details</p>
+                </div>
+                <button onclick="document.getElementById('edit-inventory-modal').style.display='none'"
+                    style="width:32px;height:32px;background:#f1f5f9;border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+                    <svg width="14" height="14" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <form id="edit-inventory-form" method="POST" style="padding:24px 28px;display:flex;flex-direction:column;gap:16px;">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Item Name</label>
+                    <input type="text" name="name" id="edit-item-name" required placeholder="e.g. Premium Detergent"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Unit (e.g. ml, kg)</label>
+                        <input type="text" name="unit" id="edit-item-unit" required placeholder="e.g. ml"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Low Stock Alert</label>
+                        <input type="number" name="low_stock_threshold" id="edit-item-threshold" required min="0" step="0.01" value="10"
+                            style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                            onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                    </div>
+                </div>
+                <div>
+                    <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Location (Shelf/Rack)</label>
+                    <input type="text" name="location" id="edit-item-location" placeholder="e.g. Shelf A2"
+                        style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;box-sizing:border-box;"
+                        onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#e2e8f0'">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:4px;">
+                    <button type="button" onclick="document.getElementById('edit-inventory-modal').style.display='none'"
+                        style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
+                    <button type="submit"
+                        style="flex:1;padding:11px;background:#0ea5e9;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;"
+                        onmouseover="this.style.background='#0284c7'" onmouseout="this.style.background='#0ea5e9'">Update Item</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         function openStockOutModal(id, name, unit) {
             document.getElementById('stock-out-item-name').innerText = name;
@@ -311,7 +391,13 @@
             document.getElementById('stock-out-form').action = '/inventory/' + id + '/stock-out';
             document.getElementById('stock-out-modal').style.display = 'flex';
         }
+        function openEditModal(id, name, unit, threshold, location) {
+            document.getElementById('edit-item-name').value = name;
+            document.getElementById('edit-item-unit').value = unit;
+            document.getElementById('edit-item-threshold').value = threshold;
+            document.getElementById('edit-item-location').value = location;
+            document.getElementById('edit-inventory-form').action = '/inventory/' + id;
+            document.getElementById('edit-inventory-modal').style.display = 'flex';
+        }
     </script>
 </x-app-layout>
-
-

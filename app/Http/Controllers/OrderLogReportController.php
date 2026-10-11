@@ -37,7 +37,7 @@ class OrderLogReportController extends Controller
             });
         }
 
-        $logs = $query->orderBy('created_at', 'desc')->paginate(20)->appends($request->all());
+        $logs = $query->orderBy('created_at', 'desc')->paginate(15)->appends($request->all());
 
         $branches = Branch::where('is_active', true)->get();
 

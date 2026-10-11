@@ -278,7 +278,7 @@ class CreatePosOrderAction
                     'received_at_workshop_at' => now(),
                     'dispatch_notes'     => 'Walk-in POS Order',
                 ]);
-                $order->update(['status' => 'received_at_workshop']);
+                $order->update(['status' => 'received']);
             }
 
             if ($paidAmount > 0 && $paymentMode === 'pay_now') {

@@ -26,9 +26,34 @@ class InventoryController extends Controller
         return view('inventory.index', compact('items'));
     }
 
+    public function update(Request $request, InventoryItem $item)
+    {
+        if (!auth()->user()->hasAdminAccess() && !auth()->user()->isWorkshopAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
+        
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'unit' => 'required|string|max:50',
+            'low_stock_threshold' => 'required|numeric|min:0',
+            'location' => 'nullable|string|max:255',
+        ]);
+        
+        $item->update([
+            'name' => $request->name,
+            'unit' => $request->unit,
+            'low_stock_threshold' => $request->low_stock_threshold,
+            'location' => $request->location,
+        ]);
+        
+        return redirect()->route('inventory.index')->with('success', 'Inventory item updated successfully.');
+    }
+
     public function destroy(InventoryItem $item)
     {
-        Gate::authorize('manage-users');
+        if (!auth()->user()->hasAdminAccess() && !auth()->user()->isWorkshopAdmin()) {
+            abort(403, 'Unauthorized action.');
+        }
         $item->delete();
 
         return redirect()->route('inventory.index')->with('success', 'Inventory item deleted.');

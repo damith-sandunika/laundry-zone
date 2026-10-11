@@ -101,7 +101,7 @@ class MainReportController extends Controller
         $topCustomers = $topCustomersQuery->select('customer_id', \DB::raw('SUM(total) as total_spent'), \DB::raw('COUNT(id) as total_orders'))
             ->with('customer')->groupBy('customer_id')->orderByDesc('total_spent')->limit(5)->get();
 
-        $depositsQuery = BankDeposit::with(['branch', 'user'])
+        $depositsQuery = BankDeposit::withTrashed()->with(['branch', 'user', 'deletedByUser', 'editedByUser'])
             ->whereBetween('deposited_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         if ($branchId)
             $depositsQuery->where('branch_id', $branchId);

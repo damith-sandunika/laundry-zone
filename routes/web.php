@@ -140,6 +140,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/shifts/close', [\App\Http\Controllers\DashboardController::class, 'closeShift'])->name('shifts.close');
 
     Route::post('/bank-deposits', [\App\Http\Controllers\BankDepositController::class, 'store'])->name('bank-deposits.store');
+    Route::put('/bank-deposits/{bankDeposit}', [\App\Http\Controllers\BankDepositController::class, 'update'])->name('bank-deposits.update');
+    Route::delete('/bank-deposits/{bankDeposit}', [\App\Http\Controllers\BankDepositController::class, 'destroy'])->name('bank-deposits.destroy');
 
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
@@ -217,7 +219,7 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware(['workshop'])->prefix('workshop')->name('workshop.')->group(function () {
         Route::get('/dashboard', [WorkshopDashboardController::class, 'dashboard'])->name('dashboard');
         Route::get('/operations', [WorkshopOperationsController::class, 'operations'])->name('operations');
-        Route::get('/history', [WorkshopDashboardController::class, 'history'])->name('history');
+        Route::get('/history', fn() => redirect()->route('orders.history', request()->all()))->name('history');
         Route::post('/dispatches/{dispatch}/receive', [WorkshopOperationsController::class, 'receive'])->name('receive');
         Route::post('/dispatches/{dispatch}/start-processing', [WorkshopOperationsController::class, 'startProcessing'])->name('startProcessing');
         Route::post('/dispatches/{dispatch}/complete', [WorkshopOperationsController::class, 'complete'])->name('complete');
@@ -247,6 +249,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/inventory/bulk-restock', [InventoryController::class, 'bulkStockIn'])->name('inventory.bulkStockIn');
         Route::post('/inventory/bulk-stock-out', [InventoryController::class, 'bulkStockOut'])->name('inventory.bulkStockOut');
         Route::post('/inventory/{item}/stock-out', [InventoryController::class, 'stockOut'])->name('inventory.stockOut');
+        Route::put('/inventory/{item}', [InventoryController::class, 'update'])->name('inventory.update');
         Route::delete('/inventory/{item}', [InventoryController::class, 'destroy'])->name('inventory.destroy');
     });
 

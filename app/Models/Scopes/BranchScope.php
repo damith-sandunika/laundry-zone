@@ -27,7 +27,13 @@ class BranchScope implements Scope
                 if ($model instanceof \App\Models\Order) {
                     $builder->where(function($q) use ($model, $user) {
                         $q->where($model->getTable().'.branch_id', $user->branch_id)
-                          ->orWhere($model->getTable().'.workshop_id', $user->branch_id);
+                          ->orWhere($model->getTable().'.workshop_id', $user->branch_id)
+                          ->orWhereExists(function($sub) use ($model, $user) {
+                              $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                                  ->from('workshop_dispatches')
+                                  ->whereColumn('workshop_dispatches.order_id', $model->getTable().'.id')
+                                  ->where('workshop_dispatches.workshop_branch_id', $user->branch_id);
+                          });
                     });
                 } else {
                     $builder->where($model->getTable().'.branch_id', $user->branch_id);

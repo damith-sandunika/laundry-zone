@@ -20,7 +20,7 @@ class BranchLogController extends Controller
             $query->whereDate('created_at', $request->date);
         }
 
-        $logs = $query->paginate(30)->withQueryString();
+        $logs = $query->paginate(15)->withQueryString();
         $branches = \App\Models\Branch::all();
 
         return view('superadmin.branch-logs', compact('logs', 'branches'));

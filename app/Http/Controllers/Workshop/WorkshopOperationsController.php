@@ -31,13 +31,20 @@ class WorkshopOperationsController extends Controller
             $query->where('workshop_dispatches.branch_id', $selectedBranch);
         }
 
-        $countsQuery = clone $query;
+        $rawCounts = (clone $query)->selectRaw("
+            COUNT(CASE WHEN workshop_dispatches.status = 'dispatched_to_workshop' THEN 1 END) as incoming,
+            COUNT(CASE WHEN workshop_dispatches.status = 'received_at_workshop' THEN 1 END) as to_wash,
+            COUNT(CASE WHEN workshop_dispatches.status = 'processing' THEN 1 END) as washing,
+            COUNT(CASE WHEN workshop_dispatches.status = 'completed_at_workshop' THEN 1 END) as completed,
+            COUNT(CASE WHEN workshop_dispatches.status IN ('returned_to_branch', 'received_at_branch') THEN 1 END) as returned
+        ")->first();
+
         $counts = [
-            'incoming' => (clone $countsQuery)->where('workshop_dispatches.status', 'dispatched_to_workshop')->count(),
-            'to_wash' => (clone $countsQuery)->where('workshop_dispatches.status', 'received_at_workshop')->count(),
-            'washing' => (clone $countsQuery)->where('workshop_dispatches.status', 'processing')->count(),
-            'completed' => (clone $countsQuery)->where('workshop_dispatches.status', 'completed_at_workshop')->count(),
-            'returned' => (clone $countsQuery)->whereIn('workshop_dispatches.status', ['returned_to_branch', 'received_at_branch'])->count(),
+            'incoming' => (int) ($rawCounts->incoming ?? 0),
+            'to_wash' => (int) ($rawCounts->to_wash ?? 0),
+            'washing' => (int) ($rawCounts->washing ?? 0),
+            'completed' => (int) ($rawCounts->completed ?? 0),
+            'returned' => (int) ($rawCounts->returned ?? 0),
         ];
 
         $currentTab = $request->get('tab', 'incoming');

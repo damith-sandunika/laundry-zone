@@ -82,6 +82,16 @@ class Order extends Model
         return $this->belongsTo(Branch::class, 'workshop_id')->withoutGlobalScopes();
     }
 
+    public function workshopDispatches()
+    {
+        return $this->hasMany(WorkshopDispatch::class, 'order_id');
+    }
+
+    public function latestWorkshopDispatch()
+    {
+        return $this->hasOne(WorkshopDispatch::class, 'order_id')->latestOfMany();
+    }
+
     public function deletedBy()
     {
         return $this->belongsTo(User::class, 'deleted_by')->withoutGlobalScopes();
