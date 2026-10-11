@@ -440,7 +440,7 @@ class WorkshopDashboardController extends Controller
             
         $allBranches = collect();
         if ($user->isSuperAdmin()) {
-            $allBranches = \App\Models\Branch::where('type', 'workshop')->get();
+            $allBranches = \App\Models\Branch::orderBy('name')->get();
         }
 
         return view('workshop.history', compact('dispatches', 'cancelledBookings', 'stats', 'allBranches'));

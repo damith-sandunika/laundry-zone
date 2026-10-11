@@ -578,20 +578,40 @@ class OrderController extends Controller
         $user = auth()->user();
         $branchId = $user->branch_id;
 
-        $query = Order::with('customer', 'branch', 'deletedBy')
+        $query = Order::withTrashed()->with('customer', 'branch', 'deletedBy')
             ->orderByDesc('id');
             
         $statsQuery = Order::query()
-            ->when(!$user->isSuperAdmin() && $branchId, fn($q) => $q->where('branch_id', $branchId));
+            ->when(!$user->isSuperAdmin() && $branchId, function ($q) use ($branchId) {
+                $q->where(function ($sub) use ($branchId) {
+                    $sub->where('branch_id', $branchId)
+                        ->orWhere('workshop_id', $branchId);
+                });
+            });
 
         if (!$user->isSuperAdmin() && $branchId) {
-            $query->where('branch_id', $branchId);
+            $query->where(function ($q) use ($branchId) {
+                $q->where('branch_id', $branchId)
+                    ->orWhere('workshop_id', $branchId);
+            });
         }
 
         if ($user->isSuperAdmin() && $request->filled('branch_id')) {
             $branchIdFilter = $request->branch_id;
-            $query->where('branch_id', $branchIdFilter);
-            $statsQuery->where('branch_id', $branchIdFilter);
+            $query->where(function ($q) use ($branchIdFilter) {
+                $q->where('branch_id', $branchIdFilter)
+                    ->orWhere('workshop_id', $branchIdFilter);
+            });
+            $statsQuery->where(function ($q) use ($branchIdFilter) {
+                $q->where('branch_id', $branchIdFilter)
+                    ->orWhere('workshop_id', $branchIdFilter);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $statusFilter = $request->status;
+            $query->where('status', $statusFilter);
+            $statsQuery->where('status', $statusFilter);
         }
 
         if ($request->filled('start_date') && $request->filled('end_date')) {
@@ -658,7 +678,7 @@ class OrderController extends Controller
         
         $allBranches = collect();
         if ($user->isSuperAdmin()) {
-            $allBranches = \App\Models\Branch::where('type', 'branch')->get();
+            $allBranches = \App\Models\Branch::orderBy('name')->get();
         }
 
         return view('orders.history', compact('completedOrders', 'stats', 'allBranches'));

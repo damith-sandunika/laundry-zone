@@ -3,11 +3,24 @@
         <div class="flex flex-wrap justify-between items-start gap-3">
             <div>
                 <h2 class="ph-title">All Orders History</h2>
-                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all orders for this branch</p>
+                <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">
+                    @if(auth()->user()->isSuperAdmin())
+                        System-wide log of all orders across branches
+                    @else
+                        Log of all orders for this branch
+                    @endif
+                </p>
             </div>
-            <a href="{{ route('orders.index') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
-                Back to Orders
-            </a>
+            <div class="flex items-center gap-2">
+                @if(auth()->user()->isSuperAdmin() || auth()->user()->role === 'workshop_admin')
+                    <a href="{{ route('workshop.history') }}" class="px-3.5 py-2 bg-indigo-50 text-indigo-700 text-xs font-bold rounded hover:bg-indigo-100 border border-indigo-200 transition-colors">
+                        Workshop Dispatches
+                    </a>
+                @endif
+                <a href="{{ route('orders.index') }}" class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
+                    Back to Orders
+                </a>
+            </div>
         </div>
     </x-slot>
 
@@ -27,6 +40,23 @@
                 </div>
             @endif
             <div>
+                <select name="status"
+                    class="border-slate-200 rounded-md text-xs font-bold w-[140px] shadow-sm py-1.5 text-slate-600">
+                    <option value="">All Statuses</option>
+                    <option value="received" {{ request('status') == 'received' ? 'selected' : '' }}>Received</option>
+                    <option value="confirmed" {{ request('status') == 'confirmed' ? 'selected' : '' }}>Confirmed</option>
+                    <option value="pending" {{ request('status') == 'pending' ? 'selected' : '' }}>Pending Pickup</option>
+                    <option value="picked_up" {{ request('status') == 'picked_up' ? 'selected' : '' }}>Picked Up</option>
+                    <option value="dispatched_to_workshop" {{ request('status') == 'dispatched_to_workshop' ? 'selected' : '' }}>Dispatched</option>
+                    <option value="processing" {{ request('status') == 'processing' ? 'selected' : '' }}>Processing</option>
+                    <option value="completed_at_workshop" {{ request('status') == 'completed_at_workshop' ? 'selected' : '' }}>Completed at Workshop</option>
+                    <option value="returned_from_workshop" {{ request('status') == 'returned_from_workshop' ? 'selected' : '' }}>Returned to Branch</option>
+                    <option value="done" {{ request('status') == 'done' ? 'selected' : '' }}>Done</option>
+                    <option value="delivered" {{ request('status') == 'delivered' ? 'selected' : '' }}>Delivered</option>
+                    <option value="cancelled" {{ request('status') == 'cancelled' ? 'selected' : '' }}>Cancelled</option>
+                </select>
+            </div>
+            <div>
                 <input type="date" name="start_date" id="start_date" value="{{ request('start_date') }}"
                     class="border-slate-200 rounded-md text-xs font-bold w-[130px] shadow-sm py-1.5 text-slate-600">
             </div>
@@ -44,17 +74,17 @@
                     $isToday = request('start_date') == now()->format('Y-m-d') && request('end_date') == now()->format('Y-m-d');
                     $isYesterday = request('start_date') == now()->subDay()->format('Y-m-d') && request('end_date') == now()->subDay()->format('Y-m-d');
                 @endphp
-                <a href="{{ route('orders.history', ['start_date' => now()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')]) }}"
+                <a href="{{ route('orders.history', array_merge(request()->only(['branch_id', 'status']), ['start_date' => now()->format('Y-m-d'), 'end_date' => now()->format('Y-m-d')])) }}"
                     class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors {{ $isToday ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' }}">
                     Today
                 </a>
-                <a href="{{ route('orders.history', ['start_date' => now()->subDay()->format('Y-m-d'), 'end_date' => now()->subDay()->format('Y-m-d')]) }}"
+                <a href="{{ route('orders.history', array_merge(request()->only(['branch_id', 'status']), ['start_date' => now()->subDay()->format('Y-m-d'), 'end_date' => now()->subDay()->format('Y-m-d')])) }}"
                     class="px-3 py-1.5 rounded-md text-xs font-bold transition-colors {{ $isYesterday ? 'bg-indigo-600 text-white' : 'bg-indigo-50 text-indigo-600 hover:bg-indigo-100' }}">
                     Yesterday
                 </a>
             </div>
 
-            @if (request('start_date') || request('end_date') || request('branch_id'))
+            @if (request('start_date') || request('end_date') || request('branch_id') || request('status'))
                 <a href="{{ route('orders.history') }}"
                     class="px-3 py-1.5 bg-slate-100 text-slate-600 rounded-md text-xs font-bold hover:bg-slate-200 transition-colors ml-1">
                     Clear
@@ -181,8 +211,15 @@
                         <td style="padding:12px 20px;">
                             @php
                                 $statusColors = [
+                                    'received' => ['bg' => '#e0f2fe', 'text' => '#0369a1', 'border' => '#bae6fd'],
+                                    'confirmed' => ['bg' => '#ede9fe', 'text' => '#6d28d9', 'border' => '#ddd6fe'],
                                     'pending' => ['bg' => '#fef3c7', 'text' => '#b45309', 'border' => '#fde68a'],
+                                    'picked_up' => ['bg' => '#e0f2fe', 'text' => '#0284c7', 'border' => '#bae6fd'],
+                                    'dispatched_to_workshop' => ['bg' => '#ffedd5', 'text' => '#c2410c', 'border' => '#fed7aa'],
                                     'processing' => ['bg' => '#e0e7ff', 'text' => '#4338ca', 'border' => '#c7d2fe'],
+                                    'completed_at_workshop' => ['bg' => '#ccfbf1', 'text' => '#0f766e', 'border' => '#99f6e4'],
+                                    'returned_from_workshop' => ['bg' => '#f3e8ff', 'text' => '#7e22ce', 'border' => '#e9d5ff'],
+                                    'done' => ['bg' => '#dcfce7', 'text' => '#15803d', 'border' => '#bbf7d0'],
                                     'completed' => ['bg' => '#dcfce7', 'text' => '#15803d', 'border' => '#bbf7d0'],
                                     'delivered' => ['bg' => '#dbeafe', 'text' => '#1d4ed8', 'border' => '#bfdbfe'],
                                     'cancelled' => ['bg' => '#fee2e2', 'text' => '#b91c1c', 'border' => '#fecaca'],

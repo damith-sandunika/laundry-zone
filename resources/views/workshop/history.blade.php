@@ -6,10 +6,16 @@
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Log of all orders dispatched to this
                     workshop</p>
             </div>
-            <a href="{{ route('workshop.dashboard') }}"
-                class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
-                Back to Dashboard
-            </a>
+            <div class="flex items-center gap-2">
+                <a href="{{ route('orders.history') }}"
+                    class="px-3.5 py-2 bg-indigo-50 text-indigo-700 text-xs font-bold rounded hover:bg-indigo-100 border border-indigo-200 transition-colors">
+                    All Orders History
+                </a>
+                <a href="{{ route('workshop.dashboard') }}"
+                    class="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded hover:bg-blue-700 transition-colors">
+                    Back to Dashboard
+                </a>
+            </div>
         </div>
     </x-slot>
 
