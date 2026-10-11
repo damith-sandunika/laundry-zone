@@ -122,6 +122,19 @@ class User extends Authenticatable
         };
     }
 
+    public function canDeleteOrders(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if (in_array($this->role, ['branch_admin', 'workshop_admin'])) {
+            return \App\Models\Setting::get('allow_branch_admins_delete_orders', '0') === '1';
+        }
+
+        return false;
+    }
+
     public function roleLabel(): string
     {
         return match ($this->role) {

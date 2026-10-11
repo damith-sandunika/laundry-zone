@@ -124,6 +124,7 @@ class GeneralSettingsController extends Controller
 
         if ($user->role === 'super_admin') {
             Setting::set('centralized_management', $request->has('centralized_management') ? '1' : '0');
+            Setting::set('allow_branch_admins_delete_orders', $request->has('allow_branch_admins_delete_orders') ? '1' : '0');
             Setting::set('auto_print_label', $request->has('auto_print_label') ? '1' : '0');
             Setting::set('auto_print_pos_chit', $request->has('auto_print_pos_chit') ? '1' : '0');
             Setting::set('chit_show_totals', $request->has('chit_show_totals') ? '1' : '0');

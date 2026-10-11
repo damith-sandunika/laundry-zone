@@ -26,6 +26,7 @@ class UpdateGeneralSettingsRequest extends FormRequest
                 'company_name' => 'nullable|string|max:255',
                 'auto_close_time' => 'nullable|date_format:H:i',
                 'centralized_management' => 'nullable|boolean',
+                'allow_branch_admins_delete_orders' => 'nullable|boolean',
                 'site_landing_page' => 'nullable|string|max:255',
             ];
         }

@@ -246,7 +246,7 @@
                                         View
                                     </a>
                                 @endif
-                                @if(!$isDeleted && auth()->user() && in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'workshop_admin']))
+                                @if(!$isDeleted && auth()->user()?->canDeleteOrders())
                                     <button
                                         onclick="if(confirm('Are you sure you want to delete this order? It will be crossed out and removed from reports.')){ fetch('{{ route('orders.destroy', $dispatch->order->id) }}', {method:'DELETE', headers:{'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json'}}).then(r=>r.json()).then(d=>{if(d.success) location.reload(); else alert(d.message);}); }"
                                         style="display:inline-block;padding:5px 12px;background:#fee2e2;color:#b91c1c;border:1px solid #fecaca;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;transition:all 0.1s;margin-left:4px;"

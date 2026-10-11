@@ -94,6 +94,19 @@
                                             </div>
                                         </label>
                                     </div>
+
+                                    <div class="pt-4 mt-4 border-t border-gray-100">
+                                        <label class="flex items-start gap-2 cursor-pointer w-max max-w-full">
+                                            <input type="checkbox" name="allow_branch_admins_delete_orders" value="1" {{ \App\Models\Setting::get('allow_branch_admins_delete_orders', '0') == '1' ? 'checked' : '' }} class="w-4 h-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <div>
+                                                <span class="text-sm font-semibold text-gray-700 block">Allow Branch & Workshop Admins to Delete Orders</span>
+                                                <p class="text-[11px] text-gray-500 mt-1">
+                                                    If checked, Branch Admins and Workshop Admins can delete orders from History pages. <br>
+                                                    If unchecked (<strong class="text-slate-700">Default: Super Admin Only</strong>), only Super Admin can see the Delete button and delete orders.
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
                                 </div>
                             </div>
                         @else

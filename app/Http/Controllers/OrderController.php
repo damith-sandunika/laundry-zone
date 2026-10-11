@@ -687,8 +687,8 @@ class OrderController extends Controller
     public function destroy(Order $order)
     {
         $user = auth()->user();
-        if (!in_array($user->role, ['super_admin', 'workshop_admin', 'branch_admin'])) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized action.'], 403);
+        if (!$user || !$user->canDeleteOrders()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized action. Order deletion is restricted.'], 403);
         }
 
         try {
