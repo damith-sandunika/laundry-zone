@@ -120,6 +120,43 @@
     {{ $scripts }}
 @endif
 
+<script>
+    document.addEventListener('submit', function (e) {
+        const form = e.target;
+        if (form.checkValidity && !form.checkValidity()) return;
+        if (form.dataset.submitting === 'true') {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            return false;
+        }
+        form.dataset.submitting = 'true';
+        const btns = form.querySelectorAll('button[type="submit"], input[type="submit"]');
+        btns.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.style.cursor = 'wait';
+            btn.style.pointerEvents = 'none';
+        });
+        setTimeout(() => {
+            form.dataset.submitting = 'false';
+            btns.forEach(btn => {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                btn.style.cursor = '';
+                btn.style.pointerEvents = '';
+            });
+        }, 10000);
+    });
+    window.addEventListener('pageshow', () => {
+        document.querySelectorAll('form[data-submitting="true"]').forEach(f => f.dataset.submitting = 'false');
+        document.querySelectorAll('button[type="submit"], input[type="submit"]').forEach(btn => {
+            btn.disabled = false;
+            btn.style.opacity = '';
+            btn.style.cursor = '';
+            btn.style.pointerEvents = '';
+        });
+    });
+</script>
 </body>
 </html>
 

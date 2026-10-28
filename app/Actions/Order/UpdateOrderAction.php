@@ -82,8 +82,13 @@ class UpdateOrderAction
                 }
             }
 
-            $discountPercentage = max(0, min(100, (float) ($data['discount_percentage'] ?? 0)));
-            $discountAmount = $subtotal * ($discountPercentage / 100);
+            if (isset($data['discount_type']) && $data['discount_type'] === 'fixed') {
+                $discountAmount = max(0, min($subtotal, (float) ($data['discount_amount'] ?? 0)));
+                $discountPercentage = $subtotal > 0 ? ($discountAmount / $subtotal) * 100 : 0;
+            } else {
+                $discountPercentage = max(0, min(100, (float) ($data['discount_percentage'] ?? 0)));
+                $discountAmount = $subtotal * ($discountPercentage / 100);
+            }
             
             if ($discountPercentage > 0 && $order->customer_id) {
                 \App\Models\Customer::where('id', $order->customer_id)

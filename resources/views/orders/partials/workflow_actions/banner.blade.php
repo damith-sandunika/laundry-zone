@@ -47,7 +47,7 @@
                         <button @click="workshopAction('start-processing')"
                             style="padding:8px 16px;background:#eab308;color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
                             onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            <i class="fa-solid fa-play"></i> Start Washing
+                            <i class="fa-solid fa-play"></i> Start
                         </button>
                     </div>
                 </template>

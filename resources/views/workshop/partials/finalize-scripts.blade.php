@@ -10,12 +10,20 @@
                 activeSubcategory: null,
                 cart: @json($cartItems),
 
-                deliveryFee: {{ (float) ($dispatch->order->delivery_fee ?? $order->delivery_fee ?? 0) }},
-                discountPercent: 0,
-                requestedAdvance: null,
+                @php
+                    $currentOrder = $dispatch?->order ?? $order ?? null;
+                    $discAmount = $currentOrder ? (float)$currentOrder->discount : 0;
+                    $subtotalAmount = $currentOrder ? (float)$currentOrder->subtotal : 0;
+                    $discPercent = $subtotalAmount > 0 ? round(($discAmount / $subtotalAmount) * 100, 2) : 0;
+                @endphp
+                deliveryFee: {{ (float) ($dispatch?->order?->delivery_fee ?? $order->delivery_fee ?? 0) }},
+                discountType: 'percent', // 'percent' or 'fixed'
+                discountPercent: {{ $discPercent }},
+                discountFixed: {{ $discAmount }},
+                requestedAdvance: {{ (float) ($currentOrder->requested_advance ?? 0) }},
                 isSaving: false,
-                orderId: {{ $dispatch->order_id ?? $order->id ?? 0 }},
-                orderNumber: '{{ $dispatch->order->order_number ?? $order->order_number ?? '' }}',
+                orderId: {{ $dispatch?->order_id ?? $order->id ?? 0 }},
+                orderNumber: '{{ $dispatch?->order?->order_number ?? $order->order_number ?? '' }}',
 
                 init() {
                     if (this.categories.length > 0) {
@@ -151,10 +159,30 @@
                     return this.cart.reduce((sum, item) => sum + this.getItemTotal(item), 0);
                 },
 
+                toggleDiscountType() {
+                    if (this.discountType === 'percent') {
+                        this.discountType = 'fixed';
+                        if (this.discountPercent > 0 && this.subtotal > 0) {
+                            this.discountFixed = Math.round(this.subtotal * (this.discountPercent / 100) * 100) / 100;
+                        }
+                    } else {
+                        this.discountType = 'percent';
+                        if (this.discountFixed > 0 && this.subtotal > 0) {
+                            this.discountPercent = Math.round((this.discountFixed / this.subtotal) * 100 * 100) / 100;
+                        }
+                    }
+                },
+
+                get discountAmount() {
+                    if (this.discountType === 'fixed') {
+                        return Math.max(0, Math.min(this.subtotal, parseFloat(this.discountFixed) || 0));
+                    }
+                    return this.subtotal * (Math.max(0, Math.min(100, parseFloat(this.discountPercent) || 0)) / 100);
+                },
+
                 get total() {
                     let baseSub = this.subtotal;
-                    let discountAmount = baseSub * (this.discountPercent / 100);
-                    let calculated = (baseSub - discountAmount) + this.deliveryFee;
+                    let calculated = (baseSub - this.discountAmount) + this.deliveryFee;
                     return Math.max({{ $minimumDeliveryCost }}, calculated);
                 },
 
@@ -171,7 +199,9 @@
                             },
                             body: JSON.stringify({
                                 cart: this.cart,
-                                discount_percentage: this.discountPercent,
+                                discount_type: this.discountType,
+                                discount_percentage: this.discountType === 'percent' ? this.discountPercent : (this.subtotal > 0 ? (this.discountAmount / this.subtotal) * 100 : 0),
+                                discount_amount: this.discountAmount,
                                 delivery_fee: this.deliveryFee,
                                 requested_advance: this.requestedAdvance,
                                 next_action: action

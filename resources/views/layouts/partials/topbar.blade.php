@@ -172,7 +172,29 @@
                                         </a>
                                     </template>
                                 </div>
-                                <div x-show="query.length >= 2 && results.length === 0 && !loading" x-cloak
+
+                                {{-- See More Button --}}
+                                <div x-show="hasMore" class="p-2 border-t border-slate-100 bg-slate-50/80 text-center">
+                                    <button type="button" @click.stop="loadMore()" :disabled="loadingMore"
+                                        class="w-full py-1.5 px-3 text-[11px] font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-100/60 rounded-xl transition-all flex items-center justify-center gap-1.5 focus:outline-none">
+                                        <span x-show="!loadingMore" class="flex items-center gap-1">
+                                            <span>See More</span>
+                                            <span class="text-[10px] text-slate-400 font-semibold" x-text="'(' + (total - results.length) + ' more)'"></span>
+                                            <svg class="w-3.5 h-3.5 text-blue-600 ml-0.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </span>
+                                        <span x-show="loadingMore" class="flex items-center gap-1.5 text-slate-500">
+                                            <svg class="w-3.5 h-3.5 animate-spin text-blue-600" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                                            </svg>
+                                            <span>Loading...</span>
+                                        </span>
+                                    </button>
+                                </div>
+
+                                <div x-show="query.trim().length >= 1 && results.length === 0 && !loading" x-cloak
                                     class="px-4 py-5 text-center text-[12px] font-semibold text-slate-400">
                                     No orders found.
                                 </div>

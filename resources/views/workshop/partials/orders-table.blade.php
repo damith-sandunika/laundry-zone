@@ -89,7 +89,7 @@
                                                 <button @click="workshopAction(dispatch.id, 'start-processing')"
                                                     style="padding:5px 10px;background:#eab308;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(234,179,8,0.3);transition:transform 0.1s;"
                                                     onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                                    Start Washing
+                                                    Start
                                                 </button>
                                             </div>
                                         </template>

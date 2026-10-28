@@ -57,21 +57,23 @@ class BankDepositController extends Controller
             }
         }
 
-        BankDeposit::create([
-            'branch_id' => $branchId,
-            'user_id' => auth()->id(),
-            'amount' => $request->amount,
-            'reference_number' => $request->reference_number,
-            'notes' => $request->notes,
-            'deposited_at' => now(),
-        ]);
+        DB::transaction(function () use ($branchId, $request) {
+            BankDeposit::create([
+                'branch_id' => $branchId,
+                'user_id' => auth()->id(),
+                'amount' => $request->amount,
+                'reference_number' => $request->reference_number,
+                'notes' => $request->notes,
+                'deposited_at' => now(),
+            ]);
 
-        BranchLog::create([
-            'branch_id'   => $branchId,
-            'user_id'     => auth()->id(),
-            'action'      => 'bank_deposit',
-            'description' => 'Deposited Rs. ' . number_format($request->amount, 2) . ($request->reference_number ? ' (Ref: ' . $request->reference_number . ')' : ''),
-        ]);
+            BranchLog::create([
+                'branch_id'   => $branchId,
+                'user_id'     => auth()->id(),
+                'action'      => 'bank_deposit',
+                'description' => 'Deposited Rs. ' . number_format($request->amount, 2) . ($request->reference_number ? ' (Ref: ' . $request->reference_number . ')' : ''),
+            ]);
+        });
 
         return redirect()->back()->with('success', 'Bank deposit recorded successfully. Cash balance updated.');
     }

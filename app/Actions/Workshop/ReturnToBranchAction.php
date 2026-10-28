@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Services\CommunicationService;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\SystemAlertNotification;
+use Illuminate\Support\Facades\DB;
 use Exception;
 use Illuminate\Support\Facades\Log;
 
@@ -15,25 +16,28 @@ class ReturnToBranchAction
 {
     public function execute(WorkshopDispatch $dispatch, int $userId): void
     {
-        $dispatch->update([
-            'status'      => 'returned_to_branch',
-            'returned_by' => $userId,
-            'returned_at' => now(),
-        ]);
-
         $order = $dispatch->order;
-        $order->update(['status' => 'returned_from_workshop']);
 
-        try {
-            OrderStatusHistory::create([
-                'order_id'   => $order->id,
-                'status'     => 'returned_from_workshop',
-                'changed_by' => $userId,
-                'note'       => 'Washing completed. Dispatched back to branch.',
+        DB::transaction(function () use ($dispatch, $order, $userId) {
+            $dispatch->update([
+                'status'      => 'returned_to_branch',
+                'returned_by' => $userId,
+                'returned_at' => now(),
             ]);
-        } catch (Exception $e) {
-            Log::warning('OrderStatusHistory insert failed (returnToBranch): ' . $e->getMessage());
-        }
+
+            $order->update(['status' => 'returned_from_workshop']);
+
+            try {
+                OrderStatusHistory::create([
+                    'order_id'   => $order->id,
+                    'status'     => 'returned_from_workshop',
+                    'changed_by' => $userId,
+                    'note'       => 'Washing completed. Dispatched back to branch.',
+                ]);
+            } catch (Exception $e) {
+                Log::warning('OrderStatusHistory insert failed (returnToBranch): ' . $e->getMessage());
+            }
+        });
 
         try {
             $branchAdmins = User::whereIn('role', ['branch_admin', 'admin', 'staff'])

@@ -6,6 +6,7 @@ use App\Models\Attendance;
 use App\Models\Leave;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class HRController extends Controller
 {
@@ -77,31 +78,33 @@ class HRController extends Controller
             return back()->with('error', 'Invalid attendance data format.');
         }
 
-        foreach ($data as $dateStr => $dayInfo) {
-            $status = $dayInfo['status'] ?? null;
-            
-            // If status is empty, it means the user cleared it from the UI. Remove the record if it exists.
-            if (!$status) {
-                $staff->attendances()->where('date', $dateStr)->delete();
-                continue;
+        DB::transaction(function () use ($data, $staff) {
+            foreach ($data as $dateStr => $dayInfo) {
+                $status = $dayInfo['status'] ?? null;
+                
+                // If status is empty, it means the user cleared it from the UI. Remove the record if it exists.
+                if (!$status) {
+                    $staff->attendances()->where('date', $dateStr)->delete();
+                    continue;
+                }
+
+                $clockIn = !empty($dayInfo['clock_in']) ? $dayInfo['clock_in'] : null;
+                $clockOut = !empty($dayInfo['clock_out']) ? $dayInfo['clock_out'] : null;
+                $normalMinutes = $dayInfo['normal_minutes'] ?? 0;
+                $otMinutes = $dayInfo['ot_minutes'] ?? 0;
+
+                $staff->attendances()->updateOrCreate(
+                    ['date' => $dateStr],
+                    [
+                        'status' => $status,
+                        'clock_in' => $clockIn,
+                        'clock_out' => $clockOut,
+                        'normal_minutes' => $normalMinutes,
+                        'ot_minutes' => $otMinutes,
+                    ]
+                );
             }
-
-            $clockIn = !empty($dayInfo['clock_in']) ? $dayInfo['clock_in'] : null;
-            $clockOut = !empty($dayInfo['clock_out']) ? $dayInfo['clock_out'] : null;
-            $normalMinutes = $dayInfo['normal_minutes'] ?? 0;
-            $otMinutes = $dayInfo['ot_minutes'] ?? 0;
-
-            $staff->attendances()->updateOrCreate(
-                ['date' => $dateStr],
-                [
-                    'status' => $status,
-                    'clock_in' => $clockIn,
-                    'clock_out' => $clockOut,
-                    'normal_minutes' => $normalMinutes,
-                    'ot_minutes' => $otMinutes,
-                ]
-            );
-        }
+        });
 
         return back()->with('success', 'Monthly attendance updated successfully.');
     }
@@ -117,22 +120,24 @@ class HRController extends Controller
 
         $status = auth()->user()->hasAdminAccess() ? 'approved' : 'pending';
 
-        $leave = $staff->leaves()->create([
-            'start_date' => $request->start_date,
-            'end_date' => $request->end_date,
-            'type' => $request->type,
-            'reason' => $request->reason,
-            'status' => $status,
-            'approved_by' => $status === 'approved' ? auth()->id() : null,
-        ]);
+        DB::transaction(function () use ($staff, $request, $status) {
+            $leave = $staff->leaves()->create([
+                'start_date' => $request->start_date,
+                'end_date' => $request->end_date,
+                'type' => $request->type,
+                'reason' => $request->reason,
+                'status' => $status,
+                'approved_by' => $status === 'approved' ? auth()->id() : null,
+            ]);
 
-        if ($status === 'approved') {
-            // Create an 'absent' attendance record for today so the button goes away in the index
-            $staff->attendances()->updateOrCreate(
-                ['date' => $request->start_date],
-                ['status' => 'absent']
-            );
-        }
+            if ($status === 'approved') {
+                // Create an 'absent' attendance record for today so the button goes away in the index
+                $staff->attendances()->updateOrCreate(
+                    ['date' => $request->start_date],
+                    ['status' => 'absent']
+                );
+            }
+        });
 
         return back()->with('success', $status === 'approved' ? 'Leave marked and approved successfully.' : 'Leave requested successfully.');
     }
@@ -148,17 +153,19 @@ class HRController extends Controller
             'status' => 'required|in:approved,rejected',
         ]);
 
-        $leave->update([
-            'status' => $request->status,
-            'approved_by' => auth()->id(),
-        ]);
+        DB::transaction(function () use ($leave, $request) {
+            $leave->update([
+                'status' => $request->status,
+                'approved_by' => auth()->id(),
+            ]);
 
-        if ($request->status === 'approved') {
-            $leave->user->attendances()->updateOrCreate(
-                ['date' => $leave->start_date],
-                ['status' => 'absent']
-            );
-        }
+            if ($request->status === 'approved') {
+                $leave->user->attendances()->updateOrCreate(
+                    ['date' => $leave->start_date],
+                    ['status' => 'absent']
+                );
+            }
+        });
 
         return back()->with('success', 'Leave status updated.');
     }

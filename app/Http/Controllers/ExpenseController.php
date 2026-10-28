@@ -162,20 +162,21 @@ class ExpenseController extends Controller
 
         $branchId = $this->getActiveBranchId();
         
-        \DB::table('petty_cash_topups')->insert([
-            'branch_id' => $branchId,
-            'user_id' => auth()->id(),
-            'amount' => $request->amount,
-            'reference_note' => $request->reference_note,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        \DB::transaction(function () use ($branchId, $request) {
+            \DB::table('petty_cash_topups')->insert([
+                'branch_id' => $branchId,
+                'user_id' => auth()->id(),
+                'amount' => $request->amount,
+                'reference_note' => $request->reference_note,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-        $branch = \App\Models\Branch::find($branchId);
-        if ($branch) {
-            $branch->petty_cash_balance += $request->amount;
-            $branch->save();
-        }
+            $branch = \App\Models\Branch::find($branchId);
+            if ($branch) {
+                $branch->increment('petty_cash_balance', $request->amount);
+            }
+        });
 
         return redirect()->back()->with('success', 'Petty Cash topped up successfully.');
     }

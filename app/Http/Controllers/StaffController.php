@@ -6,6 +6,7 @@ use App\Models\Branch;
 use App\Models\Expense;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StaffController extends Controller
 {
@@ -88,20 +89,22 @@ class StaffController extends Controller
             $userData['can_manage_global_config'] = $request->has('can_manage_global_config');
         }
 
-        $user = User::create($userData);
+        DB::transaction(function () use ($userData, $request) {
+            $user = User::create($userData);
 
-        $user->profile()->create([
-            'nic' => $request->nic,
-            'dob' => $request->dob,
-            'address' => $request->address,
-            'emergency_contact' => $request->emergency_contact,
-            'vehicle_number' => $request->vehicle_number,
-            'casual_leaves' => $request->casual_leaves ?? 0,
-            'standard_working_hours' => $request->standard_working_hours ?? 8.0,
-            'ot_rate_per_hour' => $request->ot_rate_per_hour ?? 0,
-            'hourly_rate' => $request->hourly_rate ?? 0,
-            'basic_salary' => $request->basic_salary ?? 0,
-        ]);
+            $user->profile()->create([
+                'nic' => $request->nic,
+                'dob' => $request->dob,
+                'address' => $request->address,
+                'emergency_contact' => $request->emergency_contact,
+                'vehicle_number' => $request->vehicle_number,
+                'casual_leaves' => $request->casual_leaves ?? 0,
+                'standard_working_hours' => $request->standard_working_hours ?? 8.0,
+                'ot_rate_per_hour' => $request->ot_rate_per_hour ?? 0,
+                'hourly_rate' => $request->hourly_rate ?? 0,
+                'basic_salary' => $request->basic_salary ?? 0,
+            ]);
+        });
 
         return redirect()->back()->with('success', 'Staff member added successfully.');
     }
@@ -197,13 +200,15 @@ class StaffController extends Controller
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
         }
-        $staff->update($data);
-        
-        if ($staff->profile) {
-            $staff->profile->update($profileData);
-        } else {
-            $staff->profile()->create($profileData);
-        }
+        DB::transaction(function () use ($staff, $data, $profileData) {
+            $staff->update($data);
+            
+            if ($staff->profile) {
+                $staff->profile->update($profileData);
+            } else {
+                $staff->profile()->create($profileData);
+            }
+        });
 
         return redirect()->route('staff.index')->with('success', 'Staff updated.');
     }

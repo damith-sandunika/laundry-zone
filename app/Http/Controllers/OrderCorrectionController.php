@@ -84,8 +84,13 @@ class OrderCorrectionController extends Controller
                 $calcResult = app(\App\Actions\Order\CalculateOrderTotalAction::class)->execute($newData['cart']);
                 $subtotal = $calcResult['subtotal'];
             }
-            $discountPercentage = isset($newData['discount_percentage']) ? (float) $newData['discount_percentage'] : ($order->customer ? $order->customer->default_discount : 0);
-            $discountAmount = $subtotal * ($discountPercentage / 100);
+            if (isset($newData['discount_type']) && $newData['discount_type'] === 'fixed') {
+                $discountAmount = max(0, min($subtotal, (float) ($newData['discount_amount'] ?? 0)));
+                $discountPercentage = $subtotal > 0 ? ($discountAmount / $subtotal) * 100 : 0;
+            } else {
+                $discountPercentage = isset($newData['discount_percentage']) ? (float) $newData['discount_percentage'] : ($order->customer ? $order->customer->default_discount : 0);
+                $discountAmount = $subtotal * ($discountPercentage / 100);
+            }
             $deliveryFee = isset($newData['delivery_fee']) ? (float) $newData['delivery_fee'] : $order->delivery_fee;
             
             $newData['calculated_total'] = $subtotal - $discountAmount + $deliveryFee;

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\InventoryItem;
 use App\Models\InventoryTransaction;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 class InventoryController extends Controller
@@ -68,28 +69,28 @@ class InventoryController extends Controller
         ]);
 
         $updatedCount = 0;
-        foreach ($request->items as $data) {
-            if (empty($data['quantity'])) {
-                continue;
-            }
+        DB::transaction(function () use ($request, &$updatedCount) {
+            foreach ($request->items as $data) {
+                if (empty($data['quantity'])) {
+                    continue;
+                }
 
-            $item = InventoryItem::find($data['id']);
-            if ($item) {
-                // Notice: In the previous stockIn method, it did increment('quantity'), but the column is 'current_stock'
-                // Let's use 'current_stock' to be safe, because create logic uses 'current_stock'.
-                $item->increment('current_stock', (float) $data['quantity']);
+                $item = InventoryItem::find($data['id']);
+                if ($item) {
+                    $item->increment('current_stock', (float) $data['quantity']);
 
-                InventoryTransaction::create([
-                    'inventory_item_id' => $item->id,
-                    'type' => 'stock_in',
-                    'quantity' => $data['quantity'],
-                    'reference' => 'Bulk Restock',
-                    'notes' => $request->notes ?? null,
-                    'created_by' => auth()->id(),
-                ]);
-                $updatedCount++;
+                    InventoryTransaction::create([
+                        'inventory_item_id' => $item->id,
+                        'type' => 'stock_in',
+                        'quantity' => $data['quantity'],
+                        'reference' => 'Bulk Restock',
+                        'notes' => $request->notes ?? null,
+                        'created_by' => auth()->id(),
+                    ]);
+                    $updatedCount++;
+                }
             }
-        }
+        });
 
         return redirect()->back()->with('success', "Successfully restocked {$updatedCount} items.");
     }
@@ -115,26 +116,28 @@ class InventoryController extends Controller
             }
         }
 
-        foreach ($request->items as $data) {
-            if (empty($data['quantity'])) {
-                continue;
-            }
+        DB::transaction(function () use ($request, &$updatedCount) {
+            foreach ($request->items as $data) {
+                if (empty($data['quantity'])) {
+                    continue;
+                }
 
-            $item = InventoryItem::find($data['id']);
-            if ($item) {
-                $item->decrement('current_stock', (float) $data['quantity']);
+                $item = InventoryItem::find($data['id']);
+                if ($item) {
+                    $item->decrement('current_stock', (float) $data['quantity']);
 
-                InventoryTransaction::create([
-                    'inventory_item_id' => $item->id,
-                    'type' => 'out',
-                    'quantity' => $data['quantity'],
-                    'reference' => 'Bulk Stock Out',
-                    'notes' => $request->notes ?? null,
-                    'created_by' => auth()->id(),
-                ]);
-                $updatedCount++;
+                    InventoryTransaction::create([
+                        'inventory_item_id' => $item->id,
+                        'type' => 'out',
+                        'quantity' => $data['quantity'],
+                        'reference' => 'Bulk Stock Out',
+                        'notes' => $request->notes ?? null,
+                        'created_by' => auth()->id(),
+                    ]);
+                    $updatedCount++;
+                }
             }
-        }
+        });
 
         return redirect()->back()->with('success', "Successfully stocked out {$updatedCount} items.");
     }
@@ -150,15 +153,17 @@ class InventoryController extends Controller
             return redirect()->back()->with('error', 'Not enough stock available.');
         }
 
-        $item->decrement('current_stock', (float) $request->quantity);
+        DB::transaction(function () use ($item, $request) {
+            $item->decrement('current_stock', (float) $request->quantity);
 
-        InventoryTransaction::create([
-            'inventory_item_id' => $item->id,
-            'type' => 'out',
-            'quantity' => $request->quantity,
-            'reference' => 'Manual Deduct: '.$request->note,
-            'created_by' => auth()->id(),
-        ]);
+            InventoryTransaction::create([
+                'inventory_item_id' => $item->id,
+                'type' => 'out',
+                'quantity' => $request->quantity,
+                'reference' => 'Manual Deduct: '.$request->note,
+                'created_by' => auth()->id(),
+            ]);
+        });
 
         return redirect()->back()->with('success', 'Stock deducted successfully.');
     }

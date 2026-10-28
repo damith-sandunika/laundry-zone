@@ -9,6 +9,7 @@ use App\Models\PaymentTransaction;
 use App\Models\OrderStatusHistory;
 use App\Models\User;
 use App\Services\CommunicationService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 use App\Notifications\SystemAlertNotification;
 use Exception;
@@ -22,19 +23,21 @@ class DispatchOrderDeliveryAction
         $branchId = User::find($userId)->branch_id ?? \App\Models\Branch::first()->id;
 
         if ($data['delivery_method'] === 'rider') {
-            DeliveryTask::create([
-                'delivery_appointment_id' => $appointment ? $appointment->id : null,
-                'order_id' => $order->id,
-                'rider_id' => $data['rider_id'],
-                'branch_id' => $branchId,
-                'task_type' => 'delivery',
-                'status' => 'assigned',
-            ]);
+            DB::transaction(function () use ($appointment, $order, $data, $branchId) {
+                DeliveryTask::create([
+                    'delivery_appointment_id' => $appointment ? $appointment->id : null,
+                    'order_id' => $order->id,
+                    'rider_id' => $data['rider_id'],
+                    'branch_id' => $branchId,
+                    'task_type' => 'delivery',
+                    'status' => 'assigned',
+                ]);
 
-            if ($appointment) {
-                $appointment->update(['status' => 'out_for_delivery']);
-            }
-            $order->update(['status' => 'out_for_delivery']);
+                if ($appointment) {
+                    $appointment->update(['status' => 'out_for_delivery']);
+                }
+                $order->update(['status' => 'out_for_delivery']);
+            });
 
             $riderUser = User::find($data['rider_id']);
             if ($riderUser) {
@@ -51,56 +54,58 @@ class DispatchOrderDeliveryAction
             return ['status' => 'dispatched_for_delivery'];
 
         } else {
-            Expense::create([
-                'branch_id' => $branchId,
-                'amount' => (float)($data['pickme_cost'] ?? 0),
-                'category' => 'PickMe',
-                'description' => 'PickMe Delivery for Order #' . $order->order_number,
-                'expense_date' => now(),
-                'created_by' => $userId,
-            ]);
-
             $amountToPay   = $order->total - $order->paid_amount;
             $paymentMethod = $data['payment_method'] ?? 'cash';
 
-            if ($paymentMethod === 'credit') {
-                // Credit: do NOT collect money. Mark order as credit/pending.
-                $order->update([
-                    'payment_status' => 'pending',
-                    'payment_method' => 'credit',
+            DB::transaction(function () use ($branchId, $data, $order, $userId, $amountToPay, $paymentMethod, $appointment) {
+                Expense::create([
+                    'branch_id' => $branchId,
+                    'amount' => (float)($data['pickme_cost'] ?? 0),
+                    'category' => 'PickMe',
+                    'description' => 'PickMe Delivery for Order #' . $order->order_number,
+                    'expense_date' => now(),
+                    'created_by' => $userId,
                 ]);
-            } elseif ($amountToPay > 0) {
-                // Cash/Card/Bank: collect balance and mark as paid.
-                PaymentTransaction::create([
-                    'order_id'       => $order->id,
-                    'amount'         => $amountToPay,
-                    'payment_method' => $paymentMethod,
-                    'created_by'     => $userId,
-                    'collected_from_rider_at' => now(),
-                    'status'         => 'completed',
-                    'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                ]);
-                $order->update([
-                    'paid_amount'    => $order->paid_amount + $amountToPay,
-                    'payment_status' => 'paid',
-                    'payment_method' => $paymentMethod,
-                ]);
-            }
 
-            if ($appointment) {
-                $appointment->update(['status' => 'delivered']);
-            }
-            $order->update([
-                'status' => 'delivered',
-                'delivered_at' => now(),
-            ]);
-            
-            OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => 'delivered',
-                'changed_by' => $userId,
-                'note' => 'Delivered via PickMe',
-            ]);
+                if ($paymentMethod === 'credit') {
+                    // Credit: do NOT collect money. Mark order as credit/pending.
+                    $order->update([
+                        'payment_status' => 'pending',
+                        'payment_method' => 'credit',
+                    ]);
+                } elseif ($amountToPay > 0) {
+                    // Cash/Card/Bank: collect balance and mark as paid.
+                    PaymentTransaction::create([
+                        'order_id'       => $order->id,
+                        'amount'         => $amountToPay,
+                        'payment_method' => $paymentMethod,
+                        'created_by'     => $userId,
+                        'collected_from_rider_at' => now(),
+                        'status'         => 'completed',
+                        'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                    ]);
+                    $order->update([
+                        'paid_amount'    => $order->paid_amount + $amountToPay,
+                        'payment_status' => 'paid',
+                        'payment_method' => $paymentMethod,
+                    ]);
+                }
+
+                if ($appointment) {
+                    $appointment->update(['status' => 'delivered']);
+                }
+                $order->update([
+                    'status' => 'delivered',
+                    'delivered_at' => now(),
+                ]);
+                
+                OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => 'delivered',
+                    'changed_by' => $userId,
+                    'note' => 'Delivered via PickMe',
+                ]);
+            });
 
             try {
                 $commService = new CommunicationService();

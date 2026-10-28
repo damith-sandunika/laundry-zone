@@ -17,6 +17,7 @@ use App\Services\DashboardStatService;
 
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -210,50 +211,52 @@ class DashboardController extends Controller
         }
 
         try {
-            $newSession = RegisterSession::create([
-                'branch_id'    => $branchId,
-                'user_id'      => auth()->id(),
-                'opening_cash' => $request->opening_cash,
-                'opened_at'    => now(),
-                'status'       => 'open',
-            ]);
+            DB::transaction(function () use ($branchId, $request) {
+                $newSession = RegisterSession::create([
+                    'branch_id'    => $branchId,
+                    'user_id'      => auth()->id(),
+                    'opening_cash' => $request->opening_cash,
+                    'opened_at'    => now(),
+                    'status'       => 'open',
+                ]);
 
-            \Log::info('openShift: created session id=' . $newSession->id . ' branch=' . $branchId);
+                \Log::info('openShift: created session id=' . $newSession->id . ' branch=' . $branchId);
 
-            // ── Sync branches.cash_balance to the opening cash amount ──
-            Branch::where('id', $branchId)->update(['cash_balance' => $request->opening_cash]);
+                // ── Sync branches.cash_balance to the opening cash amount ──
+                Branch::where('id', $branchId)->update(['cash_balance' => $request->opening_cash]);
 
-            // Mark assigned staff for system access
-            $assignedStaffDesc = [];
-            if ($request->has('assigned_staff')) {
-                foreach ($request->assigned_staff as $staffId) {
-                    \App\Models\Attendance::create([
-                        'user_id'             => $staffId,
-                        'date'                => now()->toDateString(),
-                        'register_session_id' => $newSession->id,
-                        'is_assigned'         => true,
-                        'status'              => 'present',
-                    ]);
+                // Mark assigned staff for system access
+                $assignedStaffDesc = [];
+                if ($request->has('assigned_staff')) {
+                    foreach ($request->assigned_staff as $staffId) {
+                        \App\Models\Attendance::create([
+                            'user_id'             => $staffId,
+                            'date'                => now()->toDateString(),
+                            'register_session_id' => $newSession->id,
+                            'is_assigned'         => true,
+                            'status'              => 'present',
+                        ]);
 
-                    $staff = \App\Models\User::find($staffId);
-                    if ($staff) {
-                        $assignedStaffDesc[] = $staff->name;
+                        $staff = \App\Models\User::find($staffId);
+                        if ($staff) {
+                            $assignedStaffDesc[] = $staff->name;
+                        }
                     }
                 }
-            }
 
-            // Log the event
-            $logDesc = 'Shift opened with Rs. ' . number_format($request->opening_cash, 2);
-            if (!empty($assignedStaffDesc)) {
-                $logDesc .= '. Staff Assigned: ' . implode(', ', $assignedStaffDesc);
-            }
+                // Log the event
+                $logDesc = 'Shift opened with Rs. ' . number_format($request->opening_cash, 2);
+                if (!empty($assignedStaffDesc)) {
+                    $logDesc .= '. Staff Assigned: ' . implode(', ', $assignedStaffDesc);
+                }
 
-            \App\Models\BranchLog::create([
-                'branch_id'   => $branchId,
-                'user_id'     => auth()->id(),
-                'action'      => 'shift_opened',
-                'description' => $logDesc,
-            ]);
+                \App\Models\BranchLog::create([
+                    'branch_id'   => $branchId,
+                    'user_id'     => auth()->id(),
+                    'action'      => 'shift_opened',
+                    'description' => $logDesc,
+                ]);
+            });
 
             return $this->dashboardRedirect()->with('success', 'Branch shift opened successfully.');
 
@@ -292,35 +295,37 @@ class DashboardController extends Controller
             return redirect()->back()->with('error', 'No active shift found.');
         }
 
-        foreach ($request->assigned_staff as $key => $data) {
-            $staffId = $data['staff_id'] ?? null;
-            if (!$staffId) continue;
+        DB::transaction(function () use ($request, $activeSession, $branchId) {
+            foreach ($request->assigned_staff as $key => $data) {
+                $staffId = $data['staff_id'] ?? null;
+                if (!$staffId) continue;
 
-            $isAssigned = !empty($data['is_assigned']);
+                $isAssigned = !empty($data['is_assigned']);
 
-            if (str_starts_with($key, 'new_')) {
-                \App\Models\Attendance::create([
-                    'user_id' => $staffId,
-                    'date' => now()->toDateString(),
-                    'status' => 'present',
-                    'register_session_id' => $activeSession->id,
-                    'is_assigned' => $isAssigned,
-                ]);
-            } else {
-                $attendance = \App\Models\Attendance::find($key);
-                if ($attendance && $attendance->register_session_id === $activeSession->id) {
-                    $attendance->is_assigned = $isAssigned;
-                    $attendance->save();
+                if (str_starts_with($key, 'new_')) {
+                    \App\Models\Attendance::create([
+                        'user_id' => $staffId,
+                        'date' => now()->toDateString(),
+                        'status' => 'present',
+                        'register_session_id' => $activeSession->id,
+                        'is_assigned' => $isAssigned,
+                    ]);
+                } else {
+                    $attendance = \App\Models\Attendance::find($key);
+                    if ($attendance && $attendance->register_session_id === $activeSession->id) {
+                        $attendance->is_assigned = $isAssigned;
+                        $attendance->save();
+                    }
                 }
             }
-        }
 
-        \App\Models\BranchLog::create([
-            'branch_id' => $branchId,
-            'user_id' => auth()->id(),
-            'action' => 'attendance_updated',
-            'description' => 'Staff attendance updated during shift.',
-        ]);
+            \App\Models\BranchLog::create([
+                'branch_id' => $branchId,
+                'user_id' => auth()->id(),
+                'action' => 'attendance_updated',
+                'description' => 'Staff attendance updated during shift.',
+            ]);
+        });
 
         return redirect()->back()->with('success', 'Staff attendance updated successfully.');
     }
@@ -357,22 +362,24 @@ class DashboardController extends Controller
 
         $finalCash = $session->opening_cash + $cashCollected - $bankDepositsLogged;
 
-        $session->update([
-            'closing_cash' => $finalCash,
-            'closed_at'    => now(),
-            'status'       => 'closed',
-            'closed_by'    => auth()->id(),
-        ]);
+        DB::transaction(function () use ($session, $finalCash, $branchId) {
+            $session->update([
+                'closing_cash' => $finalCash,
+                'closed_at'    => now(),
+                'status'       => 'closed',
+                'closed_by'    => auth()->id(),
+            ]);
 
-        // ── Sync branches.cash_balance so it stays accurate across sessions ──
-        Branch::where('id', $branchId)->update(['cash_balance' => $finalCash]);
+            // ── Sync branches.cash_balance so it stays accurate across sessions ──
+            Branch::where('id', $branchId)->update(['cash_balance' => $finalCash]);
 
-        \App\Models\BranchLog::create([
-            'branch_id'   => $branchId,
-            'user_id'     => auth()->id(),
-            'action'      => 'shift_closed',
-            'description' => 'Shift closed. Final Cash: Rs. ' . number_format($finalCash, 2),
-        ]);
+            \App\Models\BranchLog::create([
+                'branch_id'   => $branchId,
+                'user_id'     => auth()->id(),
+                'action'      => 'shift_closed',
+                'description' => 'Shift closed. Final Cash: Rs. ' . number_format($finalCash, 2),
+            ]);
+        });
 
         // Redirect to dashboard directly (not back()) for clean state
         return $this->dashboardRedirect()->with('success', 'Shift closed. Final Cash: Rs.' . number_format($finalCash, 2) . '.');

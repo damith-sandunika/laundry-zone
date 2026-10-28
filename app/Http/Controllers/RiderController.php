@@ -96,92 +96,104 @@ class RiderController extends Controller
 
         $appointment = $task->appointment;
         $isWaitingForPayment = false;
+        $orderToNotify = null;
 
-        if ($task->task_type === 'pickup') {
-            // Rider picked up from customer, heading to branch
-            $appointment->update(['status' => 'picked_up', 'picked_up_at' => now()]);
-            // Sync Order status if linked
-            if ($appointment->order_id) {
-                $order = Order::find($appointment->order_id);
-                if ($order) {
-                    $order->update(['status' => 'picked_up']);
-                    try {
-                        OrderStatusHistory::create([
-                            'order_id' => $order->id,
-                            'status' => 'picked_up',
-                            'changed_by' => auth()->id(),
-                            'note' => 'Rider picked up garments from customer.',
-                        ]);
-                    } catch (\Exception $e) {
-                        \Log::warning('OrderStatusHistory failed (riderPickedUp): ' . $e->getMessage());
+        DB::transaction(function () use ($request, $task, $appointment, &$isWaitingForPayment, &$orderToNotify) {
+            if ($task->task_type === 'pickup') {
+                // Rider picked up from customer, heading to branch
+                $appointment->update(['status' => 'picked_up', 'picked_up_at' => now()]);
+                // Sync Order status if linked
+                if ($appointment->order_id) {
+                    $order = Order::find($appointment->order_id);
+                    if ($order) {
+                        $order->update(['status' => 'picked_up']);
+                        try {
+                            OrderStatusHistory::create([
+                                'order_id' => $order->id,
+                                'status' => 'picked_up',
+                                'changed_by' => auth()->id(),
+                                'note' => 'Rider picked up garments from customer.',
+                            ]);
+                        } catch (\Exception $e) {
+                            \Log::warning('OrderStatusHistory failed (riderPickedUp): ' . $e->getMessage());
+                        }
                     }
                 }
-            }
-        } elseif ($task->task_type === 'delivery') {
-            // Rider delivered to customer
-            $appointment?->update(['status' => 'delivered']);
-            $order = Order::find($task->order_id);
-            if ($order) {
-                $balance = $order->total - $order->paid_amount;
-                
-                // Determine the payment method chosen by the rider to settle the balance
-                $paymentMethod = $request->input('payment_method', 'cash');
-                
-                if ($balance > 0 && in_array($paymentMethod, ['cash', 'card', 'bank_transfer'])) {
-                    $actualMethod = $paymentMethod === 'bank_transfer' ? 'bank' : $paymentMethod;
-                    PaymentTransaction::create([
+            } elseif ($task->task_type === 'delivery') {
+                // Rider delivered to customer
+                $appointment?->update(['status' => 'delivered']);
+                $order = Order::find($task->order_id);
+                if ($order) {
+                    $balance = $order->total - $order->paid_amount;
+                    
+                    // Determine the payment method chosen by the rider to settle the balance
+                    $paymentMethod = $request->input('payment_method', 'cash');
+                    
+                    if ($balance > 0 && in_array($paymentMethod, ['cash', 'card', 'bank_transfer'])) {
+                        $actualMethod = $paymentMethod === 'bank_transfer' ? 'bank' : $paymentMethod;
+                        PaymentTransaction::create([
+                            'order_id' => $order->id,
+                            'amount' => $balance,
+                            'payment_method' => $actualMethod,
+                            'created_by' => auth()->id(),
+                            'status' => 'completed',
+                            'transaction_id' => 'TXN-' . strtoupper(uniqid()),
+                            'collected_from_rider_at' => $actualMethod === 'cash' ? null : now() // Branch admin needs to collect cash from rider
+                        ]);
+
+                        $order->paid_amount += $balance;
+                        $order->payment_status = 'paid';
+                        
+                        if ($actualMethod === 'cash') {
+                            $isWaitingForPayment = true;
+                        }
+                    } elseif ($balance > 0 && $paymentMethod === 'credit') {
+                        $order->payment_status = 'pending';
+                        $order->payment_method = 'credit';
+                    }
+
+                    $updateData = [
+                        'status' => 'delivered',
+                        'delivered_at' => now(),
+                    ];
+
+                    if ($balance > 0) {
+                        $updateData['paid_amount'] = $order->paid_amount;
+                        $updateData['payment_status'] = $order->payment_status;
+                        $updateData['payment_method'] = isset($actualMethod) ? $actualMethod : ($paymentMethod === 'credit' ? 'credit' : null);
+                    }
+
+                    $order->update($updateData);
+
+                    \App\Models\OrderStatusHistory::create([
                         'order_id' => $order->id,
-                        'amount' => $balance,
-                        'payment_method' => $actualMethod,
-                        'created_by' => auth()->id(),
-                        'status' => 'completed',
-                        'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-                        'collected_from_rider_at' => $actualMethod === 'cash' ? null : now() // Branch admin needs to collect cash from rider
+                        'status' => 'delivered',
+                        'changed_by' => auth()->id(),
+                        'note' => 'Delivered by rider',
                     ]);
 
-                    $order->paid_amount += $balance;
-                    $order->payment_status = 'paid';
-                    
-                    if ($actualMethod === 'cash') {
-                        $isWaitingForPayment = true;
-                    }
-                } elseif ($balance > 0 && $paymentMethod === 'credit') {
-                    $order->payment_status = 'pending';
-                    $order->payment_method = 'credit';
+                    $orderToNotify = $order;
                 }
+            }
 
-                $updateData = [
-                    'status' => 'delivered',
-                    'delivered_at' => now(),
-                ];
+            $newStatus = $isWaitingForPayment ? 'waiting_for_payment' : 'completed';
+            
+            $task->update([
+                'status' => $newStatus,
+                'completed_at' => $newStatus === 'completed' ? now() : null,
+            ]);
+        });
 
-                if ($balance > 0) {
-                    $updateData['paid_amount'] = $order->paid_amount;
-                    $updateData['payment_status'] = $order->payment_status;
-                    $updateData['payment_method'] = isset($actualMethod) ? $actualMethod : ($paymentMethod === 'credit' ? 'credit' : null);
-                }
-
-                $order->update($updateData);
-
-                \App\Models\OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => 'delivered',
-                    'changed_by' => auth()->id(),
-                    'note' => 'Delivered by rider',
-                ]);
-
+        if ($orderToNotify) {
+            try {
                 $commService = new \App\Services\CommunicationService();
-                $commService->sendDeliveryCompleted($order);
+                $commService->sendDeliveryCompleted($orderToNotify);
+            } catch (\Exception $e) {
+                \Log::warning('sendDeliveryCompleted failed: ' . $e->getMessage());
             }
         }
 
         $newStatus = $isWaitingForPayment ? 'waiting_for_payment' : 'completed';
-        
-        $task->update([
-            'status' => $newStatus,
-            'completed_at' => $newStatus === 'completed' ? now() : null,
-        ]);
-
         return response()->json(['success' => true, 'status' => $newStatus]);
     }
 
@@ -190,43 +202,37 @@ class RiderController extends Controller
     {
         $this->authorizeRiderTask($task);
 
-        if ($task->task_type === 'delivery') {
-            $order = Order::find($task->order_id);
-            if ($order) {
-                // Find the previous status before it was assigned to a rider
-                $previousHistory = OrderStatusHistory::where('order_id', $order->id)
-                    ->whereNotIn('status', ['out_for_delivery', 'rider_assigned'])
-                    ->orderBy('id', 'desc')
-                    ->first();
-                
-                $revertStatus = $previousHistory ? $previousHistory->status : 'done';
+        DB::transaction(function () use ($task) {
+            if ($task->task_type === 'delivery') {
+                $order = Order::find($task->order_id);
+                if ($order) {
+                    $order->update([
+                        'status' => 'returned_from_delivery', // Explicitly marking it as returned
+                        'delivered_at' => null
+                    ]);
 
-                $order->update([
-                    'status' => 'returned_from_delivery', // Explicitly marking it as returned
-                    'delivered_at' => null
-                ]);
+                    OrderStatusHistory::create([
+                        'order_id' => $order->id,
+                        'status' => 'returned_from_delivery',
+                        'changed_by' => auth()->id(),
+                        'note' => 'Delivery returned by rider (Customer unavailable).',
+                    ]);
+                }
+                if ($task->appointment) {
+                    $task->appointment->update(['status' => 'returned_from_delivery']);
+                }
+            } elseif ($task->task_type === 'pickup') {
+                if ($task->appointment) {
+                    $task->appointment->update(['status' => 'pending']);
+                }
+            }
 
-                OrderStatusHistory::create([
-                    'order_id' => $order->id,
-                    'status' => 'returned_from_delivery',
-                    'changed_by' => auth()->id(),
-                    'note' => 'Delivery returned by rider (Customer unavailable).',
-                ]);
-            }
-            if ($task->appointment) {
-                $task->appointment->update(['status' => 'returned_from_delivery']);
-            }
-        } elseif ($task->task_type === 'pickup') {
-            if ($task->appointment) {
-                $task->appointment->update(['status' => 'pending']);
-            }
-        }
-
-        $task->update([
-            'status' => 'returned',
-            'completed_at' => now(), // Technically finished processing this task
-            'notes' => 'Returned: Customer unavailable'
-        ]);
+            $task->update([
+                'status' => 'returned',
+                'completed_at' => now(), // Technically finished processing this task
+                'notes' => 'Returned: Customer unavailable'
+            ]);
+        });
 
         return response()->json(['success' => true, 'status' => 'returned']);
     }

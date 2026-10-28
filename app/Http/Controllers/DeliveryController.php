@@ -204,37 +204,38 @@ class DeliveryController extends Controller
 
         try {
             $order = \App\Models\Order::findOrFail($orderId);
-            
-            // Assign to cubby
-            \App\Models\OrderCubby::updateOrCreate(
-                ['order_id' => $order->id],
-                ['cubby_id' => $request->cubby_id, 'assigned_at' => now()]
-            );
-            \App\Models\Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
-
             $isWorkshop = auth()->user()->branch && auth()->user()->branch->type === 'workshop';
             $status = $isWorkshop ? 'processing' : 'done';
 
-            $order->update(['status' => $status]);
+            \Illuminate\Support\Facades\DB::transaction(function () use ($order, $request, $isWorkshop, $status) {
+                // Assign to cubby
+                \App\Models\OrderCubby::updateOrCreate(
+                    ['order_id' => $order->id],
+                    ['cubby_id' => $request->cubby_id, 'assigned_at' => now()]
+                );
+                \App\Models\Cubby::where('id', $request->cubby_id)->update(['status' => 'occupied']);
 
-            \App\Models\OrderStatusHistory::create([
-                'order_id' => $order->id,
-                'status' => $status,
-                'changed_by' => auth()->id(),
-                'note' => 'Return confirmed. Assigned to cubby and marked as ' . $status . '.',
-            ]);
+                $order->update(['status' => $status]);
 
-            // Update workshop dispatch if workshop
-            if ($isWorkshop) {
-                \App\Models\WorkshopDispatch::where('order_id', $order->id)
-                    ->orderBy('id', 'desc')
-                    ->first()?->update(['status' => 'completed_at_workshop']);
-            }
+                \App\Models\OrderStatusHistory::create([
+                    'order_id' => $order->id,
+                    'status' => $status,
+                    'changed_by' => auth()->id(),
+                    'note' => 'Return confirmed. Assigned to cubby and marked as ' . $status . '.',
+                ]);
 
-            // Update appointment
-            if ($order->deliveryAppointment) {
-                $order->deliveryAppointment->update(['status' => 'returned']);
-            }
+                // Update workshop dispatch if workshop
+                if ($isWorkshop) {
+                    \App\Models\WorkshopDispatch::where('order_id', $order->id)
+                        ->orderBy('id', 'desc')
+                        ->first()?->update(['status' => 'completed_at_workshop']);
+                }
+
+                // Update appointment
+                if ($order->deliveryAppointment) {
+                    $order->deliveryAppointment->update(['status' => 'returned']);
+                }
+            });
 
             $tabName = $isWorkshop ? 'completed' : 'done';
             return redirect()->route($isWorkshop ? 'workshop.operations' : 'orders.index', ['tab' => $tabName])->with('success', 'Return confirmed and assigned to cubby.');

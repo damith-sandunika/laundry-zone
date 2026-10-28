@@ -173,13 +173,31 @@
                             </div>
 
                             <!-- Discount -->
-                            <div class="flex justify-between items-center bg-slate-800/50 p-1.5 rounded-md group">
-                                <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">Discount
-                                    (%)</span>
-                                <div class="flex items-center">
-                                    <input type="number" x-model.number="discountPercent"
-                                        class="w-10 bg-slate-800 border-none rounded text-right text-white text-[12px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
-                                        min="0" max="100">
+                            <div class="flex flex-col justify-center bg-slate-800/50 p-1.5 rounded-md group">
+                                <div class="flex items-center justify-between">
+                                    <span class="text-slate-400 text-[10px] font-bold uppercase tracking-wide">
+                                        Discount (<span x-text="discountType === 'percent' ? '%' : 'Rs'"></span>)
+                                    </span>
+                                    <button type="button" @click="toggleDiscountType()"
+                                        class="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-black transition-all bg-blue-600/30 text-blue-300 hover:bg-blue-600/50 border border-blue-500/30 shadow-sm"
+                                        :title="'Switch to ' + (discountType === 'percent' ? 'Fixed (Rs)' : 'Percentage (%)')">
+                                        <span :class="discountType === 'percent' ? 'text-white font-black' : 'text-slate-400'">%</span>
+                                        <span class="text-slate-500 text-[8px]">⇄</span>
+                                        <span :class="discountType === 'fixed' ? 'text-white font-black' : 'text-slate-400'">Rs</span>
+                                    </button>
+                                </div>
+                                <div class="flex items-center justify-between mt-0.5">
+                                    <span x-show="discountAmount > 0" class="text-[9px] font-semibold text-emerald-400/80"
+                                        x-text="discountType === 'percent' ? ('-Rs. ' + discountAmount.toFixed(2)) : ('(' + (subtotal > 0 ? ((discountAmount / subtotal) * 100).toFixed(1) : 0) + '%)')">
+                                    </span>
+                                    <div class="flex items-center ml-auto">
+                                        <input x-show="discountType === 'percent'" type="number" x-model.number="discountPercent"
+                                            class="w-12 bg-slate-800 border border-slate-700/50 rounded text-right text-emerald-400 text-[11px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
+                                            min="0" max="100" placeholder="0">
+                                        <input x-show="discountType === 'fixed'" type="number" x-model.number="discountFixed"
+                                            class="w-16 bg-slate-800 border border-slate-700/50 rounded text-right text-emerald-400 text-[11px] font-black p-0.5 hide-arrows focus:ring-1 focus:ring-blue-500"
+                                            min="0" :max="subtotal" step="0.01" placeholder="0.00">
+                                    </div>
                                 </div>
                             </div>
 
