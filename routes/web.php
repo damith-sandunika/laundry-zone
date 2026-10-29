@@ -5,7 +5,6 @@ use App\Http\Controllers\BranchPlanController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\CustomerSiteController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\DeliveryController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HRController;
 use App\Http\Controllers\HRDashboardController;
@@ -21,7 +20,6 @@ use App\Http\Controllers\Reports\SalesReportController;
 use App\Http\Controllers\Reports\ServiceReportController;
 use App\Http\Controllers\Reports\CustomerReportController;
 use App\Http\Controllers\Reports\ShiftReportController;
-use App\Http\Controllers\RiderController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SmsTemplateController;
 use App\Http\Controllers\EmailTemplateController;
@@ -37,6 +35,9 @@ use App\Http\Controllers\Settings\PackageSettingsController;
 use App\Http\Controllers\Settings\InventorySettingsController;
 use App\Models\Order;
 use Illuminate\Support\Facades\Route;
+
+// ─── Super Admin SaaS Platform Routes ───
+require __DIR__ . '/super_admin.php';
 
 // ─── App Redirect ───
 Route::redirect('/app', '/stafflogin');
@@ -145,7 +146,6 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
     Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
-    Route::post('/pos/delivery', [POSController::class, 'storeDelivery'])->name('pos.delivery.store');
 
     Route::post('/customers/pos', [CustomerController::class, 'store'])->name('customers.store.pos');
     Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
@@ -153,7 +153,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/customers/{customer}/bulk-credit-payment', [CustomerController::class, 'bulkCreditPayment'])->name('customers.bulkCreditPayment');
     Route::get('/customers/top', [\App\Http\Controllers\TopCustomersController::class, 'index'])->name('customers.top');
     Route::resource('customers', CustomerController::class);
-    Route::resource('campaigns', \App\Http\Controllers\PromotionalCampaignController::class);
 
     Route::post('/orders/{order:id}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
     Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store')->middleware('throttle:10,1');
@@ -165,11 +164,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/orders/{order:id}/label', [OrderController::class, 'printLabel'])->name('orders.printLabel');
     Route::get('/orders/{order:id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
     Route::post('/orders/{order:id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::post('/orders/{order:id}/dispatch-delivery', [OrderController::class, 'dispatchDelivery'])->name('orders.dispatchDelivery');
     Route::post('/orders/{order:id}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
     Route::post('/orders/{order:id}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
-    Route::post('/orders/{order:id}/convert-to-delivery', [OrderController::class, 'convertToDelivery'])->name('orders.convertToDelivery');
-    Route::post('/orders/{order:id}/convert-to-pickup', [OrderController::class, 'convertToPickup'])->name('orders.convertToPickup');
     Route::post('/orders/{order:id}/refund-overpayment', [OrderController::class, 'refundOverpayment'])->name('orders.refundOverpayment')->middleware('throttle:10,1');
     Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve')->middleware('throttle:10,1');
     Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject')->middleware('throttle:10,1');
@@ -201,20 +197,6 @@ Route::middleware(['auth'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // ─── RIDER ROUTES ───
-    Route::middleware(['rider'])->prefix('rider')->name('rider.')->group(function () {
-        Route::get('/dashboard', [RiderController::class, 'dashboard'])->name('dashboard');
-        Route::get('/tasks', [RiderController::class, 'tasks'])->name('tasks');
-        Route::post('/tasks/{task}/accept', [RiderController::class, 'accept'])->name('tasks.accept');
-        Route::post('/tasks/{task}/on-way', [RiderController::class, 'onWay'])->name('tasks.onWay');
-        Route::post('/tasks/{task}/arrived', [RiderController::class, 'arrived'])->name('tasks.arrived');
-        Route::post('/tasks/{task}/complete', [RiderController::class, 'complete'])->name('tasks.complete');
-        Route::post('/tasks/{task}/return', [RiderController::class, 'returnTask'])->name('tasks.return');
-        Route::post('/tasks/{task}/location', [RiderController::class, 'updateLocation'])->name('tasks.location');
-        Route::get('/tasks/{task}/create-order', [RiderController::class, 'createOrder'])->name('createOrder');
-        Route::post('/tasks/{task}/store-order', [RiderController::class, 'storeOrder'])->name('storeOrder');
-    });
-
     // ─── WORKSHOP ROUTES ───
     Route::middleware(['workshop'])->prefix('workshop')->name('workshop.')->group(function () {
         Route::get('/dashboard', [WorkshopDashboardController::class, 'dashboard'])->name('dashboard');
@@ -225,23 +207,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/dispatches/{dispatch}/complete', [WorkshopOperationsController::class, 'complete'])->name('complete');
         Route::post('/dispatches/{dispatch}/handover', [WorkshopOperationsController::class, 'handover'])->name('handover');
         Route::post('/dispatches/{dispatch}/return', [WorkshopOperationsController::class, 'returnToBranch'])->name('return');
-        Route::post('/dispatches/{dispatch}/delivery', [WorkshopOperationsController::class, 'dispatchDelivery'])->name('dispatchDelivery');
         Route::post('/dispatches/{dispatch}/request-payment', [WorkshopBillingController::class, 'requestPayment'])->name('requestPayment');
         Route::post('/dispatches/{dispatch}/approve-payment', [WorkshopBillingController::class, 'approvePayment'])->name('approvePayment');
         Route::post('/bulk-status', [WorkshopOperationsController::class, 'bulkStatus'])->name('bulkStatus');
     });
 
-    // ─── DELIVERY (BRANCH ADMIN & STAFF & WORKSHOP ADMIN) ───
-    // Authorization is handled inside DeliveryController
-    Route::get('/delivery', [DeliveryController::class, 'index'])->name('delivery.index');
-    Route::get('/delivery/{appointment}/confirm', [DeliveryController::class, 'confirm'])->name('delivery.confirm');
-    Route::post('/delivery/{appointment}/confirm-action', [DeliveryController::class, 'confirmAction'])->name('delivery.confirmAction');
-    Route::post('/delivery/{appointment}/cancel', [DeliveryController::class, 'cancel'])->name('delivery.cancel');
-    Route::post('/delivery/{appointment}/assign-rider', [DeliveryController::class, 'assignRider'])->name('delivery.assignRider');
-    Route::post('/delivery/{appointment}/at-branch', [DeliveryController::class, 'markAtBranch'])->name('delivery.atBranch');
-    Route::post('/delivery/{appointment}/assign-delivery-rider', [DeliveryController::class, 'assignDeliveryRider'])->name('delivery.assignDeliveryRider');
-    Route::post('/delivery/{appointment}/collect-cash', [DeliveryController::class, 'collectCash'])->name('delivery.collectCash');
-    Route::post('/delivery/{order}/confirm-return', [DeliveryController::class, 'confirmReturn'])->name('delivery.confirmReturn');
 
     // ─── INVENTORY (WORKSHOP ADMIN) ───
     Route::middleware(['workshop'])->group(function () {
@@ -307,11 +277,7 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/settings/turnaround-types/{turnaroundType}', [ServiceSettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
         Route::delete('/settings/turnaround-types/{turnaroundType}', [ServiceSettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
 
-        // Delivery & Pickup
-        Route::post('/settings/delivery-global', [LogisticsSettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
-        Route::post('/settings/delivery-ranges', [LogisticsSettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
-        Route::delete('/settings/delivery-ranges/{deliveryRange}', [LogisticsSettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
-
+        // Logistics / Pickups
         Route::post('/settings/pickup-time-periods', [LogisticsSettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
         Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [LogisticsSettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
 
@@ -340,9 +306,6 @@ Route::middleware(['auth'])->group(function () {
             Route::put('/email-templates/{template}', [EmailTemplateController::class, 'update'])->name('email-templates.update');
             Route::post('/email-templates/toggle', [EmailTemplateController::class, 'toggleGlobal'])->name('email-templates.toggleGlobal');
             Route::post('/email-templates/seed', [EmailTemplateController::class, 'seedDefault'])->name('email-templates.seedDefault');
-
-            Route::post('/promotions/reorder', [App\Http\Controllers\PromotionController::class, 'reorder'])->name('promotions.reorder');
-            Route::resource('promotions', App\Http\Controllers\PromotionController::class)->except(['create', 'show', 'edit']);
         });
 
         // HR Routes

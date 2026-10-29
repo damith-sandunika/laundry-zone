@@ -21,8 +21,8 @@ class RoleMiddleware
 
         $user = auth()->user();
 
-        // Super admin has access to everything
-        if ($user->role === 'super_admin') {
+        // Owner / Super admin has access to everything
+        if (in_array($user->role, ['owner', 'super_admin'])) {
             return $next($request);
         }
 

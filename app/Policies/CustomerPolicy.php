@@ -10,7 +10,7 @@ class CustomerPolicy
 {
     public function before(User $user, string $ability): bool|null
     {
-        if ($user->role === 'super_admin') {
+        if (in_array($user->role, ['owner', 'super_admin'])) {
             return true;
         }
         return null;
@@ -59,7 +59,7 @@ class CustomerPolicy
      */
     public function delete(User $user, Customer $customer): bool
     {
-        return $user->role === 'super_admin';
+        return in_array($user->role, ['owner', 'super_admin']);
     }
 
     /**

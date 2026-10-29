@@ -2,7 +2,6 @@
 
 use App\Http\Middleware\AdminMiddleware;
 use App\Http\Middleware\ApiKeyMiddleware;
-use App\Http\Middleware\RiderMiddleware;
 use App\Http\Middleware\RoleMiddleware;
 use App\Http\Middleware\WorkshopMiddleware;
 
@@ -20,18 +19,21 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'role'    => RoleMiddleware::class,
-            'admin'   => AdminMiddleware::class,
-            'rider'   => RiderMiddleware::class,
-            'workshop'=> WorkshopMiddleware::class,
-            'api.key' => ApiKeyMiddleware::class,
+            'role'        => RoleMiddleware::class,
+            'admin'       => AdminMiddleware::class,
+            'workshop'    => WorkshopMiddleware::class,
+            'api.key'     => ApiKeyMiddleware::class,
+            'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
         ]);
         
-        $middleware->web(append: [
-            \App\Http\Middleware\ExcludeRiderMiddleware::class,
+        $middleware->web(prepend: [
+            \App\Http\Middleware\IdentifyTenant::class,
         ]);
         
         $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+            if ($request->is('super-admin*')) {
+                return '/super-admin/login';
+            }
             if ($request->is('customer/*') || $request->is('book')) {
                 return '/customer/login';
             }
@@ -39,6 +41,9 @@ return Application::configure(basePath: dirname(__DIR__))
         });
 
         $middleware->redirectUsersTo(function (\Illuminate\Http\Request $request) {
+            if (Auth::guard('super_admin')->check()) {
+                return '/super-admin/dashboard';
+            }
             if (Auth::guard('customer')->check() && $request->is('customer/*')) {
                 return '/customer/dashboard';
             }

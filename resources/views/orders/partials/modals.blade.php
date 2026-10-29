@@ -4,8 +4,4 @@
 
             @include('orders.partials.modals.mark-done-cubbet')
 
-            @include('orders.partials.modals.delivery-payment')
-
         @include('orders.partials.modals.inline-edit')
-
-        @include('orders.partials.modals.dispatch-delivery')

@@ -139,10 +139,9 @@
                                         <label class="block text-xs font-bold text-gray-700 mb-1">System Role</label>
                                         <select name="role" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                             <option value="staff">Staff</option>
-                                            <option value="rider">🚗 Rider</option>
                                             <option value="workshop_admin">⚙️ Workshop Admin</option>
                                             <option value="branch_admin">🏪 Branch Admin</option>
-                                            @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
+                                            @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin' || auth()->user()->role === 'owner')
                                             <option value="super_admin">⭐ Super Admin</option>
                                             @endif
                                         </select>

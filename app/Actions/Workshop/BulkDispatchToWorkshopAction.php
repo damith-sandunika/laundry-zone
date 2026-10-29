@@ -28,25 +28,39 @@ class BulkDispatchToWorkshopAction
                 Order::whereIn('id', $data['order_ids'])
                     ->whereNotIn('status', ['dispatched_to_workshop'])
                     ->chunkById(100, function ($orders) use ($data, $userId) {
+                        $dispatchBatch = [];
+                        $orderIdsInChunk = [];
+                        $now = now();
+
                         foreach ($orders as $order) {
-                            WorkshopDispatch::create([
+                            $orderIdsInChunk[] = $order->id;
+                            $dispatchBatch[] = [
                                 'order_id' => $order->id,
                                 'branch_id' => $order->branch_id,
                                 'workshop_branch_id' => $data['workshop_branch_id'],
                                 'dispatched_by' => $userId,
                                 'status' => 'dispatched_to_workshop',
-                                'dispatched_at' => now(),
+                                'dispatched_at' => $now,
                                 'dispatch_notes' => $data['dispatch_notes'] ?? null,
-                            ]);
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
 
-                            $order->update([
+                        if (!empty($dispatchBatch)) {
+                            // 1. High-Performance Multi-Row Batch Insert
+                            WorkshopDispatch::insert($dispatchBatch);
+
+                            // 2. High-Performance Mass Order Status Update
+                            Order::whereIn('id', $orderIdsInChunk)->update([
                                 'status' => 'dispatched_to_workshop',
-                                'dispatched_to_workshop_at' => now(),
+                                'dispatched_to_workshop_at' => $now,
                                 'workshop_id' => $data['workshop_branch_id'],
+                                'updated_at' => $now,
                             ]);
                         }
                     });
-            });
+            }, 5);
 
             $workshopAdmins = User::whereIn('role', ['workshop_admin', 'staff'])->where('branch_id', $data['workshop_branch_id'])->get();
             Notification::send($workshopAdmins, new SystemAlertNotification($count . ' Orders Dispatched from Branch', route('workshop.dashboard'), 'branch_dispatch'));

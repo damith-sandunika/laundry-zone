@@ -282,11 +282,10 @@ class OrderController extends Controller
         $cubbies = Cubby::where('branch_id', $this->getActiveBranchId())->orderBy('name')->get();
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $workshops = Branch::workshops()->get();
-        $riders = \App\Models\User::where('role', 'rider')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
         $allBranches = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? Branch::all() : collect();
 
-        return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'riders', 'minimumDeliveryCost', 'allBranches', 'filterBranchId', 'tab', 'counts'));
+        return view('orders.index', compact('orders', 'cubbies', 'categories', 'workshops', 'minimumDeliveryCost', 'allBranches', 'filterBranchId', 'tab', 'counts'));
     }
     public function requestPayment(Order $order, Request $request)
     {
@@ -546,40 +545,6 @@ class OrderController extends Controller
                 'error' => $e->getMessage()
             ]);
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function convertToPickup(Request $request, Order $order, \App\Actions\Order\ProcessPickupConversionAction $action)
-    {
-        if (!$order->is_delivery_order && !$order->delivery_appointment_id) {
-            return response()->json(['success' => false, 'message' => 'This order is not a delivery order.']);
-        }
-
-        try {
-            $result = $action->execute($order, $request->all(), auth()->user());
-            return response()->json([
-                'success' => true,
-                'message' => $result['message'],
-                'overpayment' => $result['overpayment'] ?? 0
-            ]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Convert to Pickup Failed', ['order_id' => $order->id, 'error' => $e->getMessage()]);
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
-    }
-
-    public function dispatchDelivery(\App\Http\Requests\Order\DispatchDeliveryRequest $request, Order $order, \App\Actions\Order\DispatchOrderDeliveryAction $action)
-    {
-        try {
-            $result = $action->execute($order, $request->validated(), auth()->id());
-            return response()->json(array_merge(['success' => true], $result));
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Dispatch Delivery Failed', [
-                'order_id' => $order->id ?? null,
-                'user_id' => auth()->id(),
-                'error' => $e->getMessage()
-            ]);
-            return response()->json(['success' => false, 'message' => 'An error occurred while dispatching delivery.'], 500);
         }
     }
 

@@ -135,7 +135,7 @@ return [
     | When false, it disables delivery everywhere regardless of branch settings.
     |
     */
-    'delivery_enabled' => env('DELIVERY_ENABLED', true),
+    'delivery_enabled' => false,
 
 ];
 

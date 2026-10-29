@@ -16,7 +16,7 @@ class WorkshopMiddleware
 
         $user = auth()->user();
 
-        if (in_array($user->role, ['workshop_admin', 'super_admin']) || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop')) {
+        if (in_array($user->role, ['owner', 'workshop_admin', 'super_admin']) || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop')) {
             return $next($request);
         }
 

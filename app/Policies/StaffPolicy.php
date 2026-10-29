@@ -8,7 +8,7 @@ class StaffPolicy
 {
     public function before(User $user, string $ability): bool|null
     {
-        if ($user->role === 'super_admin') {
+        if (in_array($user->role, ['owner', 'super_admin'])) {
             return true;
         }
         return null;

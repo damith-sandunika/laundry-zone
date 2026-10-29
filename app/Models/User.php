@@ -39,17 +39,12 @@ class User extends Authenticatable
 
     public function canManageGlobalConfig()
     {
-        return $this->role === 'super_admin' || $this->can_manage_global_config;
+        return in_array($this->role, ['owner', 'super_admin']) || $this->can_manage_global_config;
     }
 
     public function orders()
     {
         return $this->hasMany(Order::class, 'created_by');
-    }
-
-    public function deliveryTasks()
-    {
-        return $this->hasMany(DeliveryTask::class, 'rider_id');
     }
 
     public function attendances()
@@ -73,9 +68,14 @@ class User extends Authenticatable
     }
 
     // ─── Role Helpers ───
+    public function isOwner(): bool
+    {
+        return in_array($this->role, ['owner', 'super_admin']);
+    }
+
     public function isSuperAdmin(): bool
     {
-        return $this->role === 'super_admin';
+        return in_array($this->role, ['owner', 'super_admin']);
     }
 
     public function isBranchAdmin(): bool
@@ -85,7 +85,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['super_admin', 'branch_admin']);
+        return in_array($this->role, ['owner', 'super_admin', 'branch_admin']);
     }
 
     public function isStaff(): bool
@@ -95,7 +95,7 @@ class User extends Authenticatable
 
     public function isRider(): bool
     {
-        return $this->role === 'rider';
+        return false;
     }
 
     public function isWorkshopAdmin(): bool
@@ -103,20 +103,19 @@ class User extends Authenticatable
         return $this->role === 'workshop_admin';
     }
 
-    // Has admin-level access (super_admin or branch_admin)
+    // Has admin-level access (owner, super_admin or branch_admin)
     public function hasAdminAccess(): bool
     {
-        return in_array($this->role, ['super_admin', 'branch_admin']);
+        return in_array($this->role, ['owner', 'super_admin', 'branch_admin']);
     }
 
     // Dashboard redirect based on role
     public function dashboardRoute(): string
     {
         return match ($this->role) {
-            'super_admin' => 'dashboard',
+            'owner', 'super_admin' => 'dashboard',
             'branch_admin',
             'staff' => 'dashboard',
-            'rider' => 'rider.dashboard',
             'workshop_admin' => 'workshop.dashboard',
             default => 'dashboard',
         };
@@ -124,7 +123,7 @@ class User extends Authenticatable
 
     public function canDeleteOrders(): bool
     {
-        if ($this->isSuperAdmin()) {
+        if ($this->isOwner()) {
             return true;
         }
 
@@ -138,10 +137,10 @@ class User extends Authenticatable
     public function roleLabel(): string
     {
         return match ($this->role) {
-            'super_admin' => 'Super Admin',
+            'owner' => 'Company Owner',
+            'super_admin' => 'Company Owner',
             'branch_admin' => 'Branch Admin',
             'staff' => 'Staff',
-            'rider' => 'Delivery Rider',
             'workshop_admin' => 'Workshop Admin',
             default => ucfirst($this->role),
         };

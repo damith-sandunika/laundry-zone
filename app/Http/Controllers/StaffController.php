@@ -48,7 +48,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:255',
-            'role' => 'required|in:branch_admin,staff,rider,workshop_admin,super_admin',
+            'role' => 'required|in:owner,branch_admin,staff,workshop_admin,super_admin',
             'password' => 'required|string|min:8',
             'nic' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
@@ -70,8 +70,8 @@ class StaffController extends Controller
         $currentUserRole = auth()->user()->role;
 
         $role = $request->role;
-        // Only super_admin can create super_admin users
-        if ($role === 'super_admin' && $currentUserRole !== 'super_admin') {
+        // Only owner / super_admin can create owner users
+        if (in_array($role, ['owner', 'super_admin']) && !in_array($currentUserRole, ['owner', 'super_admin'])) {
             $role = 'staff';
         }
 
@@ -158,7 +158,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,'.$staff->id,
             'phone' => 'nullable|string|max:50',
-            'role' => 'required|in:branch_admin,staff,super_admin,rider,workshop_admin',
+            'role' => 'required|in:owner,branch_admin,staff,super_admin,workshop_admin',
             'is_active' => 'required|boolean',
             'nic' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
@@ -188,8 +188,8 @@ class StaffController extends Controller
         $profileData['hourly_rate'] = $profileData['hourly_rate'] ?? 0;
         $profileData['basic_salary'] = $profileData['basic_salary'] ?? 0;
 
-        // Only super_admin can set role to super_admin
-        if (isset($data['role']) && $data['role'] === 'super_admin' && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
+        // Only owner / super_admin can set role to owner / super_admin
+        if (isset($data['role']) && in_array($data['role'], ['owner', 'super_admin']) && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             unset($data['role']); // Keep existing role
         }
 

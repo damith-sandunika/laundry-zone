@@ -4,7 +4,6 @@
     
     // Convert to JSON for Alpine
     $dispatchJson = $dispatch ? $dispatch->toJson() : 'null';
-    $riders = \App\Models\User::where('role', 'rider')->get();
     $cubbies = \App\Models\Cubby::where('branch_id', auth()->user()->branch_id)->where('is_active', true)->get();
 @endphp
 

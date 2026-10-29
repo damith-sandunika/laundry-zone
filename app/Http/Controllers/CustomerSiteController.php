@@ -17,6 +17,10 @@ class CustomerSiteController extends Controller
 {
     public function home()
     {
+        if (!\App\Services\Tenancy\TenantManager::hasTenant()) {
+            return redirect()->route('super_admin.login');
+        }
+
         $redirectUrl = \App\Models\Setting::get('site_landing_page', '');
         if (!empty($redirectUrl)) {
             return redirect($redirectUrl);

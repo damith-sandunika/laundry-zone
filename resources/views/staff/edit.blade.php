@@ -71,10 +71,9 @@
                         <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">Account Role <span class="text-red-500">*</span></label>
                         <select name="role" class="w-full text-sm bg-gray-50 border-gray-200 rounded-lg focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all">
                             <option value="staff" {{ $staff->role === 'staff' ? 'selected' : '' }}>Staff</option>
-                            <option value="rider" {{ $staff->role === 'rider' ? 'selected' : '' }}>🚗 Rider</option>
                             <option value="workshop_admin" {{ $staff->role === 'workshop_admin' ? 'selected' : '' }}>⚙️ Workshop Admin</option>
                             <option value="branch_admin" {{ $staff->role === 'branch_admin' ? 'selected' : '' }}>🏪 Branch Admin</option>
-                            @if(auth()->user()->isSuperAdmin())
+                            @if(auth()->user()->isSuperAdmin() || auth()->user()->role === 'owner')
                             <option value="super_admin" {{ $staff->role === 'super_admin' ? 'selected' : '' }}>⭐ Super Admin</option>
                             @endif
                         </select>

@@ -7,7 +7,6 @@
 
     @include('website.partials.hero')
     @include('website.partials.services')
-    @include('website.partials.promotions')
     @include('website.partials.how-it-works')
     @include('website.partials.why-choose-us')
     @include('website.partials.google-reviews')

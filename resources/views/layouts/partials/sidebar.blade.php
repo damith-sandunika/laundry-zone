@@ -18,13 +18,13 @@
                     $branchType = auth()->user()->branch->type ?? 'branch';
                     $isCentralized = \App\Models\Setting::get('centralized_management', '1') == '1';
                     $isGlobalManager = auth()->user()->canManageGlobalConfig();
-                    $isSuperAdmin = $role === 'super_admin';
+                    $isSuperAdmin = in_array($role, ['owner', 'super_admin']);
                     $canManageConfig = ($isCentralized && $isGlobalManager) || (!$isCentralized && !$isSuperAdmin);
                 @endphp
 
                 {{-- Dashboard: All roles --}}
-                <a href="{{ route($role === 'rider' ? 'rider.dashboard' : ($role === 'workshop_admin' ? 'workshop.dashboard' : 'dashboard')) }}"
-                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('dashboard') || request()->routeIs('rider.dashboard') || request()->routeIs('workshop.dashboard') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+                <a href="{{ route($role === 'workshop_admin' ? 'workshop.dashboard' : 'dashboard') }}"
+                    class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('dashboard') || request()->routeIs('workshop.dashboard') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                     <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                         stroke-width="2">
                         <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -36,8 +36,6 @@
                 </a>
 
                 @include('layouts.partials.sidebar.menu-super-admin')
-
-                @include('layouts.partials.sidebar.menu-rider')
 
                 @include('layouts.partials.sidebar.menu-workshop')
 

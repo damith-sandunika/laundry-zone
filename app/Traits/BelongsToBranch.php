@@ -18,7 +18,7 @@ trait BelongsToBranch
         static::creating(function ($model) {
             if (Auth::hasUser()) {
                 $user = Auth::user();
-                if ($user->role !== 'super_admin' && empty($model->branch_id)) {
+                if (!in_array($user->role, ['owner', 'super_admin']) && empty($model->branch_id)) {
                     $model->branch_id = $user->branch_id;
                 }
             }

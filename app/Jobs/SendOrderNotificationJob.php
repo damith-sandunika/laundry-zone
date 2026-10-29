@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Order;
 use App\Models\WorkshopDispatch;
 use App\Services\CommunicationService;
+use App\Traits\TenantAwareJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class SendOrderNotificationJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, TenantAwareJob;
 
     public $order;
     public $status;
@@ -24,6 +25,7 @@ class SendOrderNotificationJob implements ShouldQueue
     {
         $this->order = $order;
         $this->status = $status;
+        $this->captureTenantContext();
     }
 
     public function handle(): void

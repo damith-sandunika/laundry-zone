@@ -22,8 +22,8 @@ class BranchScope implements Scope
                 return;
             }
 
-            // Allow super_admin to see all branches' data
-            if ($user->role !== 'super_admin') {
+            // Allow owner and super_admin to see all branches' data
+            if (!in_array($user->role, ['owner', 'super_admin'])) {
                 if ($model instanceof \App\Models\Order) {
                     $builder->where(function($q) use ($model, $user) {
                         $q->where($model->getTable().'.branch_id', $user->branch_id)

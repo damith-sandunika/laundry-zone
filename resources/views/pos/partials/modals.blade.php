@@ -8,5 +8,3 @@
 
                 @include('pos.partials.modals.note')
     </div>
-
-        @include('pos.partials.modals.delivery-request')

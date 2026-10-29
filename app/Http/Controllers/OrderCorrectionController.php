@@ -97,7 +97,7 @@ class OrderCorrectionController extends Controller
         }
 
         $user = auth()->user();
-        $isAdmin = in_array($user->role, ['branch_admin', 'workshop_admin', 'super_admin']);
+        $isAdmin = in_array($user->role, ['owner', 'branch_admin', 'workshop_admin', 'super_admin']);
 
         try {
             DB::transaction(function () use ($order, $request, $oldData, $newData, $user, $isAdmin) {

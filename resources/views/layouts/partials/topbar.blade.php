@@ -28,21 +28,13 @@
                                 </svg>
                             </button>
 
-                            @if(auth()->user()->role === 'rider')
-                                <div
-                                    class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
-                                    Rider Dashboard</div>
-                            @else
-                                <div
-                                    class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
-                                    {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
-                            @endif
-
-
+                            <div
+                                class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
+                                {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
                         </div>
                         <div
                             class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">
-                            @if(auth()->user()->role !== 'rider' && $branch)
+                            @if($branch)
                                 {{ $branch->name }}
                             @else
                                 Laundry Management

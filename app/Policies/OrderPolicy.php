@@ -12,7 +12,7 @@ class OrderPolicy
      */
     public function before(User $user, string $ability): bool|null
     {
-        if ($user->role === 'super_admin') {
+        if (in_array($user->role, ['owner', 'super_admin'])) {
             return true;
         }
 
@@ -64,6 +64,6 @@ class OrderPolicy
      */
     public function delete(User $user, Order $order): bool
     {
-        return $user->role === 'super_admin';
+        return in_array($user->role, ['owner', 'super_admin']);
     }
 }

@@ -43,6 +43,11 @@ return [
             'provider' => 'users',
         ],
 
+        'super_admin' => [
+            'driver' => 'session',
+            'provider' => 'super_admins',
+        ],
+
         'customer' => [
             'driver' => 'session',
             'provider' => 'customers',
@@ -70,6 +75,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'super_admins' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\Central\SuperAdmin::class,
         ],
 
         'customers' => [

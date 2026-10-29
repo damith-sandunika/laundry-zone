@@ -34,11 +34,6 @@ Route::middleware(['api', 'throttle:api', 'api.key'])->group(function () {
     // ── Orders ────────────────────────────────────────────────────────────────
     Route::get('/orders', [BookingsController::class, 'indexProtected']);
 
-    Route::get('/orders/delivery', function (\Illuminate\Http\Request $request) {
-        $request->merge(['type' => 'delivery']);
-        return app(BookingsController::class)->indexProtected($request);
-    });
-
     Route::get('/orders/walkin', function (\Illuminate\Http\Request $request) {
         $request->merge(['type' => 'walkin']);
         return app(BookingsController::class)->indexProtected($request);

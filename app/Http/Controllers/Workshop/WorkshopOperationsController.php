@@ -71,12 +71,11 @@ class WorkshopOperationsController extends Controller
             ->count();
 
         $branches = Branch::where('type', 'branch')->get();
-        $riders = \App\Models\User::where('role', 'rider')->get();
         $cubbies = \App\Models\Cubby::where('branch_id', $branchId)->where('is_active', true)->get();
         $categories = \App\Models\ServiceCategory::with('services')->where('is_active', true)->get();
         $minimumDeliveryCost = \App\Models\Setting::get('minimum_delivery_cost', 0);
 
-        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'riders', 'cubbies', 'categories', 'minimumDeliveryCost', 'currentTab', 'selectedBranch', 'counts'));
+        return view('workshop.operations', compact('dispatches', 'completedToday', 'branches', 'cubbies', 'categories', 'minimumDeliveryCost', 'currentTab', 'selectedBranch', 'counts'));
     }
 
     public function receive(WorkshopDispatch $dispatch, \App\Actions\Workshop\ReceiveWorkshopDispatchAction $action)
@@ -139,20 +138,6 @@ class WorkshopOperationsController extends Controller
         }
     }
 
-    public function dispatchDelivery(\App\Http\Requests\Workshop\WorkshopDispatchDeliveryRequest $request, WorkshopDispatch $dispatch, \App\Actions\Workshop\WorkshopDispatchDeliveryAction $action)
-    {
-        try {
-            $result = $action->execute($dispatch, $request->validated(), auth()->id());
-            return response()->json(array_merge(['success' => true], $result));
-        } catch (\Exception $e) {
-            \Log::error('WorkshopOperationsController::dispatchDelivery error', [
-                'dispatch_id' => $dispatch->id ?? null,
-                'user_id' => auth()->id(),
-                'error' => $e->getMessage()
-            ]);
-            return response()->json(['success' => false, 'message' => 'An error occurred.'], 500);
-        }
-    }
 
     public function bulkStatus(\App\Http\Requests\Workshop\WorkshopBulkStatusUpdateRequest $request, \App\Actions\Workshop\WorkshopBulkStatusUpdateAction $action)
     {

@@ -69,24 +69,11 @@
                     <div style="display:flex;gap:6px;">
                         @if($isBranchUser)
                         <template x-if="dispatch.order.branch_id === dispatch.workshop_branch_id">
-                            <div style="display:flex;gap:6px;">
-                                <template x-if="dispatch.order.is_delivery_order && dispatch.order.delivery_appointment && dispatch.order.delivery_appointment.delivery_preference !== 'pickup_from_branch'">
-                                    <div style="display:flex;gap:6px;">
-                                        <button @click="showDeliveryModal = true"
-                                            style="padding:8px 16px;background:linear-gradient(to right,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                            onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                            <i class="fa-solid fa-truck"></i> Assign Rider
-                                        </button>
-                                    </div>
-                                </template>
-                                <template x-if="!dispatch.order.is_delivery_order || !dispatch.order.delivery_appointment || dispatch.order.delivery_appointment.delivery_preference === 'pickup_from_branch'">
-                                    <button @click="showHandoverModal = true"
-                                        style="padding:8px 16px;background:linear-gradient(to right,#10b981,#059669);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                        <i class="fa-solid fa-box-open"></i> Handover to Cust
-                                    </button>
-                                </template>
-                            </div>
+                            <button @click="showHandoverModal = true"
+                                style="padding:8px 16px;background:linear-gradient(to right,#10b981,#059669);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                                <i class="fa-solid fa-box-open"></i> Handover to Cust
+                            </button>
                         </template>
                         @endif
                         @if($isWorkshopUser)
@@ -111,29 +98,14 @@
                 </template>
                 @endif
 
-                <!-- Received at Branch (Ready for Final Handover/Delivery) -->
+                <!-- Received at Branch (Ready for Final Handover) -->
                 @if($isBranchUser)
                 <template x-if="dispatch.status === 'received_at_branch'">
-                    <div style="display:flex;gap:6px;">
-                        <!-- is_delivery_order + deliver_to_address → Assign Rider + Convert to Pickup -->
-                        <template x-if="dispatch.order.is_delivery_order && dispatch.order.delivery_appointment && dispatch.order.delivery_appointment.delivery_preference !== 'pickup_from_branch'">
-                            <div style="display:flex;gap:6px;">
-                                <button @click="showDeliveryModal = true"
-                                    style="padding:8px 16px;background:linear-gradient(to right,#3b82f6,#2563eb);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(59,130,246,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                    onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                    <i class="fa-solid fa-truck"></i> Assign Rider
-                                </button>
-                            </div>
-                        </template>
-                        <!-- Not a delivery order OR pickup_from_branch → Handover to Customer -->
-                        <template x-if="!dispatch.order.is_delivery_order || !dispatch.order.delivery_appointment || dispatch.order.delivery_appointment.delivery_preference === 'pickup_from_branch'">
-                            <button @click="showHandoverModal = true"
-                                style="padding:8px 16px;background:linear-gradient(to right,#10b981,#059669);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
-                                onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                                <i class="fa-solid fa-box-open"></i> Handover to Cust
-                            </button>
-                        </template>
-                    </div>
+                    <button @click="showHandoverModal = true"
+                        style="padding:8px 16px;background:linear-gradient(to right,#10b981,#059669);color:white;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;box-shadow:0 2px 4px rgba(16,185,129,0.35);transition:transform 0.1s;display:flex;align-items:center;gap:6px;"
+                        onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <i class="fa-solid fa-box-open"></i> Handover to Cust
+                    </button>
                 </template>
                 @endif
             </div>

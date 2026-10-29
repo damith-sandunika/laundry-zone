@@ -44,7 +44,7 @@
                     </template>
 
                     <!-- Info Alert for Staff -->
-                    @if(auth()->user()->role === 'staff' || auth()->user()->role === 'rider')
+                    @if(auth()->user()->role === 'staff')
                         <div
                             style="padding:12px 16px;background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:10px;color:#1e3a8a;font-size:12.5px;font-weight:500;line-height:1.5;">
                             <div style="display:flex;gap:8px;align-items:flex-start;">

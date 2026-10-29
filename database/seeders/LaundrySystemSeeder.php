@@ -22,9 +22,9 @@ class LaundrySystemSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
         // Create Branches
-        $b1 = Branch::create(['name' => 'Colombo Main Branch', 'phone' => '0112345678', 'address' => 'Colombo 07', 'is_active' => true, 'is_delivery_enabled' => true]);
-        $b2 = Branch::create(['name' => 'Nugegoda Branch', 'phone' => '0112345679', 'address' => 'Nugegoda', 'is_active' => true, 'is_delivery_enabled' => true]);
-        $b3 = Branch::create(['name' => 'Malabe Branch', 'phone' => '0112345680', 'address' => 'Malabe', 'is_active' => true, 'is_delivery_enabled' => true]);
+        $b1 = Branch::create(['name' => 'Colombo Main Branch', 'phone' => '0112345678', 'address' => 'Colombo 07', 'is_active' => true, 'is_delivery_enabled' => false]);
+        $b2 = Branch::create(['name' => 'Nugegoda Branch', 'phone' => '0112345679', 'address' => 'Nugegoda', 'is_active' => true, 'is_delivery_enabled' => false]);
+        $b3 = Branch::create(['name' => 'Malabe Branch', 'phone' => '0112345680', 'address' => 'Malabe', 'is_active' => true, 'is_delivery_enabled' => false]);
 
         // Create Super Admin
         User::create([

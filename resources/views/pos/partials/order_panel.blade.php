@@ -264,18 +264,6 @@
         </div>
 
         <div class="flex gap-2 flex-1 justify-end">
-            @if(config('app.delivery_enabled') && (!auth()->user()->branch || auth()->user()->branch->is_delivery_enabled))
-            <button @click="openDeliveryModal()"
-                class="px-4 py-2.5 rounded-xl text-[12px] font-black flex justify-center items-center gap-1.5 transition-all duration-300 bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md shadow-orange-500/25 hover:shadow-orange-500/40 hover:-translate-y-0.5">
-                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-                    <path stroke-linecap="round" stroke-linejoin="round"
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
-                Delivery
-            </button>
-            @endif
-
             <button
                 @click="if(!selectedCustomer) { alert('Please select a customer first.'); return; } if(!showCheckoutModal){ showCheckoutModal = true; if(!dueDate) { let d = new Date(); d.setDate(d.getDate() + 1); d.setHours(17, 0, 0, 0); dueDate = new Date(d.getTime() - (d.getTimezoneOffset() * 60000)).toISOString().slice(0, 16); } }"
                 :disabled="cart.length === 0"

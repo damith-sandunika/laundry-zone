@@ -149,10 +149,9 @@
                                 <label class="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">System Role <span class="text-red-500">*</span></label>
                                 <select name="role" class="w-full text-sm bg-gray-50 border-gray-200 rounded-xl focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all py-2.5 px-3.5">
                                     <option value="staff" {{ old('role') === 'staff' ? 'selected' : '' }}>Staff</option>
-                                    <option value="rider" {{ old('role') === 'rider' ? 'selected' : '' }}>🚗 Rider</option>
                                     <option value="workshop_admin" {{ old('role') === 'workshop_admin' ? 'selected' : '' }}>⚙️ Workshop Admin</option>
                                     <option value="branch_admin" {{ old('role') === 'branch_admin' ? 'selected' : '' }}>🏪 Branch Admin</option>
-                                    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
+                                    @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin' || auth()->user()->role === 'owner')
                                     <option value="super_admin" {{ old('role') === 'super_admin' ? 'selected' : '' }}>⭐ Super Admin</option>
                                     @endif
                                 </select>

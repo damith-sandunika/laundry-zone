@@ -1,6 +1,5 @@
     <script>
         window.__ordersPageData = {
-            riders: @js($riders),
             categories: @js($categories),
             orders: @js($orders instanceof \Illuminate\Pagination\LengthAwarePaginator ? $orders->items() : $orders),
             minimumDeliveryCost: {{ (float) ($minimumDeliveryCost ?? 0) }},
@@ -27,15 +26,6 @@
                 reverseOrderId: null,
                 reversePassword: '',
                 reverseError: '',
-                showDeliverModal: false,
-                deliverOrder: null,
-                deliveryPaymentMethod: 'cash',
-                showDispatchDeliveryModal: false,
-                deliveryMethod: 'rider',
-                deliveryRiderId: '',
-                deliveryPickmeCost: '',
-                isDispatchingDelivery: false,
-                riders: window.__ordersPageData.riders,
                 showEditModal: false,
                 editOrderData: null,
                 editCart: [],
@@ -70,8 +60,6 @@
                 openSlipModal(receipt, order) { this.selectedSlip = receipt; this.selectedOrder = order; this.showSlipModal = true; },
 
                 openCubbetPopup(order) { this.cubbetOrder = order; this.selectedCubby = ''; this.showCubbetModal = true; },
-                openDeliverPopup(order) { this.deliverOrder = order; this.deliveryPaymentMethod = 'cash'; this.showDeliverModal = true; },
-                openDeliveryDispatchPopup(order) { this.deliverOrder = order; this.deliveryMethod = 'rider'; this.deliveryRiderId = ''; this.deliveryPickmeCost = ''; this.deliveryPaymentMethod = 'cash'; this.isDispatchingDelivery = false; this.showDispatchDeliveryModal = true; },
 
                 getReceipts(order) {
                     if (!order || !order.payment_transactions) return [];
@@ -160,47 +148,6 @@
                 },
 
 
-                async submitDeliveryDispatch() {
-                    if (this.deliveryMethod === 'rider' && !this.deliveryRiderId) return alert('Select a rider');
-                    if (this.deliveryMethod === 'pickme_flash' && (this.deliveryPickmeCost === '' || this.deliveryPickmeCost === null)) return alert('Enter PickMe cost (0 is allowed)');
-                    this.isDispatchingDelivery = true;
-                    try {
-                        if (this.deliverOrder.status === 'returned_from_workshop' && this.deliverOrder.workshop_dispatch_id) {
-                            await fetch('/workshop/dispatches/' + this.deliverOrder.workshop_dispatch_id + '/received-at-branch', {
-                                method: 'POST',
-                                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }
-                            });
-                        }
-                        const res = await fetch('/orders/' + this.deliverOrder.id + '/dispatch-delivery', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                            body: JSON.stringify({ delivery_method: this.deliveryMethod, rider_id: this.deliveryRiderId, pickme_cost: this.deliveryPickmeCost, payment_method: this.deliveryPaymentMethod })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            if (this.deliverOrder && this.deliverOrder.id) {
-                                window.open('/orders/' + this.deliverOrder.id + '/print', '_blank');
-                            }
-                            setTimeout(() => { window.location.reload(); }, 500);
-                        }
-                        else { alert(data.message || 'Error dispatching delivery'); this.isDispatchingDelivery = false; }
-                    } catch (err) { alert('Connection error'); this.isDispatchingDelivery = false; }
-                },
-
-                async confirmDelivery(shouldPrint = true) {
-                    try {
-                        const res = await fetch('/orders/' + this.deliverOrder.id + '/status', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content },
-                            body: JSON.stringify({ status: 'delivered', payment_method: this.deliveryPaymentMethod })
-                        });
-                        const data = await res.json();
-                        if (!data.success) { alert('Error: ' + (data.message || 'Failed to update status')); return; }
-                        if (shouldPrint && data.print_bill_id) { window.open('/orders/' + data.print_bill_id + '/print', '_blank'); }
-                        else if (shouldPrint) { window.open('/orders/' + this.deliverOrder.id + '/print', '_blank'); }
-                        window.location.reload();
-                    } catch (err) { alert('Error updating status'); }
-                },
 
                 openEdit(order) {
                     this.editOrderData = order;

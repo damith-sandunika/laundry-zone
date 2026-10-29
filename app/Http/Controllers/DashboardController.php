@@ -31,11 +31,6 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Redirect riders to their own dashboard
-        if ($user->role === 'rider') {
-            return redirect()->route('rider.dashboard');
-        }
-
         // Redirect workshop admins or staff assigned to a workshop to workshop dashboard
         if ($user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop')) {
             return redirect()->route('workshop.dashboard');
