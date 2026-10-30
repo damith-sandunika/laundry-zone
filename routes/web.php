@@ -280,6 +280,9 @@ Route::middleware(['auth'])->group(function () {
         // Logistics / Pickups
         Route::post('/settings/pickup-time-periods', [LogisticsSettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
         Route::delete('/settings/pickup-time-periods/{pickupTimePeriod}', [LogisticsSettingsController::class, 'deletePickupTimePeriod'])->name('settings.deletePickupTimePeriod');
+        Route::post('/settings/delivery-ranges', [LogisticsSettingsController::class, 'storeDeliveryRange'])->name('settings.storeDeliveryRange');
+        Route::delete('/settings/delivery-ranges/{deliveryRange}', [LogisticsSettingsController::class, 'deleteDeliveryRange'])->name('settings.deleteDeliveryRange');
+        Route::post('/settings/delivery', [LogisticsSettingsController::class, 'updateDeliverySettings'])->name('settings.updateDeliverySettings');
 
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {

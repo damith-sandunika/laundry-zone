@@ -110,6 +110,7 @@
 </div>
 
 <!-- â”€â”€ Add Delivery Range Modal â”€â”€ -->
+@if(config('app.delivery_enabled'))
 <div id="add-delivery-range-modal"
     style="display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;background:rgba(15,23,42,0.4);backdrop-filter:blur(4px);">
     <div style="background:white;border-radius:20px;box-shadow:0 25px 50px rgba(0,0,0,0.2);width:100%;max-width:400px;overflow:hidden;"
@@ -165,6 +166,7 @@
         </form>
     </div>
 </div>
+@endif
 
 <!-- â”€â”€ Add Pickup Time Modal â”€â”€ -->
 <div id="add-pickup-time-modal"
