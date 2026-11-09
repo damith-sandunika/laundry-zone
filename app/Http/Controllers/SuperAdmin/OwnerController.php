@@ -110,4 +110,30 @@ class OwnerController extends Controller
 
         return back()->with('success', "Password for owner '{$owner->name}' has been reset successfully.");
     }
+
+    /**
+     * Delete an Owner record from Landlord.
+     */
+    public function destroy(TenantOwner $owner)
+    {
+        TenantManager::resetToLandlord();
+
+        $name = $owner->name;
+
+        // Optionally delete user in tenant DB
+        try {
+            $tenant = $owner->tenant;
+            if ($tenant) {
+                TenantManager::setTenant($tenant);
+                User::where('email', $owner->email)->delete();
+                TenantManager::resetToLandlord();
+            }
+        } catch (\Throwable $e) {
+            TenantManager::resetToLandlord();
+        }
+
+        $owner->delete();
+
+        return back()->with('success', "Owner '{$name}' has been removed successfully.");
+    }
 }

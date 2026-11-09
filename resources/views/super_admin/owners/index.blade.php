@@ -68,15 +68,27 @@
                                     @endif
                                 </td>
                                 <td class="px-5 py-4 text-right">
-                                    <div class="inline-flex items-center gap-2">
+                                    <div class="inline-flex items-center gap-1.5">
                                         <button @click="activeOwner = {{ json_encode($owner) }}; resetModal = true"
-                                            class="px-2.5 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold transition">
-                                            Reset Password
+                                            class="px-2.5 py-1.5 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold transition flex items-center gap-1" title="Reset Password">
+                                            <i class="fa-solid fa-key text-[10px]"></i>
+                                            <span>Reset</span>
                                         </button>
                                         <button @click="activeOwner = {{ json_encode($owner) }}; editModal = true"
-                                            class="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 transition" title="Edit Owner">
-                                            <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                            class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1" title="Edit Owner">
+                                            <i class="fa-solid fa-pen-to-square text-[11px]"></i>
+                                            <span>Edit</span>
                                         </button>
+                                        <form action="{{ route('super_admin.owners.destroy', $owner) }}" method="POST"
+                                            onsubmit="return confirm('⚠️ Are you sure you want to delete owner \'{{ $owner->name }}\'?');" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition flex items-center gap-1" title="Delete Owner">
+                                                <i class="fa-solid fa-trash text-[11px]"></i>
+                                                <span>Delete</span>
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

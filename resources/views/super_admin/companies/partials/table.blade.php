@@ -82,22 +82,36 @@
 
                     <!-- Actions -->
                     <td class="px-5 py-4 text-right">
-                        <div class="flex items-center justify-end gap-2">
+                        <div class="flex items-center justify-end gap-1.5">
                             <a href="{{ route('super_admin.companies.show', $company) }}"
-                                class="p-2 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+                                class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold transition flex items-center gap-1"
                                 title="View Details">
                                 <i class="fa-regular fa-eye text-xs"></i>
+                                <span class="hidden sm:inline">View</span>
                             </a>
                             <a href="{{ route('super_admin.companies.edit', $company) }}"
-                                class="p-2 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 transition"
+                                class="px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition flex items-center gap-1"
                                 title="Edit Company">
                                 <i class="fa-solid fa-pen-to-square text-xs"></i>
+                                <span class="hidden sm:inline">Edit</span>
                             </a>
                             <a href="{{ route('super_admin.companies.impersonate', $company) }}" target="_blank"
-                                class="p-2 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 transition"
+                                class="px-2.5 py-1.5 rounded-lg bg-indigo-50 hover:bg-indigo-100 text-indigo-700 text-xs font-bold transition flex items-center gap-1"
                                 title="Impersonate Owner">
                                 <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+                                <span class="hidden sm:inline">Login</span>
                             </a>
+                            <form action="{{ route('super_admin.companies.destroy', $company) }}" method="POST"
+                                onsubmit="return confirm('⚠️ DANGER: Are you sure you want to completely remove company \'{{ $company->name }}\'? This will delete the company profile and its associated landlord data.');" class="inline">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit"
+                                    class="px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition flex items-center gap-1"
+                                    title="Delete Company">
+                                    <i class="fa-solid fa-trash text-xs"></i>
+                                    <span class="hidden sm:inline">Delete</span>
+                                </button>
+                            </form>
                         </div>
                     </td>
                 </tr>

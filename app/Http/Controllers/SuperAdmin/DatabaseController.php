@@ -132,7 +132,18 @@ class DatabaseController extends Controller
             // Physically drop the database
             $pdo->exec("DROP DATABASE IF EXISTS `{$sanitizedDb}`;");
 
-            return back()->with('success', "Database '{$sanitizedDb}' for company '{$company->name}' was physically dropped successfully.");
+            // Completely remove the tenant record and landlord relations so it disappears from the system
+            \App\Models\Central\TenantOwner::where('tenant_id', $company->id)->delete();
+            \App\Models\Central\TenantSubscription::where('tenant_id', $company->id)->delete();
+            \App\Models\Central\TenantSmsCredit::where('tenant_id', $company->id)->delete();
+            if (class_exists(\App\Models\Central\TenantPrintLayout::class)) {
+                \App\Models\Central\TenantPrintLayout::where('tenant_id', $company->id)->delete();
+            }
+            TenantManager::clearTenantCache($company);
+            $companyName = $company->name;
+            $company->delete();
+
+            return back()->with('success', "Database '{$sanitizedDb}' was physically dropped and company '{$companyName}' was completely removed from the system.");
         } catch (\Throwable $e) {
             return back()->withErrors(['error' => 'Could not drop database: ' . $e->getMessage()]);
         }

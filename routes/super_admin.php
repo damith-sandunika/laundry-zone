@@ -36,6 +36,7 @@ Route::prefix('saas-admin')->name('super_admin.')->group(function () {
         // Company Owners
         Route::get('/owners', [OwnerController::class, 'index'])->name('owners.index');
         Route::put('/owners/{owner}', [OwnerController::class, 'update'])->name('owners.update');
+        Route::delete('/owners/{owner}', [OwnerController::class, 'destroy'])->name('owners.destroy');
         Route::post('/owners/{owner}/reset-password', [OwnerController::class, 'resetPassword'])->name('owners.resetPassword');
 
         // Tenant Databases

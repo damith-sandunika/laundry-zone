@@ -34,7 +34,6 @@
         body {
             font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif !important;
         }
-    <style>
         [x-cloak] { display: none !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
