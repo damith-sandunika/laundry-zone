@@ -68,7 +68,13 @@ function provisionWizard() {
                 clearTimeout(timer1);
                 clearTimeout(timer2);
 
-                const data = await response.json();
+                const responseText = await response.text();
+                let data;
+                try {
+                    data = JSON.parse(responseText);
+                } catch (e) {
+                    throw new Error(responseText.substring(0, 300) || 'Server returned non-JSON response');
+                }
 
                 if (!response.ok || !data.success) {
                     this.hasError = true;
