@@ -99,7 +99,11 @@
         </div>
     @endif
 
-    @if(!$activeSession)
+    @php
+        $isSuperAdminUser = in_array(auth()->user()->role ?? '', ['super_admin', 'owner']);
+    @endphp
+
+    @if(!$activeSession && !$isSuperAdminUser)
         @include('dashboard.partials.shift-closed')
     @else
 

@@ -9,13 +9,40 @@
             $order->payment_token = 'inv_' . bin2hex(random_bytes(16));
             $order->saveQuietly();
         }
+
+        $layout = $layout ?? \App\Models\Central\TenantPrintLayout::getForTenant(tenant('id'), 'invoice');
+        $cfg = $layout->custom_fields ?? [];
+        $showLogo = $layout->show_logo;
+        $logoSize = $cfg['logo_size'] ?? '60';
+        $companyNameSize = $cfg['company_name_size'] ?? '24px';
+        $invoiceTitle = $cfg['invoice_title'] ?? 'INVOICE';
+        $invoiceTitleSize = $cfg['invoice_title_size'] ?? '28px';
+        $primaryColor = $layout->primary_color ?: '#0f172a';
+        $accentColor = $layout->accent_color ?: '#3b82f6';
+        $fontFamily = $layout->font_family ?: "'Inter', sans-serif";
+        $fontSize = $layout->font_size ?: '13px';
+
+        $headerTitle = $layout->header_title ?: (\App\Models\Setting::get('company_name', 'Laundry Zone'));
+        $headerSubtitle = $layout->header_subtitle ?: ($order->branch->name ?? 'Main Branch');
+        $contactPhone = $cfg['contact_phone'] ?? ($order->branch->phone ?? '011 234 5678');
+        $contactEmail = $cfg['contact_email'] ?? ($mainBranch->email ?? 'contact@company.com');
+        $contactAddress = $cfg['contact_address'] ?? ($order->branch->address ?? 'Colombo, Sri Lanka');
+        
+        $badgeTextPaid = $cfg['badge_text_paid'] ?? 'FULLY PAID';
+        $badgeTextPending = $cfg['badge_text_pending'] ?? 'PAYMENT PENDING';
+        $showPayOnlineBtn = ($cfg['show_pay_online_btn'] ?? '1') == '1';
+        $payBtnText = $cfg['pay_btn_text'] ?? 'PAY NOW - CLICK HERE';
+        $termsText = $layout->terms_and_conditions ?: ($mainBranch?->invoice_terms ?? '');
+        $footerText = $layout->footer_text ?: ($mainBranch?->invoice_footer ?? 'Thank you for your business! 🤍');
+        $footerNote = $cfg['footer_note'] ?? 'Please visit our website for full digital terms & conditions.';
     @endphp
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         @page { size: A4; margin: 0; }
         body { 
-            font-family: 'Inter', sans-serif; 
+            font-family: {!! $fontFamily !!}; 
+            font-size: {{ $fontSize }};
             background: #e2e8f0; 
             -webkit-print-color-adjust: exact !important; 
             print-color-adjust: exact !important; 
@@ -40,16 +67,16 @@
             left: 0;
             right: 0;
             height: 12px;
-            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            background: {{ $primaryColor }};
         }
         
         .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; margin-top: 20px; }
-        .logo-section h1 { font-size: 28px; font-weight: 900; color: #0f172a; margin-bottom: 4px; letter-spacing: -0.03em; }
+        .logo-section h1 { font-size: {{ $companyNameSize }}; font-weight: 900; color: {{ $primaryColor }}; margin-bottom: 4px; letter-spacing: -0.03em; }
         .logo-section p { font-size: 13px; color: #64748b; font-weight: 500; line-height: 1.5; }
         
         .invoice-title { text-align: right; }
-        .invoice-title h2 { font-size: 36px; font-weight: 900; color: #e2e8f0; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
-        .invoice-title p { font-size: 14px; font-weight: 700; color: #3b82f6; }
+        .invoice-title h2 { font-size: {{ $invoiceTitleSize }}; font-weight: 900; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+        .invoice-title p { font-size: 14px; font-weight: 700; color: {{ $accentColor }}; }
         
         .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 40px; }
         .info-box { background: #f8fafc; padding: 20px; border-radius: 12px; border: 1px solid #f1f5f9; }
@@ -58,7 +85,7 @@
         .info-box span { font-size: 13px; color: #64748b; font-weight: 500; display: block; line-height: 1.5; }
 
         .items-table { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
-        .items-table th { background: #0f172a; color: white; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 14px 16px; text-align: left; letter-spacing: 0.05em; }
+        .items-table th { background: {{ $primaryColor }}; color: white; font-size: 12px; font-weight: 700; text-transform: uppercase; padding: 14px 16px; text-align: left; letter-spacing: 0.05em; }
         .items-table th.right { text-align: right; }
         .items-table th.center { text-align: center; }
         .items-table th:first-child { border-radius: 8px 0 0 8px; }
@@ -80,7 +107,7 @@
         .footer p { font-size: 13px; color: #64748b; font-weight: 600; }
         .badge { background: #10b981; color: white; padding: 6px 14px; border-radius: 99px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; }
         .badge.pending { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; font-size: 10px; }
-        .pay-btn { display: inline-block; background: linear-gradient(135deg, #10b981, #059669); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 900; font-size: 16px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); margin: 5px 0; }
+        .pay-btn { display: inline-block; background: {{ $accentColor }}; color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 900; font-size: 16px; box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3); margin: 5px 0; }
         .print-link { display: none; font-size: 11px; font-weight: 700; color: #0f172a; margin: 5px 0; }
 
         @media screen {
@@ -91,14 +118,13 @@
             .invoice-box { box-shadow: none; width: 100%; min-height: 100vh; padding: 15mm; border-radius: 0; margin: 0; }
             .no-print { display: none !important; }
             .print-link { display: none !important; }
-            /* Button is kept visible for PDF exports */
         }
     </style>
 </head>
 <body>
     
     <div class="no-print" style="position: fixed; top: 20px; right: 20px; display: flex; gap: 10px;">
-        <button onclick="window.print()" style="background: #3b82f6; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">🖨 Print / Save as PDF</button>
+        <button onclick="window.print()" style="background: {{ $accentColor }}; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">🖨 Print / Save as PDF</button>
         <button onclick="window.close()" style="background: white; color: #475569; border: 1px solid #cbd5e1; padding: 12px 24px; border-radius: 8px; font-size: 14px; font-weight: 700; cursor: pointer;">Close</button>
     </div>
 
@@ -107,17 +133,22 @@
         
         <div class="header">
             <div class="logo-section">
-                @if($mainBranch && $mainBranch->logo_path)
-                    <img src="{{ asset($mainBranch->logo_path) }}" alt="Logo" style="max-width: 150px; height: auto; margin-bottom: 12px; display: block;" onerror="this.style.display='none'">
+                @if($showLogo)
+                    @php
+                        $tenant = \App\Services\Tenancy\TenantManager::getTenant();
+                        $logoUrl = $tenant && $tenant->logo_path ? asset($tenant->logo_path) : ($mainBranch && $mainBranch->logo_path ? asset($mainBranch->logo_path) : asset('images/laundry_main_logo.png'));
+                    @endphp
+                    <img src="{{ $logoUrl }}" alt="Logo" style="max-height: {{ $logoSize }}px; max-width: {{ $logoSize }}px; height: auto; margin-bottom: 12px; display: block; object-fit: contain;" onerror="this.style.display='none'">
                 @endif
-                <h1>{{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</h1>
-                <p>{{ $order->branch->name ?? 'Main Branch' }}</p>
-                <p>{{ $order->branch->phone ?? '011 234 5678' }}</p>
-                <p>{{ $order->branch->address ?? 'Colombo, Sri Lanka' }}</p>
+                <h1>{{ $headerTitle }}</h1>
+                @if($headerSubtitle)<p>{{ $headerSubtitle }}</p>@endif
+                @if($contactPhone)<p>{{ $contactPhone }}</p>@endif
+                @if($contactEmail)<p>{{ $contactEmail }}</p>@endif
+                @if($contactAddress)<p>{{ $contactAddress }}</p>@endif
             </div>
             <div class="invoice-title">
-                <h2>INVOICE</h2>
-                <p style="color: #000000; font-weight: 900; font-size: 16px;">Invoice Number: #{{ $order->order_number }}</p>
+                <h2>{{ $invoiceTitle }}</h2>
+                <p style="color: {{ $accentColor }}; font-weight: 900; font-size: 16px;">Invoice Number: #{{ $order->order_number }}</p>
             </div>
         </div>
 
@@ -241,7 +272,7 @@
                 @endforeach
                 <tr style="background:white; color:#0f172a; border-top:2px solid #e2e8f0; border-bottom:2px solid #e2e8f0;">
                     <td style="text-align:right; font-weight:900; font-size:12px; text-transform:uppercase; letter-spacing:0.05em; padding:12px 16px;">Total Items / Qty:</td>
-                    <td class="center" style="font-weight:900; font-size:15px; padding:12px 16px; color:#3b82f6;">{{ $total_qty == floor($total_qty) ? (int)$total_qty : rtrim(rtrim(number_format($total_qty, 2), '0'), '.') }}</td>
+                    <td class="center" style="font-weight:900; font-size:15px; padding:12px 16px; color:{{ $accentColor }};">{{ $total_qty == floor($total_qty) ? (int)$total_qty : rtrim(rtrim(number_format($total_qty, 2), '0'), '.') }}</td>
                     <td colspan="2"></td>
                 </tr>
             </tbody>
@@ -292,41 +323,34 @@
         </div>
 
         <div style="margin-top: 30px; font-size: 11px; color: #64748b; line-height: 1.6;">
-            @if($mainBranch && $mainBranch->invoice_terms)
+            @if($termsText)
                 <strong style="color: #0f172a; text-transform: uppercase; font-size: 10px; letter-spacing: 0.1em; display: block; margin-bottom: 4px;">Terms & Conditions</strong>
-                {!! nl2br(e($mainBranch->invoice_terms)) !!}
+                {!! nl2br(e($termsText)) !!}
             @endif
         </div>
 
         <div class="footer">
             @if($order->paid_amount >= $order->total && $order->total > 0)
-                <div class="badge" style="margin-bottom: 8px;">FULLY PAID</div>
+                <div class="badge" style="margin-bottom: 8px;">{{ $badgeTextPaid }}</div>
             @elseif($order->total - $order->paid_amount > 0)
-                <div class="badge pending" style="margin-bottom: 8px;">{{ $order->payment_method === 'credit' ? 'CREDIT' : 'PAYMENT PENDING' }}</div>
+                <div class="badge pending" style="margin-bottom: 8px;">{{ $order->payment_method === 'credit' ? 'CREDIT' : $badgeTextPending }}</div>
                 
-                @if($order->payment_method !== 'credit')
+                @if($showPayOnlineBtn && $order->payment_method !== 'credit')
                     <a href="{{ route('payment.link.show', $order->payment_token) }}" class="pay-btn" target="_blank">
-                        PAY NOW - CLICK HERE
+                        {{ $payBtnText }}
                     </a>
                 @endif
             @endif
 
-            <p>
-                @if($mainBranch && $mainBranch->invoice_footer)
-                    {!! nl2br(e($mainBranch->invoice_footer)) !!}
-                @else
-                    Thank you for your business! 🤍
-                @endif
-            </p>
+            <p>{!! nl2br(e($footerText)) !!}</p>
             <div style="font-size: 11px; color: #94a3b8; font-weight: 500;">
                 <strong style="text-transform: uppercase; letter-spacing: 0.1em; color: #64748b;">Terms & Conditions:</strong> 
-                Please visit <a href="{{ url('/terms') }}" style="color: #3b82f6; text-decoration: none; font-weight: bold;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</a>
+                {{ $footerNote }} <a href="{{ url('/terms') }}" style="color: {{ $accentColor }}; text-decoration: none; font-weight: bold;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</a>
             </div>
         </div>
     </div>
     
     <script>
-        // Auto print when opened from the admin
         window.onload = function() {
             setTimeout(() => {
                 window.print();
@@ -335,5 +359,3 @@
     </script>
 </body>
 </html>
-
-

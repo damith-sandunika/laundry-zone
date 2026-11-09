@@ -40,11 +40,11 @@ class AuthController extends Controller
         if (Auth::guard('super_admin')->attempt($credentials, $remember)) {
             $request->session()->regenerate();
             return redirect()->intended(route('super_admin.dashboard'))
-                ->with('success', 'Welcome back, Platform Super Administrator.');
+                ->with('success', 'Welcome back, SaaS Administrator.');
         }
 
         return back()->withInput($request->only('email', 'remember'))
-            ->withErrors(['email' => 'Invalid email or password for SaaS Super Admin.']);
+            ->withErrors(['email' => 'Invalid email or password for SaaS Admin.']);
     }
 
     /**
@@ -57,6 +57,6 @@ class AuthController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('super_admin.login')
-            ->with('info', 'You have been successfully logged out from the Super Admin platform.');
+            ->with('info', 'You have been successfully logged out from the SaaS Admin platform.');
     }
 }

@@ -86,6 +86,13 @@ class CentralSchemaManager
                 });
             }
 
+            if (!$landlordSchema->hasColumn('tenants', 'sms_balance')) {
+                $landlordSchema->table('tenants', function ($table) {
+                    $table->integer('sms_balance')->default(0)->after('sms_api_key');
+                    $table->decimal('sms_rate', 8, 2)->default(2.00)->after('sms_balance');
+                });
+            }
+
             // tenant_owners table
             if (!$landlordSchema->hasTable('tenant_owners')) {
                 $landlordSchema->create('tenant_owners', function ($table) {
@@ -118,6 +125,22 @@ class CentralSchemaManager
                     $table->string('payment_method')->nullable();
                     $table->string('payment_reference')->nullable();
                     $table->timestamp('paid_at')->nullable();
+                    $table->text('notes')->nullable();
+                    $table->timestamps();
+                });
+            }
+
+            // tenant_sms_credits table
+            if (!$landlordSchema->hasTable('tenant_sms_credits')) {
+                $landlordSchema->create('tenant_sms_credits', function ($table) {
+                    $table->id();
+                    $table->foreignId('tenant_id')->constrained('tenants')->onDelete('cascade');
+                    $table->integer('sms_count');
+                    $table->decimal('rate_per_sms', 8, 2)->default(2.00);
+                    $table->decimal('amount_paid', 10, 2);
+                    $table->string('payment_reference')->nullable();
+                    $table->string('payment_method')->default('Bank Transfer');
+                    $table->enum('status', ['completed', 'pending', 'cancelled'])->default('completed');
                     $table->text('notes')->nullable();
                     $table->timestamps();
                 });

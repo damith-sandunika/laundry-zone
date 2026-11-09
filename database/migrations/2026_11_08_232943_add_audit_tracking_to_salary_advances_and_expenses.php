@@ -12,16 +12,30 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('salary_advances', function (Blueprint $table) {
-            $table->foreignId('created_by')->nullable()->after('reason')->constrained('users')->nullOnDelete();
-            $table->foreignId('updated_by')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
-            $table->foreignId('deleted_by')->nullable()->after('updated_by')->constrained('users')->nullOnDelete();
-            $table->softDeletes()->after('updated_at');
+            if (!Schema::hasColumn('salary_advances', 'created_by')) {
+                $table->foreignId('created_by')->nullable()->after('reason')->constrained('users')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('salary_advances', 'updated_by')) {
+                $table->foreignId('updated_by')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('salary_advances', 'deleted_by')) {
+                $table->foreignId('deleted_by')->nullable()->after('updated_by')->constrained('users')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('salary_advances', 'deleted_at')) {
+                $table->softDeletes()->after('updated_at');
+            }
         });
 
         Schema::table('expenses', function (Blueprint $table) {
-            $table->foreignId('updated_by')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
-            $table->foreignId('deleted_by')->nullable()->after('updated_by')->constrained('users')->nullOnDelete();
-            $table->softDeletes()->after('updated_at');
+            if (!Schema::hasColumn('expenses', 'updated_by')) {
+                $table->foreignId('updated_by')->nullable()->after('created_by')->constrained('users')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('expenses', 'deleted_by')) {
+                $table->foreignId('deleted_by')->nullable()->after('updated_by')->constrained('users')->nullOnDelete();
+            }
+            if (!Schema::hasColumn('expenses', 'deleted_at')) {
+                $table->softDeletes()->after('updated_at');
+            }
         });
     }
 

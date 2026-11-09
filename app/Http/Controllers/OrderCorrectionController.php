@@ -180,7 +180,8 @@ class OrderCorrectionController extends Controller
                 $newData = $correction->new_data;
 
                 if ($correction->type === 'payment_change') {
-                    $correctionNote = app(\App\Actions\Order\UpdateOrderPaymentAction::class)->execute($order, $newData);
+                    $result = app(\App\Actions\Order\UpdateOrderPaymentAction::class)->execute($order, $newData);
+                    $correctionNote = is_array($result) ? ($result['message'] ?? 'Payment updated') : (string)$result;
                 } else if ($correction->type === 'items_change' || $correction->type === 'order_change') {
                     $correctionNote = app(\App\Actions\Order\UpdateOrderItemsAction::class)->execute($order, $newData, $correction->type);
                 } else if ($correction->type === 'convert_to_delivery') {

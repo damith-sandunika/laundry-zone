@@ -23,7 +23,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('customer.booking.index') }}" class="w-full inline-block bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
+            <a href="{{ route('home') }}" class="w-full inline-block bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition-transform hover:scale-[1.02]">
                 Return Home
             </a>
         </div>

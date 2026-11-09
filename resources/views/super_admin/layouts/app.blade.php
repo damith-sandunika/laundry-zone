@@ -4,13 +4,36 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'Super Admin Platform' }} - {{ \App\Models\Central\PlatformSetting::get('platform_name', 'Laundry Zone SaaS') }}</title>
+    <title>{{ $title ?? 'SaaS Admin Platform' }} - {{ \App\Models\Central\PlatformSetting::get('platform_name', 'Laundry Zone SaaS') }}</title>
     <link rel="icon" type="image/png" href="{{ asset('images/laundry_main_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+                    },
+                    borderRadius: {
+                        '3xl': '1rem',
+                        '2xl': '0.75rem',
+                    }
+                }
+            }
+        }
+    </script>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        *, *::before, *::after {
+            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif !important;
+        }
+        body {
+            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif !important;
+        }
     <style>
         [x-cloak] { display: none !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }

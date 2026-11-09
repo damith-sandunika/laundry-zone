@@ -15,13 +15,13 @@ class SuperAdminMiddleware
     public function handle(Request $request, Closure $next): Response
     {
         if (!Auth::guard('super_admin')->check()) {
-            return redirect()->route('super_admin.login')->with('warning', 'Please login to access the SaaS Super Admin platform.');
+            return redirect()->route('super_admin.login')->with('warning', 'Please login to access the SaaS Admin platform.');
         }
 
         $superAdmin = Auth::guard('super_admin')->user();
         if (!$superAdmin->is_active) {
             Auth::guard('super_admin')->logout();
-            return redirect()->route('super_admin.login')->withErrors(['email' => 'Your super admin account is disabled.']);
+            return redirect()->route('super_admin.login')->withErrors(['email' => 'Your SaaS admin account is disabled.']);
         }
 
         return $next($request);

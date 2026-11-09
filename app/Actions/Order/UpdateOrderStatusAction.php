@@ -21,7 +21,13 @@ class UpdateOrderStatusAction
         $cubby_id = $data['cubby_id'] ?? null;
 
         DB::transaction(function () use ($order, $status, $cubby_id, $userId, $data) {
-            $order->status = $status;
+            // Lock order for update to prevent status update race conditions
+            $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
+            if (!$lockedOrder) {
+                throw new \Exception("Order #{$order->id} not found.");
+            }
+
+            $lockedOrder->status = $status;
 
             if ($status === 'done') {
                 if ($cubby_id) {
@@ -35,7 +41,7 @@ class UpdateOrderStatusAction
             }
 
             if ($status === 'done') {
-                $dispatch = WorkshopDispatch::where('order_id', $order->id)
+                $dispatch = WorkshopDispatch::where('order_id', $lockedOrder->id)
                     ->whereNotIn('status', ['received_at_branch'])
                     ->first();
                 if ($dispatch) {
@@ -47,51 +53,51 @@ class UpdateOrderStatusAction
             }
 
             if ($status === 'done') {
-                $appt = DeliveryAppointment::where('order_id', $order->id)->first();
+                $appt = DeliveryAppointment::where('order_id', $lockedOrder->id)->first();
                 if ($appt && $appt->status !== 'ready') {
                     $appt->update(['status' => 'ready']);
                 }
             }
 
             if ($status === 'delivered') {
-                $order->delivered_at = now();
+                $lockedOrder->delivered_at = now();
                 if (isset($data['payment_method'])) {
-                    $order->payment_method = $data['payment_method'];
+                    $lockedOrder->payment_method = $data['payment_method'];
                 }
-                if ($order->payment_method === 'credit') {
-                    $order->payment_status = 'pending';
+                if ($lockedOrder->payment_method === 'credit') {
+                    $lockedOrder->payment_status = 'pending';
                 } else {
-                    $amountToPay = $order->total - $order->paid_amount;
+                    $amountToPay = $lockedOrder->total - $lockedOrder->paid_amount;
                     if ($amountToPay > 0) {
                         PaymentTransaction::create([
-                            'order_id'       => $order->id,
+                            'order_id'       => $lockedOrder->id,
                             'amount'         => $amountToPay,
-                            'payment_method' => $order->payment_method ?? 'cash',
+                            'payment_method' => $lockedOrder->payment_method ?? 'cash',
                             'created_by'     => $userId,
                         ]);
-                        $order->paid_amount += $amountToPay;
+                        $lockedOrder->paid_amount += $amountToPay;
                     } elseif ($amountToPay < 0 && !empty($data['refund_overpayment'])) {
                         $refundAmount = abs($amountToPay);
                         PaymentTransaction::create([
-                            'order_id'       => $order->id,
+                            'order_id'       => $lockedOrder->id,
                             'amount'         => -$refundAmount,
                             'payment_method' => 'cash',
                             'created_by'     => $userId,
                             'status'         => 'completed',
                             'transaction_id' => 'REFUND-' . strtoupper(uniqid()),
                         ]);
-                        $order->paid_amount -= $refundAmount;
+                        $lockedOrder->paid_amount -= $refundAmount;
                     }
-                    $order->payment_status = 'paid';
+                    $lockedOrder->payment_status = 'paid';
                 }
 
-                $orderCubby = $order->cubbies()->whereNull('released_at')->first();
+                $orderCubby = $lockedOrder->cubbies()->whereNull('released_at')->first();
                 if ($orderCubby) {
                     $orderCubby->update(['released_at' => now()]);
                     Cubby::where('id', $orderCubby->cubby_id)->update(['status' => 'empty']);
                 }
 
-                $appt = DeliveryAppointment::where('order_id', $order->id)->first();
+                $appt = DeliveryAppointment::where('order_id', $lockedOrder->id)->first();
                 if ($appt) {
                     $appt->update(['status' => 'delivered']);
                 }
@@ -99,44 +105,46 @@ class UpdateOrderStatusAction
 
             if ($status === 'completed') {
                 if (isset($data['payment_method'])) {
-                    $order->payment_method = $data['payment_method'];
+                    $lockedOrder->payment_method = $data['payment_method'];
                 }
-                $amountToPay = $order->total - $order->paid_amount;
+                $amountToPay = $lockedOrder->total - $lockedOrder->paid_amount;
                 if ($amountToPay > 0) {
                     PaymentTransaction::create([
-                        'order_id'                => $order->id,
+                        'order_id'                => $lockedOrder->id,
                         'amount'                  => $amountToPay,
-                        'payment_method'          => $order->payment_method ?? 'cash',
+                        'payment_method'          => $lockedOrder->payment_method ?? 'cash',
                         'created_by'              => $userId,
                         'collected_from_rider_at' => now(),
                         'status'                  => 'completed',
                         'transaction_id'          => 'TXN-' . strtoupper(uniqid()),
                     ]);
                     if ($amountToPay > 0) {
-                        $order->paid_amount += $amountToPay;
+                        $lockedOrder->paid_amount += $amountToPay;
                     }
-                    $order->payment_status = 'paid';
+                    $lockedOrder->payment_status = 'paid';
                 } else {
-                    PaymentTransaction::where('order_id', $order->id)
+                    PaymentTransaction::where('order_id', $lockedOrder->id)
                         ->where('payment_method', 'cash')
                         ->whereNull('collected_from_rider_at')
                         ->update(['collected_from_rider_at' => now()]);
                 }
             }
 
-            $order->save();
+            $lockedOrder->save();
 
-            try {
-                OrderStatusHistory::create([
-                    'order_id'   => $order->id,
-                    'status'     => $status,
-                    'changed_by' => $userId,
-                    'note'       => 'Status updated to ' . $status,
-                ]);
-            } catch (\Exception $e) {
-                Log::warning('OrderStatusHistory insert failed: ' . $e->getMessage());
-            }
-        });
+            // Strict auditability: status history must be recorded inside the same transaction
+            OrderStatusHistory::create([
+                'order_id'   => $lockedOrder->id,
+                'status'     => $status,
+                'changed_by' => $userId,
+                'note'       => 'Status updated to ' . $status,
+            ]);
+
+            // Sync original model attributes
+            $order->status = $lockedOrder->status;
+            $order->paid_amount = $lockedOrder->paid_amount;
+            $order->payment_status = $lockedOrder->payment_status;
+        }, 5);
 
         \App\Jobs\SendOrderNotificationJob::dispatch($order, $status);
     }

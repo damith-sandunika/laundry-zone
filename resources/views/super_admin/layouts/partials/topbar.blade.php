@@ -15,19 +15,12 @@
         <!-- Brand / Path (Centered on mobile, left on desktop) -->
         <div class="absolute left-1/2 -translate-x-1/2 lg:static lg:transform-none flex flex-col text-center lg:text-left pointer-events-none lg:pointer-events-auto">
             <div class="flex items-center justify-center lg:justify-start gap-2">
-                <!-- Desktop Back Button -->
-                <button onclick="window.history.back()" title="Go Back"
-                    class="hidden lg:flex items-center justify-center w-7 h-7 rounded-full bg-slate-100 hover:bg-blue-100 hover:text-blue-600 text-slate-500 transition-colors pointer-events-auto">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
                 <div class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
                     {{ \App\Models\Central\PlatformSetting::get('platform_name', 'Laundry Zone') }}
                 </div>
             </div>
             <div class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">
-                Super Admin Cloud Portal
+                SaaS Admin Central Cloud Portal
             </div>
         </div>
 
@@ -75,7 +68,7 @@
                     SA
                 </div>
                 <div class="text-left">
-                    <div class="text-[12px] font-extrabold text-slate-800 leading-tight">Super Admin</div>
+                    <div class="text-[12px] font-extrabold text-slate-800 leading-tight">SaaS Admin</div>
                     <div class="text-[10px] font-bold text-blue-600 uppercase tracking-wider">Platform Owner</div>
                 </div>
                 <svg class="w-4 h-4 text-slate-400 ml-1 transition-transform" :class="{ 'rotate-180': profileOpen }" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -87,8 +80,8 @@
             <div x-show="profileOpen" x-transition.opacity.scale.95 x-cloak
                 class="absolute right-0 top-12 w-52 bg-white rounded-2xl shadow-xl border border-slate-200/80 py-2 z-50">
                 <div class="px-4 py-2 border-b border-slate-100">
-                    <div class="text-[12px] font-extrabold text-slate-800">Super Administrator</div>
-                    <div class="text-[11px] text-slate-400 truncate">superadmin@laundryzone.com</div>
+                    <div class="text-[12px] font-extrabold text-slate-800">SaaS Administrator</div>
+                    <div class="text-[11px] text-slate-400 truncate">saasadmin@laundryzone.com</div>
                 </div>
                 <a href="{{ route('super_admin.settings.index') }}"
                     class="flex items-center gap-2.5 px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Super Admin Login - Laundry Zone Platform</title>
+    <title>SaaS Admin Login - Laundry Zone Platform</title>
     <link rel="icon" type="image/png" href="{{ asset('images/laundry_main_logo.png') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
@@ -27,8 +27,8 @@
                     <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
             </div>
-            <h1 class="text-2xl font-black text-slate-900 tracking-tight">Super Admin Portal</h1>
-            <p class="text-xs text-slate-500 mt-1">Laundry Zone SaaS Platform Control Center</p>
+            <h1 class="text-2xl font-black text-slate-900 tracking-tight">SaaS Admin Portal</h1>
+            <p class="text-xs text-slate-500 mt-1">Laundry Zone Platform Central Control Center</p>
         </div>
 
         <!-- Login Card (Light Theme) -->
@@ -50,7 +50,7 @@
             <form action="{{ route('super_admin.login.submit') }}" method="POST" class="space-y-4">
                 @csrf
                 <div>
-                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">Super Admin Email</label>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">SaaS Admin Email</label>
                     <input type="email" name="email" value="{{ old('email', 'superadmin@laundryzone.com') }}" required autofocus
                         placeholder="superadmin@laundryzone.com"
                         class="w-full px-4 py-3 rounded-xl bg-slate-50 border border-slate-200 text-slate-900 placeholder-slate-400 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 transition">

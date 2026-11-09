@@ -68,7 +68,7 @@ class DashboardStatService
             ->sum('amount');
 
         // Calculate delivery fee split and commissionable sales
-        $salesMetrics = $this->calculateSalesMetrics($activeSession, $branchId);
+        $salesMetrics = $this->calculateSalesMetrics($activeSession->opened_at, $branchId);
 
         $currentBalance = $activeSession->opening_cash + $cashCollected + $cardPaymentsAmount + $bankTransfersAmount - $expensesLogged - $bankDepositsLogged;
         $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged - $bankDepositsLogged;
@@ -101,12 +101,91 @@ class DashboardStatService
         ];
     }
 
-    private function calculateSalesMetrics(RegisterSession $activeSession, int $branchId): array
+    /**
+     * Get overall metrics for today (used for Super Admin or when shift is closed).
+     */
+    public function getTodayMetrics(?int $branchId): array
     {
-        // Use SQL aggregations instead of loading all models into memory to prevent OOM on large datasets
-        $orderMetrics = Order::where('branch_id', $branchId)
-            ->where('created_at', '>=', $activeSession->opened_at)
-            ->selectRaw('
+        $startOfDay = now()->startOfDay();
+
+        $txQuery = PaymentTransaction::where('created_at', '>=', $startOfDay);
+        if ($branchId) {
+            $txQuery->whereHas('order', fn ($q) => $q->where('branch_id', $branchId));
+        }
+
+        $cashCollected = (clone $txQuery)->where('payment_method', 'cash')->sum('amount');
+        
+        $cardTx = (clone $txQuery)->where('payment_method', 'card');
+        $cardPaymentsCount = $cardTx->count();
+        $cardPaymentsAmount = $cardTx->sum('amount');
+
+        $bankTx = (clone $txQuery)->where('payment_method', 'bank');
+        $bankTransfersCount = $bankTx->count();
+        $bankTransfersAmount = $bankTx->sum('amount');
+
+        // Direct orders
+        $directCashQuery = Order::where('created_at', '>=', $startOfDay)
+            ->where('payment_method', 'cash')
+            ->whereDoesntHave('paymentTransactions');
+        if ($branchId) $directCashQuery->where('branch_id', $branchId);
+        $cashCollected += $directCashQuery->sum('paid_amount');
+
+        $directBankQuery = Order::where('created_at', '>=', $startOfDay)
+            ->where('payment_method', 'bank')
+            ->whereDoesntHave('paymentTransactions');
+        if ($branchId) $directBankQuery->where('branch_id', $branchId);
+        $bankTransfersAmount += $directBankQuery->sum('paid_amount');
+
+        $expenseQuery = Expense::where('created_at', '>=', $startOfDay);
+        if ($branchId) $expenseQuery->where('branch_id', $branchId);
+        $expensesLogged = $expenseQuery->sum('amount');
+
+        $pendingQuery = Order::where('created_at', '>=', $startOfDay);
+        if ($branchId) $pendingQuery->where('branch_id', $branchId);
+        $pendingPayments = $pendingQuery->selectRaw('SUM(total - paid_amount) as pending_total')->value('pending_total') ?? 0;
+
+        $depositQuery = \App\Models\BankDeposit::where('created_at', '>=', $startOfDay);
+        if ($branchId) $depositQuery->where('branch_id', $branchId);
+        $bankDepositsLogged = $depositQuery->sum('amount');
+
+        $salesMetrics = $this->calculateSalesMetrics($startOfDay, $branchId);
+
+        $branch = $branchId ? Branch::find($branchId) : null;
+        $branchProfitPercent = $branch->branch_profit_percentage ?? 0;
+        $branchCommission = $salesMetrics['commissionableSales'] * ($branchProfitPercent / 100);
+        $totalBranchRevenue = $branchCommission + $salesMetrics['totalDeliveryFees'];
+        $netIncome = $totalBranchRevenue - $expensesLogged;
+        $totalPaymentsCollected = $cashCollected + $cardPaymentsAmount + $bankTransfersAmount;
+
+        return [
+            'current_balance' => $cashCollected + $cardPaymentsAmount + $bankTransfersAmount - $expensesLogged - $bankDepositsLogged,
+            'cash_balance' => $cashCollected - $expensesLogged - $bankDepositsLogged,
+            'cash_collected' => $cashCollected,
+            'card_payments' => $cardPaymentsCount,
+            'card_payments_amount' => $cardPaymentsAmount,
+            'bank_transfers_count' => $bankTransfersCount,
+            'bank_transfers' => $bankTransfersAmount,
+            'total_payments_collected' => $totalPaymentsCollected,
+            'gross_sales' => $salesMetrics['grossSales'],
+            'commissionable_sales' => $salesMetrics['commissionableSales'],
+            'total_delivery_fees' => $salesMetrics['totalDeliveryFees'],
+            'branch_commission' => $branchCommission,
+            'total_branch_revenue' => $totalBranchRevenue,
+            'net_income' => $netIncome,
+            'branch_profit_percentage' => $branchProfitPercent,
+            'expenses_logged' => $expensesLogged,
+            'pending_payments' => $pendingPayments,
+        ];
+    }
+
+    private function calculateSalesMetrics($since, ?int $branchId): array
+    {
+        $orderQuery = Order::where('created_at', '>=', $since);
+        if ($branchId) {
+            $orderQuery->where('branch_id', $branchId);
+        }
+
+        $orderMetrics = $orderQuery->selectRaw('
                 SUM(COALESCE(total, 0)) as gross_sales,
                 SUM(COALESCE(delivery_fee, 0)) as total_delivery_fees,
                 SUM(CASE WHEN COALESCE(total, 0) > COALESCE(delivery_fee, 0) THEN COALESCE(total, 0) - COALESCE(delivery_fee, 0) ELSE 0 END) as commissionable_sales
@@ -116,11 +195,11 @@ class DashboardStatService
         $totalDeliveryFees = (float) ($orderMetrics->total_delivery_fees ?? 0);
         $commissionableSales = (float) ($orderMetrics->commissionable_sales ?? 0);
 
-        // Package sales (assuming these are paid in full upfront usually, or we accrue them)
-        // For packages, we will keep them as cash-basis or when package is created.
-        $totalPackageSales = PackagePayment::whereHas('customerPackage', fn ($q) => $q->where('branch_id', $branchId))
-            ->where('created_at', '>=', $activeSession->opened_at)
-            ->sum('amount');
+        $packageQuery = PackagePayment::where('created_at', '>=', $since);
+        if ($branchId) {
+            $packageQuery->whereHas('customerPackage', fn ($q) => $q->where('branch_id', $branchId));
+        }
+        $totalPackageSales = $packageQuery->sum('amount');
 
         $grossSales += $totalPackageSales;
         $commissionableSales += $totalPackageSales;

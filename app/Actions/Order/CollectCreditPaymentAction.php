@@ -61,6 +61,6 @@ class CollectCreditPaymentAction
             // Sync original model attributes
             $order->paid_amount = $lockedOrder->paid_amount;
             $order->payment_status = $lockedOrder->payment_status;
-        });
+        }, 5);
     }
 }

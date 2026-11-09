@@ -49,6 +49,9 @@ return new class extends Migration
 
     private function indexExists(string $table, string $indexName): bool
     {
+        if (\Illuminate\Support\Facades\DB::getDriverName() === 'sqlite') {
+            return false;
+        }
         $indexes = \Illuminate\Support\Facades\DB::select("SHOW INDEX FROM `{$table}` WHERE Key_name = ?", [$indexName]);
         return count($indexes) > 0;
     }

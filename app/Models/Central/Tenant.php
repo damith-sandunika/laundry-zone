@@ -38,6 +38,8 @@ class Tenant extends Model
         'sms_mask',
         'sms_api_url',
         'sms_api_key',
+        'sms_balance',
+        'sms_rate',
         'mail_from_name',
         'mail_from_address',
         'trial_ends_at',
@@ -72,6 +74,14 @@ class Tenant extends Model
     public function subscriptions(): HasMany
     {
         return $this->hasMany(TenantSubscription::class, 'tenant_id');
+    }
+
+    /**
+     * Relationship to tenant SMS credit packages.
+     */
+    public function smsCredits(): HasMany
+    {
+        return $this->hasMany(TenantSmsCredit::class, 'tenant_id');
     }
 
     /**

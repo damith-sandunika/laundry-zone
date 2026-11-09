@@ -8,7 +8,7 @@ class StaffPolicy
 {
     public function before(User $user, string $ability): bool|null
     {
-        if ($user->role === 'super_admin') {
+        if (in_array($user->role, ['owner', 'super_admin'])) {
             return true;
         }
         return null;
@@ -16,7 +16,7 @@ class StaffPolicy
 
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['branch_admin', 'workshop_admin', 'hr_manager', 'accountant_and_hr_manager']);
+        return in_array($user->role, ['owner', 'super_admin', 'branch_admin', 'workshop_admin', 'hr_manager', 'accountant_and_hr_manager']);
     }
 
     public function view(User $user, User $model): bool

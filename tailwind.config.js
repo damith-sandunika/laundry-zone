@@ -11,8 +11,12 @@ export default {
     theme: {
         extend: {
             fontFamily: {
-                sans: ['Figtree', ...defaultTheme.fontFamily.sans],
-                serif: ['Figtree', ...defaultTheme.fontFamily.sans],
+                sans: ['"Plus Jakarta Sans"', ...defaultTheme.fontFamily.sans],
+                serif: ['"Plus Jakarta Sans"', ...defaultTheme.fontFamily.sans],
+            },
+            borderRadius: {
+                '3xl': '1rem', // normalize ultra-large radius to clean 16px
+                '2xl': '0.75rem', // normalize 2xl radius to clean 12px
             },
             animation: {
                 'fade-in': 'fadeIn 0.3s ease-out',

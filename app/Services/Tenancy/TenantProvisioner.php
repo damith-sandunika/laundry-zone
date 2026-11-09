@@ -118,6 +118,9 @@ class TenantProvisioner
             'password' => $ownerPassword,
         ]);
 
+        // 9. Seed Default Print Layouts (Thermal Bill, Receipt, Invoice A4) with Company Info
+        $this->seedTenantPrintLayouts($tenant);
+
         // Reset connection back to landlord
         TenantManager::resetToLandlord();
 
@@ -170,14 +173,14 @@ class TenantProvisioner
     {
         TenantManager::setTenant($tenant);
 
-        // 1. Create or update Company Owner user (role = 'owner')
+        // 1. Create or update Company Super Admin user (role = 'super_admin')
         $owner = User::firstOrNew(['email' => $ownerData['email']]);
         $owner->name = $ownerData['name'];
         $owner->phone = $ownerData['phone'] ?? null;
         $owner->password = Hash::make($ownerData['password']);
-        $owner->role = 'owner'; // Former super_admin is now Owner!
+        $owner->role = 'super_admin'; // Company Super Admin
         $owner->is_active = true;
-        $owner->branch_id = null; // Owner has global access across all branches
+        $owner->branch_id = null; // Super Admin has global access across all branches
         $owner->can_manage_global_config = true;
         $owner->save();
 
@@ -219,6 +222,55 @@ class TenantProvisioner
         foreach ($settings as $k => $v) {
             Setting::set($k, $v);
         }
+    }
+
+    /**
+     * Populate default print layouts for the new company.
+     */
+    public function seedTenantPrintLayouts(Tenant $tenant): void
+    {
+        $cName = $tenant->name ?: 'Laundry Zone';
+        $cPhone = $tenant->phone ?: '+94 11 234 5678';
+        $cAddress = $tenant->address ?: 'No 45, High Level Road, Colombo';
+        $cEmail = $tenant->email ?: 'contact@' . ($tenant->subdomain ?: 'laundryzone') . '.com';
+
+        // 1. Thermal Bill
+        $bill = \App\Models\Central\TenantPrintLayout::firstOrNew([
+            'tenant_id' => $tenant->id,
+            'type' => 'bill',
+        ]);
+        $billDefaults = \App\Models\Central\TenantPrintLayout::defaultAttributes('bill');
+        $billDefaults['header_title'] = $cName;
+        $billDefaults['custom_fields']['branch_phone'] = $cPhone;
+        $billDefaults['custom_fields']['branch_address'] = $cAddress;
+        $billDefaults['footer_text'] = "Thank you for choosing {$cName}.";
+        $bill->fill($billDefaults);
+        $bill->save();
+
+        // 2. Receipt / Job Card
+        $receipt = \App\Models\Central\TenantPrintLayout::firstOrNew([
+            'tenant_id' => $tenant->id,
+            'type' => 'receipt',
+        ]);
+        $receiptDefaults = \App\Models\Central\TenantPrintLayout::defaultAttributes('receipt');
+        $receiptDefaults['header_title'] = $cName;
+        $receiptDefaults['footer_text'] = "Quality checked by {$cName}.";
+        $receipt->fill($receiptDefaults);
+        $receipt->save();
+
+        // 3. Invoice A4
+        $invoice = \App\Models\Central\TenantPrintLayout::firstOrNew([
+            'tenant_id' => $tenant->id,
+            'type' => 'invoice',
+        ]);
+        $invDefaults = \App\Models\Central\TenantPrintLayout::defaultAttributes('invoice');
+        $invDefaults['header_title'] = $cName;
+        $invDefaults['custom_fields']['contact_phone'] = $cPhone;
+        $invDefaults['custom_fields']['contact_address'] = $cAddress;
+        $invDefaults['custom_fields']['contact_email'] = $cEmail;
+        $invDefaults['footer_text'] = "Thank you for choosing {$cName}! We appreciate your business.";
+        $invoice->fill($invDefaults);
+        $invoice->save();
     }
 
     /**

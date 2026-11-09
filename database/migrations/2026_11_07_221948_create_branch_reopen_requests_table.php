@@ -11,20 +11,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('branch_reopen_requests', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('branch_id')->constrained()->onDelete('cascade');
-            $table->foreignId('requested_by')->constrained('users')->onDelete('cascade');
-            $table->text('reason')->nullable();
-            $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
-            $table->foreignId('reviewed_by')->nullable()->constrained('users')->onDelete('set null');
-            $table->timestamp('reviewed_at')->nullable();
-            $table->text('admin_notes')->nullable();
-            $table->date('request_date');
-            $table->timestamps();
+        if (!Schema::hasTable('branch_reopen_requests')) {
+            Schema::create('branch_reopen_requests', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('branch_id')->constrained()->onDelete('cascade');
+                $table->foreignId('requested_by')->constrained('users')->onDelete('cascade');
+                $table->text('reason')->nullable();
+                $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
+                $table->foreignId('reviewed_by')->nullable()->constrained('users')->onDelete('set null');
+                $table->timestamp('reviewed_at')->nullable();
+                $table->text('admin_notes')->nullable();
+                $table->date('request_date');
+                $table->timestamps();
 
-            $table->index(['branch_id', 'request_date', 'status']);
-        });
+                $table->index(['branch_id', 'request_date', 'status']);
+            });
+        }
     }
 
     /**

@@ -288,28 +288,41 @@ class SalesReportController extends Controller
         
         $fileName = 'sales_report_' . $startDate . '_to_' . $endDate . '.csv';
 
-        \Illuminate\Support\Facades\Log::info("User ID " . auth()->id() . " generated Sales CSV Report from {$startDate} to {$endDate}");
+        \Illuminate\Support\Facades\Log::info("Generated Sales CSV Report", [
+            'user_id' => auth()->id(),
+            'branch_id' => $branchId,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
 
         return new StreamedResponse(function() use ($query) {
             $handle = fopen('php://output', 'w');
             fputcsv($handle, ['Date', 'Type', 'Order No', 'Customer', 'Branch', 'Payment Method', 'Amount']);
             
-            foreach ($query->cursor() as $activity) {
-                // To avoid N+1 inside cursor, we query Order in chunks, but for streaming, 
-                // simply fetching Order is fine if we cache it or fetch simply.
-                // Actually, best is to chunk the cursor.
-                $order = Order::withTrashed()->with('customer', 'branch')->find($activity->order_id);
-                
-                fputcsv($handle, [
-                    \Carbon\Carbon::parse($activity->date)->format('Y-m-d H:i'),
-                    $activity->type === 'payment' ? 'Payment' : 'Credit Sale',
-                    $order ? $order->order_number : '-',
-                    $order && $order->customer ? $order->customer->name : '-',
-                    $order && $order->branch ? $order->branch->name : '-',
-                    ucfirst($activity->payment_method),
-                    number_format((float)$activity->amount, 2, '.', '')
-                ]);
-            }
+            // Process in chunks of 500 to completely eliminate N+1 queries while streaming
+            $query->chunk(500, function ($activities) use ($handle) {
+                $orderIds = $activities->pluck('order_id')->filter()->unique();
+                $ordersMap = Order::withTrashed()
+                    ->with(['customer', 'branch'])
+                    ->whereIn('id', $orderIds)
+                    ->get()
+                    ->keyBy('id');
+
+                foreach ($activities as $activity) {
+                    $order = $ordersMap->get($activity->order_id);
+                    
+                    fputcsv($handle, [
+                        \Carbon\Carbon::parse($activity->date)->format('Y-m-d H:i'),
+                        $activity->type === 'payment' ? 'Payment' : 'Credit Sale',
+                        $order ? $order->order_number : '-',
+                        $order && $order->customer ? $order->customer->name : '-',
+                        $order && $order->branch ? $order->branch->name : '-',
+                        ucfirst($activity->payment_method ?? 'N/A'),
+                        number_format((float)$activity->amount, 2, '.', '')
+                    ]);
+                }
+            });
+
             fclose($handle);
         }, 200, [
             'Content-Type' => 'text/csv',

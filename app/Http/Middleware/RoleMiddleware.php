@@ -21,8 +21,13 @@ class RoleMiddleware
 
         $user = auth()->user();
 
-        // Owner / Super admin has access to everything
-        if (in_array($user->role, ['owner', 'super_admin'])) {
+        // Super admin has access to everything
+        if ($user->role === 'super_admin' || $user->role === 'owner') {
+            return $next($request);
+        }
+
+        // Dual role handling: accountant_and_hr_manager satisfies both 'accountant' and 'hr_manager'
+        if ($user->role === 'accountant_and_hr_manager' && (in_array('accountant', $roles) || in_array('hr_manager', $roles))) {
             return $next($request);
         }
 

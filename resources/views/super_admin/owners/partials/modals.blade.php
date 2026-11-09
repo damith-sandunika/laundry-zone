@@ -6,7 +6,7 @@
         <h3 class="text-base font-bold text-slate-900">Reset Password for Owner</h3>
         <p class="text-xs text-slate-400 mt-1">This will update the owner's credentials in both Landlord and Tenant databases.</p>
 
-        <form :action="`/super-admin/owners/${activeOwner.id}/reset-password`" method="POST" class="mt-4 space-y-4">
+        <form :action="`/saas-admin/owners/${activeOwner.id}/reset-password`" method="POST" class="mt-4 space-y-4">
             @csrf
             <div>
                 <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-1.5">New Password</label>
@@ -28,7 +28,7 @@
         <h3 class="text-base font-bold text-slate-900">Edit Owner Profile</h3>
         <p class="text-xs text-slate-400 mt-1">Update contact details for this company owner.</p>
 
-        <form :action="`/super-admin/owners/${activeOwner.id}`" method="POST" class="mt-4 space-y-4">
+        <form :action="`/saas-admin/owners/${activeOwner.id}`" method="POST" class="mt-4 space-y-4">
             @csrf
             @method('PUT')
             <div>

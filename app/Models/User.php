@@ -68,14 +68,14 @@ class User extends Authenticatable
     }
 
     // ─── Role Helpers ───
-    public function isOwner(): bool
-    {
-        return in_array($this->role, ['owner', 'super_admin']);
-    }
-
     public function isSuperAdmin(): bool
     {
-        return in_array($this->role, ['owner', 'super_admin']);
+        return $this->role === 'super_admin' || $this->role === 'owner';
+    }
+
+    public function isOwner(): bool
+    {
+        return $this->isSuperAdmin();
     }
 
     public function isBranchAdmin(): bool
@@ -85,7 +85,7 @@ class User extends Authenticatable
 
     public function isAdmin(): bool
     {
-        return in_array($this->role, ['owner', 'super_admin', 'branch_admin']);
+        return in_array($this->role, ['super_admin', 'owner', 'branch_admin']);
     }
 
     public function isStaff(): bool
@@ -113,35 +113,35 @@ class User extends Authenticatable
         return in_array($this->role, ['accountant', 'accountant_and_hr_manager']);
     }
 
-    // Has admin-level access (owner, super_admin, branch_admin, hr_manager, accountant_and_hr_manager)
+    // Has admin-level access (super_admin, branch_admin, hr_manager, accountant_and_hr_manager)
     public function hasAdminAccess(): bool
     {
-        return in_array($this->role, ['owner', 'super_admin', 'branch_admin', 'hr_manager', 'accountant_and_hr_manager']);
+        return in_array($this->role, ['super_admin', 'owner', 'branch_admin', 'hr_manager', 'accountant_and_hr_manager']);
     }
 
-    // Has financial oversight access (owner, super_admin, accountant, accountant_and_hr_manager)
+    // Has financial oversight access (super_admin, accountant, accountant_and_hr_manager)
     public function canManageFinance(): bool
     {
-        return in_array($this->role, ['owner', 'super_admin', 'accountant', 'accountant_and_hr_manager']);
+        return in_array($this->role, ['super_admin', 'owner', 'accountant', 'accountant_and_hr_manager']);
     }
 
-    // Has HR oversight access (owner, super_admin, hr_manager, accountant_and_hr_manager)
+    // Has HR oversight access (super_admin, hr_manager, accountant_and_hr_manager)
     public function canManageHR(): bool
     {
-        return in_array($this->role, ['owner', 'super_admin', 'hr_manager', 'accountant_and_hr_manager']);
+        return in_array($this->role, ['super_admin', 'owner', 'hr_manager', 'accountant_and_hr_manager']);
     }
 
-    // Has Staff administration access (owner, super_admin, hr_manager, accountant_and_hr_manager)
+    // Has Staff administration access (super_admin, hr_manager, accountant_and_hr_manager)
     public function canManageStaff(): bool
     {
-        return in_array($this->role, ['owner', 'super_admin', 'hr_manager', 'accountant_and_hr_manager']);
+        return in_array($this->role, ['super_admin', 'owner', 'hr_manager', 'accountant_and_hr_manager']);
     }
 
     // Dashboard redirect based on role
     public function dashboardRoute(): string
     {
         return match ($this->role) {
-            'owner', 'super_admin' => 'dashboard',
+            'super_admin', 'owner' => 'dashboard',
             'branch_admin',
             'staff' => 'dashboard',
             'workshop_admin' => 'workshop.dashboard',
@@ -154,7 +154,7 @@ class User extends Authenticatable
 
     public function canDeleteOrders(): bool
     {
-        if ($this->isOwner()) {
+        if ($this->isSuperAdmin()) {
             return true;
         }
 
@@ -168,8 +168,7 @@ class User extends Authenticatable
     public function roleLabel(): string
     {
         return match ($this->role) {
-            'owner' => 'Company Owner',
-            'super_admin' => 'Company Owner',
+            'super_admin', 'owner' => 'Super Admin',
             'branch_admin' => 'Branch Admin',
             'staff' => 'Staff',
             'workshop_admin' => 'Workshop Admin',

@@ -316,6 +316,26 @@ class CompanyController extends Controller
     }
 
     /**
+     * Toggle Suspend / Block status for a company.
+     */
+    public function toggleSuspend(Tenant $company)
+    {
+        TenantManager::resetToLandlord();
+
+        $newStatus = ($company->status === 'suspended') ? 'active' : 'suspended';
+        $company->status = $newStatus;
+        $company->save();
+
+        // Clear cache so the suspension takes effect immediately
+        \Illuminate\Support\Facades\Cache::forget("tenant_resolution:{$company->custom_domain}");
+        \Illuminate\Support\Facades\Cache::forget("tenant_resolution:{$company->subdomain}.localhost");
+        \Illuminate\Support\Facades\Cache::forget("tenant_resolution:{$company->subdomain}.test");
+
+        $actionText = ($newStatus === 'suspended') ? 'suspended and blocked from accessing the system' : 'reactivated';
+        return back()->with('success', "Company '{$company->name}' has been {$actionText}.");
+    }
+
+    /**
      * Delete / Suspend Company.
      */
     public function destroy(Tenant $company)

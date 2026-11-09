@@ -30,10 +30,10 @@
                         class="block text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 md:mb-2">Branch</label>
                     <select name="branch_id"
                         class="w-full px-2 py-1.5 md:px-4 md:py-2.5 border-2 border-slate-200 rounded-lg md:rounded-xl text-[10px] md:text-sm font-semibold text-slate-900 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-0 transition-colors">
-                        <option value="">🌍 All Branches (Company Wide)</option>
+                        <option value="">All Branches</option>
                         @foreach($branches as $branch)
                             <option value="{{ $branch->id }}" {{ $branchId == $branch->id ? 'selected' : '' }}>
-                                🏪 {{ $branch->name }}
+                             {{ $branch->name }}
                             </option>
                         @endforeach
                     </select>

@@ -6,16 +6,18 @@ use App\Http\Controllers\SuperAdmin\DashboardController;
 use App\Http\Controllers\SuperAdmin\DatabaseController;
 use App\Http\Controllers\SuperAdmin\OwnerController;
 use App\Http\Controllers\SuperAdmin\PaymentController;
+use App\Http\Controllers\SuperAdmin\PrintLayoutController;
 use App\Http\Controllers\SuperAdmin\SettingController;
+use App\Http\Controllers\SuperAdmin\SmsPackageController;
 use Illuminate\Support\Facades\Route;
 
-// ─── Super Admin Authentication ───
-Route::prefix('super-admin')->name('super_admin.')->group(function () {
+// ─── SaaS Admin Authentication & Routes ───
+Route::prefix('saas-admin')->name('super_admin.')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
-    // ─── Protected Platform Admin Routes ───
+    // ─── Protected SaaS Platform Admin Routes ───
     Route::middleware(['super_admin'])->group(function () {
         // Dashboard
         Route::get('/', fn() => redirect()->route('super_admin.dashboard'));
@@ -45,8 +47,18 @@ Route::prefix('super-admin')->name('super_admin.')->group(function () {
         // Payments & Billing
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');
         Route::post('/payments', [PaymentController::class, 'store'])->name('payments.store');
-        Route::put('/payments/{subscription}/status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
+        Route::patch('/payments/{subscription}/status', [PaymentController::class, 'updateStatus'])->name('payments.updateStatus');
+        Route::put('/payments/{subscription}/status', [PaymentController::class, 'updateStatus']);
         Route::get('/payments/{subscription}/invoice', [PaymentController::class, 'invoice'])->name('payments.invoice');
+
+        // SMS Packages & Top-Ups (Dedicated SaaS Platform Tab)
+        Route::get('/sms-packages', [SmsPackageController::class, 'index'])->name('sms_packages.index');
+        Route::post('/sms-packages', [SmsPackageController::class, 'storePackage'])->name('sms_packages.store');
+        Route::put('/sms-packages/{package}', [SmsPackageController::class, 'updatePackage'])->name('sms_packages.update');
+        Route::delete('/sms-packages/{package}', [SmsPackageController::class, 'destroyPackage'])->name('sms_packages.destroy');
+        Route::post('/sms-credits', [SmsPackageController::class, 'storeCredit'])->name('sms_credits.store');
+
+        Route::post('/companies/{company}/toggle-suspend', [CompanyController::class, 'toggleSuspend'])->name('companies.toggleSuspend');
 
         // Platform Settings
         Route::get('/settings', [SettingController::class, 'index'])->name('settings.index');
@@ -54,3 +66,7 @@ Route::prefix('super-admin')->name('super_admin.')->group(function () {
         Route::get('/settings/download-nginx', [SettingController::class, 'downloadNginx'])->name('settings.downloadNginx');
     });
 });
+
+// Backward-compatible redirect from /super-admin to /saas-admin
+Route::redirect('/super-admin', '/saas-admin');
+Route::redirect('/super-admin/{any}', '/saas-admin/{any}')->where('any', '.*');

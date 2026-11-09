@@ -48,65 +48,71 @@
         </div>
     </div>
 
-    <!-- Data Table -->
-    <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden mb-6">
+    <!-- Data Table (Saman Hardware ERP DataTable) -->
+    <div class="bg-white rounded-xl border border-slate-200/90 shadow-sm overflow-hidden mb-6 flex flex-col justify-between">
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse text-[10px] md:text-sm">
-                <thead class="bg-slate-50 border-b border-slate-100">
+            <table class="w-full text-left border-collapse text-xs">
+                <thead class="bg-slate-50 text-[11px] font-bold text-slate-500 uppercase border-b border-slate-200">
                     <tr>
-                        <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center w-16">No</th>
+                        <th class="px-4 py-3.5 text-center w-12 whitespace-nowrap">No</th>
                         @if($isSuperAdmin && !$branchId)
-                            <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Branch</th>
+                            <th class="px-4 py-3.5 whitespace-nowrap">Branch</th>
                         @endif
-                        <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Date</th>
-                        <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Order ID</th>
-                        <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Customer Name</th>
-                        <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-center">QTY</th>
-                        <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest">Payment Method</th>
-                        <th class="px-2 py-2 md:px-6 md:py-4 text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-widest text-right">Total</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Date</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Order ID</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Customer Name</th>
+                        <th class="px-4 py-3.5 text-center whitespace-nowrap">QTY</th>
+                        <th class="px-4 py-3.5 whitespace-nowrap">Payment Method</th>
+                        <th class="px-4 py-3.5 text-right whitespace-nowrap">Total</th>
                     </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-100">
+                <tbody class="divide-y divide-slate-100 font-medium">
                     @forelse($orders as $index => $activity)
-                        <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-2 py-2 md:px-6 md:py-4 text-center font-bold text-slate-400">{{ $orders->firstItem() + $index }}</td>
+                        <tr class="hover:bg-slate-50/80 transition-colors">
+                            <td class="px-4 py-3.5 text-center font-mono text-slate-400">{{ $orders->firstItem() + $index }}</td>
                             @if($isSuperAdmin && !$branchId)
-                                <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ optional(optional($activity->order)->branch)->name ?? 'Unknown' }}</td>
+                                <td class="px-4 py-3.5 font-bold text-slate-900">{{ optional(optional($activity->order)->branch)->name ?? 'Unknown' }}</td>
                             @endif
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ \Carbon\Carbon::parse($activity->date)->format('Y-m-d') }}</td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">
+                            <td class="px-4 py-3.5 font-mono text-slate-600 whitespace-nowrap">{{ \Carbon\Carbon::parse($activity->date)->format('Y-m-d') }}</td>
+                            <td class="px-4 py-3.5">
                                 @if(optional($activity->order)->order_number)
-                                <a href="{{ route('orders.show', optional($activity->order)->order_number) }}" class="text-blue-600 hover:underline">
-                                    {{ optional($activity->order)->order_number }}
+                                <a href="{{ route('orders.show', optional($activity->order)->order_number) }}" class="font-bold text-blue-600 hover:text-blue-800 font-mono">
+                                    #{{ optional($activity->order)->order_number }}
                                 </a>
                                 @else
-                                -
+                                <span class="text-slate-400 font-mono">-</span>
                                 @endif
                             </td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ optional(optional($activity->order)->customer)->name ?? 'Walk-in' }}</td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ number_format($activity->total_qty ?? 0, 1) }}</td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold uppercase">
+                            <td class="px-4 py-3.5 font-bold text-slate-900">{{ optional(optional($activity->order)->customer)->name ?? 'Walk-in' }}</td>
+                            <td class="px-4 py-3.5 text-center font-bold text-blue-600 font-mono">{{ number_format($activity->total_qty ?? 0, 1) }}</td>
+                            <td class="px-4 py-3.5 whitespace-nowrap">
                                 @php
                                     $pm = $activity->payment_method ?? '';
                                     $labels = ['cash'=>'Cash','card'=>'Card','bank'=>'Bank Transfer','credit'=>'Credit'];
                                     $label = $labels[$pm] ?? strtoupper($pm) ?: 'None';
                                     $colors = [
-                                        'cash'   => 'bg-emerald-100 text-emerald-700 border-emerald-200',
-                                        'card'   => 'bg-blue-100 text-blue-700 border-blue-200',
-                                        'bank'   => 'bg-purple-100 text-purple-700 border-purple-200',
-                                        'credit' => 'bg-orange-100 text-orange-700 border-orange-200',
+                                        'cash'   => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                        'card'   => 'bg-blue-50 text-blue-700 border-blue-200',
+                                        'bank'   => 'bg-purple-50 text-purple-700 border-purple-200',
+                                        'credit' => 'bg-amber-50 text-amber-700 border-amber-200',
                                     ];
-                                    $color = $colors[$pm] ?? 'bg-slate-100 text-slate-700 border-slate-200';
+                                    $color = $colors[$pm] ?? 'bg-slate-50 text-slate-700 border-slate-200';
                                 @endphp
-                                <span class="px-2.5 py-1 rounded-lg text-[10px] md:text-xs font-bold border {{ $color }}">{{ $label }}</span>
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-black uppercase tracking-wider border {{ $color }}">{{ $label }}</span>
                             </td>
-                            <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black {{ $activity->amount < 0 ? 'text-red-500' : 'text-emerald-500' }}">
-                                Rs.{{ number_format($activity->amount, 2) }}
+                            <td class="px-4 py-3.5 text-right font-black font-mono {{ $activity->amount < 0 ? 'text-rose-600' : 'text-emerald-600' }}">
+                                Rs. {{ number_format($activity->amount, 2) }}
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="{{ ($isSuperAdmin && !$branchId) ? 8 : 7 }}" class="px-3 py-6 md:px-6 md:py-10 text-center text-slate-400 text-[10px] md:text-sm font-semibold">No sales found in this date range.</td>
+                            <td colspan="{{ ($isSuperAdmin && !$branchId) ? 8 : 7 }}" class="px-6 py-16 text-center">
+                                <div class="w-12 h-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center mx-auto mb-3 text-slate-400">
+                                    <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                </div>
+                                <p class="text-sm font-bold text-slate-700">No sales transactions found</p>
+                                <p class="text-xs text-slate-400 mt-1">Try expanding your date range filter.</p>
+                            </td>
                         </tr>
                     @endforelse
                 </tbody>

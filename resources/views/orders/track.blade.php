@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Order #{{ $order->order_number }} — Track</title>
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Figtree', sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .card { background: white; border-radius: 24px; padding: 36px; max-width: 440px; width: 100%; box-shadow: 0 30px 60px rgba(0,0,0,0.4); }
+        body { font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .card { background: white; border-radius: 16px; padding: 36px; max-width: 440px; width: 100%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
         .badge { display: inline-block; padding: 5px 14px; border-radius: 99px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; }
         .status-step { display: flex; align-items: center; gap: 12px; padding: 10px 0; }
         .dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }

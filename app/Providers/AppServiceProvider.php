@@ -39,13 +39,13 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(300)->by($request->ip());
         });
 
-        // Global Authorization Gates
+        // Global Authorization Gates (Synchronized with 360 Laundry core)
         Gate::define('is-super-admin', function ($user) {
-            return in_array($user->role, ['owner', 'super_admin']);
+            return $user->role === 'super_admin' || $user->role === 'owner';
         });
 
         Gate::define('is-admin', function ($user) {
-            return in_array($user->role, ['owner', 'super_admin', 'branch_admin']);
+            return in_array($user->role, ['super_admin', 'owner', 'branch_admin']);
         });
 
         Gate::define('is-workshop-admin', function ($user) {
@@ -53,11 +53,11 @@ class AppServiceProvider extends ServiceProvider
         });
 
         Gate::define('manage-users', function ($user) {
-            return in_array($user->role, ['owner', 'super_admin']);
+            return in_array($user->role, ['super_admin', 'owner', 'hr_manager', 'accountant_and_hr_manager']);
         });
 
         Gate::define('manage-branches', function ($user) {
-            return in_array($user->role, ['owner', 'super_admin']);
+            return $user->role === 'super_admin' || $user->role === 'owner';
         });
 
         // Register policies that don't match auto-discovery

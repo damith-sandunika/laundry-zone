@@ -38,6 +38,9 @@ use Illuminate\Support\Facades\Route;
 // ─── Super Admin SaaS Platform Routes ───
 require __DIR__ . '/super_admin.php';
 
+// ─── Dynamic Tenant PWA Manifest ───
+Route::get('/manifest.json', [\App\Http\Controllers\PwaManifestController::class, 'manifest'])->name('pwa.manifest');
+
 // ─── App Redirect ───
 Route::redirect('/app', '/stafflogin');
 Route::redirect('/login', '/stafflogin');
@@ -161,10 +164,10 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve')->middleware('throttle:10,1');
         Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject')->middleware('throttle:10,1');
         Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
-        Route::get('/orders/{order:id}/print', [OrderController::class, 'printBill'])->name('orders.print');
-        Route::get('/orders/{order:id}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
-        Route::get('/orders/{order:id}/label', [OrderController::class, 'printLabel'])->name('orders.printLabel');
-        Route::get('/orders/{order:id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+        Route::get('/orders/{order:id}/print', [\App\Http\Controllers\OrderPrintController::class, 'printBill'])->name('orders.print');
+        Route::get('/orders/{order:id}/chit', [\App\Http\Controllers\OrderPrintController::class, 'printChit'])->name('orders.printChit');
+        Route::get('/orders/{order:id}/label', [\App\Http\Controllers\OrderPrintController::class, 'printLabel'])->name('orders.printLabel');
+        Route::get('/orders/{order:id}/invoice', [\App\Http\Controllers\OrderPrintController::class, 'invoice'])->name('orders.invoice');
         Route::post('/orders/{order:id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
         Route::post('/orders/{order:id}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
         Route::post('/orders/{order:id}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
@@ -178,9 +181,9 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/workshop/orders/{order_number}/finalize-bill', [WorkshopBillingController::class, 'finalizeBill'])->name('workshop.finalizeBill')->middleware('admin');
 
         // Order Management
-        Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
+        Route::get('/orders/history', [\App\Http\Controllers\OrderHistoryController::class, 'index'])->name('orders.history');
         Route::get('/orders/archive', [App\Http\Controllers\OrderArchiveController::class, 'index'])->name('orders.archive');
-        Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
+        Route::get('/orders/search', [\App\Http\Controllers\OrderSearchController::class, 'search'])->name('orders.search');
         Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
         Route::resource('orders', OrderController::class)->only(['index', 'edit']);
         Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
@@ -249,6 +252,11 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/settings/inventory', [InventorySettingsController::class, 'storeInventory'])->name('settings.storeInventory');
         Route::post('/settings/inventory/{item}/stock-in', [InventorySettingsController::class, 'stockIn'])->name('settings.stockIn');
 
+        // Packages Settings
+        Route::post('/settings/packages', [PackageSettingsController::class, 'storePackage'])->name('settings.storePackage');
+        Route::put('/settings/packages/{package}', [PackageSettingsController::class, 'updatePackage'])->name('settings.updatePackage');
+        Route::delete('/settings/packages/{package}', [PackageSettingsController::class, 'destroyPackage'])->name('settings.destroyPackage');
+
         // Service Reordering
         Route::post('/settings/services/reorder', [ServiceSettingsController::class, 'reorderServices'])->name('settings.reorderServices');
         Route::post('/settings/service-categories/reorder', [ServiceSettingsController::class, 'reorderCategories'])->name('settings.reorderCategories');
@@ -285,6 +293,21 @@ Route::middleware(['auth'])->group(function () {
 
         // Super Admin Only Settings Routes
         Route::middleware(['role:super_admin'])->group(function () {
+            // SaaS Platform Monthly Subscription & Payments (Super Admin of Tenant)
+            Route::get('/billing', [\App\Http\Controllers\TenantBillingController::class, 'index'])->name('billing.index');
+
+            // Document & Print Layout Customizer (Tenant Super Admin)
+            Route::get('/document-layouts', [\App\Http\Controllers\TenantPrintLayoutController::class, 'index'])->name('tenant.layouts.index');
+            Route::get('/document-layouts/bill', [\App\Http\Controllers\TenantPrintLayoutController::class, 'billPage'])->name('tenant.layouts.bill');
+            Route::get('/document-layouts/receipt', [\App\Http\Controllers\TenantPrintLayoutController::class, 'receiptPage'])->name('tenant.layouts.receipt');
+            Route::get('/document-layouts/invoice', [\App\Http\Controllers\TenantPrintLayoutController::class, 'invoicePage'])->name('tenant.layouts.invoice');
+            Route::post('/document-layouts', [\App\Http\Controllers\TenantPrintLayoutController::class, 'update'])->name('tenant.layouts.update');
+            Route::post('/document-layouts/reset', [\App\Http\Controllers\TenantPrintLayoutController::class, 'reset'])->name('tenant.layouts.reset');
+
+            // SMS Messages Sender & Bundle Payments
+            Route::get('/sms/sender', [\App\Http\Controllers\TenantSmsController::class, 'sender'])->name('sms.sender');
+            Route::get('/sms/payments', [\App\Http\Controllers\TenantSmsController::class, 'payments'])->name('sms.payments');
+
             Route::get('/settings/payment-methods', [GeneralSettingsController::class, 'paymentMethods'])->name('settings.payment-methods');
             Route::post('/settings/payment-methods', [PaymentSettingsController::class, 'update'])->name('settings.payment-methods.update');
             

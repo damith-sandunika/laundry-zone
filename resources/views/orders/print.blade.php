@@ -5,6 +5,35 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bill #{{ $order->order_number }}</title>
+    @php
+        $layout = $layout ?? \App\Models\Central\TenantPrintLayout::getForTenant(tenant('id'), 'bill');
+        $cfg = $layout->custom_fields ?? [];
+        $paperWidth = $cfg['paper_width'] ?? '300px';
+        $fontFamily = $layout->font_family ?: "'Inter', system-ui, -apple-system, sans-serif";
+        $fontSize = $layout->font_size ?: '12px';
+        $companyNameSize = $cfg['company_name_size'] ?? '18px';
+        $showLogo = $layout->show_logo;
+        $logoSize = $cfg['logo_size'] ?? '50';
+        $headerTitle = $layout->header_title ?: ($branch?->name ?? 'Laundry Zone');
+        $headerSubtitle = $layout->header_subtitle ?: ($mainBranch?->tagline ?? '');
+        $branchPhone = $cfg['branch_phone'] ?? ($branch?->phone ?? '');
+        $branchAddress = $cfg['branch_address'] ?? ($branch?->address ?? '');
+        $showDueDate = ($cfg['show_due_date'] ?? '1') == '1';
+        $showDeliveryFee = ($cfg['show_delivery_fee'] ?? '1') == '1';
+        $showDiscount = ($cfg['show_discount'] ?? '1') == '1';
+        $badgeTextPaid = $cfg['badge_text_paid'] ?? '✓ PAID IN FULL';
+        $badgeTextCredit = $cfg['badge_text_credit'] ?? '⏳ CREDIT';
+        $badgeTextPickup = $cfg['badge_text_pickup'] ?? '🕒 PAY ON PICKUP';
+        $termsText = $layout->terms_and_conditions ?: ($mainBranch?->invoice_terms ?? '');
+        $footerText = $layout->footer_text ?: ($mainBranch?->invoice_footer ?? 'Thank you for choosing ' . ($branch?->name ?? 'Laundry Zone') . '.');
+        $reviewText = $cfg['review_text'] ?? 'If you are happy with our service, please leave us a Google Review!';
+        $softwareBranding = $cfg['software_branding'] ?? 'Software by DSRZone';
+        $billNotice = $cfg['bill_notice'] ?? '';
+        $customExtraTexts = $cfg['custom_extra_texts'] ?? [];
+        if (!is_array($customExtraTexts)) {
+            $customExtraTexts = [];
+        }
+    @endphp
     <style>
         * {
             margin: 0;
@@ -18,9 +47,9 @@
         }
 
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            font-size: 12px;
-            width: 74mm;
+            font-family: {!! $fontFamily !!};
+            font-size: {{ $fontSize }};
+            width: {{ $paperWidth }};
             max-width: 100%;
             margin: 0 auto;
             padding: 4mm 3mm;
@@ -98,7 +127,7 @@
 
         @media print {
             body {
-                width: 74mm;
+                width: {{ $paperWidth }};
                 padding: 2mm 3mm;
                 margin: 0 auto;
             }
@@ -111,32 +140,29 @@
 </head>
 
 <body>
-    <div class="center" style="margin-bottom: 12px;">
-        @if($mainBranch && $mainBranch->logo_path)
-            <img src="{{ asset($mainBranch->logo_path) }}" alt="Logo"
-                style="max-width: {{ $mainBranch->logo_size ?? 140 }}px; height: auto;" onerror="this.style.display='none'">
-        @endif
+    @if($showLogo)
+        <div class="center" style="margin-bottom: 8px;">
+            @php
+                $tenant = \App\Services\Tenancy\TenantManager::getTenant();
+                $logoUrl = $tenant && $tenant->logo_path ? asset($tenant->logo_path) : ($mainBranch && $mainBranch->logo_path ? asset($mainBranch->logo_path) : asset('images/laundry_main_logo.png'));
+            @endphp
+            <img src="{{ $logoUrl }}" alt="Logo"
+                style="max-height: {{ $logoSize }}px; max-width: {{ $logoSize }}px; object-fit: contain;" onerror="this.style.display='none'">
+        </div>
+    @endif
+
+    <div class="center bold" style="font-size: {{ $companyNameSize }}; letter-spacing:-0.03em; margin-bottom: 2px;">
+        {{ $headerTitle }}
     </div>
 
-    @if($branch)
-        <div class="center bold" style="font-size:18px; letter-spacing:-0.03em; margin-bottom: 2px;">{{ $branch->name }}
-        </div>
+    @if($headerSubtitle)
+        <div class="center" style="font-size:12px; margin-bottom:2px;">{{ $headerSubtitle }}</div>
     @endif
-
-    @if($mainBranch && $mainBranch->tagline)
-        <div class="center" style="font-size:12px; margin-bottom:2px;">{{ $mainBranch->tagline }}</div>
+    @if($branchPhone)
+        <div class="center" style="font-size:12px;">{{ $branchPhone }}</div>
     @endif
-    @if($branch && $branch->phone)
-        <div class="center" style="font-size:12px;">{{ $branch->phone }}</div>
-    @endif
-    @if($branch && $branch->address)
-        <div class="center" style="font-size:12px;">{{ $branch->address }}</div>
-    @endif
-
-    @if($mainBranch && $mainBranch->invoice_header)
-        <div class="center" style="font-size:12px; margin-top:4px; font-style:italic;">
-            {!! nl2br(e($mainBranch->invoice_header)) !!}
-        </div>
+    @if($branchAddress)
+        <div class="center" style="font-size:12px;">{{ $branchAddress }}</div>
     @endif
 
     <div class="divider"></div>
@@ -145,7 +171,7 @@
     </div>
     <div class="row" style="font-size: 12px;"><span>Order Create Date:</span><span
             class="bold">{{ $order->created_at->format('d M Y h:i A') }}</span></div>
-    @if($order->due_date)
+    @if($showDueDate && $order->due_date)
         <div class="row" style="font-size: 12px;"><span>Delivery
                 Date:</span><span>{{ \Carbon\Carbon::parse($order->due_date)->format('M d, Y h:i A') }}</span></div>
     @endif
@@ -154,6 +180,12 @@
     </div>
     <div class="row" style="font-size: 12px;"><span>Phone:</span><span class="bold">{{ $order->customer->phone }}</span>
     </div>
+
+    @if($billNotice)
+        <div class="center bold" style="margin: 6px 0; padding: 4px; border: 1px dashed #000; font-size: 11px;">
+            {{ $billNotice }}
+        </div>
+    @endif
 
     <div class="divider"></div>
     @foreach($order->items as $item)
@@ -202,14 +234,14 @@
 
     <div class="divider"></div>
 
-    @if($order->discount > 0 || $order->delivery_fee > 0 || $order->additional > 0)
+    @if(($showDiscount && $order->discount > 0) || ($showDeliveryFee && $order->delivery_fee > 0) || $order->additional > 0)
         <div class="row"><span>Subtotal</span><span>Rs.{{ number_format($order->subtotal, 2) }}</span></div>
-        @if($order->discount > 0)
+        @if($showDiscount && $order->discount > 0)
             @php $discountPct = ($order->subtotal > 0) ? round(($order->discount / $order->subtotal) * 100, 1) : 0; @endphp
             <div class="row"><span>Discount{{ $discountPct > 0 ? ' (' . $discountPct . '%)' : '' }}</span><span>-
                     Rs.{{ number_format($order->discount, 2) }}</span></div>
         @endif
-        @if($order->delivery_fee > 0)
+        @if($showDeliveryFee && $order->delivery_fee > 0)
             <div class="row"><span>Delivery Fee</span><span>Rs.{{ number_format($order->delivery_fee, 2) }}</span></div>
         @endif
         @if($order->additional > 0)
@@ -255,40 +287,47 @@
 
     <div class="center" style="margin: 8px 0;">
         <span class="badge">
-            @if($order->paid_amount >= $order->total) ✓ PAID IN FULL @elseif($order->payment_method === 'credit') ⏳
-            CREDIT @else 🕒 PAY ON PICKUP @endif
+            @if($order->paid_amount >= $order->total)
+                {{ $badgeTextPaid }}
+            @elseif($order->payment_method === 'credit')
+                {{ $badgeTextCredit }}
+            @else
+                {{ $badgeTextPickup }}
+            @endif
         </span>
     </div>
 
+    @if(!empty($customExtraTexts))
+        <div class="divider"></div>
+        <div style="margin: 6px 0; font-size: 11px;">
+            @foreach($customExtraTexts as $extraLine)
+                @if(!empty($extraLine['text']))
+                    <div class="center bold" style="margin-bottom: 3px;">{{ $extraLine['text'] }}</div>
+                @endif
+            @endforeach
+        </div>
+    @endif
+
     <div class="divider"></div>
 
-    @if($mainBranch && $mainBranch->invoice_terms)
+    @if($termsText)
         <div style="font-size:10px; margin-top:8px; color:#333; text-align:justify;">
             <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
-            {!! nl2br(e($mainBranch->invoice_terms)) !!}
+            {!! nl2br(e($termsText)) !!}
         </div>
         <div class="divider"></div>
     @endif
 
-    <div style="font-size:10px; margin-top:8px; margin-bottom:8px; color:#333; text-align:center;">
-        <div class="bold center" style="margin-bottom:2px;">Terms & Conditions</div>
-        Read our full terms at <br><strong
-            style="font-size:11px;">{{ str_replace(['http://', 'https://'], '', url('/terms')) }}</strong>
-    </div>
-    <div class="divider"></div>
-
-    @if($mainBranch && $mainBranch->invoice_footer)
-        <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($mainBranch->invoice_footer)) !!}</div>
-    @else
-        <div class="center bold" style="font-size:12px; margin-top:8px;">Thank you for choosing
-            {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}.</div>
-        <div class="center" style="font-size:10px; margin-top:3px; color:#333;">If you are happy with our service, please
-            leave us a Google Review!</div>
+    <div class="center bold" style="font-size:12px; margin-top:8px;">{!! nl2br(e($footerText)) !!}</div>
+    @if($reviewText)
+        <div class="center" style="font-size:10px; margin-top:3px; color:#333;">{{ $reviewText }}</div>
     @endif
 
-    <div class="center" style="font-size:10px; margin-top:12px; color:#666;">
-        Software by DSRZone
-    </div>
+    @if($softwareBranding)
+        <div class="center" style="font-size:10px; margin-top:12px; color:#666;">
+            {{ $softwareBranding }}
+        </div>
+    @endif
 
     <div class="no-print" style="margin-top:16px; text-align:center;">
         <button onclick="window.print()"

@@ -21,8 +21,8 @@ class IdentifyTenant
         $path = $request->path();
         $centralDomain = TenantManager::getCentralBaseDomain();
 
-        // Always prioritize Super Admin platform routes or central domain
-        if ($request->is('super-admin*') || str_starts_with($host, 'admin.') || $host === $centralDomain) {
+        // Always prioritize SaaS Admin platform routes or central domain
+        if ($request->is('saas-admin*') || $request->is('super-admin*') || str_starts_with($host, 'admin.') || $host === $centralDomain) {
             TenantManager::resetToLandlord();
             return $next($request);
         }
@@ -57,7 +57,7 @@ class IdentifyTenant
                 }
             }
 
-            if ($subdomain && !in_array($subdomain, ['www', 'admin', 'app', 'mail', 'api', 'central', 'super-admin'])) {
+            if ($subdomain && !in_array($subdomain, ['www', 'admin', 'app', 'mail', 'api', 'central', 'super-admin', 'saas-admin'])) {
                 $found = Tenant::where('subdomain', $subdomain)->first();
                 return $found?->id;
             }
@@ -80,10 +80,17 @@ class IdentifyTenant
 
         // 3. Handle Tenant Resolution
         if ($tenant) {
-            // Check if tenant is suspended
+            // Check if tenant is suspended (e.g. unpaid bills / on hold)
             if ($tenant->status === 'suspended') {
+                $unpaidInvoices = \App\Models\Central\TenantSubscription::where('tenant_id', $tenant->id)
+                    ->whereIn('status', ['pending', 'overdue'])
+                    ->get();
+                $outstandingAmount = $unpaidInvoices->sum('total_amount');
+
                 return response()->view('super_admin.errors.suspended', [
                     'tenant' => $tenant,
+                    'unpaidInvoices' => $unpaidInvoices,
+                    'outstandingAmount' => $outstandingAmount,
                 ], 403);
             }
 

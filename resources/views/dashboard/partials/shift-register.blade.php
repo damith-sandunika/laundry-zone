@@ -19,7 +19,7 @@
                 <div class="p-6 flex flex-col gap-0 divide-y divide-slate-800">
                     <div class="flex justify-between items-center py-3">
                         <span class="text-[12px] font-semibold text-slate-400">Opening Balance</span>
-                        <span class="text-[14px] font-black text-white tracking-tight">Rs.{{ number_format($activeSession->opening_cash, 0) }}</span>
+                        <span class="text-[14px] font-black text-white tracking-tight">Rs.{{ number_format($activeSession->opening_cash ?? 0, 0) }}</span>
                     </div>
                     <div class="flex justify-between items-center py-2">
                         <span class="text-[12px] font-semibold text-slate-400">Cash Sales</span>
@@ -86,11 +86,11 @@
                     </div>
                     <div class="flex justify-between items-center py-3 border-t border-slate-700">
                         <span class="text-[11px] font-semibold text-slate-500">Opened By</span>
-                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession->user?->name ?? 'Unknown' }}</span>
+                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession ? ($activeSession->user?->name ?? 'Unknown') : 'No Active Shift' }}</span>
                     </div>
                     <div class="flex justify-between items-center py-3 border-b-0">
                         <span class="text-[11px] font-semibold text-slate-500">Time Started</span>
-                        <span class="text-[11px] font-bold text-slate-300">{{ \Carbon\Carbon::parse($activeSession->opened_at)->format('h:i A') }}</span>
+                        <span class="text-[11px] font-bold text-slate-300">{{ $activeSession && $activeSession->opened_at ? \Carbon\Carbon::parse($activeSession->opened_at)->format('h:i A') : '-' }}</span>
                     </div>
                 </div>
             </div>

@@ -49,6 +49,14 @@
                             class="px-2.5 py-1 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-bold transition">
                             Invoice
                         </a>
+                        @if($sub->tenant)
+                            <form action="{{ route('super_admin.companies.toggleSuspend', $sub->tenant) }}" method="POST" class="inline" onsubmit="return confirm('{{ $sub->tenant->status === 'suspended' ? 'Reactivate this company?' : 'Suspend and block this company from accessing the system?' }}')">
+                                @csrf
+                                <button type="submit" class="px-2.5 py-1 rounded-lg text-xs font-bold transition {{ $sub->tenant->status === 'suspended' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-rose-50 text-rose-700 hover:bg-rose-100' }}">
+                                    {{ $sub->tenant->status === 'suspended' ? 'Unblock' : 'Block Company' }}
+                                </button>
+                            </form>
+                        @endif
                     </td>
                 </tr>
             @endforeach

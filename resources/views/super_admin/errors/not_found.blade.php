@@ -23,7 +23,7 @@
         </div>
 
         <div class="pt-2">
-            <a href="http://{{ $centralDomain }}/super-admin/login"
+            <a href="http://{{ $centralDomain }}/saas-admin/login"
                 class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs shadow-lg transition">
                 <span>Go to Platform Admin</span>
             </a>

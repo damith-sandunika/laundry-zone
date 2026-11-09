@@ -46,12 +46,20 @@ class PaymentController extends Controller
         $overdueAmount = TenantSubscription::where('status', 'overdue')->sum('total_amount');
         $tenants = Tenant::where('status', 'active')->get();
 
+        // SMS Credits History
+        $smsCredits = \App\Models\Central\TenantSmsCredit::with('tenant')->latest()->paginate(10, ['*'], 'sms_page');
+        $totalSmsRevenue = \App\Models\Central\TenantSmsCredit::where('status', 'completed')->sum('amount_paid');
+        $totalSmsIssued = \App\Models\Central\TenantSmsCredit::where('status', 'completed')->sum('sms_count');
+
         return view('super_admin.payments.index', compact(
             'subscriptions',
             'totalCollected',
             'pendingAmount',
             'overdueAmount',
-            'tenants'
+            'tenants',
+            'smsCredits',
+            'totalSmsRevenue',
+            'totalSmsIssued'
         ));
     }
 
@@ -64,41 +72,43 @@ class PaymentController extends Controller
 
         $request->validate([
             'tenant_id' => 'required|exists:landlord.tenants,id',
-            'plan_name' => 'required|string|max:100',
-            'base_amount' => 'required|numeric|min:0',
-            'delivery_addon_amount' => 'nullable|numeric|min:0',
-            'billing_cycle' => 'required|in:monthly,quarterly,yearly',
-            'billing_period_start' => 'nullable|date',
-            'billing_period_end' => 'nullable|date',
-            'status' => 'required|in:paid,pending,overdue',
+            'amount' => 'nullable|numeric|min:0',
+            'billing_month' => 'required|date_format:Y-m',
+            'status' => 'nullable|in:paid,pending,overdue',
             'payment_method' => 'nullable|string|max:100',
             'payment_reference' => 'nullable|string|max:100',
             'notes' => 'nullable|string',
         ]);
 
-        $base = (float) $request->base_amount;
-        $delivery = (float) ($request->delivery_addon_amount ?? 0);
-        $total = $base + $delivery;
+        $tenant = Tenant::findOrFail($request->tenant_id);
+
+        $totalAmount = $request->filled('amount') 
+            ? (float) $request->amount 
+            : $tenant->total_monthly_price;
+
+        $startDate = \Carbon\Carbon::createFromFormat('Y-m', $request->billing_month)->startOfMonth();
+        $endDate = (clone $startDate)->endOfMonth();
+        $status = $request->status ?? 'paid';
 
         TenantSubscription::create([
-            'tenant_id' => $request->tenant_id,
+            'tenant_id' => $tenant->id,
             'invoice_number' => 'INV-' . strtoupper(Str::random(4)) . '-' . date('Ymd'),
-            'plan_name' => $request->plan_name,
-            'base_amount' => $base,
-            'delivery_addon_amount' => $delivery,
-            'total_amount' => $total,
+            'plan_name' => $tenant->plan ?? 'Standard Plan',
+            'base_amount' => (float) ($tenant->plan_price ?? $totalAmount),
+            'delivery_addon_amount' => $tenant->is_delivery_enabled ? (float) ($tenant->delivery_price ?? 0) : 0,
+            'total_amount' => $totalAmount,
             'currency' => 'LKR',
-            'billing_cycle' => $request->billing_cycle,
-            'billing_period_start' => $request->billing_period_start ?? now()->startOfMonth(),
-            'billing_period_end' => $request->billing_period_end ?? now()->endOfMonth(),
-            'status' => $request->status,
+            'billing_cycle' => 'monthly',
+            'billing_period_start' => $startDate,
+            'billing_period_end' => $endDate,
+            'status' => $status,
             'payment_method' => $request->payment_method ?? 'Bank Transfer',
             'payment_reference' => $request->payment_reference,
-            'paid_at' => $request->status === 'paid' ? now() : null,
+            'paid_at' => $status === 'paid' ? now() : null,
             'notes' => $request->notes,
         ]);
 
-        return back()->with('success', 'Subscription invoice generated successfully.');
+        return back()->with('success', 'Subscription invoice generated successfully for ' . $startDate->format('F Y') . '.');
     }
 
     /**
@@ -127,6 +137,50 @@ class PaymentController extends Controller
         $subscription->save();
 
         return back()->with('success', "Invoice {$subscription->invoice_number} status updated to {$subscription->status}.");
+    }
+
+    /**
+     * Add SMS Credits to a Tenant (SaaS Admin).
+     */
+    public function storeSmsCredit(Request $request)
+    {
+        TenantManager::resetToLandlord();
+
+        $request->validate([
+            'tenant_id' => 'required|exists:landlord.tenants,id',
+            'sms_count' => 'required|integer|min:1',
+            'rate_per_sms' => 'nullable|numeric|min:0',
+            'amount_paid' => 'nullable|numeric|min:0',
+            'payment_method' => 'nullable|string|max:100',
+            'payment_reference' => 'nullable|string|max:100',
+            'notes' => 'nullable|string',
+        ]);
+
+        $tenant = Tenant::findOrFail($request->tenant_id);
+        $rate = $request->filled('rate_per_sms') ? (float)$request->rate_per_sms : (float)$tenant->sms_rate;
+        $count = (int)$request->sms_count;
+        $amountPaid = $request->filled('amount_paid') ? (float)$request->amount_paid : ($count * $rate);
+
+        // Record credit package
+        \App\Models\Central\TenantSmsCredit::create([
+            'tenant_id' => $tenant->id,
+            'sms_count' => $count,
+            'rate_per_sms' => $rate,
+            'amount_paid' => $amountPaid,
+            'payment_method' => $request->payment_method ?? 'Bank Transfer',
+            'payment_reference' => $request->payment_reference,
+            'status' => 'completed',
+            'notes' => $request->notes ?? 'SMS Bundle Top-Up by SaaS Admin',
+        ]);
+
+        // Increment tenant sms balance and update rate if changed
+        $tenant->increment('sms_balance', $count);
+        if ($request->filled('rate_per_sms')) {
+            $tenant->sms_rate = $rate;
+            $tenant->save();
+        }
+
+        return back()->with('success', "Successfully added {$count} SMS credits to {$tenant->name}. New Balance: {$tenant->sms_balance} SMS.");
     }
 
     /**

@@ -23,7 +23,7 @@ class EnsureShiftIsOpen
         }
 
         // Super Admin has full unrestricted bypass across the entire system
-        if ($user->role === 'super_admin') {
+        if ($user->role === 'super_admin' || $user->role === 'owner') {
             return $next($request);
         }
 

@@ -34,6 +34,24 @@ class ProcessSms implements ShouldQueue
     public function handle(): void
     {
         try {
+            // Check Tenant SMS Credit Balance (Central Landlord DB)
+            $tenant = \App\Services\Tenancy\TenantManager::getTenant();
+            if ($tenant) {
+                // Refresh tenant data from landlord DB
+                $centralTenant = \App\Models\Central\Tenant::find($tenant->id);
+                if ($centralTenant && $centralTenant->sms_balance <= 0) {
+                    Log::warning("ProcessSms Blocked: Tenant {$centralTenant->name} (ID: {$centralTenant->id}) has insufficient SMS credits (Balance: {$centralTenant->sms_balance}). Gateway paused.");
+                    $this->smsLog->update([
+                        'status' => 'failed',
+                        'response' => json_encode([
+                            'error' => 'Insufficient SMS Credits. Gateway paused. Please purchase an SMS bundle.',
+                            'balance' => $centralTenant->sms_balance,
+                        ]),
+                    ]);
+                    return;
+                }
+            }
+
             // Retrieve dynamic Per-Tenant SMS configurations
             $gateway  = Setting::get('sms_gateway', 'textware');
             $apiKey   = Setting::get('sms_api_key') ?: env('SMS_API_TOKEN');
@@ -41,11 +59,21 @@ class ProcessSms implements ShouldQueue
             $apiUrl   = Setting::get('sms_api_url') ?: env('SMS_API_URL');
 
             if ($gateway === 'mock' || empty($apiKey)) {
-                Log::info("ProcessSms [MOCK/TESTING] Sent to {$this->smsLog->phone} with Mask [{$mask}]: {$this->smsLog->message}");
+                $maskedPhone = substr($this->smsLog->phone, 0, 4) . '****' . substr($this->smsLog->phone, -2);
+                Log::info("ProcessSms [MOCK/TESTING]", [
+                    'recipient' => $maskedPhone,
+                    'mask'      => $mask,
+                    'sms_log_id' => $this->smsLog->id,
+                ]);
                 $this->smsLog->update([
                     'status' => 'sent',
                     'response' => json_encode(['mock' => true, 'mask' => $mask, 'timestamp' => now()->toIso8601String()]),
                 ]);
+
+                // Deduct 1 credit from tenant balance
+                if (!empty($centralTenant) && $centralTenant->sms_balance > 0) {
+                    $centralTenant->decrement('sms_balance', 1);
+                }
                 return;
             }
 
@@ -75,6 +103,10 @@ class ProcessSms implements ShouldQueue
 
             if ($response->successful()) {
                 $this->smsLog->update(['status' => 'sent', 'response' => $response->body()]);
+                // Deduct 1 credit upon successful delivery
+                if (!empty($centralTenant) && $centralTenant->sms_balance > 0) {
+                    $centralTenant->decrement('sms_balance', 1);
+                }
             } else {
                 Log::warning("ProcessSms Gateway Failed for [{$mask}] -> {$this->smsLog->phone}: " . $response->body());
                 $this->smsLog->update(['status' => 'failed', 'response' => $response->body()]);

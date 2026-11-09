@@ -12,15 +12,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('customers', function (Blueprint $table) {
-            $table->enum('customer_type', ['walkin', 'corporate', 'online'])
-                ->default('walkin')
-                ->after('customer_mark')
-                ->index();
-        });
+        if (!Schema::hasColumn('customers', 'customer_type')) {
+            Schema::table('customers', function (Blueprint $table) {
+                $table->enum('customer_type', ['walkin', 'corporate', 'online'])
+                    ->default('walkin')
+                    ->after('customer_mark')
+                    ->index();
+            });
 
-        // Populate existing customers based on is_corporate boolean
-        DB::statement("UPDATE `customers` SET `customer_type` = IF(`is_corporate` = 1, 'corporate', 'walkin')");
+            // Populate existing customers based on is_corporate boolean
+            if (Schema::hasColumn('customers', 'is_corporate')) {
+                DB::table('customers')->where('is_corporate', true)->update(['customer_type' => 'corporate']);
+                DB::table('customers')->where('is_corporate', false)->update(['customer_type' => 'walkin']);
+            }
+        }
     }
 
     /**

@@ -44,7 +44,7 @@
             </div>
             @endif
 
-            <form action="{{ route('booking.store') }}" method="POST" class="space-y-5">
+            <form action="{{ route('customer.booking.store') }}" method="POST" class="space-y-5">
                 @csrf
                 <input type="hidden" name="branch_id" value="{{ $branch->id ?? 1 }}">
 

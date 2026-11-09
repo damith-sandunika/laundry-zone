@@ -12,7 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('customers', function (Blueprint $table) {
-            $table->boolean('is_corporate')->default(false)->after('customer_mark')->index();
+            if (!Schema::hasColumn('customers', 'is_corporate')) {
+                $table->boolean('is_corporate')->default(false)->after('customer_mark')->index();
+            }
         });
     }
 

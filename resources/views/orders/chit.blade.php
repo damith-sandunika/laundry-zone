@@ -4,6 +4,36 @@
 <head>
     <meta charset="UTF-8">
     <title>Job Card - {{ $order->order_number }}</title>
+    @php
+        $layout = $layout ?? \App\Models\Central\TenantPrintLayout::getForTenant(tenant('id'), 'receipt');
+        $cfg = $layout->custom_fields ?? [];
+        $paperWidth = $cfg['paper_width'] ?? '80mm';
+        $orderNoSize = $cfg['order_no_size'] ?? '20px';
+        $showLogo = $layout->show_logo;
+        $logoSize = $cfg['logo_size'] ?? '45';
+        $showCustomerPhone = ($cfg['show_customer_phone'] ?? '1') == '1';
+        $showDueDate = ($cfg['show_due_date'] ?? '1') == '1';
+        $showTotals = ($cfg['show_totals'] ?? '1') == '1';
+        $showSpecialNotes = ($cfg['show_special_notes'] ?? '1') == '1';
+        $notesLabel = $cfg['notes_label'] ?? 'Special Note :';
+        $notesLineCount = (int)($cfg['notes_line_count'] ?? 2);
+        $showProcessList = ($cfg['show_process_list'] ?? '1') == '1';
+        
+        $processItems = $cfg['process_items'] ?? null;
+        if (!is_array($processItems) || empty($processItems)) {
+            $processItems = [
+                ['name' => 'Collected', 'suffix' => 'Kamal'],
+                ['name' => 'Wash', 'suffix' => '________'],
+                ['name' => 'Iron', 'suffix' => '________'],
+                ['name' => 'Quality check', 'suffix' => '________'],
+                ['name' => 'Final inspection', 'suffix' => '________'],
+            ];
+        }
+
+        $fontFamily = $layout->font_family ?: "'Helvetica Neue', Helvetica, Arial, sans-serif";
+        $fontSize = $layout->font_size ?: '12px';
+        $headerSubtitle = $layout->header_subtitle ?: '';
+    @endphp
     <style>
         /* ── Control Panel (hidden on print) ── */
         #ctrl-panel {
@@ -49,55 +79,52 @@
         #btn-print {
             margin-left: auto;
             background: #3b82f6;
-            color: white;
+            color: #fff;
             border: none;
-            padding: 6px 18px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 800;
+            border-radius: 6px;
+            padding: 5px 14px;
+            font-size: 12px;
+            font-weight: 700;
             cursor: pointer;
-            letter-spacing: 0.03em;
-            transition: background 0.15s;
         }
 
         #btn-print:hover {
             background: #2563eb;
         }
 
-        #scale-val {
-            font-weight: 800;
-            color: #60a5fa;
-            min-width: 36px;
+        /* ── Base Styles ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
-        /* ── Chit Body ── */
         body {
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            font-weight: 600;
-            margin: 0;
-            padding: 10px;
+            font-family: {!! $fontFamily !!};
+            font-size: {{ $fontSize }};
             color: #000;
-            box-sizing: border-box;
-            background: #f1f5f9;
+            background: #f8fafc;
+            display: flex;
+            justify-content: center;
         }
 
         #chit-wrapper {
             background: #fff;
-            margin: 0 auto;
-            padding: 10px;
-            box-sizing: border-box;
+            padding: 10px 10px 20px 10px;
+            width: {{ $paperWidth }};
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
         .header {
             text-align: center;
-            margin-bottom: 10px;
             border-bottom: 1px solid #000;
             padding-bottom: 5px;
+            margin-bottom: 10px;
         }
 
         .text-bold {
             font-weight: 900;
-            font-size: 1.4em;
+            font-size: {{ $orderNoSize }};
             margin: 3px 0;
         }
 
@@ -159,12 +186,13 @@
             margin-top: 15px;
             font-size: 0.78em;
             font-weight: bold;
+            margin-bottom: 15px;
         }
 
         .note-line {
-            border-bottom: 1px solid #000;
+            border-bottom: 1px dotted #000;
             height: 18px;
-            margin-top: 5px;
+            margin-top: 4px;
         }
 
         @media print {
@@ -173,14 +201,17 @@
             }
 
             body {
-                margin: 0;
-                padding: 0;
                 background: #fff;
             }
 
             #chit-wrapper {
-                padding: 3mm;
                 box-shadow: none;
+                padding: 0;
+                margin-top: 0 !important;
+            }
+
+            @page {
+                margin: 0;
             }
         }
     </style>
@@ -192,17 +223,17 @@
     <div id="ctrl-panel">
         <label>&#128207; Paper Width:</label>
         <select id="sel-width" onchange="applySize()">
-            <option value="58mm">58mm (Narrow)</option>
-            <option value="72mm">72mm</option>
-            <option value="80mm">80mm (Wide)</option>
-            <option value="100mm">100mm</option>
+            <option value="58mm" {{ $paperWidth === '260px' || $paperWidth === '58mm' ? 'selected' : '' }}>58mm (Narrow)</option>
+            <option value="72mm" {{ $paperWidth === '72mm' ? 'selected' : '' }}>72mm</option>
+            <option value="80mm" {{ $paperWidth === '300px' || $paperWidth === '80mm' ? 'selected' : '' }}>80mm (Wide)</option>
+            <option value="100mm" {{ $paperWidth === '360px' || $paperWidth === '100mm' ? 'selected' : '' }}>100mm</option>
             <option value="148mm">A6 (148mm)</option>
             <option value="210mm">A5 (210mm)</option>
         </select>
 
         <label>&#128288; Font Size:</label>
-        <input type="range" id="sl-font" min="8" max="22" value="12" step="1" oninput="applySize()">
-        <span id="scale-val">12px</span>
+        <input type="range" id="sl-font" min="8" max="22" value="{{ (int)$fontSize }}" step="1" oninput="applySize()">
+        <span id="scale-val">{{ $fontSize }}</span>
 
         <button id="btn-print" onclick="window.print()">&#128438; Print</button>
     </div>
@@ -211,19 +242,33 @@
     <div id="chit-wrapper" style="margin-top: 56px;">
 
         <div class="header">
+            @if($showLogo)
+                @php
+                    $tenant = \App\Services\Tenancy\TenantManager::getTenant();
+                    $logoUrl = $tenant && $tenant->logo_path ? asset($tenant->logo_path) : asset('images/laundry_main_logo.png');
+                @endphp
+                <div style="margin-bottom: 6px;">
+                    <img src="{{ $logoUrl }}" style="max-height: {{ $logoSize }}px; max-width: {{ $logoSize }}px; object-fit: contain;" onerror="this.style.display='none'">
+                </div>
+            @endif
             <div class="text-bold text-center">{{ $order->order_number }}</div>
             <div class="text-small">
                 @if($order->customer && $order->customer->customer_mark)
                     {{ $order->customer->customer_mark }} -
                 @endif
                 {{ strtoupper(optional($order->customer)->title ? optional($order->customer)->title . ' ' : '') }}{{ strtoupper(optional($order->customer)->name ?? 'Walk-in') }}
-                @if($order->customer && $order->customer->phone)
+                @if($showCustomerPhone && $order->customer && $order->customer->phone)
                     <br>{{ $order->customer->phone }}
                 @endif
             </div>
+            @if($headerSubtitle)
+                <div style="font-size: 0.7em; color: #475569; font-weight: bold; margin-top: 2px;">{{ $headerSubtitle }}</div>
+            @endif
         </div>
 
-        <div class="date">{{ $order->due_date ? $order->due_date->format('d M Y h:i A') : 'N/A' }}</div>
+        @if($showDueDate)
+            <div class="date">{{ $order->due_date ? $order->due_date->format('d M Y h:i A') : 'N/A' }}</div>
+        @endif
 
         <div class="items">
             @php $total_qty = 0; @endphp
@@ -275,8 +320,8 @@
             </div>
         </div>
 
-        {{-- Payment Totals — controlled by General Setting: chit_show_totals --}}
-        @if(\App\Models\Setting::get('chit_show_totals', '0') == '1')
+        {{-- Payment Totals --}}
+        @if($showTotals)
         <div style="border-top: 1px solid #000; margin-top: 15px; padding-top: 10px; padding-bottom: 15px;">
             @if($order->discount > 0)
             <div class="item-row" style="font-size: 0.72em;">
@@ -318,21 +363,25 @@
         </div>
         @endif
 
+        @if($showSpecialNotes)
         <div class="special-note" style="border-top: 1px solid #000; padding-top: 15px;">
-            <div>Special Note :</div>
-            <div class="note-line"></div>
-            <div class="note-line"></div>
+            <div>{{ $notesLabel }}</div>
+            @for($i = 0; $i < $notesLineCount; $i++)
+                <div class="note-line"></div>
+            @endfor
         </div>
+        @endif
 
+        @if($showProcessList && !empty($processItems))
         <div class="process-list">
-            <div>Collected :</div>
-            <div>Wash :</div>
-            <div>Iron :</div>
-            <div>Quality check :</div>
-            <div>Final inspection :</div>
+            @foreach($processItems as $proc)
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span>{{ $proc['name'] ?? '' }} :</span>
+                    <span style="font-family: monospace;">{{ $proc['suffix'] ?? '________' }}</span>
+                </div>
+            @endforeach
         </div>
-
-
+        @endif
 
     </div><!-- /chit-wrapper -->
 
@@ -348,7 +397,6 @@
             wrapper.style.width = width;
             wrapper.style.fontSize = fontSize + 'px';
 
-            // Save to localStorage so next print remembers
             localStorage.setItem(STORE_KEY, JSON.stringify({ width, fontSize }));
         }
 
@@ -362,7 +410,6 @@
             } catch (e) { }
             applySize();
 
-            // Auto-print if requested via URL
             if (window.location.search.includes('auto_print=1')) {
                 setTimeout(function () {
                     window.print();

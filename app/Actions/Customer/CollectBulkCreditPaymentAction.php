@@ -21,24 +21,30 @@ class CollectBulkCreditPaymentAction
         }
 
         // Get all unpaid credit orders for this customer, oldest first
-        $orders = Order::where('customer_id', $customer->id)
+        $orderIds = Order::where('customer_id', $customer->id)
             ->where('payment_method', 'credit')
             ->where('status', '!=', 'cancelled')
             ->whereColumn('paid_amount', '<', 'total')
             ->orderBy('created_at', 'asc')
-            ->get();
+            ->pluck('id');
 
-        if ($orders->isEmpty()) {
+        if ($orderIds->isEmpty()) {
             throw new Exception('No pending credit orders found for this customer.');
         }
 
-        DB::transaction(function () use ($orders, &$remainingPayment, $data, $userId, &$settledOrders) {
+        DB::transaction(function () use ($orderIds, &$remainingPayment, $data, $userId, &$settledOrders) {
+            // Lock orders for update to eliminate race condition
+            $orders = Order::whereIn('id', $orderIds)->lockForUpdate()->orderBy('created_at', 'asc')->get();
+
             foreach ($orders as $order) {
                 if ($remainingPayment <= 0) {
                     break;
                 }
 
                 $due = $order->total - $order->paid_amount;
+                if ($due <= 0) {
+                    continue;
+                }
                 $payAmount = min($remainingPayment, $due);
 
                 PaymentTransaction::create([
@@ -64,7 +70,7 @@ class CollectBulkCreditPaymentAction
 
                 $remainingPayment -= $payAmount;
             }
-        });
+        }, 5);
 
         return [
             'total_paid' => $totalPayment,
