@@ -9,7 +9,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -29,10 +29,13 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
         *, *::before, *::after {
-            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif !important;
+            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
         }
         body {
-            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif !important;
+            font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+        }
+        .fa, .fas, .far, .fal, .fad, .fab, .fa-solid, .fa-regular, .fa-brands {
+            font-family: "Font Awesome 6 Free", "Font Awesome 6 Brands" !important;
         }
         [x-cloak] { display: none !important; }
         .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
