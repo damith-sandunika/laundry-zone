@@ -225,15 +225,21 @@ class TenantManager
      */
     public static function getCentralBaseDomain(): string
     {
+        // 1. If configured explicitly in environment or platform settings, prioritize that
+        $configuredDomain = env('CENTRAL_DOMAIN') ?: \App\Models\Central\PlatformSetting::get('central_domain');
+        if (!empty($configuredDomain)) {
+            return trim($configuredDomain);
+        }
+
         if (app()->bound('request') && request()->hasHeader('host')) {
             $host = request()->getHost();
 
-            // 1. If running on localhost or 127.0.0.1 or loopback
+            // 2. If running on localhost or 127.0.0.1 or loopback
             if ($host === 'localhost' || $host === '127.0.0.1' || str_ends_with($host, '.localhost')) {
                 return 'localhost';
             }
 
-            // 2. If running on .test (Valet, Laragon, etc.)
+            // 3. If running on .test (Valet, Laragon, etc.)
             if (str_ends_with($host, '.test')) {
                 $parts = explode('.', $host);
                 if (count($parts) >= 2) {
@@ -242,17 +248,12 @@ class TenantManager
                 return 'laundryzone.test';
             }
 
-            // 3. Derive root domain from current host (strip leading subdomain if present)
-            $parts = explode('.', $host);
-            if (count($parts) > 2) {
-                return implode('.', array_slice($parts, -2));
-            }
-
+            // 4. Fallback to host itself
             return $host;
         }
 
         // Fallback when executed from pure CLI / queue workers without HTTP request
-        return env('CENTRAL_DOMAIN') ?: \App\Models\Central\PlatformSetting::get('central_domain', 'localhost');
+        return 'localhost';
     }
 
     /**
