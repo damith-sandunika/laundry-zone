@@ -26,9 +26,9 @@ class CustomerSiteController extends Controller
             return redirect($redirectUrl);
         }
 
-        // If the website folder is deleted, prevent a 500 error by falling back
+        // If the website folder is empty or not enabled, redirect to staff login
         if (!view()->exists('website.home')) {
-            return redirect()->route('customer.login');
+            return redirect()->route('login');
         }
 
         // Include both workshop branches and delivery-enabled branches on the map

@@ -55,17 +55,17 @@ Route::get('/', [CustomerSiteController::class, 'home'])->name('home');
 
 // ─── Public Website Pages ───
 Route::get('/about', function () {
-    return view()->exists('website.pages.about') ? view('website.pages.about') : redirect()->route('customer.login'); })->name('site.about');
+    return view()->exists('website.pages.about') ? view('website.pages.about') : redirect()->route('login'); })->name('site.about');
 Route::get('/faq', function () {
-    return view()->exists('website.pages.faq') ? view('website.pages.faq') : redirect()->route('customer.login'); })->name('site.faq');
+    return view()->exists('website.pages.faq') ? view('website.pages.faq') : redirect()->route('login'); })->name('site.faq');
 Route::get('/how-it-works', function () {
-    return view()->exists('website.pages.how-it-works') ? view('website.pages.how-it-works') : redirect()->route('customer.login'); })->name('site.how-it-works');
+    return view()->exists('website.pages.how-it-works') ? view('website.pages.how-it-works') : redirect()->route('login'); })->name('site.how-it-works');
 Route::get('/terms', function () {
-    return view()->exists('website.pages.terms') ? view('website.pages.terms') : redirect()->route('customer.login'); })->name('site.terms');
+    return view()->exists('website.pages.terms') ? view('website.pages.terms') : redirect()->route('login'); })->name('site.terms');
 Route::get('/privacy', function () {
-    return view()->exists('website.pages.privacy') ? view('website.pages.privacy') : redirect()->route('customer.login'); })->name('site.privacy');
+    return view()->exists('website.pages.privacy') ? view('website.pages.privacy') : redirect()->route('login'); })->name('site.privacy');
 Route::get('/quality', function () {
-    return view()->exists('website.pages.quality') ? view('website.pages.quality') : redirect()->route('customer.login'); })->name('site.quality');
+    return view()->exists('website.pages.quality') ? view('website.pages.quality') : redirect()->route('login'); })->name('site.quality');
 
 
 // Fix for Windows PHP built-in server symlink 403 error
