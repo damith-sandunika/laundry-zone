@@ -109,6 +109,16 @@
                                                 Migrate
                                             </button>
                                         </form>
+
+                                        <form action="{{ route('super_admin.databases.drop', $t) }}" method="POST"
+                                            onsubmit="return confirm('⚠️ DANGER: Are you sure you want to permanently DROP the MySQL database \'{{ $t->database_name }}\'? All data in this tenant database will be destroyed!');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold transition">
+                                                Drop DB
+                                            </button>
+                                        </form>
                                     </div>
                                 </td>
                             </tr>

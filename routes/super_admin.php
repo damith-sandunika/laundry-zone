@@ -43,6 +43,7 @@ Route::prefix('saas-admin')->name('super_admin.')->group(function () {
         Route::post('/databases/migrate-all', [DatabaseController::class, 'migrateAll'])->name('databases.migrateAll');
         Route::post('/databases/{company}/migrate', [DatabaseController::class, 'migrate'])->name('databases.migrate');
         Route::get('/databases/{company}/tables', [DatabaseController::class, 'tables'])->name('databases.tables');
+        Route::delete('/databases/{company}/drop', [DatabaseController::class, 'dropDatabase'])->name('databases.drop');
 
         // Payments & Billing
         Route::get('/payments', [PaymentController::class, 'index'])->name('payments.index');

@@ -103,4 +103,38 @@ class DatabaseController extends Controller
             return back()->withErrors(['error' => 'Could not inspect tables: ' . $e->getMessage()]);
         }
     }
+
+    /**
+     * Physically drop a tenant database and recreate an empty schema.
+     */
+    public function dropDatabase(Tenant $company)
+    {
+        TenantManager::resetToLandlord();
+
+        try {
+            $host = $company->db_host ?: config('database.connections.mysql.host', '127.0.0.1');
+            $port = $company->db_port ?: config('database.connections.mysql.port', '3306');
+            $user = $company->db_username ?: config('database.connections.mysql.username', 'root');
+            $pass = $company->db_password !== null ? $company->db_password : config('database.connections.mysql.password', '');
+
+            $sanitizedDb = preg_replace('/[^a-zA-Z0-9_]/', '', $company->database_name);
+
+            // Safety guard: Never drop landlord database
+            $landlordDb = config('database.connections.landlord.database', 'laundry_zone_saas_central');
+            if ($sanitizedDb === $landlordDb || empty($sanitizedDb)) {
+                return back()->withErrors(['error' => 'Safety Violation: Cannot drop central landlord database!']);
+            }
+
+            $pdo = new PDO("mysql:host={$host};port={$port}", $user, $pass, [
+                PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+            ]);
+
+            // Physically drop the database
+            $pdo->exec("DROP DATABASE IF EXISTS `{$sanitizedDb}`;");
+
+            return back()->with('success', "Database '{$sanitizedDb}' for company '{$company->name}' was physically dropped successfully.");
+        } catch (\Throwable $e) {
+            return back()->withErrors(['error' => 'Could not drop database: ' . $e->getMessage()]);
+        }
+    }
 }
