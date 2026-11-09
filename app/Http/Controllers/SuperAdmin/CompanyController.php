@@ -118,6 +118,7 @@ class CompanyController extends Controller
             }
 
             try {
+                @set_time_limit(300);
                 $tenant = $this->provisioner->provision($request->all(), $request->file('logo'));
                 $owner = $tenant->latestOwner;
 

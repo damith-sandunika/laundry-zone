@@ -150,6 +150,7 @@ class TenantProvisioner
      */
     public function runTenantMigrations(Tenant $tenant): array
     {
+        @set_time_limit(300);
         TenantManager::setTenant($tenant);
 
         $exitCode = Artisan::call('migrate', [
