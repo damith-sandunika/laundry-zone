@@ -24,6 +24,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'workshop'    => WorkshopMiddleware::class,
             'api.key'     => ApiKeyMiddleware::class,
             'super_admin' => \App\Http\Middleware\SuperAdminMiddleware::class,
+            'shift.open'  => \App\Http\Middleware\EnsureShiftIsOpen::class,
         ]);
         
         $middleware->web(prepend: [

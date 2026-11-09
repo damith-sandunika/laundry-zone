@@ -20,7 +20,24 @@ class CustomerController extends Controller
             });
         }
 
-        $customers = $query->paginate(15);
+        if ($request->filled('type')) {
+            if ($request->type === 'corporate') {
+                $query->where(function($q) {
+                    $q->where('customer_type', 'corporate')->orWhere('is_corporate', true);
+                });
+            } elseif ($request->type === 'online') {
+                $query->where('customer_type', 'online');
+            } elseif ($request->type === 'walkin') {
+                $query->where(function($q) {
+                    $q->where('customer_type', 'walkin')
+                      ->orWhere(function($sub) {
+                          $sub->whereNull('customer_type')->where('is_corporate', false);
+                      });
+                });
+            }
+        }
+
+        $customers = $query->paginate(15)->withQueryString();
 
         return view('customers.index', compact('customers'));
     }
@@ -40,6 +57,8 @@ class CustomerController extends Controller
             'date_of_birth' => 'nullable|date',
             'nic' => 'nullable|string|max:20',
             'customer_mark' => 'nullable|string|max:255',
+            'customer_type' => 'nullable|string|in:walkin,corporate,online',
+            'is_corporate' => 'nullable|boolean',
         ]);
 
         $exists = Customer::where('phone', $request->phone)->first();
@@ -51,6 +70,12 @@ class CustomerController extends Controller
             return redirect()->back()->withErrors(['phone' => 'You are already in our system. Please search and add!'])->withInput();
         }
 
+        $customerType = $request->input('customer_type');
+        if (!$customerType) {
+            $customerType = $request->boolean('is_corporate', false) ? 'corporate' : 'walkin';
+        }
+        $isCorporate = ($customerType === 'corporate');
+
         $customer = Customer::create([
             'title' => $request->title,
             'name' => $request->name,
@@ -60,6 +85,8 @@ class CustomerController extends Controller
             'date_of_birth' => $request->date_of_birth ?? null,
             'nic' => $request->nic ?? null,
             'customer_mark' => $request->customer_mark ?? null,
+            'customer_type' => $customerType,
+            'is_corporate' => $isCorporate,
             'is_active' => true,
         ]);
 
@@ -236,9 +263,19 @@ class CustomerController extends Controller
             'date_of_birth' => 'nullable|date',
             'nic' => 'nullable|string|max:20',
             'customer_mark' => 'nullable|string|max:255',
+            'customer_type' => 'nullable|string|in:walkin,corporate,online',
+            'is_corporate' => 'nullable|boolean',
         ]);
 
         $data = $request->only(['title', 'name', 'phone', 'email', 'address', 'date_of_birth', 'nic', 'customer_mark']);
+
+        if ($request->filled('customer_type')) {
+            $data['customer_type'] = $request->customer_type;
+            $data['is_corporate'] = ($request->customer_type === 'corporate');
+        } elseif ($request->has('is_corporate')) {
+            $data['is_corporate'] = $request->boolean('is_corporate');
+            $data['customer_type'] = $data['is_corporate'] ? 'corporate' : 'walkin';
+        }
 
         if ($request->filled('password')) {
             $data['password'] = bcrypt($request->password);
@@ -253,7 +290,7 @@ class CustomerController extends Controller
     {
         $request->validate([
             'amount' => 'required|numeric|min:1',
-            'payment_method' => 'required|string|in:cash,card,bank_transfer',
+            'payment_method' => 'required|string|in:cash,card,bank',
         ]);
 
         try {

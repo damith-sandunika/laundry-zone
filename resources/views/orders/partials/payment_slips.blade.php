@@ -2,9 +2,12 @@
             <div class="w-full flex flex-col gap-4 mt-4">
 
                 @php
-                    $paymentTxs = \App\Models\PaymentTransaction::where('order_id', $order->id)
+                    $paymentTxs = \App\Models\PaymentTransaction::withTrashed()
+                        ->with(['creator', 'editor', 'deleter'])
+                        ->where('order_id', $order->id)
                         ->orderBy('created_at', 'desc')
                         ->get();
+                    $todayStr = now()->format('Y-m-d');
                 @endphp
 
                 @if($paymentTxs->count() > 0)
@@ -13,52 +16,209 @@
                             Payment Slips</h3>
                         <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:16px;">
                             @foreach($paymentTxs as $index => $tx)
-                                <div x-data="{ openReviewModal: false, openPaymentEditModal: false, editReason: '', newPaymentMethod: '{{ strtolower($tx->payment_method ?? 'cash') }}', isUpdating: false, updatePaymentMethod() { this.isUpdating = true; fetch('{{ route('orders.corrections.store', $order->id) }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }, body: JSON.stringify({ type: 'payment_change', reason: this.editReason, new_data: { payment_method: this.newPaymentMethod, transaction_id: {{ $tx->id }} } }) }).then(r => r.json()).then(res => { if (res.success) { window.location.reload(); } else { alert(res.message || 'Error occurred'); this.isUpdating = false; } }).catch(err => { alert('Error occurred'); this.isUpdating = false; }); } }"
-                                    style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;">
-                                    <div style="display:flex;align-items:center;justify-content:space-between;">
-                                        <div style="display:flex;align-items:center;gap:8px;">
+                                @php
+                                    $isDeleted = $tx->trashed();
+                                    $isToday = $tx->created_at->format('Y-m-d') === $todayStr;
+                                    $isRefund = $tx->amount < 0;
+                                    $pm = strtolower($tx->payment_method ?? 'unknown');
+                                    $pmLabels = ['cash'=>'Cash', 'card'=>'Card', 'bank'=>'Bank Transfer', 'credit'=>'Credit', 'online'=>'Online'];
+                                    $pmLabel = $pmLabels[$pm] ?? ucfirst($pm);
+                                    $pmColors = ['cash'=>'#d1fae5:#065f46', 'card'=>'#dbeafe:#1e40af', 'bank'=>'#f3e8ff:#7e22ce', 'credit'=>'#ffedd5:#c2410c', 'online'=>'#e0e7ff:#3730a3'];
+                                    $pmBg = explode(':', $pmColors[$pm] ?? '#f1f5f9:#475569');
+                                @endphp
+
+                                <div x-data="{ 
+                                        openReviewModal: false, 
+                                        openPaymentEditModal: false, 
+                                        openPaymentDeleteModal: false,
+                                        editReason: '', 
+                                        newPaymentMethod: '{{ $pm === 'unknown' ? 'cash' : $pm }}', 
+                                        newPaymentAmount: '{{ abs($tx->amount) }}',
+                                        deleteReason: '',
+                                        isUpdating: false, 
+                                        updatePayment(isDelete = false) { 
+                                            this.isUpdating = true; 
+                                            const payload = {
+                                                type: 'payment_change',
+                                                reason: isDelete ? this.deleteReason : this.editReason,
+                                                new_data: {
+                                                    transaction_id: {{ $tx->id }},
+                                                    is_delete: isDelete,
+                                                    payment_method: isDelete ? '{{ $pm }}' : this.newPaymentMethod,
+                                                    amount: isDelete ? {{ $tx->amount }} : parseFloat(this.newPaymentAmount),
+                                                    delete_reason: isDelete ? this.deleteReason : null,
+                                                    reason: isDelete ? this.deleteReason : this.editReason
+                                                }
+                                            };
+                                            fetch('{{ route('orders.corrections.store', $order->id) }}', { 
+                                                method: 'POST', 
+                                                headers: { 
+                                                    'Content-Type': 'application/json', 
+                                                    'X-CSRF-TOKEN': '{{ csrf_token() }}', 
+                                                    'Accept': 'application/json' 
+                                                }, 
+                                                body: JSON.stringify(payload) 
+                                            })
+                                            .then(r => r.json())
+                                            .then(res => { 
+                                                if (res.success) { 
+                                                    window.location.reload(); 
+                                                } else { 
+                                                    alert(res.message || 'Error occurred'); 
+                                                    this.isUpdating = false; 
+                                                } 
+                                            })
+                                            .catch(err => { 
+                                                alert('Error occurred while communicating with server.'); 
+                                                this.isUpdating = false; 
+                                            }); 
+                                        } 
+                                    }"
+                                    style="{{ $isDeleted ? 'background:#fff1f2;border:1.5px dashed #f43f5e;' : 'background:#f8fafc;border:1px solid #cbd5e1;' }}border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;position:relative;">
+                                    
+                                    <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;">
+                                        <div style="display:flex;align-items:flex-start;gap:8px;">
                                             <div
-                                                style="width:32px;height:32px;background:#eef2ff;color:#4f46e5;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">
-                                                <i class="fa-solid fa-file-invoice"></i>
+                                                style="width:34px;height:34px;flex-shrink:0;{{ $isDeleted ? 'background:#ffe4e6;color:#e11d48;' : ($isRefund ? 'background:#fef2f2;color:#dc2626;' : 'background:#eef2ff;color:#4f46e5;') }}border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;">
+                                                @if($isDeleted)
+                                                    <i class="fa-solid fa-ban"></i>
+                                                @elseif($isRefund)
+                                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                                @else
+                                                    <i class="fa-solid fa-file-invoice"></i>
+                                                @endif
                                             </div>
                                             <div>
-                                                <div style="display:flex;align-items:center;gap:8px;">
-                                                    <p style="font-size:11.5px;font-weight:800;color:#0f172a;margin:0;">
-                                                        Rs.{{ number_format($tx->amount, 2) }}
+                                                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">
+                                                    <p style="font-size:12px;font-weight:800;{{ $isDeleted ? 'color:#9f1239;text-decoration:line-through;' : ($isRefund ? 'color:#dc2626;' : 'color:#0f172a;') }}margin:0;">
+                                                        {{ $isRefund ? '- Rs.' . number_format(abs($tx->amount), 2) : 'Rs.' . number_format($tx->amount, 2) }}
                                                     </p>
-                                                    @php
-                                                        $pm = strtolower($tx->payment_method ?? 'unknown');
-                                                        $pmLabels = ['cash'=>'Cash', 'card'=>'Card', 'bank'=>'Bank Transfer', 'credit'=>'Credit', 'online'=>'Online'];
-                                                        $pmLabel = $pmLabels[$pm] ?? ucfirst($pm);
-                                                        $pmColors = ['cash'=>'#d1fae5:#065f46', 'card'=>'#dbeafe:#1e40af', 'bank'=>'#f3e8ff:#7e22ce', 'credit'=>'#ffedd5:#c2410c', 'online'=>'#e0e7ff:#3730a3'];
-                                                        $pmBg = explode(':', $pmColors[$pm] ?? '#f1f5f9:#475569');
-                                                    @endphp
-                                                    <span style="background:{{ $pmBg[0] }};color:{{ $pmBg[1] }};font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.02em;">
-                                                        {{ $pmLabel }}
-                                                    </span>
-                                                    <button type="button" @click="openPaymentEditModal = true" style="color:#3b82f6;font-size:10px;font-weight:700;cursor:pointer;border:none;background:none;padding:2px;outline:none;text-decoration:underline;" title="Change Payment Method">
-                                                        Edit
-                                                    </button>
+
+                                                    @if($isDeleted)
+                                                        <span style="background:#e11d48;color:white;font-size:9px;font-weight:900;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.04em;">
+                                                            <i class="fa-solid fa-trash-can" style="font-size:8px;"></i> DELETED
+                                                        </span>
+                                                    @elseif($isRefund)
+                                                        <span style="background:#fee2e2;color:#991b1b;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.02em;">
+                                                            Refund / Change
+                                                        </span>
+                                                    @else
+                                                        <span style="background:{{ $pmBg[0] }};color:{{ $pmBg[1] }};font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;text-transform:uppercase;letter-spacing:0.02em;">
+                                                            {{ $pmLabel }}
+                                                        </span>
+                                                    @endif
+
+                                                    @if(!$isDeleted && $tx->is_edited)
+                                                        <span style="background:#fef3c7;color:#b45309;font-size:9px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fde68a;" title="Original: Rs.{{ number_format($tx->original_amount ?? $tx->amount, 2) }} ({{ ucfirst($tx->original_payment_method ?? $tx->payment_method) }})">
+                                                            <i class="fa-solid fa-pen" style="font-size:8px;"></i> Edited
+                                                        </span>
+                                                    @endif
                                                 </div>
+
                                                 <p style="font-size:10px;color:#64748b;margin:3px 0 0;font-weight:600;">
-                                                    {{ $tx->created_at->format('M d, h:i A') }}
+                                                    Recorded: {{ $tx->created_at->format('M d, h:i A') }}
                                                 </p>
+
+                                                <div style="margin-top:4px;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+                                                    @if($tx->creator)
+                                                        <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#334155;background:#e2e8f0;padding:2px 6px;border-radius:4px;">
+                                                            <i class="fa-solid fa-user-check" style="font-size:9px;color:#2563eb;"></i>
+                                                            {{ $tx->creator->name }} <span style="font-size:9px;font-weight:600;color:#64748b;">({{ $tx->creator->roleLabel() }})</span>
+                                                        </span>
+                                                    @elseif($order->customer)
+                                                        <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:700;color:#0369a1;background:#e0f2fe;padding:2px 6px;border-radius:4px;">
+                                                            <i class="fa-solid fa-user-tag" style="font-size:9px;color:#0284c7;"></i>
+                                                            Customer: {{ $order->customer->name }}
+                                                        </span>
+                                                    @else
+                                                        <span style="display:inline-flex;align-items:center;gap:3px;font-size:10px;font-weight:600;color:#64748b;background:#f1f5f9;padding:2px 6px;border-radius:4px;">
+                                                            <i class="fa-solid fa-user" style="font-size:9px;"></i> System
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
                                         </div>
 
-                                        @if($tx->status === 'pending')
-                                            <span
-                                                style="background:#fef9c3;color:#a16207;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fef08a;text-transform:uppercase;">Pending</span>
-                                        @elseif($tx->status === 'completed')
-                                            <span
-                                                style="background:#f0fdf4;color:#16a34a;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #bbf7d0;text-transform:uppercase;">Approved</span>
-                                        @elseif($tx->status === 'rejected')
-                                            <span
-                                                style="background:#fef2f2;color:#dc2626;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fecaca;text-transform:uppercase;">Rejected</span>
-                                        @endif
+                                        <!-- Status Badge & Quick Actions -->
+                                        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;">
+                                            @if($isDeleted)
+                                                <span style="background:#fee2e2;color:#991b1b;font-size:9.5px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fecaca;text-transform:uppercase;">
+                                                    VOIDED
+                                                </span>
+                                            @elseif($tx->status === 'pending')
+                                                <span style="background:#fef9c3;color:#a16207;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fef08a;text-transform:uppercase;">
+                                                    Pending
+                                                </span>
+                                            @elseif($tx->status === 'completed')
+                                                <span style="background:#f0fdf4;color:#16a34a;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #bbf7d0;text-transform:uppercase;">
+                                                    Approved
+                                                </span>
+                                            @elseif($tx->status === 'rejected')
+                                                <span style="background:#fef2f2;color:#dc2626;font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;border:1px solid #fecaca;text-transform:uppercase;">
+                                                    Rejected
+                                                </span>
+                                            @endif
+
+                                            <!-- Edit & Delete Buttons for active slips -->
+                                            @if(!$isDeleted && !$isRefund)
+                                                <div style="display:flex;align-items:center;gap:6px;margin-top:2px;">
+                                                    @if($isToday)
+                                                        <button type="button" @click="openPaymentEditModal = true" 
+                                                            style="color:#2563eb;font-size:10.5px;font-weight:700;cursor:pointer;border:none;background:none;padding:2px;outline:none;display:inline-flex;align-items:center;gap:3px;" 
+                                                            title="Edit payment amount and method">
+                                                            <i class="fa-solid fa-pen-to-square"></i> Edit
+                                                        </button>
+                                                        <button type="button" @click="openPaymentDeleteModal = true" 
+                                                            style="color:#dc2626;font-size:10.5px;font-weight:700;cursor:pointer;border:none;background:none;padding:2px;outline:none;display:inline-flex;align-items:center;gap:3px;" 
+                                                            title="Delete this payment slip">
+                                                            <i class="fa-solid fa-trash-can"></i> Delete
+                                                        </button>
+                                                    @else
+                                                        <span style="font-size:9px;font-weight:700;color:#94a3b8;background:#f1f5f9;padding:2px 6px;border-radius:4px;" title="Past days cannot be edited or deleted to keep daily cash accounts balanced">
+                                                            <i class="fa-solid fa-lock" style="font-size:8px;"></i> Locked (Past Day)
+                                                        </span>
+                                                    @endif
+                                                </div>
+                                            @endif
+                                        </div>
                                     </div>
 
-                                    @if($tx->receipt_path || $tx->status === 'pending')
+                                    <!-- Deletion Audit Information Banner -->
+                                    @if($isDeleted)
+                                        <div style="background:#ffe4e6;border:1px solid #fecdd3;border-radius:6px;padding:6px 10px;font-size:10.5px;color:#9f1239;margin-top:2px;">
+                                            <div style="font-weight:800;display:flex;align-items:center;gap:4px;">
+                                                <i class="fa-solid fa-circle-exclamation"></i>
+                                                Deleted by {{ $tx->deleter->name ?? 'Admin' }} on {{ $tx->deleted_at ? \Carbon\Carbon::parse($tx->deleted_at)->format('M d, h:i A') : 'Unknown' }}
+                                            </div>
+                                            @if($tx->delete_reason)
+                                                <div style="margin-top:2px;font-weight:600;color:#881337;">
+                                                    Reason: "{{ $tx->delete_reason }}"
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    <!-- Edit Audit Information Banner -->
+                                    @if(!$isDeleted && $tx->is_edited)
+                                        <div style="background:#fefce8;border:1px solid #fef08a;border-radius:6px;padding:5px 8px;font-size:10px;color:#854d0e;margin-top:2px;">
+                                            <div>
+                                                <strong>Edited:</strong> Was <s>Rs.{{ number_format($tx->original_amount ?? $tx->amount, 2) }} ({{ ucfirst($tx->original_payment_method ?? $tx->payment_method) }})</s>
+                                                @if($tx->editor)
+                                                    by {{ $tx->editor->name }}
+                                                @endif
+                                                @if($tx->edited_at)
+                                                    at {{ \Carbon\Carbon::parse($tx->edited_at)->format('M d, h:i A') }}
+                                                @endif
+                                            </div>
+                                            @if($tx->edit_reason)
+                                                <div style="margin-top:2px;font-style:italic;color:#713f12;">
+                                                    "{{ $tx->edit_reason }}"
+                                                </div>
+                                            @endif
+                                        </div>
+                                    @endif
+
+                                    @if($tx->receipt_path || ($tx->status === 'pending' && !$isDeleted))
                                     <div style="display:flex;gap:6px;margin-top:4px;">
                                         @if($tx->receipt_path)
                                             <a href="{{ \Illuminate\Support\Str::startsWith($tx->receipt_path, 'http') ? $tx->receipt_path : asset('storage/' . $tx->receipt_path) }}"
@@ -68,7 +228,7 @@
                                                 onmouseout="this.style.background='white'">View Slip</a>
                                         @endif
 
-                                        @if($tx->status === 'pending')
+                                        @if($tx->status === 'pending' && !$isDeleted)
                                             <button type="button" @click="openReviewModal = true"
                                                 style="flex:1;padding:6px;background:#4f46e5;color:white;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;box-shadow:0 1px 2px rgba(79,70,229,0.3);">Review</button>
                                         @endif
@@ -84,19 +244,26 @@
                                         </div>
                                     @endif
 
-                                    <!-- Change Payment Method Modal -->
+                                    @if(!$isDeleted && $isToday)
+                                    <!-- Edit Payment Modal -->
                                     <div x-show="openPaymentEditModal" style="display:none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
                                         <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openPaymentEditModal = false"></div>
                                         <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm flex flex-col overflow-hidden">
                                             <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-                                                <h3 class="text-sm font-bold text-slate-800">Change Payment Method</h3>
+                                                <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                                                    <i class="fa-solid fa-pen text-blue-600"></i> Edit Payment Slip #{{ $tx->id }}
+                                                </h3>
                                                 <button type="button" @click="openPaymentEditModal = false" class="text-slate-400 hover:text-slate-600">
                                                     <i class="fa-solid fa-xmark"></i>
                                                 </button>
                                             </div>
-                                            <div class="p-4 space-y-4">
+                                            <div class="p-4 space-y-3">
                                                 <div>
-                                                    <label class="block text-xs font-bold text-slate-700 mb-1">New Payment Method</label>
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1">Amount (Rs.) <span class="text-red-500">*</span></label>
+                                                    <input type="number" step="0.01" min="0" x-model="newPaymentAmount" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-bold text-slate-800 outline-none">
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1">Payment Method <span class="text-red-500">*</span></label>
                                                     <select x-model="newPaymentMethod" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-semibold outline-none">
                                                         <option value="cash">Cash</option>
                                                         <option value="card">Card</option>
@@ -105,20 +272,59 @@
                                                     </select>
                                                 </div>
                                                 <div>
-                                                    <label class="block text-xs font-bold text-slate-700 mb-1">Reason for Change <span class="text-red-500">*</span></label>
-                                                    <input type="text" x-model="editReason" placeholder="Customer requested, Mistake, etc." class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium outline-none">
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1">Reason for Edit <span class="text-red-500">*</span></label>
+                                                    <input type="text" x-model="editReason" placeholder="e.g. Corrected cash amount entered" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 font-medium outline-none">
+                                                </div>
+                                                <div class="p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-[11px] text-amber-800 font-medium leading-tight">
+                                                    <i class="fa-solid fa-shield-halved text-amber-600"></i> Changes are recorded in audit logs and will update drawer balance automatically.
                                                 </div>
                                             </div>
                                             <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
                                                 <button type="button" @click="openPaymentEditModal = false" class="flex-1 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
-                                                <button type="button" @click="updatePaymentMethod()" :disabled="!editReason || isUpdating" class="flex-1 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm flex items-center justify-center gap-2 transition-colors">
-                                                    <span x-show="!isUpdating">Submit Request</span>
+                                                <button type="button" @click="updatePayment(false)" :disabled="!editReason || !newPaymentAmount || newPaymentAmount <= 0 || isUpdating" class="flex-1 py-2 text-xs font-bold text-white bg-blue-600 rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm flex items-center justify-center gap-2 transition-colors">
+                                                    <span x-show="!isUpdating">Save Changes</span>
                                                     <i x-show="isUpdating" class="fa-solid fa-spinner fa-spin"></i>
                                                 </button>
                                             </div>
                                         </div>
                                     </div>
-                                    <!-- End Change Payment Method Modal -->
+                                    <!-- End Edit Payment Modal -->
+
+                                    <!-- Delete Payment Confirmation Modal -->
+                                    <div x-show="openPaymentDeleteModal" style="display:none;" class="fixed inset-0 z-[100] flex items-center justify-center p-4">
+                                        <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="openPaymentDeleteModal = false"></div>
+                                        <div class="relative bg-white rounded-xl shadow-xl w-full max-w-sm flex flex-col overflow-hidden">
+                                            <div class="p-4 border-b border-rose-200 flex justify-between items-center bg-rose-50">
+                                                <h3 class="text-sm font-bold text-rose-800 flex items-center gap-2">
+                                                    <i class="fa-solid fa-triangle-exclamation text-rose-600"></i> Delete Payment Slip #{{ $tx->id }}
+                                                </h3>
+                                                <button type="button" @click="openPaymentDeleteModal = false" class="text-rose-400 hover:text-rose-600">
+                                                    <i class="fa-solid fa-xmark"></i>
+                                                </button>
+                                            </div>
+                                            <div class="p-4 space-y-3">
+                                                <div class="text-xs text-slate-700 font-medium">
+                                                    Are you sure you want to delete this payment of <strong class="text-slate-900 font-bold">Rs. {{ number_format($tx->amount, 2) }} ({{ ucfirst($tx->payment_method) }})</strong>?
+                                                </div>
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1">Reason for Deletion <span class="text-rose-500">*</span></label>
+                                                    <textarea x-model="deleteReason" rows="2" placeholder="e.g. Duplicate entry by staff, customer cancelled" class="w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-rose-500 font-medium outline-none resize-none"></textarea>
+                                                </div>
+                                                <div class="p-2.5 bg-rose-50 border border-rose-200 rounded-lg text-[11px] text-rose-800 font-medium leading-tight">
+                                                    <i class="fa-solid fa-circle-exclamation text-rose-600"></i> The slip will remain visible marked as <strong>DELETED</strong> for accounting audit, and the order balance will adjust.
+                                                </div>
+                                            </div>
+                                            <div class="p-4 bg-slate-50 border-t border-slate-200 flex gap-2">
+                                                <button type="button" @click="openPaymentDeleteModal = false" class="flex-1 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors">Cancel</button>
+                                                <button type="button" @click="updatePayment(true)" :disabled="!deleteReason || isUpdating" class="flex-1 py-2 text-xs font-bold text-white bg-rose-600 rounded-lg hover:bg-rose-700 disabled:opacity-50 shadow-sm flex items-center justify-center gap-2 transition-colors">
+                                                    <span x-show="!isUpdating">Confirm Delete</span>
+                                                    <i x-show="isUpdating" class="fa-solid fa-spinner fa-spin"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <!-- End Delete Payment Confirmation Modal -->
+                                    @endif
 
                                     <!-- Review Modal -->
                                     <div x-show="openReviewModal" style="display:none;">
@@ -196,6 +402,21 @@
                                                         </div>
                                                     </div>
 
+                                                    <div style="margin-bottom:12px;padding:8px 12px;background:#f1f5f9;border-radius:8px;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;">
+                                                        <span style="font-size:11px;font-weight:700;color:#64748b;">Paid By / Recorded By:</span>
+                                                        @if($tx->creator)
+                                                            <span style="font-size:11px;font-weight:800;color:#1e40af;">
+                                                                <i class="fa-solid fa-user-check"></i> {{ $tx->creator->name }}
+                                                            </span>
+                                                        @elseif($order->customer)
+                                                            <span style="font-size:11px;font-weight:800;color:#0369a1;">
+                                                                <i class="fa-solid fa-user-tag"></i> {{ $order->customer->name }} (Customer)
+                                                            </span>
+                                                        @else
+                                                            <span style="font-size:11px;font-weight:700;color:#64748b;">System</span>
+                                                        @endif
+                                                    </div>
+
                                                     <div x-data="{ mode: 'review' }">
                                                         <!-- Action Buttons -->
                                                         <div x-show="mode === 'review'"
@@ -255,7 +476,7 @@
                 @if($order->correctionRequests->where('type', 'payment_change')->count() > 0)
                     <div style="background:white;border-radius:12px;border:1px solid #e2e8f0;box-shadow:0 1px 4px rgba(0,0,0,0.02);padding:16px;">
                         <h3 style="font-size:12px;font-weight:800;color:#0f172a;margin:0 0 10px;text-transform:uppercase;letter-spacing:0.05em;">
-                            Payment Edit History</h3>
+                            Payment Audit & Correction History</h3>
                         <div style="display:flex;flex-direction:column;gap:10px;">
                             @foreach($order->correctionRequests->where('type', 'payment_change')->sortByDesc('created_at') as $cr)
                                 <div style="background:#f8fafc;border:1px solid #cbd5e1;border-radius:8px;padding:12px;font-size:12px;display:flex;flex-direction:column;gap:6px;
@@ -269,11 +490,26 @@
                                     @php
                                         $oldMethod = $cr->old_data['payment_method'] ?? 'unknown';
                                         $newMethod = $cr->new_data['payment_method'] ?? 'unknown';
+                                        $isDel = !empty($cr->new_data['is_delete']);
+                                        $oldAmt = $cr->old_data['amount'] ?? null;
+                                        $newAmt = $cr->new_data['amount'] ?? null;
                                     @endphp
-                                    <div style="display:flex;align-items:center;gap:8px;">
-                                        <span style="text-decoration:line-through;color:#ef4444;font-weight:700;">{{ ucfirst($oldMethod) }}</span>
-                                        <i class="fa-solid fa-arrow-right" style="color:#94a3b8;font-size:10px;"></i>
-                                        <span style="color:#10b981;font-weight:800;">{{ ucfirst($newMethod) }}</span>
+                                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                        @if($isDel)
+                                            <span style="background:#fee2e2;color:#b91c1c;padding:2px 6px;border-radius:4px;font-weight:800;font-size:10px;">
+                                                <i class="fa-solid fa-trash-can"></i> PAYMENT DELETION
+                                            </span>
+                                            <span style="color:#64748b;font-weight:600;">Slip #{{ $cr->new_data['transaction_id'] ?? '?' }}</span>
+                                        @else
+                                            <span style="text-decoration:line-through;color:#ef4444;font-weight:700;">{{ ucfirst($oldMethod) }}</span>
+                                            <i class="fa-solid fa-arrow-right" style="color:#94a3b8;font-size:10px;"></i>
+                                            <span style="color:#10b981;font-weight:800;">{{ ucfirst($newMethod) }}</span>
+                                            @if($newAmt !== null && $oldAmt !== null && $newAmt != $oldAmt)
+                                                <span style="font-size:11px;color:#475569;font-weight:700;">
+                                                    (Rs. {{ number_format($oldAmt, 2) }} &rarr; Rs. {{ number_format($newAmt, 2) }})
+                                                </span>
+                                            @endif
+                                        @endif
                                     </div>
                                     @if($cr->reason)
                                         <div style="background:white;padding:6px 8px;border-radius:6px;border:1px solid #e2e8f0;color:#334155;font-style:italic;font-size:11px;">

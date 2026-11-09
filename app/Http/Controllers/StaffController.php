@@ -13,7 +13,9 @@ class StaffController extends Controller
     public function index()
     {
         $this->authorize('viewAny', User::class);
-        $branchId = \Illuminate\Support\Facades\Gate::allows('is-super-admin') ? null : $this->getActiveBranchId();
+        $user = auth()->user();
+        $isGlobalView = $user->role === 'super_admin' || $user->isHrManager();
+        $branchId = $isGlobalView ? null : $this->getActiveBranchId();
 
         $query = User::with('branch');
         if ($branchId) {
@@ -29,7 +31,7 @@ class StaffController extends Controller
         $salaries = $salaryExpensesQuery->latest()->get();
 
         $branches = [];
-        if (\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
+        if ($isGlobalView) {
             $branches = Branch::all();
         }
 
@@ -48,7 +50,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
             'phone' => 'required|string|max:255',
-            'role' => 'required|in:owner,branch_admin,staff,workshop_admin,super_admin',
+            'role' => 'required|in:branch_admin,staff,rider,workshop_admin,super_admin,hr_manager,accountant,accountant_and_hr_manager',
             'password' => 'required|string|min:8',
             'nic' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
@@ -70,9 +72,14 @@ class StaffController extends Controller
         $currentUserRole = auth()->user()->role;
 
         $role = $request->role;
-        // Only owner / super_admin can create owner users
-        if (in_array($role, ['owner', 'super_admin']) && !in_array($currentUserRole, ['owner', 'super_admin'])) {
+        // Only super_admin can create super_admin, hr_manager, accountant, or combined dual roles
+        if (in_array($role, ['super_admin', 'hr_manager', 'accountant', 'accountant_and_hr_manager']) && $currentUserRole !== 'super_admin') {
             $role = 'staff';
+        }
+
+        // Global roles have no branch binding (null branch_id)
+        if (in_array($role, ['super_admin', 'hr_manager', 'accountant', 'accountant_and_hr_manager'])) {
+            $branchId = null;
         }
 
         $userData = [
@@ -115,7 +122,9 @@ class StaffController extends Controller
         $year = (int) request('year', now()->year);
         $monthName = date('F Y', mktime(0, 0, 0, $month, 10, $year));
 
-        $salaries = Expense::where('category', 'salary')
+        $salaries = Expense::withTrashed()
+            ->with(['createdBy', 'updatedBy', 'deletedBy', 'auditLogs.user'])
+            ->where('category', 'salary')
             ->where('description', 'like', "%{$staff->name}%")
             ->where('description', 'like', "%{$monthName}%")
             ->latest()->get();
@@ -158,7 +167,7 @@ class StaffController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users,email,'.$staff->id,
             'phone' => 'nullable|string|max:50',
-            'role' => 'required|in:owner,branch_admin,staff,super_admin,workshop_admin',
+            'role' => 'required|in:branch_admin,staff,super_admin,rider,workshop_admin,hr_manager,accountant,accountant_and_hr_manager',
             'is_active' => 'required|boolean',
             'nic' => 'nullable|string|max:20',
             'dob' => 'nullable|date',
@@ -188,9 +197,19 @@ class StaffController extends Controller
         $profileData['hourly_rate'] = $profileData['hourly_rate'] ?? 0;
         $profileData['basic_salary'] = $profileData['basic_salary'] ?? 0;
 
-        // Only owner / super_admin can set role to owner / super_admin
-        if (isset($data['role']) && in_array($data['role'], ['owner', 'super_admin']) && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
+        // Only super_admin can set role to super_admin, hr_manager, accountant, or dual role
+        if (isset($data['role']) && in_array($data['role'], ['super_admin', 'hr_manager', 'accountant', 'accountant_and_hr_manager']) && !\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
             unset($data['role']); // Keep existing role
+        }
+
+        // Global roles have no branch binding
+        if (isset($data['role']) && in_array($data['role'], ['super_admin', 'hr_manager', 'accountant', 'accountant_and_hr_manager'])) {
+            $data['branch_id'] = null;
+        }
+
+        // Global roles have no branch binding
+        if (isset($data['role']) && in_array($data['role'], ['super_admin', 'hr_manager', 'accountant'])) {
+            $data['branch_id'] = null;
         }
 
         if (\Illuminate\Support\Facades\Gate::allows('is-super-admin')) {
@@ -233,7 +252,7 @@ class StaffController extends Controller
         $user = User::find($request->user_id);
         $branchId = $this->getActiveBranchId();
 
-        Expense::create([
+        $expense = Expense::create([
             'branch_id' => $branchId,
             'category' => 'salary',
             'amount' => $request->amount,
@@ -242,7 +261,80 @@ class StaffController extends Controller
             'created_by' => auth()->id(),
         ]);
 
+        \App\Models\SalaryAuditLog::create([
+            'auditable_type' => Expense::class,
+            'auditable_id' => $expense->id,
+            'action' => 'created',
+            'new_amount' => $request->amount,
+            'reason' => "Salary payment for {$request->month}",
+            'user_id' => auth()->id(),
+        ]);
+
         return redirect()->back()->with('success', 'Salary payment recorded successfully.');
+    }
+
+    public function updateSalary(Request $request, Expense $expense)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:0.01',
+            'expense_date' => 'nullable|date',
+            'description' => 'nullable|string',
+            'edit_reason' => 'required|string|min:3',
+        ]);
+
+        $oldAmount = $expense->amount;
+
+        $data = [
+            'amount' => $request->amount,
+            'previous_amount' => $oldAmount,
+            'edit_reason' => $request->edit_reason,
+            'updated_by' => auth()->id(),
+        ];
+
+        if ($request->filled('expense_date')) {
+            $data['expense_date'] = $request->expense_date;
+        }
+        if ($request->filled('description')) {
+            $data['description'] = $request->description;
+        }
+
+        $expense->update($data);
+
+        \App\Models\SalaryAuditLog::create([
+            'auditable_type' => Expense::class,
+            'auditable_id' => $expense->id,
+            'action' => 'edited',
+            'old_amount' => $oldAmount,
+            'new_amount' => $request->amount,
+            'reason' => $request->edit_reason,
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Salary payment record updated successfully.');
+    }
+
+    public function destroySalary(Request $request, Expense $expense)
+    {
+        $request->validate([
+            'delete_reason' => 'required|string|min:3',
+        ]);
+
+        $expense->update([
+            'delete_reason' => $request->delete_reason,
+            'deleted_by' => auth()->id(),
+        ]);
+        $expense->delete();
+
+        \App\Models\SalaryAuditLog::create([
+            'auditable_type' => Expense::class,
+            'auditable_id' => $expense->id,
+            'action' => 'deleted',
+            'old_amount' => $expense->amount,
+            'reason' => $request->delete_reason,
+            'user_id' => auth()->id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Salary payment record deleted successfully.');
     }
 
     public function downloadPayslip(User $staff, Request $request)
@@ -253,12 +345,14 @@ class StaffController extends Controller
         $payroll = \App\Services\PayrollCalculator::calculate($staff, $month, $year);
         $monthName = date('F Y', mktime(0, 0, 0, $month, 10, $year));
 
-        $salaryPayment = Expense::with('createdBy')
+        $salaryPayments = Expense::with('createdBy')
             ->where('category', 'salary')
             ->where('description', 'like', "%{$staff->name}%")
             ->where('description', 'like', "%{$monthName}%")
             ->latest()
-            ->first();
+            ->get();
+
+        $salaryPayment = $salaryPayments->first();
 
         $attendances = \App\Models\Attendance::where('user_id', $staff->id)
             ->whereMonth('date', $month)
@@ -266,7 +360,7 @@ class StaffController extends Controller
             ->orderBy('date', 'asc')
             ->get();
 
-        return view('staff.payslip', compact('staff', 'payroll', 'salaryPayment', 'attendances'));
+        return view('staff.payslip', compact('staff', 'payroll', 'salaryPayment', 'salaryPayments', 'attendances'));
     }
 }
 

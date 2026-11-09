@@ -23,23 +23,29 @@ class OrderCorrectionController extends Controller
             'new_data' => 'required|array',
         ]);
 
-        if (isset($request->new_data['payment_method'])) {
+        if ($request->type === 'payment_change') {
             $transactionId = $request->new_data['transaction_id'] ?? null;
             if ($transactionId) {
-                $paymentTransaction = \App\Models\PaymentTransaction::find($transactionId);
-                // Only allow changes to same-day transactions (or handle it properly)
-                if ($paymentTransaction && $paymentTransaction->payment_method !== $request->new_data['payment_method'] && $paymentTransaction->created_at->format('Y-m-d') !== now()->format('Y-m-d')) {
+                $paymentTransaction = \App\Models\PaymentTransaction::withTrashed()->find($transactionId);
+                if (!$paymentTransaction) {
                     return response()->json([
-                        'success' => false, 
-                        'message' => 'Cannot change payment methods of previous days because accounts are already balanced.'
+                        'success' => false,
+                        'message' => 'Payment transaction not found.'
                     ]);
                 }
-            } else if ($request->new_data['payment_method'] !== $order->payment_method) {
+                // Only allow changes to same-day transactions
+                if ($paymentTransaction->created_at->format('Y-m-d') !== now()->format('Y-m-d')) {
+                    return response()->json([
+                        'success' => false, 
+                        'message' => 'Cannot edit or delete payments of previous days because accounts are already balanced.'
+                    ]);
+                }
+            } else if (isset($request->new_data['payment_method']) && $request->new_data['payment_method'] !== $order->payment_method) {
                 $paymentTransaction = \App\Models\PaymentTransaction::where('order_id', $order->id)->latest()->first();
                 if ($paymentTransaction && $paymentTransaction->created_at->format('Y-m-d') !== now()->format('Y-m-d')) {
                     return response()->json([
                         'success' => false, 
-                        'message' => 'Cannot change payment methods of previous days because accounts are already balanced.'
+                        'message' => 'Cannot edit payments of previous days because accounts are already balanced.'
                     ]);
                 }
             }
@@ -51,10 +57,16 @@ class OrderCorrectionController extends Controller
 
         $oldData = [];
         if ($request->type === 'payment_change') {
+            $transactionId = $request->new_data['transaction_id'] ?? null;
+            $targetTx = $transactionId ? \App\Models\PaymentTransaction::withTrashed()->find($transactionId) : null;
+            
             $oldData = [
                 'payment_method' => $order->payment_method,
                 'payment_status' => $order->payment_status,
                 'paid_amount' => $order->paid_amount,
+                'transaction_id' => $transactionId,
+                'amount' => $targetTx ? (float)$targetTx->amount : null,
+                'transaction_method' => $targetTx ? $targetTx->payment_method : null,
             ];
         } else if ($request->type === 'items_change') {
             $order->load('items.extras');
@@ -97,7 +109,7 @@ class OrderCorrectionController extends Controller
         }
 
         $user = auth()->user();
-        $isAdmin = in_array($user->role, ['owner', 'branch_admin', 'workshop_admin', 'super_admin']);
+        $isAdmin = in_array($user->role, ['branch_admin', 'workshop_admin', 'super_admin']);
 
         try {
             DB::transaction(function () use ($order, $request, $oldData, $newData, $user, $isAdmin) {

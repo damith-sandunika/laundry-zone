@@ -17,13 +17,23 @@ use Illuminate\Support\Facades\DB;
 
 class ReportService
 {
-    public function getSalesData($branchId, $startDate, $endDate)
+    public function getSalesData($branchId, $startDate, $endDate, $customerType = null)
     {
         $salesQuery = Order::where('status', '!=', 'cancelled')
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         
         if ($branchId) {
             $salesQuery->where('branch_id', $branchId);
+        }
+
+        if ($customerType === 'corporate') {
+            $salesQuery->whereHas('customer', fn($q) => $q->where('customer_type', 'corporate')->orWhere('is_corporate', true));
+        } elseif ($customerType === 'online') {
+            $salesQuery->whereHas('customer', fn($q) => $q->where('customer_type', 'online'));
+        } elseif ($customerType === 'walkin') {
+            $salesQuery->whereHas('customer', fn($q) => $q->where('customer_type', 'walkin')->orWhere(function($sub) {
+                $sub->whereNull('customer_type')->where('is_corporate', false);
+            }));
         }
 
         $totalSales = (clone $salesQuery)->sum('total');
@@ -56,13 +66,23 @@ class ReportService
         return compact('salesQuery', 'totalSales', 'totalCredit', 'totalPending', 'deliveryRevenue', 'walkinRevenue', 'maxFunc', 'totalCollectedFromOrders');
     }
 
-    public function getPaymentsData($branchId, $startDate, $endDate)
+    public function getPaymentsData($branchId, $startDate, $endDate, $customerType = null)
     {
         $paymentsQuery = PaymentTransaction::with(['order', 'order.branch'])
             ->whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
         
         if ($branchId) {
             $paymentsQuery->whereHas('order', fn ($q) => $q->where('branch_id', $branchId)->orWhere('workshop_id', $branchId));
+        }
+
+        if ($customerType === 'corporate') {
+            $paymentsQuery->whereHas('order.customer', fn($q) => $q->where('customer_type', 'corporate')->orWhere('is_corporate', true));
+        } elseif ($customerType === 'online') {
+            $paymentsQuery->whereHas('order.customer', fn($q) => $q->where('customer_type', 'online'));
+        } elseif ($customerType === 'walkin') {
+            $paymentsQuery->whereHas('order.customer', fn($q) => $q->where('customer_type', 'walkin')->orWhere(function($sub) {
+                $sub->whereNull('customer_type')->where('is_corporate', false);
+            }));
         }
 
         $packagePaymentsQuery = PackagePayment::whereBetween('created_at', [$startDate.' 00:00:00', $endDate.' 23:59:59']);
@@ -120,11 +140,11 @@ class ReportService
                     orders.branch_id,
                     orders.workshop_id,
                     branches.branch_profit_percentage,
-                    (SELECT COALESCE(SUM(pt2.amount), 0) FROM payment_transactions as pt2 WHERE pt2.order_id = pt1.order_id AND pt2.id < pt1.id) as paid_before
+                    (SELECT COALESCE(SUM(pt2.amount), 0) FROM payment_transactions as pt2 WHERE pt2.deleted_at IS NULL AND pt2.order_id = pt1.order_id AND pt2.id < pt1.id) as paid_before
                 FROM payment_transactions as pt1
                 JOIN orders ON orders.id = pt1.order_id
                 LEFT JOIN branches ON branches.id = orders.branch_id
-                WHERE pt1.created_at BETWEEN ? AND ?
+                WHERE pt1.deleted_at IS NULL AND pt1.created_at BETWEEN ? AND ?
                 " . ($branchId ? " AND (orders.branch_id = ? OR orders.workshop_id = ?)" : "") . "
             ) as derived_table
         ";
@@ -144,7 +164,7 @@ class ReportService
         return compact('totalDeliveryFees', 'totalBranchProfit', 'totalWorkshopProfit');
     }
 
-    public function getServiceBreakdown($branchId, $startDate, $endDate)
+    public function getServiceBreakdown($branchId, $startDate, $endDate, $customerType = null)
     {
         $serviceBreakdown = OrderItem::select(
                 'service_types.name',
@@ -160,6 +180,33 @@ class ReportService
         
         if ($branchId) {
             $serviceBreakdown->where('orders.branch_id', $branchId);
+        }
+
+        if ($customerType === 'corporate') {
+            $serviceBreakdown->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'corporate')->orWhere('customers.is_corporate', true);
+                    });
+            });
+        } elseif ($customerType === 'online') {
+            $serviceBreakdown->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where('customers.customer_type', 'online');
+            });
+        } elseif ($customerType === 'walkin') {
+            $serviceBreakdown->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'walkin')
+                          ->orWhere(function($sub2) {
+                              $sub2->whereNull('customers.customer_type')->where('customers.is_corporate', false);
+                          });
+                    });
+            });
         }
         
         return $serviceBreakdown->groupBy('service_types.name')->get();

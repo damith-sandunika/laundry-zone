@@ -6,7 +6,7 @@
                 <p style="font-size:13px;color:#94a3b8;font-weight:500;margin:0;">Manage employees, permissions and salary payments</p>
             </div>
             <div class="flex gap-2">
-                @if(in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'workshop_admin', 'admin']))
+                @if(in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'workshop_admin', 'admin', 'hr_manager', 'accountant_and_hr_manager']))
                 <a href="{{ route('branch.month_plan') }}" class="px-4 py-2 bg-slate-800 text-white text-xs font-bold rounded-lg hover:bg-slate-900 transition-colors flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     Manage Month Plan
@@ -37,11 +37,11 @@
                     <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
                         <tr>
                             <th class="px-6 py-3 font-semibold">Name / Email</th>
-                            @if(auth()->user()->role === 'super_admin')
+                            @if(in_array(auth()->user()->role, ['super_admin', 'hr_manager', 'accountant_and_hr_manager']))
                             <th class="px-6 py-3 font-semibold">Branch</th>
                             @endif
                             <th class="px-6 py-3 font-semibold">Role</th>
-                            @if(auth()->user()->role !== 'super_admin')
+                            @if(!in_array(auth()->user()->role, ['super_admin', 'hr_manager', 'accountant_and_hr_manager']))
                             <th class="px-6 py-3 font-semibold text-center">Status</th>
                             @endif
                             <th class="px-6 py-3 font-semibold text-center">Actions</th>
@@ -54,7 +54,7 @@
                                     <p class="font-medium text-gray-900">{{ $employee->name }}</p>
                                     <p class="text-xs text-gray-500">{{ $employee->email }}</p>
                                 </td>
-                                @if(auth()->user()->role === 'super_admin')
+                                @if(in_array(auth()->user()->role, ['super_admin', 'hr_manager', 'accountant_and_hr_manager']))
                                 <td class="px-6 py-4">
                                     <span class="text-xs font-semibold text-gray-600">{{ $employee->branch->name ?? 'Global' }}</span>
                                 </td>
@@ -65,7 +65,7 @@
                                     </span>
                                 </td>
                                 
-                                @if(auth()->user()->role !== 'super_admin')
+                                @if(!in_array(auth()->user()->role, ['super_admin', 'hr_manager', 'accountant_and_hr_manager']))
                                 <td class="px-6 py-4 text-center">
                                     <span class="px-2 py-1 text-xs font-semibold rounded-lg {{ $employee->is_active ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
                                         {{ $employee->is_active ? 'Active' : 'Inactive' }}
@@ -139,9 +139,10 @@
                                         <label class="block text-xs font-bold text-gray-700 mb-1">System Role</label>
                                         <select name="role" class="w-full text-sm border-gray-300 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500">
                                             <option value="staff">Staff</option>
+                                            <option value="rider">🚗 Rider</option>
                                             <option value="workshop_admin">⚙️ Workshop Admin</option>
                                             <option value="branch_admin">🏪 Branch Admin</option>
-                                            @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin' || auth()->user()->role === 'owner')
+                                            @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
                                             <option value="super_admin">⭐ Super Admin</option>
                                             @endif
                                         </select>
@@ -201,7 +202,7 @@
                                         <textarea name="address" rows="1" class="w-full text-sm border-gray-300 rounded-lg shadow-sm"></textarea>
                                     </div>
                                 </div>
-                                @if(auth()->user()->role === 'super_admin' || auth()->user()->role === 'admin')
+                                @if(in_array(auth()->user()->role, ['super_admin', 'admin', 'hr_manager', 'accountant_and_hr_manager']))
                                 <div>
                                     <label class="block text-xs font-bold text-gray-700 mb-1">Assign to Branch</label>
                                     <select name="branch_id" class="w-full text-sm border-gray-300 rounded-lg shadow-sm">

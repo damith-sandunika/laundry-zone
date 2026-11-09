@@ -98,6 +98,12 @@ class CompanyController extends Controller
             'owner_email' => 'required|email|max:255',
             'owner_phone' => 'nullable|string|max:50',
             'owner_password' => 'required|string|min:6',
+            'sms_gateway' => 'nullable|string|max:50',
+            'sms_mask' => 'nullable|string|max:50',
+            'sms_api_url' => 'nullable|string|max:255',
+            'sms_api_key' => 'nullable|string|max:500',
+            'mail_from_name' => 'nullable|string|max:100',
+            'mail_from_address' => 'nullable|email|max:255',
         ];
 
         // 1. Interactive AJAX / JSON Flow (Progressive Provisioning)
@@ -201,11 +207,19 @@ class CompanyController extends Controller
             'delivery_price' => 'nullable|numeric|min:0',
             'status' => 'required|in:active,inactive,suspended',
             'notes' => 'nullable|string',
+            'sms_gateway' => 'nullable|string|max:50',
+            'sms_mask' => 'nullable|string|max:50',
+            'sms_api_url' => 'nullable|string|max:255',
+            'sms_api_key' => 'nullable|string|max:500',
+            'mail_from_name' => 'nullable|string|max:100',
+            'mail_from_address' => 'nullable|email|max:255',
         ]);
 
         $data = $request->only([
             'name', 'custom_domain', 'address', 'phone', 'email',
-            'plan', 'plan_price', 'delivery_price', 'status', 'notes'
+            'plan', 'plan_price', 'delivery_price', 'status', 'notes',
+            'sms_gateway', 'sms_mask', 'sms_api_url', 'sms_api_key',
+            'mail_from_name', 'mail_from_address'
         ]);
 
         $data['is_delivery_enabled'] = $request->boolean('is_delivery_enabled');
@@ -224,9 +238,22 @@ class CompanyController extends Controller
             TenantManager::setTenant($company);
             Setting::set('company_name', $company->name);
             Setting::set('delivery_enabled', $company->is_delivery_enabled ? '1' : '0');
+            if (!empty($company->sms_mask)) Setting::set('sms_mask', $company->sms_mask);
+            if (!empty($company->sms_gateway)) Setting::set('sms_gateway', $company->sms_gateway);
+            if (!empty($company->sms_api_url)) Setting::set('sms_api_url', $company->sms_api_url);
+            if (!empty($company->sms_api_key)) {
+                Setting::set('sms_api_key', $company->sms_api_key);
+                Setting::set('is_sms_enabled', 'true');
+            }
+            if (!empty($company->mail_from_name)) Setting::set('mail_from_name', $company->mail_from_name);
+            if (!empty($company->mail_from_address)) {
+                Setting::set('mail_from_address', $company->mail_from_address);
+                Setting::set('is_email_enabled', 'true');
+            }
             if (!empty($data['logo_path'])) {
                 Setting::set('company_logo', $data['logo_path']);
             }
+            \Illuminate\Support\Facades\Cache::forget('global_comm_settings');
             TenantManager::resetToLandlord();
         } catch (\Throwable $e) {
             TenantManager::resetToLandlord();

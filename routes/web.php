@@ -23,7 +23,6 @@ use App\Http\Controllers\Reports\ShiftReportController;
 use App\Http\Controllers\StaffController;
 use App\Http\Controllers\SmsTemplateController;
 use App\Http\Controllers\EmailTemplateController;
-use App\Http\Controllers\WhatsappTemplateController;
 use App\Http\Controllers\Workshop\WorkshopDashboardController;
 use App\Http\Controllers\Workshop\WorkshopOperationsController;
 use App\Http\Controllers\Workshop\WorkshopDispatchController;
@@ -136,62 +135,62 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/read', [\App\Http\Controllers\NotificationController::class, 'markAsRead'])->name('notifications.read');
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/accountant/dashboard', [\App\Http\Controllers\AccountantDashboardController::class, 'index'])->name('accountant.dashboard')->middleware(['role:super_admin,accountant,accountant_and_hr_manager']);
     Route::post('/shifts/open', [\App\Http\Controllers\DashboardController::class, 'openShift'])->name('shifts.open');
     Route::post('/shifts/attendance/update', [\App\Http\Controllers\DashboardController::class, 'updateAttendance'])->name('shifts.attendance.update');
     Route::post('/shifts/close', [\App\Http\Controllers\DashboardController::class, 'closeShift'])->name('shifts.close');
+    Route::post('/shifts/reopen-request', [\App\Http\Controllers\BranchReopenRequestController::class, 'store'])->name('shifts.reopen.request');
 
     Route::post('/bank-deposits', [\App\Http\Controllers\BankDepositController::class, 'store'])->name('bank-deposits.store');
     Route::put('/bank-deposits/{bankDeposit}', [\App\Http\Controllers\BankDepositController::class, 'update'])->name('bank-deposits.update');
     Route::delete('/bank-deposits/{bankDeposit}', [\App\Http\Controllers\BankDepositController::class, 'destroy'])->name('bank-deposits.destroy');
 
-    Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
-    Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
+    Route::middleware(['shift.open'])->group(function () {
+        Route::get('/pos', [POSController::class, 'index'])->name('pos.index');
+        Route::post('/pos', [POSController::class, 'store'])->name('pos.store');
 
-    Route::post('/customers/pos', [CustomerController::class, 'store'])->name('customers.store.pos');
-    Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
-    Route::get('/customers/{customer}/sales-report/pdf', [CustomerController::class, 'salesReportPdf'])->name('customers.salesReport.pdf');
-    Route::post('/customers/{customer}/bulk-credit-payment', [CustomerController::class, 'bulkCreditPayment'])->name('customers.bulkCreditPayment');
-    Route::get('/customers/top', [\App\Http\Controllers\TopCustomersController::class, 'index'])->name('customers.top');
-    Route::resource('customers', CustomerController::class);
+        Route::post('/customers/pos', [CustomerController::class, 'store'])->name('customers.store.pos');
+        Route::get('/customers/search', [CustomerController::class, 'search'])->name('customers.search');
+        Route::get('/customers/{customer}/sales-report/pdf', [CustomerController::class, 'salesReportPdf'])->name('customers.salesReport.pdf');
+        Route::post('/customers/{customer}/bulk-credit-payment', [CustomerController::class, 'bulkCreditPayment'])->name('customers.bulkCreditPayment');
+        Route::get('/customers/top', [\App\Http\Controllers\TopCustomersController::class, 'index'])->name('customers.top');
+        Route::resource('customers', CustomerController::class);
 
-    Route::post('/orders/{order:id}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
-    Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store')->middleware('throttle:10,1');
-    Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve')->middleware('throttle:10,1');
-    Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject')->middleware('throttle:10,1');
-    Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
-    Route::get('/orders/{order:id}/print', [OrderController::class, 'printBill'])->name('orders.print');
-    Route::get('/orders/{order:id}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
-    Route::get('/orders/{order:id}/label', [OrderController::class, 'printLabel'])->name('orders.printLabel');
-    Route::get('/orders/{order:id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
-    Route::post('/orders/{order:id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
-    Route::post('/orders/{order:id}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
-    Route::post('/orders/{order:id}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
-    Route::post('/orders/{order:id}/refund-overpayment', [OrderController::class, 'refundOverpayment'])->name('orders.refundOverpayment')->middleware('throttle:10,1');
-    Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve')->middleware('throttle:10,1');
-    Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject')->middleware('throttle:10,1');
-    // Workshop dispatch from order
-    Route::post('/orders/{order}/dispatch-workshop', [WorkshopDispatchController::class, 'dispatch'])->name('orders.dispatchWorkshop');
-    Route::post('/orders/workshop/bulk-dispatch', [WorkshopDispatchController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
-    // Workshop finalize bill - accessible by branch_admin, workshop_admin, super_admin
-    Route::get('/workshop/orders/{order_number}/finalize-bill', [WorkshopBillingController::class, 'finalizeBill'])->name('workshop.finalizeBill')->middleware('admin');
+        Route::post('/orders/{order:id}/update', [OrderController::class, 'updateOrder'])->name('orders.updateOrder');
+        Route::post('/orders/{order}/corrections', [\App\Http\Controllers\OrderCorrectionController::class, 'store'])->name('orders.corrections.store')->middleware('throttle:10,1');
+        Route::post('/corrections/{correction}/approve', [\App\Http\Controllers\OrderCorrectionController::class, 'approve'])->name('corrections.approve')->middleware('throttle:10,1');
+        Route::post('/corrections/{correction}/reject', [\App\Http\Controllers\OrderCorrectionController::class, 'reject'])->name('corrections.reject')->middleware('throttle:10,1');
+        Route::post('/orders/bulk-status', [OrderController::class, 'bulkStatus'])->name('orders.bulkStatus');
+        Route::get('/orders/{order:id}/print', [OrderController::class, 'printBill'])->name('orders.print');
+        Route::get('/orders/{order:id}/chit', [OrderController::class, 'printChit'])->name('orders.printChit');
+        Route::get('/orders/{order:id}/label', [OrderController::class, 'printLabel'])->name('orders.printLabel');
+        Route::get('/orders/{order:id}/invoice', [OrderController::class, 'invoice'])->name('orders.invoice');
+        Route::post('/orders/{order:id}/status', [OrderController::class, 'updateStatus'])->name('orders.updateStatus');
+        Route::post('/orders/{order:id}/request-payment', [OrderController::class, 'requestPayment'])->name('orders.requestPayment');
+        Route::post('/orders/{order:id}/credit-payment', [OrderController::class, 'collectCreditPayment'])->name('orders.collectCreditPayment');
+        Route::post('/orders/{order:id}/refund-overpayment', [OrderController::class, 'refundOverpayment'])->name('orders.refundOverpayment')->middleware('throttle:10,1');
+        Route::post('/orders/{order}/payments/{transaction}/approve', [OrderController::class, 'approvePayment'])->name('orders.payments.approve')->middleware('throttle:10,1');
+        Route::post('/orders/{order}/payments/{transaction}/reject', [OrderController::class, 'rejectPayment'])->name('orders.payments.reject')->middleware('throttle:10,1');
+        // Workshop dispatch from order
+        Route::post('/orders/{order}/dispatch-workshop', [WorkshopDispatchController::class, 'dispatch'])->name('orders.dispatchWorkshop');
+        Route::post('/orders/workshop/bulk-dispatch', [WorkshopDispatchController::class, 'bulkDispatch'])->name('orders.bulkDispatchWorkshop');
+        // Workshop finalize bill - accessible by branch_admin, workshop_admin, super_admin
+        Route::get('/workshop/orders/{order_number}/finalize-bill', [WorkshopBillingController::class, 'finalizeBill'])->name('workshop.finalizeBill')->middleware('admin');
 
-    // Order Management
-    Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
-    Route::get('/orders/archive', [App\Http\Controllers\OrderArchiveController::class, 'index'])->name('orders.archive');
-    Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
-    Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
-    Route::resource('orders', OrderController::class)->only(['index', 'edit']);
-    Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
+        // Order Management
+        Route::get('/orders/history', [OrderController::class, 'history'])->name('orders.history');
+        Route::get('/orders/archive', [App\Http\Controllers\OrderArchiveController::class, 'index'])->name('orders.archive');
+        Route::get('/orders/search', [OrderController::class, 'search'])->name('orders.search');
+        Route::get('/orders/view/{order_number}', [OrderController::class, 'showByNumber'])->name('orders.show');
+        Route::resource('orders', OrderController::class)->only(['index', 'edit']);
+        Route::delete('/orders/{order}', [OrderController::class, 'destroy'])->name('orders.destroy');
 
+        Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
+        Route::post('/petty-cash/topup', [ExpenseController::class, 'topup'])->name('petty_cash.topup');
 
-
-    // Note: payment_methods are managed via PaymentSettingsController (settings page)
-
-    Route::resource('expenses', ExpenseController::class)->except(['create', 'show']);
-    Route::post('/petty-cash/topup', [ExpenseController::class, 'topup'])->name('petty_cash.topup');
-
-    Route::get('/online-bookings', [OnlineBookingController::class, 'index'])->name('online_bookings.index');
-    Route::post('/online-bookings/{booking}/status', [OnlineBookingController::class, 'updateStatus'])->name('online_bookings.updateStatus');
+        Route::get('/online-bookings', [OnlineBookingController::class, 'index'])->name('online_bookings.index');
+        Route::post('/online-bookings/{booking}/status', [OnlineBookingController::class, 'updateStatus'])->name('online_bookings.updateStatus');
+    });
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
@@ -300,10 +299,7 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/sms-templates/toggle', [SmsTemplateController::class, 'toggleGlobal'])->name('sms-templates.toggleGlobal');
             Route::post('/sms-templates/seed', [SmsTemplateController::class, 'seedDefault'])->name('sms-templates.seedDefault');
 
-            Route::get('/whatsapp-templates', [WhatsappTemplateController::class, 'index'])->name('whatsapp-templates.index');
-            Route::put('/whatsapp-templates/{template}', [WhatsappTemplateController::class, 'update'])->name('whatsapp-templates.update');
-            Route::post('/whatsapp-templates/toggle', [WhatsappTemplateController::class, 'toggleGlobal'])->name('whatsapp-templates.toggleGlobal');
-            Route::post('/whatsapp-templates/seed', [WhatsappTemplateController::class, 'seedDefault'])->name('whatsapp-templates.seedDefault');
+
 
             Route::get('/email-templates', [EmailTemplateController::class, 'index'])->name('email-templates.index');
             Route::put('/email-templates/{template}', [EmailTemplateController::class, 'update'])->name('email-templates.update');
@@ -320,6 +316,8 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
         Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
+        Route::put('/hr/advances/{advance}', [HRController::class, 'updateAdvance'])->name('hr.advances.update');
+        Route::delete('/hr/advances/{advance}', [HRController::class, 'destroyAdvance'])->name('hr.advances.destroy');
         Route::post('/hr/{staff}/adjustments', [HRController::class, 'storeAdjustment'])->name('hr.adjustments.store');
         Route::delete('/hr/adjustments/{adjustment}', [HRController::class, 'destroyAdjustment'])->name('hr.adjustments.destroy');
         Route::get('/hr/{staff}/payslip', [StaffController::class, 'downloadPayslip'])->name('hr.payslip.download');
@@ -328,34 +326,45 @@ Route::middleware(['auth'])->group(function () {
         Route::resource('branches', BranchController::class)->except(['show']);
         Route::get('/branch/month-plan', [BranchPlanController::class, 'index'])->name('branch.month_plan');
         Route::post('/branch/month-plan', [BranchPlanController::class, 'store'])->name('branch.month_plan.store');
+
+        // Branch Logs & Shift Re-open Requests
+        Route::get('/branch-logs', [\App\Http\Controllers\BranchLogController::class, 'index'])->name('superadmin.branch-logs');
+        Route::redirect('/reopen-requests', '/branch-logs?tab=reopen_requests')->name('superadmin.reopen-requests');
+        Route::post('/reopen-requests/{reopenRequest}/approve', [\App\Http\Controllers\BranchReopenRequestController::class, 'approve'])->name('superadmin.reopen-requests.approve');
+        Route::post('/reopen-requests/{reopenRequest}/reject', [\App\Http\Controllers\BranchReopenRequestController::class, 'reject'])->name('superadmin.reopen-requests.reject');
+
         Route::post('/workshop/dispatches/{dispatch}/received-at-branch', [WorkshopDispatchController::class, 'receivedAtBranch'])->name('workshop.receivedAtBranch');
         Route::post('/staff/pay-salary', [StaffController::class, 'paySalary'])->name('staff.paySalary');
+        Route::put('/staff/salaries/{expense}', [StaffController::class, 'updateSalary'])->name('staff.salaries.update');
+        Route::delete('/staff/salaries/{expense}', [StaffController::class, 'destroySalary'])->name('staff.salaries.destroy');
         Route::resource('staff', StaffController::class);
 
-        // ─── Reports Routes ───
-        Route::get('/reports', [MainReportController::class, 'index'])->name('reports.index');
-        Route::get('/reports/pdf', [MainReportController::class, 'exportPdf'])->name('reports.pdf');
-        Route::get('/reports/pending-orders', [\App\Http\Controllers\Reports\PendingOrdersReportController::class, 'index'])->name('reports.pending-orders');
-        Route::get('/reports/active-orders-pdf', [\App\Http\Controllers\Reports\PendingOrdersReportController::class, 'exportPdf'])->name('reports.active-orders-pdf');
+        // ─── Reports Routes (Protected by shift.open) ───
+        Route::middleware(['shift.open'])->group(function () {
+            Route::get('/reports', [MainReportController::class, 'index'])->name('reports.index');
+            Route::get('/reports/pdf', [MainReportController::class, 'exportPdf'])->name('reports.pdf');
+            Route::get('/reports/pending-orders', [\App\Http\Controllers\Reports\PendingOrdersReportController::class, 'index'])->name('reports.pending-orders');
+            Route::get('/reports/active-orders-pdf', [\App\Http\Controllers\Reports\PendingOrdersReportController::class, 'exportPdf'])->name('reports.active-orders-pdf');
 
-        Route::get('/reports/credit-orders', [\App\Http\Controllers\Reports\CreditReportController::class, 'index'])->name('reports.credit-orders');
-        Route::get('/reports/credit-orders/pdf', [\App\Http\Controllers\Reports\CreditReportController::class, 'exportPdf'])->name('reports.credit-orders.pdf');
-        Route::get('/reports/credit-orders/customer/{customerId}', [\App\Http\Controllers\Reports\CreditReportController::class, 'customerOrders'])->name('reports.credit-orders.customer');
+            Route::get('/reports/credit-orders', [\App\Http\Controllers\Reports\CreditReportController::class, 'index'])->name('reports.credit-orders');
+            Route::get('/reports/credit-orders/pdf', [\App\Http\Controllers\Reports\CreditReportController::class, 'exportPdf'])->name('reports.credit-orders.pdf');
+            Route::get('/reports/credit-orders/customer/{customerId}', [\App\Http\Controllers\Reports\CreditReportController::class, 'customerOrders'])->name('reports.credit-orders.customer');
 
-        Route::get('/reports/pending-payments', [\App\Http\Controllers\Reports\PendingPaymentsReportController::class, 'index'])->name('reports.pending-payments');
-        Route::get('/reports/pending-payments/pdf', [\App\Http\Controllers\Reports\PendingPaymentsReportController::class, 'exportPdf'])->name('reports.pending-payments.pdf');
+            Route::get('/reports/pending-payments', [\App\Http\Controllers\Reports\PendingPaymentsReportController::class, 'index'])->name('reports.pending-payments');
+            Route::get('/reports/pending-payments/pdf', [\App\Http\Controllers\Reports\PendingPaymentsReportController::class, 'exportPdf'])->name('reports.pending-payments.pdf');
 
-        Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales');
-        Route::get('/reports/sales/pdf', [SalesReportController::class, 'exportPdf'])->name('reports.sales.pdf');
-        Route::get('/reports/sales/csv', [SalesReportController::class, 'exportCsv'])->name('reports.sales.csv');
+            Route::get('/reports/sales', [SalesReportController::class, 'index'])->name('reports.sales');
+            Route::get('/reports/sales/pdf', [SalesReportController::class, 'exportPdf'])->name('reports.sales.pdf');
+            Route::get('/reports/sales/csv', [SalesReportController::class, 'exportCsv'])->name('reports.sales.csv');
 
-        Route::get('/reports/services', [ServiceReportController::class, 'index'])->name('reports.services');
-        Route::get('/reports/services/pdf', [ServiceReportController::class, 'exportPdf'])->name('reports.services.pdf');
+            Route::get('/reports/services', [ServiceReportController::class, 'index'])->name('reports.services');
+            Route::get('/reports/services/pdf', [ServiceReportController::class, 'exportPdf'])->name('reports.services.pdf');
 
-        Route::get('/reports/customers', [CustomerReportController::class, 'index'])->name('reports.customers');
-        Route::get('/reports/customers/pdf', [CustomerReportController::class, 'exportPdf'])->name('reports.customers.pdf');
+            Route::get('/reports/customers', [CustomerReportController::class, 'index'])->name('reports.customers');
+            Route::get('/reports/customers/pdf', [CustomerReportController::class, 'exportPdf'])->name('reports.customers.pdf');
 
-        Route::get('/reports/close-shift', [ShiftReportController::class, 'index'])->name('reports.closeShift');
+            Route::get('/reports/close-shift', [ShiftReportController::class, 'index'])->name('reports.closeShift');
+        });
     });
 });
 

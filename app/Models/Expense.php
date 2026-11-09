@@ -4,17 +4,18 @@ namespace App\Models;
 
 use App\Traits\BelongsToBranch;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 class Expense extends Model
 {
-    use BelongsToBranch, LogsActivity;
+    use BelongsToBranch, SoftDeletes, LogsActivity;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['description', 'amount', 'category_id', 'expense_date'])
+            ->logOnly(['description', 'amount', 'category_id', 'expense_date', 'updated_by', 'deleted_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
@@ -70,6 +71,21 @@ class Expense extends Model
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updatedBy()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function deletedBy()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
+    }
+
+    public function auditLogs()
+    {
+        return $this->morphMany(SalaryAuditLog::class, 'auditable')->latest();
     }
 }
 

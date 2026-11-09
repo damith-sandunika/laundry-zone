@@ -2,19 +2,20 @@
 
 namespace App\Jobs;
 
+use App\Models\EmailLog;
+use App\Models\Setting;
+use App\Traits\TenantAwareJob;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use App\Models\EmailLog;
-use App\Models\Setting;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class ProcessEmail implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, TenantAwareJob;
 
     protected $emailLog;
 
@@ -24,6 +25,7 @@ class ProcessEmail implements ShouldQueue
     public function __construct(EmailLog $emailLog)
     {
         $this->emailLog = $emailLog;
+        $this->captureTenantContext();
     }
 
     /**
@@ -64,8 +66,8 @@ class ProcessEmail implements ShouldQueue
 </body>
 </html>";
 
-            $fromName    = config('mail.from.name', $companyName);
-            $fromAddress = config('mail.from.address');
+            $fromName    = Setting::where('key', 'mail_from_name')->value('value') ?: config('mail.from.name', $companyName);
+            $fromAddress = Setting::where('key', 'mail_from_address')->value('value') ?: config('mail.from.address');
 
             Mail::html($htmlBody, function ($msg) use ($fromName, $fromAddress) {
                 $msg->to($this->emailLog->email)

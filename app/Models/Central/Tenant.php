@@ -34,6 +34,12 @@ class Tenant extends Model
         'delivery_price',
         'status',
         'notes',
+        'sms_gateway',
+        'sms_mask',
+        'sms_api_url',
+        'sms_api_key',
+        'mail_from_name',
+        'mail_from_address',
         'trial_ends_at',
     ];
 

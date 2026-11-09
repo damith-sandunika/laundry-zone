@@ -14,7 +14,7 @@ class Customer extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'phone', 'address', 'title', 'email', 'date_of_birth', 'nic', 'customer_mark'])
+            ->logOnly(['name', 'phone', 'address', 'title', 'email', 'date_of_birth', 'nic', 'customer_mark', 'customer_type', 'is_corporate'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges();
     }
@@ -22,8 +22,37 @@ class Customer extends Authenticatable
     protected $fillable = [
         'branch_id', 'title', 'name', 'phone', 'email', 'password', 
         'remember_token', 'address', 'loyalty_points', 'is_active', 
-        'default_discount', 'date_of_birth', 'nic', 'customer_mark'
+        'default_discount', 'date_of_birth', 'nic', 'customer_mark', 'customer_type', 'is_corporate'
     ];
+
+    protected $casts = [
+        'is_corporate' => 'boolean',
+        'is_active' => 'boolean',
+    ];
+
+    public function isCorporate(): bool
+    {
+        return $this->customer_type === 'corporate' || $this->is_corporate;
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->customer_type === 'online';
+    }
+
+    public function isWalkin(): bool
+    {
+        return $this->customer_type === 'walkin' || (!$this->isCorporate() && !$this->isOnline());
+    }
+
+    public function getCustomerTypeLabelAttribute(): string
+    {
+        return match ($this->customer_type) {
+            'corporate' => 'Corporate',
+            'online' => 'Online',
+            default => 'Walk-in',
+        };
+    }
 
     public function getAddressAttribute($value)
     {

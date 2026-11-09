@@ -8,7 +8,7 @@ class StaffPolicy
 {
     public function before(User $user, string $ability): bool|null
     {
-        if (in_array($user->role, ['owner', 'super_admin'])) {
+        if ($user->role === 'super_admin') {
             return true;
         }
         return null;
@@ -16,26 +16,35 @@ class StaffPolicy
 
     public function viewAny(User $user): bool
     {
-        return in_array($user->role, ['branch_admin', 'workshop_admin']);
+        return in_array($user->role, ['branch_admin', 'workshop_admin', 'hr_manager', 'accountant_and_hr_manager']);
     }
 
     public function view(User $user, User $model): bool
     {
+        if (in_array($user->role, ['hr_manager', 'accountant_and_hr_manager'])) {
+            return true;
+        }
         return $user->branch_id === $model->branch_id;
     }
 
     public function create(User $user): bool
     {
-        return in_array($user->role, ['branch_admin', 'workshop_admin']);
+        return in_array($user->role, ['branch_admin', 'workshop_admin', 'hr_manager', 'accountant_and_hr_manager']);
     }
 
     public function update(User $user, User $model): bool
     {
+        if (in_array($user->role, ['hr_manager', 'accountant_and_hr_manager'])) {
+            return true;
+        }
         return $user->branch_id === $model->branch_id && $user->role !== 'staff';
     }
 
     public function delete(User $user, User $model): bool
     {
+        if (in_array($user->role, ['hr_manager', 'accountant_and_hr_manager'])) {
+            return true;
+        }
         return $user->branch_id === $model->branch_id && $user->role !== 'staff';
     }
 

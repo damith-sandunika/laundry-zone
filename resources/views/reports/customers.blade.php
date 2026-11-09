@@ -40,7 +40,16 @@
                             @if($isSuperAdmin && !$branchId)
                                 <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $cust->branch_name ?? 'Unknown' }}</td>
                             @endif
-                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">{{ $cust->customer_name ?? 'Walk-in / Unknown' }}</td>
+                            <td class="px-2 py-2 md:px-6 md:py-4 font-bold text-slate-900">
+                                <div class="flex items-center gap-2">
+                                    <span>{{ $cust->customer_name ?? 'Walk-in / Unknown' }}</span>
+                                    @if(!empty($cust->is_corporate))
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] md:text-[10px] font-black bg-indigo-50 text-indigo-700 border border-indigo-200">
+                                            Corporate
+                                        </span>
+                                    @endif
+                                </div>
+                            </td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-center font-black text-blue-600">{{ $cust->order_count }}</td>
                             <td class="px-2 py-2 md:px-6 md:py-4 text-right font-black text-emerald-500">Rs.{{ number_format($cust->total_revenue, 2) }}</td>
                         </tr>

@@ -31,6 +31,21 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
+        // Redirect riders to their own dashboard
+        if ($user->role === 'rider') {
+            return redirect()->route('rider.dashboard');
+        }
+
+        // Redirect HR managers to HR dashboard
+        if ($user->role === 'hr_manager') {
+            return redirect()->route('hr.dashboard');
+        }
+
+        // Redirect accountants to account dashboard
+        if ($user->role === 'accountant' || $user->role === 'accountant_and_hr_manager') {
+            return redirect()->route('accountant.dashboard');
+        }
+
         // Redirect workshop admins or staff assigned to a workshop to workshop dashboard
         if ($user->role === 'workshop_admin' || ($user->role === 'staff' && $user->branch && $user->branch->type === 'workshop')) {
             return redirect()->route('workshop.dashboard');
@@ -119,6 +134,52 @@ class DashboardController extends Controller
             $activeAttendances = \App\Models\Attendance::where('register_session_id', $activeSession->id)->get()->keyBy('user_id');
         }
 
+        // ── Check if shift was already opened and closed today ──
+        $today = now()->format('Y-m-d');
+        $closedSessionsTodayCount = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->where('branch_id', $branchId)
+            ->where('status', 'closed')
+            ->whereDate('closed_at', $today)
+            ->count();
+
+        $requireApprovalSetting = \App\Models\Setting::get('require_superadmin_approval_to_reopen_shift', '1') == '1';
+        $requiresApprovalToOpen = false;
+        $pendingReopenRequest = null;
+        $hasApprovedReopenRequest = false;
+
+        if ($requireApprovalSetting && $closedSessionsTodayCount > 0 && !$activeSession) {
+            // Check if there is an approved reopen request for today that hasn't been used
+            $approvedRequest = \App\Models\BranchReopenRequest::where('branch_id', $branchId)
+                ->where('request_date', $today)
+                ->where('status', 'approved')
+                ->latest()
+                ->first();
+
+            // Compare with open/closed sessions after approval
+            if ($approvedRequest) {
+                $sessionsAfterApproval = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                    ->where('branch_id', $branchId)
+                    ->where('opened_at', '>=', $approvedRequest->reviewed_at)
+                    ->count();
+
+                if ($sessionsAfterApproval === 0) {
+                    $hasApprovedReopenRequest = true;
+                } else {
+                    $requiresApprovalToOpen = true;
+                }
+            } else {
+                $requiresApprovalToOpen = true;
+            }
+
+            if ($requiresApprovalToOpen) {
+                $pendingReopenRequest = \App\Models\BranchReopenRequest::where('branch_id', $branchId)
+                    ->where('request_date', $today)
+                    ->where('status', 'pending')
+                    ->latest()
+                    ->first();
+            }
+        }
+
         // ── Chart Data ──
         $chartData = $this->statService->getChartData($branchId);
 
@@ -180,7 +241,24 @@ class DashboardController extends Controller
             return view('dashboard_superadmin', compact('superAdminStats', 'recentGlobalOrders', 'branchName', 'chartBranchSales', 'chartBranchBalances'));
         }
 
-        return view('dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'suggestedOpeningCash', 'branchName', 'chartData', 'currentBranch', 'branchStaff', 'activeAttendances', 'pendingCorrections'));
+        return view('dashboard', compact(
+            'stats',
+            'recentOrders',
+            'lowStockItems',
+            'allInventory',
+            'activeSession',
+            'suggestedOpeningCash',
+            'branchName',
+            'chartData',
+            'currentBranch',
+            'branchStaff',
+            'activeAttendances',
+            'pendingCorrections',
+            'requiresApprovalToOpen',
+            'pendingReopenRequest',
+            'hasApprovedReopenRequest',
+            'closedSessionsTodayCount'
+        ));
     }
 
     public function openShift(Request $request)
@@ -203,6 +281,39 @@ class DashboardController extends Controller
         if ($existing) {
             \Log::info('openShift: session already open id=' . $existing->id);
             return $this->dashboardRedirect()->with('info', 'Branch shift is already open.');
+        }
+
+        // Check if shift was already closed today and requires Super Admin approval
+        $today = now()->format('Y-m-d');
+        $requireApprovalSetting = \App\Models\Setting::get('require_superadmin_approval_to_reopen_shift', '1') == '1';
+        $closedSessionsTodayCount = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->where('branch_id', $branchId)
+            ->where('status', 'closed')
+            ->whereDate('closed_at', $today)
+            ->count();
+
+        if ($requireApprovalSetting && $closedSessionsTodayCount > 0) {
+            $approvedRequest = \App\Models\BranchReopenRequest::where('branch_id', $branchId)
+                ->where('request_date', $today)
+                ->where('status', 'approved')
+                ->latest()
+                ->first();
+
+            $canReopen = false;
+            if ($approvedRequest) {
+                $sessionsAfterApproval = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                    ->where('branch_id', $branchId)
+                    ->where('opened_at', '>=', $approvedRequest->reviewed_at)
+                    ->count();
+
+                if ($sessionsAfterApproval === 0) {
+                    $canReopen = true;
+                }
+            }
+
+            if (!$canReopen) {
+                return $this->dashboardRedirect()->with('error', 'Today\'s shift was previously closed. Re-opening shift on the same day requires Super Admin approval.');
+            }
         }
 
         try {
@@ -251,6 +362,9 @@ class DashboardController extends Controller
                     'action'      => 'shift_opened',
                     'description' => $logDesc,
                 ]);
+
+                // Clear cached shift state in session for instant reactivity
+                session()->forget("branch_shift_open_{$branchId}");
             });
 
             return $this->dashboardRedirect()->with('success', 'Branch shift opened successfully.');
@@ -374,6 +488,9 @@ class DashboardController extends Controller
                 'action'      => 'shift_closed',
                 'description' => 'Shift closed. Final Cash: Rs. ' . number_format($finalCash, 2),
             ]);
+
+            // Clear cached shift state in session for instant reactivity
+            session()->forget("branch_shift_open_{$branchId}");
         });
 
         // Redirect to dashboard directly (not back()) for clean state

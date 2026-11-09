@@ -19,19 +19,20 @@ class SalesReportController extends Controller
         ]);
 
         $user         = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId     = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         $startDate    = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate      = $request->input('end_date', now()->toDateString());
+        $customerType = $request->input('customer_type');
 
-        return [$branchId, $startDate, $endDate, $isSuperAdmin];
+        return [$branchId, $startDate, $endDate, $isSuperAdmin, $customerType];
     }
 
-    private function buildUnionQuery($branchId, $startDate, $endDate)
+    private function buildUnionQuery($branchId, $startDate, $endDate, $customerType = null)
     {
         $paymentsBase = DB::table('payment_transactions')
             ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
-            ->where('payment_transactions.status', 'completed')
+            ->where('payment_transactions.status', 'completed')->whereNull('payment_transactions.deleted_at')
             ->whereBetween('payment_transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->selectRaw("
                 'payment' as type,
@@ -43,6 +44,32 @@ class SalesReportController extends Controller
             ");
         if ($branchId) {
             $paymentsBase->where('orders.branch_id', $branchId);
+        }
+        if ($customerType === 'corporate') {
+            $paymentsBase->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'corporate')->orWhere('customers.is_corporate', true);
+                    });
+            });
+        } elseif ($customerType === 'online') {
+            $paymentsBase->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where('customers.customer_type', 'online');
+            });
+        } elseif ($customerType === 'walkin') {
+            $paymentsBase->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'walkin')
+                          ->orWhere(function($sub2) {
+                              $sub2->whereNull('customers.customer_type')->where('customers.is_corporate', false);
+                          });
+                    });
+            });
         }
 
         $creditsBase = DB::table('orders')
@@ -60,6 +87,32 @@ class SalesReportController extends Controller
         if ($branchId) {
             $creditsBase->where('orders.branch_id', $branchId);
         }
+        if ($customerType === 'corporate') {
+            $creditsBase->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'corporate')->orWhere('customers.is_corporate', true);
+                    });
+            });
+        } elseif ($customerType === 'online') {
+            $creditsBase->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where('customers.customer_type', 'online');
+            });
+        } elseif ($customerType === 'walkin') {
+            $creditsBase->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'walkin')
+                          ->orWhere(function($sub2) {
+                              $sub2->whereNull('customers.customer_type')->where('customers.is_corporate', false);
+                          });
+                    });
+            });
+        }
 
         $unionQuery = $paymentsBase->unionAll($creditsBase);
         $unionSql = $unionQuery->toSql();
@@ -69,14 +122,40 @@ class SalesReportController extends Controller
             ->orderBy('date', 'desc');
     }
 
-    private function getTotals($branchId, $startDate, $endDate)
+    private function getTotals($branchId, $startDate, $endDate, $customerType = null)
     {
         $totalsQuery = DB::table('payment_transactions')
             ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
-            ->where('payment_transactions.status', 'completed')
+            ->where('payment_transactions.status', 'completed')->whereNull('payment_transactions.deleted_at')
             ->whereBetween('payment_transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         if ($branchId) {
             $totalsQuery->where('orders.branch_id', $branchId);
+        }
+        if ($customerType === 'corporate') {
+            $totalsQuery->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'corporate')->orWhere('customers.is_corporate', true);
+                    });
+            });
+        } elseif ($customerType === 'online') {
+            $totalsQuery->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where('customers.customer_type', 'online');
+            });
+        } elseif ($customerType === 'walkin') {
+            $totalsQuery->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'walkin')
+                          ->orWhere(function($sub2) {
+                              $sub2->whereNull('customers.customer_type')->where('customers.is_corporate', false);
+                          });
+                    });
+            });
         }
 
         $paymentTotals = (clone $totalsQuery)
@@ -95,6 +174,32 @@ class SalesReportController extends Controller
         if ($branchId) {
             $totalCreditQuery->where('branch_id', $branchId);
         }
+        if ($customerType === 'corporate') {
+            $totalCreditQuery->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'corporate')->orWhere('customers.is_corporate', true);
+                    });
+            });
+        } elseif ($customerType === 'online') {
+            $totalCreditQuery->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where('customers.customer_type', 'online');
+            });
+        } elseif ($customerType === 'walkin') {
+            $totalCreditQuery->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))->from('customers')
+                    ->whereColumn('customers.id', 'orders.customer_id')
+                    ->where(function($q) {
+                        $q->where('customers.customer_type', 'walkin')
+                          ->orWhere(function($sub2) {
+                              $sub2->whereNull('customers.customer_type')->where('customers.is_corporate', false);
+                          });
+                    });
+            });
+        }
         $totalCredit = $totalCreditQuery->sum('total');
 
         return [
@@ -108,9 +213,9 @@ class SalesReportController extends Controller
 
     public function index(Request $request)
     {
-        [$branchId, $startDate, $endDate, $isSuperAdmin] = $this->getBaseInfo($request);
+        [$branchId, $startDate, $endDate, $isSuperAdmin, $customerType] = $this->getBaseInfo($request);
         
-        $query = $this->buildUnionQuery($branchId, $startDate, $endDate);
+        $query = $this->buildUnionQuery($branchId, $startDate, $endDate, $customerType);
         
         $paginatedRecords = $query->paginate(15)->withQueryString();
 
@@ -123,7 +228,7 @@ class SalesReportController extends Controller
             return $activity;
         });
 
-        $totals = $this->getTotals($branchId, $startDate, $endDate);
+        $totals = $this->getTotals($branchId, $startDate, $endDate, $customerType);
 
         $data = array_merge([
             'orders'       => $paginatedRecords,

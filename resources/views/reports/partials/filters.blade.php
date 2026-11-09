@@ -22,6 +22,18 @@
                 <label class="block text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 md:mb-2">End</label>
                 <input type="date" name="end_date" value="{{ $endDate }}" class="w-full px-1 py-1.5 md:px-4 md:py-2.5 border-2 border-slate-200 rounded-lg md:rounded-xl text-[10px] md:text-sm font-semibold text-slate-900 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-0 transition-colors">
             </div>
+
+            {{-- Customer Type Dropdown Filter (All / Walk-in / Corporate / Online) without emojis --}}
+            <div class="flex-1 md:min-w-[170px]">
+                <label class="block text-[9px] md:text-xs font-bold text-slate-500 uppercase tracking-wider mb-1 md:mb-2">Customer Type</label>
+                <select name="customer_type" class="w-full px-2 py-1.5 md:px-4 md:py-2.5 border-2 border-slate-200 rounded-lg md:rounded-xl text-[10px] md:text-sm font-semibold text-slate-900 bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-0 transition-colors" onchange="this.form.submit()">
+                    <option value="">All Customer Types</option>
+                    <option value="walkin" {{ request('customer_type') === 'walkin' ? 'selected' : '' }}>Walk-in Customers</option>
+                    <option value="corporate" {{ request('customer_type') === 'corporate' ? 'selected' : '' }}>Corporate Customers</option>
+                    <option value="online" {{ request('customer_type') === 'online' ? 'selected' : '' }}>Online Customers</option>
+                </select>
+            </div>
+
             <div class="flex-none flex gap-2">
                 <button type="button" onclick="applyQuickDate('{{ date('Y-m-d') }}', '{{ date('Y-m-d') }}')" class="px-3 py-2 md:px-4 md:py-3 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-colors h-[34px] md:h-[46px] flex items-center">Today</button>
                 <button type="button" onclick="applyQuickDate('{{ date('Y-m-d', strtotime('-1 day')) }}', '{{ date('Y-m-d', strtotime('-1 day')) }}')" class="px-3 py-2 md:px-4 md:py-3 bg-slate-100 hover:bg-blue-100 text-slate-600 hover:text-blue-700 text-[10px] md:text-sm font-bold rounded-lg md:rounded-xl transition-colors h-[34px] md:h-[46px] flex items-center">Yesterday</button>

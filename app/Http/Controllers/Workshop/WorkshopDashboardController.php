@@ -4,7 +4,11 @@ namespace App\Http\Controllers\Workshop;
 
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
+use App\Models\BranchReopenRequest;
 use App\Models\Order;
+use App\Models\RegisterSession;
+use App\Models\Scopes\BranchScope;
+use App\Models\Setting;
 use App\Models\WorkshopDispatch;
 use Illuminate\Http\Request;
 
@@ -349,7 +353,67 @@ class WorkshopDashboardController extends Controller
             'monthly' => ['labels' => $monthlyLabels, 'pending' => $monthlyPending, 'delivered' => $monthlyDelivered],
         ];
 
-        return view('workshop.dashboard', compact('stats', 'recentOrders', 'lowStockItems', 'allInventory', 'activeSession', 'suggestedOpeningCash', 'branchName', 'chartData', 'currentBranch', 'branchStaff', 'activeAttendances'));
+        // ── Check if shift was already opened and closed today ──
+        $today = now()->format('Y-m-d');
+        $closedSessionsTodayCount = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+            ->where('branch_id', $branchId)
+            ->where('status', 'closed')
+            ->whereDate('closed_at', $today)
+            ->count();
+
+        $requireApprovalSetting = \App\Models\Setting::get('require_superadmin_approval_to_reopen_shift', '1') == '1';
+        $requiresApprovalToOpen = false;
+        $pendingReopenRequest = null;
+        $hasApprovedReopenRequest = false;
+
+        if ($requireApprovalSetting && $closedSessionsTodayCount > 0 && !$activeSession) {
+            $approvedRequest = \App\Models\BranchReopenRequest::where('branch_id', $branchId)
+                ->where('request_date', $today)
+                ->where('status', 'approved')
+                ->latest()
+                ->first();
+
+            if ($approvedRequest) {
+                $sessionsAfterApproval = RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                    ->where('branch_id', $branchId)
+                    ->where('opened_at', '>=', $approvedRequest->reviewed_at)
+                    ->count();
+
+                if ($sessionsAfterApproval === 0) {
+                    $hasApprovedReopenRequest = true;
+                } else {
+                    $requiresApprovalToOpen = true;
+                }
+            } else {
+                $requiresApprovalToOpen = true;
+            }
+
+            if ($requiresApprovalToOpen) {
+                $pendingReopenRequest = \App\Models\BranchReopenRequest::where('branch_id', $branchId)
+                    ->where('request_date', $today)
+                    ->where('status', 'pending')
+                    ->latest()
+                    ->first();
+            }
+        }
+
+        return view('workshop.dashboard', compact(
+            'stats',
+            'recentOrders',
+            'lowStockItems',
+            'allInventory',
+            'activeSession',
+            'suggestedOpeningCash',
+            'branchName',
+            'chartData',
+            'currentBranch',
+            'branchStaff',
+            'activeAttendances',
+            'requiresApprovalToOpen',
+            'pendingReopenRequest',
+            'hasApprovedReopenRequest',
+            'closedSessionsTodayCount'
+        ));
     }
 
     public function history(Request $request)

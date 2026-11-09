@@ -30,14 +30,15 @@ class MainReportController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
+        $customerType = $request->input('customer_type');
         $branches = $isSuperAdmin ? Branch::where('is_active', true)->get() : collect();
 
         try {
-            $salesData = $this->reportService->getSalesData($branchId, $startDate, $endDate);
+            $salesData = $this->reportService->getSalesData($branchId, $startDate, $endDate, $customerType);
             $salesQuery = $salesData['salesQuery'];
             $totalSales = $salesData['totalSales'];
             $totalCredit = $salesData['totalCredit'];
@@ -47,7 +48,7 @@ class MainReportController extends Controller
             $maxFunc = $salesData['maxFunc'];
             $totalCollectedFromOrders = $salesData['totalCollectedFromOrders'];
 
-            $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->paginate(15);
+            $orders = $salesQuery->with(['customer', 'items.serviceType'])->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
             
             $paginatedOrderIds = $orders->getCollection()->pluck('id')->toArray();
             $paginatedDeliveryOrderIds = DeliveryAppointment::whereIn('order_id', $paginatedOrderIds)
@@ -56,7 +57,7 @@ class MainReportController extends Controller
             $deliveryOrders  = $orders->getCollection()->whereIn('id', $paginatedDeliveryOrderIds);
             $walkinOrders    = $orders->getCollection()->whereNotIn('id', $paginatedDeliveryOrderIds);
 
-            $paymentData = $this->reportService->getPaymentsData($branchId, $startDate, $endDate);
+            $paymentData = $this->reportService->getPaymentsData($branchId, $startDate, $endDate, $customerType);
             $packagePaymentsSum = $paymentData['packagePaymentsSum'];
             $totalCollected = $paymentData['totalCollected'];
             $collectedCash = $paymentData['collectedCash'];
@@ -68,7 +69,7 @@ class MainReportController extends Controller
             $totalBranchProfit = $profitData['totalBranchProfit'];
             $totalWorkshopProfit = $profitData['totalWorkshopProfit'];
 
-            $services = $this->reportService->getServiceBreakdown($branchId, $startDate, $endDate);
+            $services = $this->reportService->getServiceBreakdown($branchId, $startDate, $endDate, $customerType);
 
         $expenseQuery = Expense::whereBetween('expense_date', [$startDate, $endDate]);
         if ($branchId)
@@ -185,7 +186,7 @@ class MainReportController extends Controller
     public function exportPdf(Request $request)
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());

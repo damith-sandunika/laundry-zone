@@ -1,4 +1,4 @@
-﻿<x-app-layout>
+<x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <div>
@@ -14,7 +14,25 @@
     </x-slot>
 
     @if(session('success'))
-        <div class="bg-green-50 text-green-700 p-3 mb-4 text-sm font-bold border border-green-100 rounded-xl">{{ session('success') }}</div>
+        <div class="bg-green-50 text-green-700 p-3 mb-4 text-sm font-bold border border-green-100 rounded-xl flex items-center gap-2">
+            <i class="fa-solid fa-circle-check text-green-500"></i>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error') || $errors->any())
+        <div class="bg-red-50 text-red-700 p-3 mb-4 text-sm font-bold border border-red-100 rounded-xl">
+            @if(session('error'))
+                <div class="flex items-center gap-2"><i class="fa-solid fa-circle-exclamation text-red-500"></i> {{ session('error') }}</div>
+            @endif
+            @if($errors->any())
+                <ul class="list-disc list-inside mt-1 font-semibold text-xs">
+                    @foreach($errors->all() as $err)
+                        <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
     @endif
 
         <!-- Alpine App Wrapper -->
@@ -79,6 +97,21 @@
                 @if($customer->customer_mark)
                     <span class="px-3 py-1 bg-amber-100 text-amber-700 font-bold text-xs md:text-sm rounded-lg border border-amber-200 uppercase tracking-widest shadow-sm">
                         {{ $customer->customer_mark }}
+                    </span>
+                @endif
+                @if($customer->isCorporate())
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-indigo-50 text-indigo-700 font-extrabold text-xs md:text-sm rounded-lg border border-indigo-200 uppercase tracking-wider shadow-sm">
+                        <svg class="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>
+                        Corporate Client
+                    </span>
+                @elseif($customer->isOnline())
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-700 font-extrabold text-xs md:text-sm rounded-lg border border-emerald-200 uppercase tracking-wider shadow-sm">
+                        <svg class="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        Online Client
+                    </span>
+                @else
+                    <span class="inline-flex items-center px-2.5 py-1 bg-slate-100 text-slate-600 font-bold text-xs rounded-lg border border-slate-200 uppercase tracking-wider">
+                        Walk-in Client
                     </span>
                 @endif
             </div>
@@ -396,7 +429,7 @@
                         <select name="payment_method" required class="w-full px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-black text-slate-900 bg-slate-50 focus:bg-white focus:border-red-500 focus:ring-0">
                             <option value="cash">💵 Cash</option>
                             <option value="card">💳 Card</option>
-                            <option value="bank_transfer">🏦 Bank Transfer</option>
+                            <option value="bank">🏦 Bank Transfer</option>
                         </select>
                     </div>
                     <button type="submit" class="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-black rounded-xl shadow-lg shadow-red-500/30 transition-transform active:scale-95 text-sm uppercase tracking-wider">
@@ -431,7 +464,7 @@
                             <select name="payment_method" required class="w-full px-3 py-2 border-2 border-slate-200 rounded-xl text-sm font-black text-slate-900 bg-slate-50 focus:bg-white focus:border-indigo-500 focus:ring-0 h-[46px]">
                                 <option value="cash">💵 Cash</option>
                                 <option value="card">💳 Card</option>
-                                <option value="bank_transfer">🏦 Bank Transfer</option>
+                                <option value="bank">🏦 Bank Transfer</option>
                             </select>
                         </div>
                     </div>

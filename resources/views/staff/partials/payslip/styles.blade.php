@@ -139,14 +139,16 @@
             border-radius: 12px;
             padding: 16px 20px;
             margin-bottom: 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
         }
         .payment-status-box.paid {
             background-color: #f0fdf4;
             border: 1px solid #bbf7d0;
             color: #166534;
+        }
+        .payment-status-box.partial {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            color: #1e40af;
         }
         .payment-status-box.pending {
             background-color: #fffbeb;
@@ -164,6 +166,10 @@
         }
         .status-badge.paid {
             background-color: #166534;
+            color: #ffffff;
+        }
+        .status-badge.partial {
+            background-color: #2563eb;
             color: #ffffff;
         }
         .status-badge.pending {
@@ -240,35 +246,87 @@
 
         /* Worked Days Section */
         .worked-days-box {
-            margin-bottom: 30px;
+            margin-top: 24px;
+            margin-bottom: 24px;
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .worked-days-header {
+            background: #f8fafc;
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
         .worked-days-title {
             font-size: 12px;
             font-weight: 800;
-            color: #334155;
+            color: #1e293b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-bottom: 10px;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
         .days-table {
             width: 100%;
             border-collapse: collapse;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            overflow: hidden;
             font-size: 11px;
         }
         .days-table th {
-            background: #f8fafc;
+            background: #f1f5f9;
             padding: 8px 12px;
             text-align: left;
-            color: #64748b;
+            color: #475569;
             font-weight: 700;
+            text-transform: uppercase;
+            font-size: 10px;
+            letter-spacing: 0.3px;
             border-bottom: 1px solid #e2e8f0;
         }
         .days-table td {
             padding: 8px 12px;
             border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+        }
+        .days-table tr:hover {
+            background-color: #f8fafc;
+        }
+        .days-table tr:last-child td {
+            border-bottom: none;
+        }
+        .badge-status {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .badge-status.present {
+            background-color: #ecfdf5;
+            color: #047857;
+            border: 1px solid #a7f3d0;
+        }
+        .badge-status.paid_leave {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+        }
+        .badge-status.leave {
+            background-color: #fff1f2;
+            color: #be123c;
+            border: 1px solid #fecdd3;
+        }
+        .badge-status.holiday {
+            background-color: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fca5a5;
         }
 
         .signatures {

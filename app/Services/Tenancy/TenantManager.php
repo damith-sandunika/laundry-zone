@@ -59,6 +59,12 @@ class TenantManager
         Config::set('app.name', $tenant->name);
         Config::set('app.delivery_enabled', false);
 
+        // Per-Tenant Communication & Mail Configuration
+        if ($tenant->mail_from_address) {
+            Config::set('mail.from.address', $tenant->mail_from_address);
+        }
+        Config::set('mail.from.name', $tenant->mail_from_name ?: $tenant->name);
+
         // Bind tenant to service container
         app()->instance('tenant', $tenant);
 

@@ -24,7 +24,69 @@
         leaveModalOpen: false, 
         advanceModalOpen: false,
         allowanceModalOpen: false,
-        deductionModalOpen: false
+        deductionModalOpen: false,
+        paySalaryModalOpen: false,
+        paySalaryAmount: '{{ $payroll->net_salary }}',
+        editAdvanceModalOpen: false,
+        editingAdvance: { id: null, amount: '', date: '', reason: '', edit_reason: '' },
+        deleteAdvanceModalOpen: false,
+        deletingAdvanceId: null,
+        deleteAdvanceReason: '',
+        editSalaryModalOpen: false,
+        editingSalary: { id: null, amount: '', expense_date: '', description: '', edit_reason: '' },
+        deleteSalaryModalOpen: false,
+        deletingSalaryId: null,
+        deleteSalaryReason: '',
+        openEditAdvance(adv) {
+            this.editingAdvance = {
+                id: adv.id,
+                amount: adv.amount,
+                date: adv.date ? adv.date.substring(0, 10) : '',
+                reason: adv.reason || '',
+                edit_reason: ''
+            };
+            this.editAdvanceModalOpen = true;
+        },
+        openEditAdvanceEl(el) {
+            this.editingAdvance = {
+                id: el.getAttribute('data-id'),
+                amount: el.getAttribute('data-amount'),
+                date: el.getAttribute('data-date') || '',
+                reason: el.getAttribute('data-reason') || '',
+                edit_reason: ''
+            };
+            this.editAdvanceModalOpen = true;
+        },
+        openDeleteAdvance(id) {
+            this.deletingAdvanceId = id;
+            this.deleteAdvanceReason = '';
+            this.deleteAdvanceModalOpen = true;
+        },
+        openEditSalary(sal) {
+            this.editingSalary = {
+                id: sal.id,
+                amount: sal.amount,
+                expense_date: sal.expense_date ? sal.expense_date.substring(0, 10) : '',
+                description: sal.description || '',
+                edit_reason: ''
+            };
+            this.editSalaryModalOpen = true;
+        },
+        openEditSalaryEl(el) {
+            this.editingSalary = {
+                id: el.getAttribute('data-id'),
+                amount: el.getAttribute('data-amount'),
+                expense_date: el.getAttribute('data-date') || '',
+                description: el.getAttribute('data-description') || '',
+                edit_reason: ''
+            };
+            this.editSalaryModalOpen = true;
+        },
+        openDeleteSalary(id) {
+            this.deletingSalaryId = id;
+            this.deleteSalaryReason = '';
+            this.deleteSalaryModalOpen = true;
+        }
     }" 
     @open-allowance.window="allowanceModalOpen = true"
     @open-deduction.window="deductionModalOpen = true"

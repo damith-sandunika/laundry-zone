@@ -21,20 +21,21 @@ class CreditReportController extends Controller
         ]);
 
         $user = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         
         $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
+        $customerType = $request->input('customer_type');
         
         $action = new GetCreditOrdersAction();
-        $query = $action->execute($branchId, $startDate, $endDate);
+        $query = $action->execute($branchId, $startDate, $endDate, true, $customerType);
 
         $customers = $query->paginate(15)->withQueryString();
         
         $branches = $isSuperAdmin ? Branch::all() : collect();
         
-        return view('reports.credit_orders', compact('customers', 'branches', 'branchId', 'startDate', 'endDate', 'isSuperAdmin'));
+        return view('reports.credit_orders', compact('customers', 'branches', 'branchId', 'startDate', 'endDate', 'isSuperAdmin', 'customerType'));
     }
     
     public function exportPdf(Request $request)
@@ -45,7 +46,7 @@ class CreditReportController extends Controller
         ]);
 
         $user = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         
         $startDate = $request->input('start_date', now()->subDays(30)->toDateString());
@@ -81,23 +82,42 @@ class CreditReportController extends Controller
     public function customerOrders(Request $request, $customerId)
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
+        
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $customerType = $request->input('customer_type');
         
         $query = Order::with('branch')
             ->where('customer_id', $customerId)
             ->whereColumn('paid_amount', '<', 'total')
             ->where('payment_method', 'credit')
-            ->where('status', '!=', 'cancelled')
-            ->orderBy('created_at', 'desc');
+            ->where('status', '!=', 'cancelled');
+            
+        if ($startDate && $endDate) {
+            $query->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
+        }
             
         if ($branchId) {
             $query->where('branch_id', $branchId);
         }
+
+        if ($customerType === 'corporate') {
+            $query->whereHas('customer', fn($q) => $q->where('customer_type', 'corporate')->orWhere('is_corporate', true));
+        } elseif ($customerType === 'online') {
+            $query->whereHas('customer', fn($q) => $q->where('customer_type', 'online'));
+        } elseif ($customerType === 'walkin') {
+            $query->whereHas('customer', fn($q) => $q->where('customer_type', 'walkin')->orWhere(function($sub) {
+                $sub->whereNull('customer_type')->where('is_corporate', false);
+            }));
+        }
+
+        $query->orderBy('created_at', 'desc');
         
         $orders = $query->get();
         
-        $html = view('reports.partials.credit_orders_list', compact('orders'))->render();
+        $html = view('reports.partials.credit_orders_list', compact('orders', 'isSuperAdmin'))->render();
         return response()->json(['html' => $html]);
     }
 }

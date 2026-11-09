@@ -19,7 +19,7 @@ class SalesReportController extends Controller
         ]);
 
         $user         = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId     = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         $startDate    = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate      = $request->input('end_date', now()->toDateString());
@@ -31,7 +31,7 @@ class SalesReportController extends Controller
     {
         $paymentsBase = DB::table('payment_transactions')
             ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
-            ->where('payment_transactions.status', 'completed')
+            ->where('payment_transactions.status', 'completed')->whereNull('payment_transactions.deleted_at')
             ->whereBetween('payment_transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
             ->selectRaw("
                 'payment' as type,
@@ -73,7 +73,7 @@ class SalesReportController extends Controller
     {
         $totalsQuery = DB::table('payment_transactions')
             ->join('orders', 'payment_transactions.order_id', '=', 'orders.id')
-            ->where('payment_transactions.status', 'completed')
+            ->where('payment_transactions.status', 'completed')->whereNull('payment_transactions.deleted_at')
             ->whereBetween('payment_transactions.created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         if ($branchId) {
             $totalsQuery->where('orders.branch_id', $branchId);

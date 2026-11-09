@@ -97,6 +97,25 @@
                     </div>
                 </div>
 
+                {{-- Customer Type Selector --}}
+                <div class="p-5 bg-slate-50 border border-slate-200 rounded-xl">
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-2">
+                        Customer Type <span class="text-red-500">*</span>
+                    </label>
+                    <select name="customer_type" class="w-full text-sm font-semibold bg-white border border-slate-300 rounded-lg px-4 py-2.5 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer">
+                        <option value="walkin" {{ old('customer_type', $customer->customer_type ?? ($customer->is_corporate ? 'corporate' : 'walkin')) === 'walkin' ? 'selected' : '' }}>
+                            Walk-in Customer (Default)
+                        </option>
+                        <option value="corporate" {{ old('customer_type', $customer->customer_type ?? ($customer->is_corporate ? 'corporate' : 'walkin')) === 'corporate' ? 'selected' : '' }}>
+                            Corporate Customer
+                        </option>
+                        <option value="online" {{ old('customer_type', $customer->customer_type ?? '') === 'online' ? 'selected' : '' }}>
+                            Online Customer
+                        </option>
+                    </select>
+                    <p class="text-xs text-slate-500 mt-2">Classify this customer for operational reporting, corporate billing, or online ordering.</p>
+                </div>
+
                 <div class="flex justify-end gap-3 pt-4 border-t border-gray-100">
                     <a href="{{ route('customers.show', $customer) }}" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-bold rounded-lg hover:bg-gray-50 transition-all shadow-sm">
                         Cancel

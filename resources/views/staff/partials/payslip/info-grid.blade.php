@@ -34,7 +34,7 @@
                 </div>
                 <div class="info-row">
                     <span class="info-label">Paid Leaves (With Salary):</span>
-                    <span class="info-value text-green">{{ $payroll->paid_leave_days ?? 0 }} Days</span>
+                    <span class="info-value text-green">{{ $payroll->approved_paid_leaves ?? 0 }} Days</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Unpaid Leaves:</span>

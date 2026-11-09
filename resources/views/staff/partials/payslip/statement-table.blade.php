@@ -63,5 +63,15 @@
                     <td class="text-right font-mono text-purple">- {{ number_format($payroll->advances, 2) }}</td>
                 </tr>
                 @endif
+
+                <!-- Already Disbursed / Paid Salary -->
+                @if(isset($payroll->already_paid) && $payroll->already_paid > 0)
+                <tr style="background-color: #f0fdf4;">
+                    <td style="color: #15803d; font-weight: 700;">Previously Disbursed Payments (Paid)</td>
+                    <td>Recorded Salary Payouts</td>
+                    <td class="text-right font-mono">-</td>
+                    <td class="text-right font-mono" style="color: #15803d; font-weight: 700;">- {{ number_format($payroll->already_paid, 2) }}</td>
+                </tr>
+                @endif
             </tbody>
         </table>

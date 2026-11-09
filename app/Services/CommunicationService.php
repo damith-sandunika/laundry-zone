@@ -7,8 +7,6 @@ use App\Models\SmsTemplate;
 use App\Models\SmsLog;
 use App\Models\EmailLog;
 use App\Models\Order;
-use App\Models\WhatsappTemplate;
-use App\Models\WhatsappLog;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -168,15 +166,14 @@ class CommunicationService
 
     protected function dispatch(string $type, Order $order, array $extraData = [])
     {
-        // Cache settings for 5 minutes — prevents 3 DB queries per notification dispatch
+        // Cache settings for 5 minutes — prevents 2 DB queries per notification dispatch
         $settings = \Illuminate\Support\Facades\Cache::remember('global_comm_settings', 300, function () {
-            return Setting::whereIn('key', ['is_sms_enabled', 'is_email_enabled', 'is_whatsapp_enabled'])
+            return Setting::whereIn('key', ['is_sms_enabled', 'is_email_enabled'])
                 ->pluck('value', 'key');
         });
 
         $isSmsEnabled      = ($settings->get('is_sms_enabled') === 'true');
         $isEmailEnabled    = ($settings->get('is_email_enabled') === 'true');
-        $isWhatsappEnabled = ($settings->get('is_whatsapp_enabled') === 'true');
 
         $customer = $order->customer;
         if (!$customer) return;
@@ -237,29 +234,7 @@ class CommunicationService
             }
         }
 
-        // Process WhatsApp — isolated so failure doesn't block SMS/Email
-        if ($isWhatsappEnabled && !empty($customer->phone)) {
-            try {
-                $waTemplate = WhatsappTemplate::where('type', $type)->where('is_active', true)->first();
-                if ($waTemplate && !empty($waTemplate->meta_template_name)) {
-                    $parameters = [
-                        $data['customer_name'],
-                        $data['order_id'],
-                        $data['rider_name'],
-                        $data['rider_phone'],
-                        $data['rider_vehicle_number'],
-                        $data['total'],
-                        $data['amount_due'],
-                        $data['tracking_link']
-                    ];
-                    $this->sendWhatsApp($order, $customer->phone, $waTemplate, $parameters);
-                }
-            } catch (\Throwable $e) {
-                Log::channel('communications')->error("CommunicationService WhatsApp failed [{$type}] Order#{$order->order_number}: " . $e->getMessage());
-            }
-        }
-
-        // Process Email — isolated so failure doesn't block SMS/WhatsApp
+        // Process Email — isolated so failure doesn't block SMS
         if ($isEmailEnabled && !empty($customer->email)) {
             try {
                 $dbTemplate = \App\Models\EmailTemplate::where('type', $type)->where('is_active', true)->first();
@@ -355,21 +330,6 @@ class CommunicationService
         ]);
 
         \App\Jobs\ProcessEmail::dispatch($log);
-    }
-
-    // ─── WhatsApp Sender ──────────────────────────────────────────────────────
-
-    protected function sendWhatsApp(Order $order, string $phone, WhatsappTemplate $template, array $parameters)
-    {
-        $log = WhatsappLog::create([
-            'order_id' => $order->id,
-            'phone'    => $phone,
-            'type'     => $template->type,
-            'template_name' => $template->meta_template_name,
-            'status'   => 'pending',
-        ]);
-
-        \App\Jobs\ProcessWhatsApp::dispatch($log, $parameters);
     }
 }
 

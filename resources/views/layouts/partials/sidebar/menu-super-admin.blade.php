@@ -8,6 +8,22 @@
         </svg>
         Branches
     </a>
+    <a href="{{ route('promotions.index') }}"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('promotions.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+        <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
+        </svg>
+        Promotions
+    </a>
+    <a href="{{ route('campaigns.index') }}"
+        class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('campaigns.*') ? 'bg-indigo-50 text-indigo-700 shadow-sm ring-1 ring-indigo-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+        <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round"
+                d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z" />
+        </svg>
+        Campaigns & Broadcasts
+    </a>
     <a href="{{ route('staff.index') }}"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('staff.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -34,6 +50,15 @@
             <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         Branch Logs
+        @php
+            $pendingReopensCount = \App\Models\BranchReopenRequest::where('status', 'pending')->count();
+        @endphp
+        @if($pendingReopensCount > 0)
+            <span
+                class="ml-auto px-2 py-0.5 rounded-full text-[10px] font-black bg-amber-500 text-white shadow-sm animate-pulse">
+                {{ $pendingReopensCount }}
+            </span>
+        @endif
     </a>
 
     <a href="{{ route('superadmin.order-logs') }}"
@@ -48,8 +73,7 @@
     <a href="{{ route('orders.history') }}"
         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('orders.history') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-            <path stroke-linecap="round" stroke-linejoin="round"
-                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         History
     </a>
@@ -71,7 +95,7 @@
         </svg>
         HR Dashboard
     </a>
-    
+
     @if($canManageConfig)
         <a href="{{ route('settings.services') }}"
             class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('settings.services') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
@@ -109,9 +133,9 @@
         </div>
     </div>
     <div
-        x-data="{ open: {{ request()->routeIs('email-templates.*') || request()->routeIs('sms-templates.*') || request()->routeIs('whatsapp-templates.*') ? 'true' : 'false' }} }">
+        x-data="{ open: {{ request()->routeIs('email-templates.*') || request()->routeIs('sms-templates.*') ? 'true' : 'false' }} }">
         <button @click="open = !open"
-            class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('email-templates.*') || request()->routeIs('sms-templates.*') || request()->routeIs('whatsapp-templates.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
+            class="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('email-templates.*') || request()->routeIs('sms-templates.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
             <div class="flex items-center gap-3">
                 <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
                     stroke-width="2">
@@ -126,14 +150,11 @@
             </svg>
         </button>
         <div x-show="open" style="display: none;" class="pl-9 mt-1 space-y-1">
-            <a href="{{ route('email-templates.index') }}"
-                class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('email-templates.*') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Email
-                Templates</a>
             <a href="{{ route('sms-templates.index') }}"
                 class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('sms-templates.*') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">SMS
                 Templates</a>
-            <a href="{{ route('whatsapp-templates.index') }}"
-                class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('whatsapp-templates.*') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">WhatsApp
+            <a href="{{ route('email-templates.index') }}"
+                class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('email-templates.*') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Email
                 Templates</a>
         </div>
     </div>
@@ -205,8 +226,8 @@
                 <a href="{{ route('settings.turnarounds') }}"
                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.turnarounds') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Turnarounds</a>
                 @if(config('app.delivery_enabled'))
-                <a href="{{ route('settings.delivery') }}"
-                    class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.delivery') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Delivery</a>
+                    <a href="{{ route('settings.delivery') }}"
+                        class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.delivery') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Delivery</a>
                 @endif
                 <a href="{{ route('settings.pickup-times') }}"
                     class="block px-3 py-2 text-xs font-semibold rounded-lg {{ request()->routeIs('settings.pickup-times') ? 'text-blue-700 bg-blue-50/50' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">Pickup

@@ -1,5 +1,17 @@
                 {{-- ── BRANCH ADMIN / ADMIN / STAFF ── --}}
                 @if(in_array($role, ['branch_admin']) || ($role === 'staff' && $branchType === 'branch'))
+                    @if(!$isShiftActive)
+                        {{-- Disabled links when branch shift is closed --}}
+                        <div class="my-2 p-3 rounded-xl bg-amber-50/80 border border-amber-200/60">
+                            <div class="flex items-center gap-2 text-amber-800 text-xs font-black">
+                                <svg class="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                                Shift Closed
+                            </div>
+                            <p class="text-[10.5px] text-amber-700 mt-1 font-medium leading-tight">
+                                Open today's shift on the dashboard to unlock operations and management pages.
+                            </p>
+                        </div>
+                    @else
                     <a href="{{ route('pos.index') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('pos.*') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -9,6 +21,8 @@
                         </svg>
                         POS System
                     </a>
+
+
                     <a href="{{ route('orders.index') }}"
                         class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ (request()->routeIs('orders.*') && !request()->routeIs('orders.history')) ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                         <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -151,5 +165,6 @@
                                 @endif
                             </div>
                         </div>
+                    @endif
                     @endif
                 @endif

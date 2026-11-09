@@ -17,13 +17,16 @@ class CustomerReportController extends Controller
         ]);
 
         $user         = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId     = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         $startDate    = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate      = $request->input('end_date', now()->toDateString());
+        $customerType = $request->input('customer_type');
 
         $query = Order::select(
                 'customers.name as customer_name',
+                'customers.customer_type',
+                'customers.is_corporate',
                 \DB::raw('COUNT(orders.id) as order_count'),
                 \DB::raw('SUM(orders.total) as total_revenue')
             )
@@ -39,12 +42,27 @@ class CustomerReportController extends Controller
                   ->groupBy('branches.name');
         }
 
+        if ($customerType === 'corporate') {
+            $query->where(function($q) {
+                $q->where('customers.customer_type', 'corporate')->orWhere('customers.is_corporate', true);
+            });
+        } elseif ($customerType === 'online') {
+            $query->where('customers.customer_type', 'online');
+        } elseif ($customerType === 'walkin') {
+            $query->where(function($q) {
+                $q->where('customers.customer_type', 'walkin')->orWhere(function($sub) {
+                    $sub->whereNull('customers.customer_type')->where('customers.is_corporate', false);
+                });
+            });
+        }
+
         return [
             'query'       => $query,
             'branchId'    => $branchId,
             'isSuperAdmin'=> $isSuperAdmin,
             'startDate'   => $startDate,
             'endDate'     => $endDate,
+            'customerType'=> $customerType,
         ];
     }
 
@@ -57,6 +75,17 @@ class CustomerReportController extends Controller
             ->whereBetween('created_at', [$data['startDate'].' 00:00:00', $data['endDate'].' 23:59:59']);
         if ($data['branchId']) {
             $totalsQuery->where('branch_id', $data['branchId']);
+        }
+        if (!empty($data['customerType'])) {
+            if ($data['customerType'] === 'corporate') {
+                $totalsQuery->whereHas('customer', fn($q) => $q->where('customer_type', 'corporate')->orWhere('is_corporate', true));
+            } elseif ($data['customerType'] === 'online') {
+                $totalsQuery->whereHas('customer', fn($q) => $q->where('customer_type', 'online'));
+            } elseif ($data['customerType'] === 'walkin') {
+                $totalsQuery->whereHas('customer', fn($q) => $q->where('customer_type', 'walkin')->orWhere(function($sub) {
+                    $sub->whereNull('customer_type')->where('is_corporate', false);
+                }));
+            }
         }
         $totalOrders = (clone $totalsQuery)->count();
         $totalRevenue = (clone $totalsQuery)->sum('total');

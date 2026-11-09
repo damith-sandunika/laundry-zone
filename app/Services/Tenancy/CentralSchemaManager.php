@@ -75,6 +75,12 @@ class CentralSchemaManager
                     $table->decimal('delivery_price', 10, 2)->default(5000.00);
                     $table->enum('status', ['active', 'inactive', 'suspended'])->default('active');
                     $table->text('notes')->nullable();
+                    $table->string('sms_gateway')->default('textware');
+                    $table->string('sms_mask')->nullable();
+                    $table->string('sms_api_url')->nullable();
+                    $table->text('sms_api_key')->nullable();
+                    $table->string('mail_from_name')->nullable();
+                    $table->string('mail_from_address')->nullable();
                     $table->timestamp('trial_ends_at')->nullable();
                     $table->timestamps();
                 });

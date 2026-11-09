@@ -63,6 +63,12 @@ class TenantProvisioner
             'delivery_price' => $deliveryPrice,
             'status' => 'active',
             'notes' => $data['notes'] ?? null,
+            'sms_gateway' => $data['sms_gateway'] ?? 'textware',
+            'sms_mask' => $data['sms_mask'] ?? $data['name'],
+            'sms_api_url' => $data['sms_api_url'] ?? null,
+            'sms_api_key' => $data['sms_api_key'] ?? null,
+            'mail_from_name' => $data['mail_from_name'] ?? $data['name'],
+            'mail_from_address' => $data['mail_from_address'] ?? ($data['email'] ?? null),
             'trial_ends_at' => now()->addDays(14),
         ]);
 
@@ -200,6 +206,14 @@ class TenantProvisioner
             'tax_percentage' => '0',
             'allow_branch_admins_delete_orders' => '0',
             'centralized_management' => '1',
+            'is_sms_enabled' => !empty($tenant->sms_api_key) ? 'true' : 'false',
+            'is_email_enabled' => !empty($tenant->mail_from_address) ? 'true' : 'false',
+            'sms_gateway' => $tenant->sms_gateway ?? 'textware',
+            'sms_mask' => $tenant->sms_mask ?? $tenant->name,
+            'sms_api_url' => $tenant->sms_api_url ?? '',
+            'sms_api_key' => $tenant->sms_api_key ?? '',
+            'mail_from_name' => $tenant->mail_from_name ?? $tenant->name,
+            'mail_from_address' => $tenant->mail_from_address ?? ($tenant->email ?? ''),
         ];
 
         foreach ($settings as $k => $v) {

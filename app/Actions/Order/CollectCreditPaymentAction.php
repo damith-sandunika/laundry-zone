@@ -9,30 +9,58 @@ use Exception;
 
 class CollectCreditPaymentAction
 {
+    /**
+     * Settle credit/unpaid payment for an order with pessimistic locking and validation.
+     *
+     * @param Order $order
+     * @param array $data
+     * @param int $userId
+     * @throws Exception
+     */
     public function execute(Order $order, array $data, int $userId): void
     {
-        if ($order->payment_status === 'paid' || $order->total <= $order->paid_amount) {
-            throw new Exception('Order is already fully paid.');
+        // Strict guard: Payment method cannot be credit when settling unpaid balances
+        if (isset($data['payment_method']) && $data['payment_method'] === 'credit') {
+            throw new Exception('Invalid payment method: Unpaid orders cannot be settled using credit.');
         }
 
-        $due = $order->total - $order->paid_amount;
-        $payAmount = min($data['amount'], $due);
+        DB::transaction(function () use ($order, $data, $userId) {
+            // Pessimistic lock on the order row to prevent race conditions & double-charging
+            $lockedOrder = Order::where('id', $order->id)->lockForUpdate()->first();
 
-        DB::transaction(function () use ($order, $payAmount, $data, $userId) {
-            PaymentTransaction::create([
-                'order_id' => $order->id,
-                'amount' => $payAmount,
-                'payment_method' => $data['payment_method'],
-                'created_by' => $userId,
-            ]);
-
-            $order->paid_amount += $payAmount;
-
-            if ($order->paid_amount >= $order->total) {
-                $order->payment_status = 'paid';
+            if (!$lockedOrder) {
+                throw new Exception('Order record not found.');
             }
 
-            $order->save();
+            if ($lockedOrder->payment_status === 'paid' || $lockedOrder->total <= $lockedOrder->paid_amount) {
+                throw new Exception('Order is already fully paid.');
+            }
+
+            $due = $lockedOrder->total - $lockedOrder->paid_amount;
+            $payAmount = min((float)$data['amount'], (float)$due);
+
+            if ($payAmount <= 0) {
+                throw new Exception('Invalid payment amount specified.');
+            }
+
+            PaymentTransaction::create([
+                'order_id'       => $lockedOrder->id,
+                'amount'         => $payAmount,
+                'payment_method' => $data['payment_method'],
+                'created_by'     => $userId,
+            ]);
+
+            $lockedOrder->paid_amount += $payAmount;
+
+            if ($lockedOrder->paid_amount >= $lockedOrder->total) {
+                $lockedOrder->payment_status = 'paid';
+            }
+
+            $lockedOrder->save();
+
+            // Sync original model attributes
+            $order->paid_amount = $lockedOrder->paid_amount;
+            $order->payment_status = $lockedOrder->payment_status;
         });
     }
 }

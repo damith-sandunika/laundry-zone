@@ -20,9 +20,19 @@
                     $isGlobalManager = auth()->user()->canManageGlobalConfig();
                     $isSuperAdmin = in_array($role, ['owner', 'super_admin']);
                     $canManageConfig = ($isCentralized && $isGlobalManager) || (!$isCentralized && !$isSuperAdmin);
+
+                    // Check if shift is currently active for branch/workshop staff
+                    $isShiftActive = true;
+                    if (in_array($role, ['branch_admin', 'workshop_admin', 'staff']) && auth()->user()->branch_id) {
+                        $isShiftActive = \App\Models\RegisterSession::withoutGlobalScope(\App\Models\Scopes\BranchScope::class)
+                            ->where('branch_id', auth()->user()->branch_id)
+                            ->where('status', 'open')
+                            ->exists();
+                    }
                 @endphp
 
-                {{-- Dashboard: All roles --}}
+                {{-- Dashboard: General roles (excluding specialized roles like accountant, hr_manager) --}}
+                @if(!in_array($role, ['accountant', 'hr_manager', 'accountant_and_hr_manager']))
                 <a href="{{ route($role === 'workshop_admin' ? 'workshop.dashboard' : 'dashboard') }}"
                     class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 text-[13px] font-semibold {{ request()->routeIs('dashboard') || request()->routeIs('workshop.dashboard') ? 'bg-blue-50 text-blue-700 shadow-sm ring-1 ring-blue-100/50' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900' }}">
                     <svg class="w-[18px] h-[18px] opacity-80" fill="none" viewBox="0 0 24 24" stroke="currentColor"
@@ -34,8 +44,13 @@
                     </svg>
                     Dashboard
                 </a>
+                @endif
 
                 @include('layouts.partials.sidebar.menu-super-admin')
+
+                @include('layouts.partials.sidebar.menu-hr-manager')
+
+                @include('layouts.partials.sidebar.menu-accountant')
 
                 @include('layouts.partials.sidebar.menu-workshop')
 

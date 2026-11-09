@@ -65,7 +65,7 @@ class HRController extends Controller
     {
         // Must be admin or HR to bulk update
         $user = auth()->user();
-        if (!in_array($user->role, ['owner', 'super_admin', 'branch_admin', 'workshop_admin'])) {
+        if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin', 'hr_manager', 'accountant_and_hr_manager'])) {
             abort(403, 'Unauthorized action.');
         }
 
@@ -187,13 +187,80 @@ class HRController extends Controller
             return back()->with('error', 'Advance amount cannot exceed the currently available payable balance (Rs. ' . number_format($payroll->net_salary, 2) . ').');
         }
 
-        $staff->salaryAdvances()->create([
+        $advance = $staff->salaryAdvances()->create([
             'amount' => $request->amount,
             'date' => $request->date,
             'reason' => $request->reason,
+            'created_by' => auth()->id(),
+        ]);
+
+        \App\Models\SalaryAuditLog::create([
+            'auditable_type' => \App\Models\SalaryAdvance::class,
+            'auditable_id' => $advance->id,
+            'action' => 'created',
+            'new_amount' => $request->amount,
+            'reason' => $request->reason ?: 'Salary advance requested',
+            'user_id' => auth()->id(),
         ]);
 
         return back()->with('success', 'Salary advance recorded.');
+    }
+
+    public function updateAdvance(Request $request, \App\Models\SalaryAdvance $advance)
+    {
+        $request->validate([
+            'amount' => 'required|numeric|min:1',
+            'date' => 'required|date',
+            'reason' => 'nullable|string',
+            'edit_reason' => 'required|string|min:3',
+        ]);
+
+        $oldAmount = $advance->amount;
+
+        $advance->update([
+            'amount' => $request->amount,
+            'previous_amount' => $oldAmount,
+            'date' => $request->date,
+            'reason' => $request->filled('reason') ? $request->reason : $advance->reason,
+            'edit_reason' => $request->edit_reason,
+            'updated_by' => auth()->id(),
+        ]);
+
+        \App\Models\SalaryAuditLog::create([
+            'auditable_type' => \App\Models\SalaryAdvance::class,
+            'auditable_id' => $advance->id,
+            'action' => 'edited',
+            'old_amount' => $oldAmount,
+            'new_amount' => $request->amount,
+            'reason' => $request->edit_reason,
+            'user_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Salary advance updated successfully.');
+    }
+
+    public function destroyAdvance(Request $request, \App\Models\SalaryAdvance $advance)
+    {
+        $request->validate([
+            'delete_reason' => 'required|string|min:3',
+        ]);
+
+        $advance->update([
+            'delete_reason' => $request->delete_reason,
+            'deleted_by' => auth()->id(),
+        ]);
+        $advance->delete();
+
+        \App\Models\SalaryAuditLog::create([
+            'auditable_type' => \App\Models\SalaryAdvance::class,
+            'auditable_id' => $advance->id,
+            'action' => 'deleted',
+            'old_amount' => $advance->amount,
+            'reason' => $request->delete_reason,
+            'user_id' => auth()->id(),
+        ]);
+
+        return back()->with('success', 'Salary advance deleted successfully.');
     }
 
     public function storeAdjustment(Request $request, User $staff)

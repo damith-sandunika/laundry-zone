@@ -155,24 +155,12 @@ class GeneralSettingsController extends Controller
         if (!\Illuminate\Support\Facades\Gate::allows('is-super-admin')) abort(403);
 
         Setting::set('is_sms_enabled', $request->has('is_sms_enabled') ? 'true' : 'false');
-        Setting::set('is_whatsapp_enabled', $request->has('is_whatsapp_enabled') ? 'true' : 'false');
         Setting::set('is_email_enabled', $request->has('is_email_enabled') ? 'true' : 'false');
 
         // Clear cached comm settings so changes take effect immediately
         \Illuminate\Support\Facades\Cache::forget('global_comm_settings');
 
         return redirect()->back()->with('success', 'Notification settings saved successfully.');
-    }
-
-    public function whatsappStatus()
-    {
-        $branchId = $this->getActiveBranchId();
-        try {
-            $response = \Illuminate\Support\Facades\Http::timeout(5)->get("http://127.0.0.1:3005/api/whatsapp/status/{$branchId}");
-            return response()->json($response->json());
-        } catch (\Exception $e) {
-            return response()->json(['connected' => false, 'qr' => null, 'error' => 'Service offline']);
-        }
     }
 
     public function whatsappLogout()

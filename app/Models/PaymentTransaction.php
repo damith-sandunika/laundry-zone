@@ -3,10 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentTransaction extends Model
 {
+    use SoftDeletes;
+
     protected $guarded = ['id'];
+
+    protected $casts = [
+        'is_edited' => 'boolean',
+        'edited_at' => 'datetime',
+        'deleted_at' => 'datetime',
+    ];
 
     public function order()
     {
@@ -16,6 +25,16 @@ class PaymentTransaction extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function editor()
+    {
+        return $this->belongsTo(User::class, 'edited_by');
+    }
+
+    public function deleter()
+    {
+        return $this->belongsTo(User::class, 'deleted_by');
     }
 
     protected static function boot()
@@ -33,16 +52,6 @@ class PaymentTransaction extends Model
                 }
             }
         });
-        
-        static::updated(function ($transaction) {
-            $original = $transaction->getOriginal();
-            if ($transaction->payment_method === 'cash') {
-                if ($original['status'] !== 'approved' && $transaction->status === 'approved') {
-                    // if status changed to approved (e.g. from pending/rejected) - wait, cash payments are usually approved immediately unless collected by rider.
-                    // Let's just handle simple created for now, but if it gets deleted:
-                }
-            }
-        });
 
         static::deleted(function ($transaction) {
             if ($transaction->payment_method === 'cash' && $transaction->status !== 'rejected') {
@@ -57,4 +66,3 @@ class PaymentTransaction extends Model
         });
     }
 }
-

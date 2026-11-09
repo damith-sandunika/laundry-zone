@@ -28,13 +28,21 @@
                                 </svg>
                             </button>
 
-                            <div
-                                class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
-                                {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
+                            @if(auth()->user()->role === 'rider')
+                                <div
+                                    class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
+                                    Rider Dashboard</div>
+                            @else
+                                <div
+                                    class="text-[14px] lg:text-[15px] font-bold text-slate-800 tracking-tight leading-none">
+                                    {{ \App\Models\Setting::get('company_name', 'Laundry Zone') }}</div>
+                            @endif
+
+
                         </div>
                         <div
                             class="text-[9px] lg:text-[10px] font-bold text-slate-400 uppercase tracking-[0.15em] mt-1">
-                            @if($branch)
+                            @if(auth()->user()->role !== 'rider' && $branch)
                                 {{ $branch->name }}
                             @else
                                 Laundry Management
@@ -96,7 +104,7 @@
                     </button>
 
                     {{-- Order Quick Search Box --}}
-                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'staff', 'super_admin', 'workshop_admin']))
+                    @if(in_array(auth()->user()->role ?? '', ['branch_admin', 'staff', 'super_admin', 'workshop_admin', 'accountant', 'hr_manager']))
                         <div class="block relative" x-data="orderSearch()" @click.away="close()">
                             <div class="relative">
                                 <svg class="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 w-3.5 sm:w-4 h-3.5 sm:h-4 text-slate-400 pointer-events-none"

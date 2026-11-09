@@ -21,14 +21,15 @@ class PendingPaymentsReportController extends Controller
         ]);
 
         $user = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());
+        $customerType = $request->input('customer_type');
         
         $action = new GetPendingPaymentsAction();
-        $query = $action->execute($branchId, $startDate, $endDate);
+        $query = $action->execute($branchId, $startDate, $endDate, $customerType);
 
         $orders = $query->paginate(15)->withQueryString();
         
@@ -51,7 +52,7 @@ class PendingPaymentsReportController extends Controller
         ]);
 
         $user = auth()->user();
-        $isSuperAdmin = $user->isSuperAdmin();
+        $isSuperAdmin = $user->canManageFinance();
         $branchId = $isSuperAdmin ? $request->input('branch_id') : $user->branch_id;
         
         $startDate = $request->input('start_date', now()->startOfMonth()->toDateString());

@@ -18,7 +18,7 @@ class PendingOrdersReportController extends Controller
         ]);
 
         $user = auth()->user();
-        $isSuperAdmin = $user->role === 'super_admin';
+        $isSuperAdmin = $user->canManageFinance();
         $isWorkshop = $request->input('workshop');
 
         // Filters
@@ -26,6 +26,7 @@ class PendingOrdersReportController extends Controller
         $endDate = $request->input('end_date', now()->toDateString());
         $branchId = $request->input('branch_id', $isSuperAdmin ? null : $user->branch_id);
         $deliveryType = $request->input('delivery_type');
+        $customerType = $request->input('customer_type');
 
         if ($isWorkshop) {
             $query = WorkshopDispatch::with(['order.customer', 'branch'])
@@ -46,6 +47,33 @@ class PendingOrdersReportController extends Controller
             } elseif ($deliveryType === 'pickup') {
                 $query->where('orders.is_delivery_order', 0);
             }
+
+            if ($customerType === 'corporate') {
+                $query->whereExists(function ($sub) {
+                    $sub->select(\DB::raw(1))->from('customers')
+                        ->whereColumn('customers.id', 'orders.customer_id')
+                        ->where(function($q) {
+                            $q->where('customers.customer_type', 'corporate')->orWhere('customers.is_corporate', true);
+                        });
+                });
+            } elseif ($customerType === 'online') {
+                $query->whereExists(function ($sub) {
+                    $sub->select(\DB::raw(1))->from('customers')
+                        ->whereColumn('customers.id', 'orders.customer_id')
+                        ->where('customers.customer_type', 'online');
+                });
+            } elseif ($customerType === 'walkin') {
+                $query->whereExists(function ($sub) {
+                    $sub->select(\DB::raw(1))->from('customers')
+                        ->whereColumn('customers.id', 'orders.customer_id')
+                        ->where(function($q) {
+                            $q->where('customers.customer_type', 'walkin')
+                              ->orWhere(function($sub2) {
+                                  $sub2->whereNull('customers.customer_type')->where('customers.is_corporate', false);
+                              });
+                        });
+                });
+            }
         } else {
             $query = Order::with('customer')
                 ->whereNotIn('status', ['delivered', 'cancelled']);
@@ -63,6 +91,16 @@ class PendingOrdersReportController extends Controller
             } elseif ($deliveryType === 'pickup') {
                 $query->where('is_delivery_order', 0);
             }
+
+            if ($customerType === 'corporate') {
+                $query->whereHas('customer', fn($q) => $q->where('customer_type', 'corporate')->orWhere('is_corporate', true));
+            } elseif ($customerType === 'online') {
+                $query->whereHas('customer', fn($q) => $q->where('customer_type', 'online'));
+            } elseif ($customerType === 'walkin') {
+                $query->whereHas('customer', fn($q) => $q->where('customer_type', 'walkin')->orWhere(function($sub) {
+                    $sub->whereNull('customer_type')->where('is_corporate', false);
+                }));
+            }
         }
 
         if ($isWorkshop) {
@@ -77,7 +115,7 @@ class PendingOrdersReportController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $isSuperAdmin = $user->role === 'super_admin';
+        $isSuperAdmin = $user->canManageFinance();
         $isWorkshop = $request->input('workshop');
         $startDate = $request->input('start_date', now()->toDateString());
         $endDate = $request->input('end_date', now()->toDateString());

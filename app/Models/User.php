@@ -103,10 +103,38 @@ class User extends Authenticatable
         return $this->role === 'workshop_admin';
     }
 
-    // Has admin-level access (owner, super_admin or branch_admin)
+    public function isHrManager(): bool
+    {
+        return in_array($this->role, ['hr_manager', 'accountant_and_hr_manager']);
+    }
+
+    public function isAccountant(): bool
+    {
+        return in_array($this->role, ['accountant', 'accountant_and_hr_manager']);
+    }
+
+    // Has admin-level access (owner, super_admin, branch_admin, hr_manager, accountant_and_hr_manager)
     public function hasAdminAccess(): bool
     {
-        return in_array($this->role, ['owner', 'super_admin', 'branch_admin']);
+        return in_array($this->role, ['owner', 'super_admin', 'branch_admin', 'hr_manager', 'accountant_and_hr_manager']);
+    }
+
+    // Has financial oversight access (owner, super_admin, accountant, accountant_and_hr_manager)
+    public function canManageFinance(): bool
+    {
+        return in_array($this->role, ['owner', 'super_admin', 'accountant', 'accountant_and_hr_manager']);
+    }
+
+    // Has HR oversight access (owner, super_admin, hr_manager, accountant_and_hr_manager)
+    public function canManageHR(): bool
+    {
+        return in_array($this->role, ['owner', 'super_admin', 'hr_manager', 'accountant_and_hr_manager']);
+    }
+
+    // Has Staff administration access (owner, super_admin, hr_manager, accountant_and_hr_manager)
+    public function canManageStaff(): bool
+    {
+        return in_array($this->role, ['owner', 'super_admin', 'hr_manager', 'accountant_and_hr_manager']);
     }
 
     // Dashboard redirect based on role
@@ -117,6 +145,9 @@ class User extends Authenticatable
             'branch_admin',
             'staff' => 'dashboard',
             'workshop_admin' => 'workshop.dashboard',
+            'hr_manager' => 'hr.dashboard',
+            'accountant',
+            'accountant_and_hr_manager' => 'accountant.dashboard',
             default => 'dashboard',
         };
     }
@@ -142,7 +173,10 @@ class User extends Authenticatable
             'branch_admin' => 'Branch Admin',
             'staff' => 'Staff',
             'workshop_admin' => 'Workshop Admin',
-            default => ucfirst($this->role),
+            'hr_manager' => 'HR Manager',
+            'accountant' => 'Accountant',
+            'accountant_and_hr_manager' => 'Accountant & HR Manager',
+            default => ucfirst(str_replace('_', ' ', $this->role)),
         };
     }
 }

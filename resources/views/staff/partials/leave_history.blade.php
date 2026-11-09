@@ -23,7 +23,7 @@
                                     </span>
                                 </div>
                                 <p class="text-[11px] text-gray-500 mb-2">{{ $leave->reason }}</p>
-                                @if($leave->status === 'pending' && in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'admin']))
+                                @if($leave->status === 'pending' && in_array(auth()->user()->role, ['super_admin', 'branch_admin', 'admin', 'hr_manager']))
                                     <div class="flex gap-2 mt-2 pt-2 border-t border-gray-100">
                                         <form method="POST" action="{{ route('hr.leaves.update', $leave->id) }}" class="inline">
                                             @csrf @method('PUT')
