@@ -83,8 +83,10 @@ class TenantManager
             'db' => $tenant->database_name,
         ]);
 
-        // Auto-ensure critical schema updates (e.g. expenses.deleted_at, salary_advances.deleted_at)
-        static::ensureTenantSchemaCompatibility();
+        // Auto-ensure critical schema updates only if tenant database has branches table
+        if (\Illuminate\Support\Facades\Schema::connection('tenant')->hasTable('branches')) {
+            static::ensureTenantSchemaCompatibility();
+        }
     }
 
     /**
