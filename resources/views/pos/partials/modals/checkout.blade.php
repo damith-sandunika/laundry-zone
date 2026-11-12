@@ -73,26 +73,51 @@
                     </div>
 
                     <!-- Discount & Advance Amount -->
-                    <div class="mb-3 px-1 flex gap-3">
-                        <div class="flex-1">
-                            <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Discount (%)</label>
-                            <input type="number" x-model.number="discountPercentage" min="0" max="100" step="1"
-                                class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
-                        </div>
-                        <div class="flex-1" x-show="paymentMode === 'pay_now'">
-                            <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Advance Amount</label>
-                            <input type="number" x-model="advanceAmount" min="0" step="0.01" :placeholder="'Full: Rs. ' + total.toFixed(2)"
-                                class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                    <div class="mb-3 px-1 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <div>
+                                <div class="flex items-center justify-between mb-1.5">
+                                    <label class="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Discount</label>
+                                    <div class="inline-flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+                                        <button type="button" @click="discountType = 'percentage'"
+                                            :class="discountType === 'percentage' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-400 font-semibold'"
+                                            class="px-2 py-0.5 text-[10px] rounded transition-all cursor-pointer">
+                                            %
+                                        </button>
+                                        <button type="button" @click="discountType = 'fixed'"
+                                            :class="discountType === 'fixed' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-400 font-semibold'"
+                                            class="px-2 py-0.5 text-[10px] rounded transition-all cursor-pointer">
+                                            Rs.
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="relative flex items-center">
+                                    <input type="number" x-model.number="discountValue" min="0" :max="discountType === 'percentage' ? 100 : subtotal" step="any"
+                                        :placeholder="discountType === 'percentage' ? 'e.g. 10%' : 'e.g. 250.00'"
+                                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 pr-12 text-[14px] font-black text-slate-800 outline-none transition-all">
+                                    <span class="absolute right-3 text-xs font-black text-slate-400 pointer-events-none" x-text="discountType === 'percentage' ? '%' : 'Rs.'"></span>
+                                </div>
+                                <template x-if="calculatedDiscount > 0">
+                                    <div class="text-[11px] font-bold text-emerald-600 mt-1 flex items-center gap-1">
+                                        <span>Discount: -Rs. <span x-text="calculatedDiscount.toFixed(2)"></span></span>
+                                        <span x-show="discountType === 'fixed' && subtotal > 0" class="text-slate-400 font-normal" x-text="'(' + ((calculatedDiscount/subtotal)*100).toFixed(1) + '%)'"></span>
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div x-show="paymentMode === 'pay_now'">
+                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Advance Amount</label>
+                                <input type="number" x-model="advanceAmount" min="0" step="0.01" :placeholder="'Full: Rs. ' + total.toFixed(2)"
+                                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                            </div>
                         </div>
                     </div>
-
-
 
                     <!-- Total -->
                     <div class="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-100 rounded-xl">
                         <span class="text-[13px] font-black text-blue-900 uppercase tracking-widest">Final Total</span>
                         <div class="text-right">
-                            <span x-show="discountPercentage > 0" class="text-sm font-bold text-slate-400 line-through block" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
+                            <span x-show="calculatedDiscount > 0" class="text-sm font-bold text-slate-400 line-through block" x-text="'Rs. ' + subtotal.toFixed(2)"></span>
                             <span class="text-2xl font-black text-blue-700" x-text="'Rs. ' + total.toFixed(2)"></span>
                         </div>
                     </div>

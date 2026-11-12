@@ -27,7 +27,7 @@ class OrderSearchController extends Controller
         $baseQuery = Order::with('customer')
             ->where(function ($query) use ($q) {
                 $query->where('order_number', 'like', "%{$q}%")
-                      ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$q}%"));
+                      ->orWhereHas('customer', fn($cq) => $cq->where('name', 'like', "%{$q}%")->orWhere('phone', 'like', "%{$q}%"));
             })
             ->when(
                 !$user->isSuperAdmin() && $user->branch_id,
@@ -60,7 +60,7 @@ class OrderSearchController extends Controller
             'status'       => $o->status,
             'status_label' => str_replace('_', ' ', ucfirst($o->status)),
             'total'        => number_format($o->total, 2),
-            'customer'     => $o->customer?->name ?? 'Walk-in',
+            'customer'     => ($o->customer ? $o->customer->name . ($o->customer->phone ? ' (' . $o->customer->phone . ')' : '') : 'Walk-in'),
             'url'          => route('orders.show', $o->order_number),
         ]);
 

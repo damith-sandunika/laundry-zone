@@ -43,6 +43,8 @@ window.posSystemData = {
                 paymentMode: 'pay_on_pickup',
                 paymentMethod: 'cash',
                 dueDate: '',
+                discountType: 'percentage', // 'percentage' or 'fixed'
+                discountValue: 0,
                 discountPercentage: 0,
                 advanceAmount: '',
                 specialName: '',

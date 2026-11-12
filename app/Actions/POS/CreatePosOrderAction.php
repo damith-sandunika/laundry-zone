@@ -129,9 +129,20 @@ class CreatePosOrderAction
             }
         }
 
-        $discountPercentage = max(0, min(100, (float) ($data['discount_percentage'] ?? 0)));
-        $discountAmount = $subtotal * ($discountPercentage / 100);
-        $total = $subtotal - $discountAmount;
+        $discountType = $data['discount_type'] ?? 'percentage';
+        $discountAmount = 0;
+        $discountPercentage = 0;
+
+        if ($discountType === 'fixed') {
+            $fixedVal = (float) ($data['discount_value'] ?? ($data['discount_amount'] ?? 0));
+            $discountAmount = max(0, min($subtotal, $fixedVal));
+            $discountPercentage = $subtotal > 0 ? round(($discountAmount / $subtotal) * 100, 2) : 0;
+        } else {
+            $discountPercentage = max(0, min(100, (float) ($data['discount_value'] ?? ($data['discount_percentage'] ?? 0))));
+            $discountAmount = $subtotal * ($discountPercentage / 100);
+        }
+
+        $total = max(0, $subtotal - $discountAmount);
         $paymentMode = $data['payment_mode'] ?? 'pay_on_pickup';
         
         $paidAmount = 0;

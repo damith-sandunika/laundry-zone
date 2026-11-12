@@ -40,7 +40,10 @@
                         payment_mode: this.paymentMode,
                         payment_method: this.paymentMethod,
                         due_date: this.dueDate,
-                        discount_percentage: this.discountPercentage || 0,
+                        discount_type: this.discountType,
+                        discount_value: parseFloat(this.discountValue) || 0,
+                        discount_percentage: this.discountType === 'percentage' ? (parseFloat(this.discountValue) || 0) : ((this.subtotal > 0 ? (this.calculatedDiscount / this.subtotal) * 100 : 0)),
+                        discount_amount: this.calculatedDiscount,
                         advance_amount: this.advanceAmount !== '' ? parseFloat(this.advanceAmount) : null,
                         customer_package_id: typeof packageId === 'number' ? packageId : null
                     };

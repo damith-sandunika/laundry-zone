@@ -21,7 +21,10 @@ class StorePosOrderRequest extends FormRequest
             'payment_mode' => 'nullable|in:pay_now,pay_on_pickup',
             'payment_method' => 'nullable|string|in:cash,card,bank',
             'due_date' => 'required|string',
+            'discount_type' => 'nullable|in:percentage,fixed',
+            'discount_value' => 'nullable|numeric|min:0',
             'discount_percentage' => 'nullable|numeric|min:0|max:100',
+            'discount_amount' => 'nullable|numeric|min:0',
             'advance_amount' => 'nullable|numeric|min:0',
             'customer_package_id' => 'nullable|integer',
         ];

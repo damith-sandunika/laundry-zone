@@ -1,9 +1,10 @@
 @php
     $tenant = \App\Services\Tenancy\TenantManager::getTenant();
     $companyName = $tenant ? $tenant->name : \App\Models\Setting::get('company_name', 'Laundry Zone');
+    $defaultLogo = asset('images/laundry_main_logo.png');
     $companyLogo = ($tenant && !empty($tenant->logo_path)) 
         ? asset($tenant->logo_path) 
-        : asset(\App\Models\Setting::get('company_logo', 'images/laundry_main_logo.png'));
+        : $defaultLogo;
 @endphp
 <!DOCTYPE html>
 <html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
@@ -15,8 +16,8 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>{{ $companyName }} — Sign In</title>
-    <link rel="icon" type="image/png" href="{{ $companyLogo }}">
-    <link rel="apple-touch-icon" href="{{ $companyLogo }}">
+    <link rel="icon" type="image/png" href="{{ $defaultLogo }}">
+    <link rel="apple-touch-icon" href="{{ $defaultLogo }}">
     <meta name="theme-color" content="#1d4ed8">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">

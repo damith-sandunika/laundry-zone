@@ -26,8 +26,11 @@
                     this.showCustDropdown = false;
                     
                     if (cust.default_discount) {
-                        this.discountPercentage = parseFloat(cust.default_discount) || 0;
+                        this.discountType = 'percentage';
+                        this.discountValue = parseFloat(cust.default_discount) || 0;
+                        this.discountPercentage = this.discountValue;
                     } else {
+                        this.discountValue = 0;
                         this.discountPercentage = 0;
                     }
 
@@ -161,12 +164,19 @@
                     return base + turnaroundCharge + extrasTotal;
                 },
 
+                get calculatedDiscount() {
+                    if (this.discountType === 'fixed') {
+                        const fixedVal = parseFloat(this.discountValue) || 0;
+                        return Math.max(0, Math.min(this.subtotal, fixedVal));
+                    }
+                    const percent = parseFloat(this.discountValue) || 0;
+                    return Math.max(0, this.subtotal * (percent / 100));
+                },
                 get subtotal() {
                     return this.cart.reduce((sum, item) => sum + this.getItemTotal(item), 0);
                 },
                 get total() {
-                    const discount = this.subtotal * ((parseFloat(this.discountPercentage) || 0) / 100);
-                    return this.subtotal - discount;
+                    return Math.max(0, this.subtotal - this.calculatedDiscount);
                 }, addSpecialToCart() {
                     if (!this.specialName || !this.specialPrice || this.specialPrice <= 0) {
                         alert('Please enter a service name and price.');
