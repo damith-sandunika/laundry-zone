@@ -1,21 +1,22 @@
 <!-- ===================== Checkout Modal ===================== -->
-        <div x-show="showCheckoutModal" x-cloak
-            class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4">
-            <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="showCheckoutModal = false"></div>
+<template x-teleport="body">
+    <div x-show="showCheckoutModal" x-cloak
+        class="fixed inset-0 flex items-center justify-center p-3 sm:p-4" style="z-index: 9999999 !important;">
+        <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="showCheckoutModal = false"></div>
+        
+        <div class="relative bg-white rounded-[22px] shadow-2xl w-full max-w-lg z-10 flex flex-col overflow-hidden animate-slide-up max-h-[90vh]" @click.stop>
             
-            <div class="relative bg-white rounded-[22px] shadow-2xl w-full max-w-lg z-10 flex flex-col overflow-hidden animate-slide-up max-h-[90vh]" @click.stop>
-                
-                <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex justify-between items-center">
-                    <h3 class="font-black text-base text-slate-900 flex items-center gap-2">
-                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        Checkout Order
-                    </h3>
-                    <button @click="showCheckoutModal = false" class="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
-                </div>
+            <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex justify-between items-center">
+                <h3 class="font-black text-base text-slate-900 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                    Checkout Order
+                </h3>
+                <button @click="showCheckoutModal = false" class="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
 
-                <div class="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[72vh] custom-scrollbar">
+            <div class="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[72vh] custom-scrollbar">
                     
                     <!-- Delivery Date -->
                     <div>
@@ -141,3 +142,4 @@
                 </div>
             </div>
         </div>
+    </template>
