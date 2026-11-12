@@ -40,7 +40,20 @@
                 }
             }
         }"
-            x-on:open-customer-modal.window="open = true; document.getElementById('nc-name').focus(); setTimeout(()=>document.getElementById('nc-name').focus(), 100);">
+            x-on:open-customer-modal.window="
+                open = true; 
+                let prefillPhone = ($event.detail && $event.detail.phone) ? $event.detail.phone : '';
+                setTimeout(() => {
+                    let phoneInput = document.getElementById('nc-phone');
+                    let nameInput = document.getElementById('nc-name');
+                    if (phoneInput && prefillPhone) {
+                        phoneInput.value = prefillPhone;
+                    }
+                    if (nameInput) {
+                        nameInput.focus();
+                    }
+                }, 100);
+            ">
             <template x-teleport="body">
                 <div x-show="open" x-cloak class="fixed inset-0 flex items-center justify-center p-4" style="z-index: 99999;">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="open = false"></div>

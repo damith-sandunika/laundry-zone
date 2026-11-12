@@ -28,8 +28,10 @@
                 class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl text-[13px] font-bold text-slate-800 transition-all outline-none placeholder:text-slate-400">
 
             <!-- Dropdown -->
-            <div x-show="showCustDropdown && filteredCustomers.length > 0" x-transition
-                class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl max-h-[220px] overflow-y-auto custom-scrollbar">
+            <div x-show="showCustDropdown && customerSearch.trim().length > 0" x-transition
+                class="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl max-h-[260px] overflow-y-auto custom-scrollbar">
+                
+                <!-- Matching customers list -->
                 <template x-for="cust in filteredCustomers" :key="cust.id">
                     <div @click="selectCustomer(cust)"
                         class="px-4 py-3 cursor-pointer border-b border-slate-50 hover:bg-blue-50 transition-colors flex items-center justify-between group">
@@ -44,6 +46,20 @@
                         </svg>
                     </div>
                 </template>
+
+                <!-- When customer not found, offer register button with pre-filled search term -->
+                <div x-show="filteredCustomers.length === 0" class="p-4 text-center">
+                    <div class="w-10 h-10 rounded-full bg-amber-50 text-amber-500 mx-auto flex items-center justify-center mb-2">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <p class="text-xs font-bold text-slate-600 mb-1">Customer not found</p>
+                    <p class="text-[11px] text-slate-400 font-medium mb-3">No customer registered with "<span class="font-bold text-slate-700" x-text="customerSearch"></span>"</p>
+                    <button type="button" @click="registerNewCustomerFromSearch()"
+                        class="w-full py-2.5 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl text-xs font-black shadow-md shadow-blue-500/20 transition-all flex items-center justify-center gap-1.5 cursor-pointer">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" /></svg>
+                        <span>+ Register New Customer</span>
+                    </button>
+                </div>
             </div>
         </div>
 

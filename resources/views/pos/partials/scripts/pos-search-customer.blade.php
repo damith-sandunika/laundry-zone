@@ -20,6 +20,14 @@
                     .catch(err => console.error(err));
                 },
 
+                registerNewCustomerFromSearch() {
+                    const searchVal = this.customerSearch.trim();
+                    this.showCustDropdown = false;
+                    window.dispatchEvent(new CustomEvent('open-customer-modal', {
+                        detail: { phone: searchVal }
+                    }));
+                },
+
                 selectCustomer(cust) {
                     this.selectedCustomer = cust;
                     this.customerSearch = '';
