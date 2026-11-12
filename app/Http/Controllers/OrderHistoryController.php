@@ -100,24 +100,59 @@ class OrderHistoryController extends Controller
 
         $creditOrders = (float) ((clone $ordersBase)->where('payment_method', 'credit')->selectRaw('SUM(GREATEST(0, total - COALESCE(paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
 
-        $collectedPayments = (float) ((clone $ordersBase)->sum('paid_amount') ?? 0);
+        // 1. Payments collected specifically from orders created in this date range
+        $fromTheseOrders = (float) ((clone $ordersBase)->sum('paid_amount') ?? 0);
 
-        $orderIdsSubquery = (clone $ordersBase)->select('orders.id');
+        // 2. Total actual cash/payments collected during this period (regardless of when order was created)
+        $txPeriodQuery = PaymentTransaction::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+            ->where(function($q) {
+                $q->where('status', '!=', 'rejected')->orWhereNull('status');
+            });
 
-        $directCash = (float) ((clone $ordersBase)->where('payment_method', 'cash')->whereDoesntHave('paymentTransactions')->sum('paid_amount') ?? 0);
-        $directCard = (float) ((clone $ordersBase)->where('payment_method', 'card')->whereDoesntHave('paymentTransactions')->sum('paid_amount') ?? 0);
-        $directBank = (float) ((clone $ordersBase)->where('payment_method', 'bank')->whereDoesntHave('paymentTransactions')->sum('paid_amount') ?? 0);
+        if (!$isSuperAdmin && $branchId) {
+            if ($isWorkshop) {
+                $txPeriodQuery->whereHas('order', function ($oq) use ($branchId) {
+                    $oq->where('workshop_id', $branchId)
+                       ->orWhere('branch_id', $branchId);
+                });
+            } else {
+                $txPeriodQuery->whereHas('order', function ($oq) use ($branchId) {
+                    $oq->where('branch_id', $branchId);
+                });
+            }
+        } elseif ($isSuperAdmin && $request->filled('branch_id')) {
+            $bId = $request->branch_id;
+            $txPeriodQuery->whereHas('order', fn($oq) => $oq->where('branch_id', $bId));
+        }
 
-        $txSums = PaymentTransaction::whereIn('order_id', $orderIdsSubquery)
+        $directLegacyOrders = (clone $ordersBase)->whereDoesntHave('paymentTransactions')
+            ->selectRaw("
+                COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN paid_amount ELSE 0 END), 0) as direct_cash,
+                COALESCE(SUM(CASE WHEN payment_method = 'card' THEN paid_amount ELSE 0 END), 0) as direct_card,
+                COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN paid_amount ELSE 0 END), 0) as direct_bank
+            ")->first();
+
+        $txPeriodSums = (clone $txPeriodQuery)
             ->selectRaw("
                 COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as cash_sum,
                 COALESCE(SUM(CASE WHEN payment_method = 'card' THEN amount ELSE 0 END), 0) as card_sum,
-                COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN amount ELSE 0 END), 0) as bank_sum
+                COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN amount ELSE 0 END), 0) as bank_sum,
+                COALESCE(SUM(amount), 0) as total_tx_sum
             ")->first();
 
-        $cashTotal = (float) (($txSums->cash_sum ?? 0) + $directCash);
-        $cardTotal = (float) (($txSums->card_sum ?? 0) + $directCard);
-        $bankTotal = (float) (($txSums->bank_sum ?? 0) + $directBank);
+        $cashTotal = (float) (($txPeriodSums->cash_sum ?? 0) + ($directLegacyOrders->direct_cash ?? 0));
+        $cardTotal = (float) (($txPeriodSums->card_sum ?? 0) + ($directLegacyOrders->direct_card ?? 0));
+        $bankTotal = (float) (($txPeriodSums->bank_sum ?? 0) + ($directLegacyOrders->direct_bank ?? 0));
+        
+        $collectedPaymentsPeriod = (float) ($cashTotal + $cardTotal + $bankTotal);
+
+        // Fallback: If no transactions logged yet, use fromTheseOrders
+        if ($collectedPaymentsPeriod == 0 && $fromTheseOrders > 0) {
+            $collectedPaymentsPeriod = $fromTheseOrders;
+            $cashTotal = $fromTheseOrders;
+        }
+
+        $orderIdsSubquery = (clone $ordersBase)->select('orders.id');
 
         $orderQty = (int) (clone $ordersBase)->count();
         $totalCustomerCount = (int) (clone $ordersBase)->distinct()->count('customer_id');
@@ -130,7 +165,8 @@ class OrderHistoryController extends Controller
             'pending_due' => $pendingDue,
             'regular_pending' => $regularPending,
             'credit_orders' => $creditOrders,
-            'collected_payments' => $collectedPayments,
+            'collected_payments' => $collectedPaymentsPeriod,
+            'from_these_orders' => $fromTheseOrders,
             'cash' => $cashTotal,
             'card' => $cardTotal,
             'bank' => $bankTotal,

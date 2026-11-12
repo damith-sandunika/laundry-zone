@@ -45,19 +45,19 @@
                     class="text-[9px] font-black text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded uppercase">From
                     These Orders</span>
                 <span
-                    class="text-[10px] font-black text-emerald-600">Rs.{{ number_format($stats['collected_payments'], 2) }}</span>
+                    class="text-[10px] font-black text-emerald-600">Rs.{{ number_format($stats['from_these_orders'] ?? $stats['collected_payments'], 2) }}</span>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-[11px] font-bold text-slate-500">💵 Cash</span>
-                <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['cash'], 0) }}</span>
+                <span class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['cash'], 2) }}</span>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-[11px] font-bold text-slate-500">💳 Card</span>
-                <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['card'], 0) }}</span>
+                <span class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['card'], 2) }}</span>
             </div>
             <div class="flex justify-between items-center">
                 <span class="text-[11px] font-bold text-slate-500">🏦 Bank</span>
-                <span class="text-[11px] font-black text-slate-700">{{ number_format($stats['bank'], 0) }}</span>
+                <span class="text-[11px] font-black text-slate-700">Rs.{{ number_format($stats['bank'], 2) }}</span>
             </div>
         </div>
     </div>
