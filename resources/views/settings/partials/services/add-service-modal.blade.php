@@ -16,8 +16,13 @@
                     <label style="display:block;font-size:11.5px;font-weight:700;color:#374151;margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em;">Category</label>
                     <select id="add-category-id" name="category_id" style="width:100%;padding:10px 14px;border:1.5px solid #e2e8f0;border-radius:10px;font-size:13px;font-weight:600;outline:none;background:white;box-sizing:border-box;">
                         <option value="">Uncategorized</option>
-                        @foreach($serviceCategories as $cat)
-                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @foreach($mainCategories as $mainCat)
+                            <optgroup label="📁 {{ $mainCat->name }}">
+                                <option value="{{ $mainCat->id }}">{{ $mainCat->name }} (Main)</option>
+                                @foreach($mainCat->children as $subCat)
+                                    <option value="{{ $subCat->id }}">&nbsp;&nbsp;&nbsp;&nbsp;↳ {{ $subCat->name }}</option>
+                                @endforeach
+                            </optgroup>
                         @endforeach
                     </select>
                 </div>
@@ -44,10 +49,14 @@
                         </select>
                     </div>
                 </div>
+                @if(config('app.delivery_enabled'))
                 <div style="display:flex;align-items:center;gap:8px;">
                     <input type="checkbox" name="is_visible_on_website" id="add-website-visible" value="1" checked style="width:16px;height:16px;accent-color:#1d4ed8;cursor:pointer;">
                     <label for="add-website-visible" style="font-size:12px;font-weight:700;color:#374151;cursor:pointer;">Visible on Website</label>
                 </div>
+                @else
+                <input type="hidden" name="is_visible_on_website" value="1">
+                @endif
                 <div style="display:flex;gap:10px;margin-top:4px;">
                     <button type="button" onclick="document.getElementById('add-service-modal').style.display='none'" style="flex:1;padding:11px;background:#f8fafc;color:#64748b;font-size:13px;font-weight:700;border:1.5px solid #e2e8f0;border-radius:10px;cursor:pointer;">Cancel</button>
                     <button type="submit" style="flex:1;padding:11px;background:#1d4ed8;color:white;font-size:13px;font-weight:800;border:none;border-radius:10px;cursor:pointer;">Save Service</button>
