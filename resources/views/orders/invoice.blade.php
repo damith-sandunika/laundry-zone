@@ -334,12 +334,6 @@
                 <div class="badge" style="margin-bottom: 8px;">{{ $badgeTextPaid }}</div>
             @elseif($order->total - $order->paid_amount > 0)
                 <div class="badge pending" style="margin-bottom: 8px;">{{ $order->payment_method === 'credit' ? 'CREDIT' : $badgeTextPending }}</div>
-                
-                @if($showPayOnlineBtn && $order->payment_method !== 'credit')
-                    <a href="{{ route('payment.link.show', $order->payment_token) }}" class="pay-btn" target="_blank">
-                        {{ $payBtnText }}
-                    </a>
-                @endif
             @endif
 
             <p>{!! nl2br(e($footerText)) !!}</p>

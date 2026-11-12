@@ -1,21 +1,21 @@
 <!-- ===================== Checkout Modal ===================== -->
         <div x-show="showCheckoutModal" x-cloak
-            class="fixed inset-0 z-50 flex items-center justify-center p-4">
+            class="fixed inset-0 z-[99999] flex items-center justify-center p-3 sm:p-4">
             <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" x-transition.opacity @click="showCheckoutModal = false"></div>
             
-            <div class="relative bg-white rounded-[24px] shadow-2xl w-full max-w-md z-10 flex flex-col overflow-hidden animate-slide-up" @click.stop>
+            <div class="relative bg-white rounded-[22px] shadow-2xl w-full max-w-lg z-10 flex flex-col overflow-hidden animate-slide-up max-h-[90vh]" @click.stop>
                 
-                <div class="px-6 py-5 border-b border-slate-100 bg-slate-50/50 flex justify-between items-center">
-                    <h3 class="font-black text-lg text-slate-900 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+                <div class="px-5 py-3.5 border-b border-slate-100 bg-slate-50/70 flex justify-between items-center">
+                    <h3 class="font-black text-base text-slate-900 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                         Checkout Order
                     </h3>
-                    <button @click="showCheckoutModal = false" class="p-2 -mr-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
-                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    <button @click="showCheckoutModal = false" class="p-1.5 -mr-1 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
 
-                <div class="p-6 space-y-6 overflow-y-auto max-h-[75vh] custom-scrollbar">
+                <div class="p-4 sm:p-5 space-y-4 overflow-y-auto max-h-[72vh] custom-scrollbar">
                     
                     <!-- Delivery Date -->
                     <div>
@@ -72,43 +72,45 @@
                         </button>
                     </div>
 
-                    <!-- Discount & Advance Amount -->
-                    <div class="mb-3 px-1 space-y-3">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <div>
-                                <div class="flex items-center justify-between mb-1.5">
-                                    <label class="text-[11px] font-extrabold text-slate-500 uppercase tracking-widest">Discount</label>
-                                    <div class="inline-flex items-center bg-slate-100 rounded-lg p-0.5 border border-slate-200">
+                    <!-- Discount & Advance Amount (Combined Row) -->
+                    <div class="mb-2 px-1">
+                        <div class="flex flex-col sm:flex-row gap-3 items-start">
+                            <!-- Discount control in one clean flex line -->
+                            <div class="flex-1 w-full">
+                                <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Discount</label>
+                                <div class="flex items-center gap-1.5 w-full">
+                                    <div class="inline-flex items-center bg-slate-100 rounded-xl p-1 border border-slate-200 shrink-0">
                                         <button type="button" @click="discountType = 'percentage'"
                                             :class="discountType === 'percentage' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-400 font-semibold'"
-                                            class="px-2 py-0.5 text-[10px] rounded transition-all cursor-pointer">
+                                            class="px-2.5 py-1 text-[11px] rounded-lg transition-all cursor-pointer">
                                             %
                                         </button>
                                         <button type="button" @click="discountType = 'fixed'"
                                             :class="discountType === 'fixed' ? 'bg-white text-blue-600 shadow-sm font-black' : 'text-slate-400 font-semibold'"
-                                            class="px-2 py-0.5 text-[10px] rounded transition-all cursor-pointer">
+                                            class="px-2.5 py-1 text-[11px] rounded-lg transition-all cursor-pointer">
                                             Rs.
                                         </button>
                                     </div>
-                                </div>
-                                <div class="relative flex items-center">
-                                    <input type="number" x-model.number="discountValue" min="0" :max="discountType === 'percentage' ? 100 : subtotal" step="any"
-                                        :placeholder="discountType === 'percentage' ? 'e.g. 10%' : 'e.g. 250.00'"
-                                        class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 pr-12 text-[14px] font-black text-slate-800 outline-none transition-all">
-                                    <span class="absolute right-3 text-xs font-black text-slate-400 pointer-events-none" x-text="discountType === 'percentage' ? '%' : 'Rs.'"></span>
+                                    <div class="relative flex-1">
+                                        <input type="number" x-model.number="discountValue" min="0" :max="discountType === 'percentage' ? 100 : subtotal" step="any"
+                                            :placeholder="discountType === 'percentage' ? '0%' : '0.00'"
+                                            class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-3.5 py-2 text-[14px] font-black text-slate-800 outline-none transition-all pr-10">
+                                        <span class="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400 pointer-events-none" x-text="discountType === 'percentage' ? '%' : 'Rs.'"></span>
+                                    </div>
                                 </div>
                                 <template x-if="calculatedDiscount > 0">
                                     <div class="text-[11px] font-bold text-emerald-600 mt-1 flex items-center gap-1">
-                                        <span>Discount: -Rs. <span x-text="calculatedDiscount.toFixed(2)"></span></span>
+                                        <span>-Rs. <span x-text="calculatedDiscount.toFixed(2)"></span></span>
                                         <span x-show="discountType === 'fixed' && subtotal > 0" class="text-slate-400 font-normal" x-text="'(' + ((calculatedDiscount/subtotal)*100).toFixed(1) + '%)'"></span>
                                     </div>
                                 </template>
                             </div>
 
-                            <div x-show="paymentMode === 'pay_now'">
+                            <!-- Advance Amount (when pay_now) -->
+                            <div class="flex-1 w-full" x-show="paymentMode === 'pay_now'">
                                 <label class="block text-[11px] font-extrabold text-slate-500 uppercase tracking-widest mb-1.5">Advance Amount</label>
                                 <input type="number" x-model="advanceAmount" min="0" step="0.01" :placeholder="'Full: Rs. ' + total.toFixed(2)"
-                                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-4 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
+                                    class="w-full bg-slate-50 border-2 border-slate-200 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 rounded-xl px-3.5 py-2 text-[14px] font-black text-slate-800 outline-none transition-all">
                             </div>
                         </div>
                     </div>

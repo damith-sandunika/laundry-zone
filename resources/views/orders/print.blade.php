@@ -62,17 +62,17 @@
         }
 
         .bold {
-            font-weight: 800;
+            font-weight: 600;
         }
 
         .uppercase {
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.03em;
             font-size: 11px;
         }
 
         .divider {
-            border-top: 1.5px dashed #000;
+            border-top: 1px dashed #64748b;
             margin: 8px 0;
         }
 
@@ -95,25 +95,25 @@
         }
 
         .total-row {
-            font-weight: 900;
-            font-size: 15px;
-            border-top: 2px solid #000;
+            font-weight: 700;
+            font-size: 14px;
+            border-top: 1.5px solid #0f172a;
             padding-top: 6px;
             margin-top: 6px;
         }
 
         .badge {
             display: inline-block;
-            border: 1.5px solid #000;
+            border: 1px solid #0f172a;
             padding: 4px 10px;
             margin-top: 6px;
-            font-size: 12px;
-            font-weight: 800;
+            font-size: 11px;
+            font-weight: 600;
             border-radius: 6px;
         }
 
         .item-name {
-            font-weight: 700;
+            font-weight: 600;
             font-size: 12px;
             display: block;
             word-break: break-word;
