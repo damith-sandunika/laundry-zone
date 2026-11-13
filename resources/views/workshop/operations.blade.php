@@ -46,6 +46,63 @@
             this.showPaymentModal = true;
         },
 
+        showDeliveryModal: false,
+        deliveryDispatch: null,
+        deliveryMethod: 'rider',
+        deliveryRiderId: '',
+        deliveryPickmeCost: '',
+        deliveryPaymentMethod: 'cash',
+        isDispatchingDelivery: false,
+
+        openDeliveryModal(dispatch) {
+            this.deliveryDispatch = dispatch;
+            this.deliveryMethod = 'rider';
+            this.deliveryRiderId = '';
+            this.deliveryPickmeCost = '';
+            this.deliveryPaymentMethod = 'cash';
+            this.showDeliveryModal = true;
+        },
+
+        async submitDelivery() {
+            if (!this.deliveryDispatch) return;
+            if (this.deliveryMethod === 'rider' && !this.deliveryRiderId) return alert('Select a rider');
+            if (this.deliveryMethod === 'pickme_flash' && !this.deliveryPickmeCost) return alert('Enter PickMe cost');
+
+            this.isDispatchingDelivery = true;
+            try {
+                const res = await fetch(`/workshop/dispatches/${this.deliveryDispatch.id}/delivery`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        delivery_method: this.deliveryMethod,
+                        rider_id: this.deliveryRiderId,
+                        pickme_cost: this.deliveryPickmeCost,
+                        payment_method: this.deliveryPaymentMethod
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    // Automatically print the bill for the delivery order
+                    if (this.deliveryDispatch && this.deliveryDispatch.order && this.deliveryDispatch.order.order_number) {
+                        window.open('/orders/' + this.deliveryDispatch.order.order_number + '/print', '_blank');
+                    }
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500); // slight delay to ensure popup works before reload
+                } else {
+                    alert(data.message || 'Failed to dispatch delivery.');
+                }
+            } catch (err) {
+                console.error('AJAX Error:', err);
+                alert('Connection error');
+            }
+            this.isDispatchingDelivery = false;
+        },
+
         async sendPaymentRequest() {
             if (!this.paymentDispatch) return;
             this.isRequestingPayment = true;
@@ -95,6 +152,8 @@
             }
         },
 
+        autoPrintWorkshopChit: {{ \App\Models\Setting::get('auto_print_workshop_chit', '1') == '1' ? 'true' : 'false' }},
+
         async workshopAction(dispatchId, action) {
             try {
                 const res = await fetch(`/workshop/dispatches/${dispatchId}/${action}`, {
@@ -107,7 +166,7 @@
                 });
                 const data = await res.json();
                 if (data.success) {
-                    if (action === 'start-processing' && data.order_number) {
+                    if (action === 'start-processing' && data.order_number && this.autoPrintWorkshopChit) {
                         window.open(`/orders/${data.order_number}/chit`, '_blank');
                     }
                     window.location.reload();

@@ -67,8 +67,8 @@ class OrderHistoryController extends Controller
 
         if ($request->filled('status')) {
             $statusFilter = $request->status;
-            $query->where('status', $statusFilter);
-            $statsQuery->where('status', $statusFilter);
+            $query->where('orders.status', $statusFilter);
+            $statsQuery->where('orders.status', $statusFilter);
         }
 
         $startDate = $request->input('start_date');
@@ -80,79 +80,213 @@ class OrderHistoryController extends Controller
         }
 
         if (!empty($startDate) && !empty($endDate)) {
-            $query->whereDate('created_at', '>=', $startDate)
-                  ->whereDate('created_at', '<=', $endDate);
-            $statsQuery->whereDate('created_at', '>=', $startDate)
-                       ->whereDate('created_at', '<=', $endDate);
+            $query->whereDate('orders.created_at', '>=', $startDate)
+                  ->whereDate('orders.created_at', '<=', $endDate);
+            $statsQuery->whereDate('orders.created_at', '>=', $startDate)
+                       ->whereDate('orders.created_at', '<=', $endDate);
         }
 
         $ordersBase = clone $statsQuery;
         
-        $totalOrderValue = (float) ((clone $ordersBase)->sum('total') ?? 0);
-        $walkIn = (float) ((clone $ordersBase)->where('is_delivery_order', false)->sum('total') ?? 0);
-        $delivery = (float) ((clone $ordersBase)->where('is_delivery_order', true)->sum('total') ?? 0);
+        $totalOrderValue = (float) ((clone $ordersBase)->sum('orders.total') ?? 0);
+        $walkIn = (float) ((clone $ordersBase)->where('orders.is_delivery_order', false)->sum('orders.total') ?? 0);
+        $delivery = (float) ((clone $ordersBase)->where('orders.is_delivery_order', true)->sum('orders.total') ?? 0);
         
-        $pendingDue = (float) ((clone $ordersBase)->selectRaw('SUM(GREATEST(0, total - COALESCE(paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
+        // Zero-RAM SQL aggregations for pending amounts
+        $pendingDue = (float) ((clone $ordersBase)->selectRaw('SUM(GREATEST(0, orders.total - COALESCE(orders.paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
         
         $regularPending = (float) ((clone $ordersBase)->where(function($q) {
-            $q->where('payment_method', '!=', 'credit')->orWhereNull('payment_method');
-        })->selectRaw('SUM(GREATEST(0, total - COALESCE(paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
+            $q->where('orders.payment_method', '!=', 'credit')->orWhereNull('orders.payment_method');
+        })->selectRaw('SUM(GREATEST(0, orders.total - COALESCE(orders.paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
 
-        $creditOrders = (float) ((clone $ordersBase)->where('payment_method', 'credit')->selectRaw('SUM(GREATEST(0, total - COALESCE(paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
+        $creditOrders = (float) ((clone $ordersBase)->where('orders.payment_method', 'credit')->selectRaw('SUM(GREATEST(0, orders.total - COALESCE(orders.paid_amount, 0))) as aggregate')->value('aggregate') ?? 0);
 
-        // 1. Payments collected specifically from orders created in this date range
-        $fromTheseOrders = (float) ((clone $ordersBase)->sum('paid_amount') ?? 0);
+        $fromTheseOrders = (float) ((clone $ordersBase)->sum('orders.paid_amount') ?? 0);
 
-        // 2. Total actual cash/payments collected during this period (regardless of when order was created)
-        $txPeriodQuery = PaymentTransaction::whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59'])
+        // SQL aggregations for payment totals using subquery
+        $orderIdsSubquery = (clone $ordersBase)->select('orders.id');
+
+        // 1. Payments collected from these specific date-filtered orders
+        $directCash = (float) ((clone $ordersBase)->where('orders.payment_method', 'cash')->whereDoesntHave('paymentTransactions')->sum('orders.paid_amount') ?? 0);
+        $directCard = (float) ((clone $ordersBase)->where('orders.payment_method', 'card')->whereDoesntHave('paymentTransactions')->sum('orders.paid_amount') ?? 0);
+        $directBank = (float) ((clone $ordersBase)->where('orders.payment_method', 'bank')->whereDoesntHave('paymentTransactions')->sum('orders.paid_amount') ?? 0);
+
+        $txSums = PaymentTransaction::whereIn('order_id', $orderIdsSubquery)
             ->where(function($q) {
-                $q->where('status', '!=', 'rejected')->orWhereNull('status');
+                $q->whereNull('status')->orWhere('status', '!=', 'rejected');
+            })
+            ->selectRaw("
+                COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as cash_sum,
+                COALESCE(SUM(CASE WHEN payment_method = 'card' THEN amount ELSE 0 END), 0) as card_sum,
+                COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN amount ELSE 0 END), 0) as bank_sum
+            ")->first();
+
+        $cashTotal = (float) (($txSums->cash_sum ?? 0) + $directCash);
+        $cardTotal = (float) (($txSums->card_sum ?? 0) + $directCard);
+        $bankTotal = (float) (($txSums->bank_sum ?? 0) + $directBank);
+
+        // 2. Total payments actually received/collected DURING THIS DATE RANGE (irrespective of when order was placed)
+        $rangePaymentsQuery = PaymentTransaction::where(function($q) {
+                $q->whereNull('status')->orWhere('status', '!=', 'rejected');
             });
 
         if (!$isSuperAdmin && $branchId) {
             if ($isWorkshop) {
-                $txPeriodQuery->whereHas('order', function ($oq) use ($branchId) {
-                    $oq->where('workshop_id', $branchId)
-                       ->orWhere('branch_id', $branchId);
+                $rangePaymentsQuery->whereHas('order', function ($q) use ($branchId) {
+                    $q->where('orders.workshop_id', $branchId)
+                      ->orWhere('orders.branch_id', $branchId);
                 });
             } else {
-                $txPeriodQuery->whereHas('order', function ($oq) use ($branchId) {
-                    $oq->where('branch_id', $branchId);
-                });
+                $rangePaymentsQuery->whereHas('order', fn ($q) => $q->where('orders.branch_id', $branchId));
             }
-        } elseif ($isSuperAdmin && $request->filled('branch_id')) {
-            $bId = $request->branch_id;
-            $txPeriodQuery->whereHas('order', fn($oq) => $oq->where('branch_id', $bId));
+        } elseif ($isSuperAdmin) {
+            if ($request->filled('branch_id')) {
+                $rangePaymentsQuery->whereHas('order', fn ($q) => $q->where('orders.branch_id', $request->branch_id));
+            }
+            if ($request->filled('workshop_id')) {
+                $rangePaymentsQuery->whereHas('order', fn ($q) => $q->where('orders.workshop_id', $request->workshop_id));
+            }
         }
 
-        $directLegacyOrders = (clone $ordersBase)->whereDoesntHave('paymentTransactions')
-            ->selectRaw("
-                COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN paid_amount ELSE 0 END), 0) as direct_cash,
-                COALESCE(SUM(CASE WHEN payment_method = 'card' THEN paid_amount ELSE 0 END), 0) as direct_card,
-                COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN paid_amount ELSE 0 END), 0) as direct_bank
-            ")->first();
-
-        $txPeriodSums = (clone $txPeriodQuery)
-            ->selectRaw("
-                COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as cash_sum,
-                COALESCE(SUM(CASE WHEN payment_method = 'card' THEN amount ELSE 0 END), 0) as card_sum,
-                COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN amount ELSE 0 END), 0) as bank_sum,
-                COALESCE(SUM(amount), 0) as total_tx_sum
-            ")->first();
-
-        $cashTotal = (float) (($txPeriodSums->cash_sum ?? 0) + ($directLegacyOrders->direct_cash ?? 0));
-        $cardTotal = (float) (($txPeriodSums->card_sum ?? 0) + ($directLegacyOrders->direct_card ?? 0));
-        $bankTotal = (float) (($txPeriodSums->bank_sum ?? 0) + ($directLegacyOrders->direct_bank ?? 0));
-        
-        $collectedPaymentsPeriod = (float) ($cashTotal + $cardTotal + $bankTotal);
-
-        // Fallback: If no transactions logged yet, use fromTheseOrders
-        if ($collectedPaymentsPeriod == 0 && $fromTheseOrders > 0) {
-            $collectedPaymentsPeriod = $fromTheseOrders;
-            $cashTotal = $fromTheseOrders;
+        if (!empty($startDate) && !empty($endDate)) {
+            $rangePaymentsQuery->whereBetween('created_at', [$startDate . ' 00:00:00', $endDate . ' 23:59:59']);
         }
 
-        $orderIdsSubquery = (clone $ordersBase)->select('orders.id');
+        // Direct orders (legacy/POS without transaction records) created in this date range
+        $rangeDirectOrders = (clone $ordersBase)->whereDoesntHave('paymentTransactions');
+        $rangeDirectCash = (float) ((clone $rangeDirectOrders)->where('orders.payment_method', 'cash')->sum('orders.paid_amount') ?? 0);
+        $rangeDirectCard = (float) ((clone $rangeDirectOrders)->where('orders.payment_method', 'card')->sum('orders.paid_amount') ?? 0);
+        $rangeDirectBank = (float) ((clone $rangeDirectOrders)->where('orders.payment_method', 'bank')->sum('orders.paid_amount') ?? 0);
+
+        $rangeTxSums = (clone $rangePaymentsQuery)->selectRaw("
+            COALESCE(SUM(CASE WHEN payment_method = 'cash' THEN amount ELSE 0 END), 0) as cash_sum,
+            COALESCE(SUM(CASE WHEN payment_method = 'card' THEN amount ELSE 0 END), 0) as card_sum,
+            COALESCE(SUM(CASE WHEN payment_method = 'bank' THEN amount ELSE 0 END), 0) as bank_sum,
+            COALESCE(SUM(amount), 0) as total_sum
+        ")->first();
+
+        $rangeCashTotal = (float) (($rangeTxSums->cash_sum ?? 0) + $rangeDirectCash);
+        $rangeCardTotal = (float) (($rangeTxSums->card_sum ?? 0) + $rangeDirectCard);
+        $rangeBankTotal = (float) (($rangeTxSums->bank_sum ?? 0) + $rangeDirectBank);
+        $totalCollectedInRange = (float) (($rangeTxSums->total_sum ?? 0) + $rangeDirectCash + $rangeDirectCard + $rangeDirectBank);
+
+        // 3. Workshop vs Collection Points Profit & Commission Breakdown
+        $profitQuery = (clone $ordersBase)
+            ->leftJoin('branches as collection_branches', 'collection_branches.id', '=', 'orders.branch_id')
+            ->selectRaw("
+                COALESCE(SUM(
+                    CASE 
+                        WHEN orders.branch_profit > 0 THEN orders.branch_profit
+                        WHEN orders.workshop_profit > 0 THEN (orders.total - orders.workshop_profit)
+                        WHEN orders.branch_id != orders.workshop_id AND orders.workshop_id IS NOT NULL AND collection_branches.branch_profit_percentage > 0 
+                            THEN (orders.total * (collection_branches.branch_profit_percentage / 100.0))
+                        ELSE 0 
+                    END
+                ), 0) as total_branch_commission,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN orders.workshop_profit > 0 THEN orders.workshop_profit
+                        WHEN orders.branch_profit > 0 THEN (orders.total - orders.branch_profit)
+                        WHEN orders.branch_id != orders.workshop_id AND orders.workshop_id IS NOT NULL AND collection_branches.branch_profit_percentage > 0 
+                            THEN (orders.total * (1 - (collection_branches.branch_profit_percentage / 100.0)))
+                        ELSE orders.total 
+                    END
+                ), 0) as total_workshop_net
+            ")->first();
+
+        $totalBranchCommission = (float) ($profitQuery->total_branch_commission ?? 0);
+        $totalWorkshopNet = (float) ($profitQuery->total_workshop_net ?? 0);
+
+        // Branch-by-branch commission breakdown for collection points
+        $collectionPointBreakdown = (clone $ordersBase)
+            ->join('branches', 'branches.id', '=', 'orders.branch_id')
+            ->where(function($q) {
+                $q->whereColumn('orders.branch_id', '!=', 'orders.workshop_id')
+                  ->orWhereNull('orders.workshop_id');
+            })
+            ->where('branches.type', '!=', 'workshop')
+            ->selectRaw("
+                branches.id as branch_id,
+                branches.name as branch_name,
+                COALESCE(branches.branch_profit_percentage, 0) as commission_rate,
+                COUNT(orders.id) as order_count,
+                COALESCE(SUM(orders.total), 0) as gross_total,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN orders.branch_profit > 0 THEN orders.branch_profit
+                        WHEN orders.workshop_profit > 0 THEN (orders.total - orders.workshop_profit)
+                        WHEN branches.branch_profit_percentage > 0 THEN (orders.total * (branches.branch_profit_percentage / 100.0))
+                        ELSE 0 
+                    END
+                ), 0) as branch_commission,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN orders.workshop_profit > 0 THEN orders.workshop_profit
+                        WHEN orders.branch_profit > 0 THEN (orders.total - orders.branch_profit)
+                        WHEN branches.branch_profit_percentage > 0 THEN (orders.total * (1 - (branches.branch_profit_percentage / 100.0)))
+                        ELSE orders.total 
+                    END
+                ), 0) as workshop_net
+            ")
+            ->groupBy('branches.id', 'branches.name', 'branches.branch_profit_percentage')
+            ->get();
+
+        // Workshop-by-workshop breakdown (Which workshops processed this collection branch's orders)
+        $workshopBreakdown = (clone $ordersBase)
+            ->leftJoin('branches as workshop_branches', 'workshop_branches.id', '=', 'orders.workshop_id')
+            ->whereNotNull('orders.workshop_id')
+            ->selectRaw("
+                workshop_branches.id as workshop_id,
+                COALESCE(workshop_branches.name, 'Default Workshop') as workshop_name,
+                COUNT(orders.id) as order_count,
+                COALESCE(SUM(orders.total), 0) as gross_total,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN orders.workshop_profit > 0 THEN orders.workshop_profit
+                        WHEN orders.branch_profit > 0 THEN (orders.total - orders.branch_profit)
+                        ELSE orders.total 
+                    END
+                ), 0) as workshop_share,
+                COALESCE(SUM(
+                    CASE 
+                        WHEN orders.branch_profit > 0 THEN orders.branch_profit
+                        WHEN orders.workshop_profit > 0 THEN (orders.total - orders.workshop_profit)
+                        ELSE 0 
+                    END
+                ), 0) as branch_commission
+            ")
+            ->groupBy('workshop_branches.id', 'workshop_branches.name')
+            ->get();
+
+        // Direct Workshop Orders (originated directly at workshop without collection branch commission)
+        $directWorkshopOrders = (clone $ordersBase)
+            ->where(function($q) {
+                $q->whereColumn('orders.branch_id', '=', 'orders.workshop_id')
+                  ->orWhereHas('branch', fn($b) => $b->where('type', 'workshop'));
+            })
+            ->selectRaw("
+                COUNT(orders.id) as order_count,
+                COALESCE(SUM(orders.total), 0) as gross_total
+            ")->first();
+
+        $directWorkshopCount = (int) ($directWorkshopOrders->order_count ?? 0);
+        $directWorkshopGross = (float) ($directWorkshopOrders->gross_total ?? 0);
+        $collectionPointsGross = max(0, (float) ($totalOrderValue - $directWorkshopGross));
+
+        // Collected Payments split strictly for orders in this date range:
+        // 1. From Workshop Direct Orders
+        $workshopDirectOrdersQuery = (clone $ordersBase)->where(function($q) {
+            $q->whereColumn('orders.branch_id', '=', 'orders.workshop_id')
+              ->orWhereHas('branch', fn($b) => $b->where('type', 'workshop'));
+        });
+        $workshopDirectCollected = (float) ((clone $workshopDirectOrdersQuery)->sum('orders.paid_amount') ?? 0);
+
+        // 2. From Collection Point Orders
+        $collectionPointOrdersQuery = (clone $ordersBase)->where(function($q) {
+            $q->whereColumn('orders.branch_id', '!=', 'orders.workshop_id')
+              ->orWhereNull('orders.workshop_id');
+        })->whereHas('branch', fn($b) => $b->where('type', '!=', 'workshop'));
+        $collectionPointsCollected = (float) ((clone $collectionPointOrdersQuery)->sum('orders.paid_amount') ?? 0);
 
         $orderQty = (int) (clone $ordersBase)->count();
         $totalCustomerCount = (int) (clone $ordersBase)->distinct()->count('customer_id');
@@ -165,11 +299,23 @@ class OrderHistoryController extends Controller
             'pending_due' => $pendingDue,
             'regular_pending' => $regularPending,
             'credit_orders' => $creditOrders,
-            'collected_payments' => $collectedPaymentsPeriod,
-            'from_these_orders' => $fromTheseOrders,
-            'cash' => $cashTotal,
-            'card' => $cardTotal,
-            'bank' => $bankTotal,
+            'collected_payments' => $totalCollectedInRange, // Total collected in date range
+            'from_these_orders' => $fromTheseOrders,       // Collected from these orders specifically
+            'cash' => $rangeCashTotal,
+            'card' => $rangeCardTotal,
+            'bank' => $rangeBankTotal,
+            'these_orders_cash' => $cashTotal,
+            'these_orders_card' => $cardTotal,
+            'these_orders_bank' => $bankTotal,
+            'total_branch_commission' => $totalBranchCommission, // Collection Point Commissions
+            'total_workshop_net' => $totalWorkshopNet,           // Workshop Net Share
+            'collection_point_breakdown' => $collectionPointBreakdown,
+            'workshop_breakdown' => $workshopBreakdown,
+            'direct_workshop_count' => $directWorkshopCount,
+            'direct_workshop_gross' => $directWorkshopGross,
+            'collection_points_gross' => $collectionPointsGross,
+            'workshop_direct_collected' => $workshopDirectCollected,
+            'collection_points_collected' => $collectionPointsCollected,
             'order_qty' => $orderQty,
             'total_customer_count' => $totalCustomerCount,
             'item_qty' => $itemQty,

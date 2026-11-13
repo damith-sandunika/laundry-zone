@@ -127,6 +127,7 @@ class GeneralSettingsController extends Controller
             Setting::set('allow_branch_admins_delete_orders', $request->has('allow_branch_admins_delete_orders') ? '1' : '0');
             Setting::set('auto_print_label', $request->has('auto_print_label') ? '1' : '0');
             Setting::set('auto_print_pos_chit', $request->has('auto_print_pos_chit') ? '1' : '0');
+            Setting::set('auto_print_workshop_chit', $request->has('auto_print_workshop_chit') ? '1' : '0');
             Setting::set('chit_show_totals', $request->has('chit_show_totals') ? '1' : '0');
             Setting::set('site_landing_page', $request->input('site_landing_page', ''));
             Setting::set('default_pickup_days', $request->input('default_pickup_days', '3'));

@@ -85,6 +85,18 @@
 
                                     <div class="pt-4 mt-4 border-t border-gray-100">
                                         <label class="flex items-start gap-2 cursor-pointer w-max max-w-full">
+                                            <input type="checkbox" name="auto_print_workshop_chit" value="1" {{ \App\Models\Setting::get('auto_print_workshop_chit', '1') == '1' ? 'checked' : '' }} class="w-4 h-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <div>
+                                                <span class="text-sm font-semibold text-gray-700 block">Auto Print Job Chit on Workshop Start (To Wash)</span>
+                                                <p class="text-[11px] text-gray-500 mt-1">
+                                                    If enabled (<strong>Default: ON</strong>), clicking "Start" in the Workshop "To Wash" queue will automatically open the order chit in a new tab for printing. If unchecked, status will update without opening the chit tab.
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="pt-4 mt-4 border-t border-gray-100">
+                                        <label class="flex items-start gap-2 cursor-pointer w-max max-w-full">
                                             <input type="checkbox" name="chit_show_totals" value="1" {{ \App\Models\Setting::get('chit_show_totals', '0') == '1' ? 'checked' : '' }} class="w-4 h-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
                                             <div>
                                                 <span class="text-sm font-semibold text-gray-700 block">Show Payment Totals on Job Chit</span>
@@ -103,6 +115,19 @@
                                                 <p class="text-[11px] text-gray-500 mt-1">
                                                     If checked, Branch Admins and Workshop Admins can delete orders from History pages. <br>
                                                     If unchecked (<strong class="text-slate-700">Default: Super Admin Only</strong>), only Super Admin can see the Delete button and delete orders.
+                                                </p>
+                                            </div>
+                                        </label>
+                                    </div>
+
+                                    <div class="pt-4 mt-4 border-t border-gray-100">
+                                        <label class="flex items-start gap-2 cursor-pointer w-max max-w-full">
+                                            <input type="checkbox" name="require_superadmin_approval_to_reopen_shift" value="1" {{ \App\Models\Setting::get('require_superadmin_approval_to_reopen_shift', '1') == '1' ? 'checked' : '' }} class="w-4 h-4 mt-0.5 text-blue-600 border-gray-300 rounded focus:ring-blue-500">
+                                            <div>
+                                                <span class="text-sm font-semibold text-gray-700 block">Require Super Admin Approval to Re-Open Closed Shifts</span>
+                                                <p class="text-[11px] text-gray-500 mt-1">
+                                                    <strong class="text-slate-700">Default: ON (Checked).</strong> Branches can only open their shift once a day. If closed, re-opening on the same day strictly requires Super Admin approval.<br>
+                                                    If unchecked (OFF), branches are allowed to freely open/close their shift multiple times a day without requiring Super Admin permission.
                                                 </p>
                                             </div>
                                         </label>
