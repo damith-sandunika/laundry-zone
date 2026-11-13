@@ -1,7 +1,9 @@
 @php
     $tenant = \App\Services\Tenancy\TenantManager::getTenant();
     $companyName = $tenant ? $tenant->name : \App\Models\Setting::get('company_name', 'Laundry Zone');
-    $defaultLogo = asset('images/laundry_main_logo.png');
+    $defaultLogo = file_exists(public_path('images/laundry_main_logo.jpeg')) 
+        ? asset('images/laundry_main_logo.jpeg') 
+        : asset('images/laundry_main_logo.png');
     $companyLogo = ($tenant && !empty($tenant->logo_path)) 
         ? asset($tenant->logo_path) 
         : $defaultLogo;
@@ -16,126 +18,85 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <title>{{ $companyName }} — Sign In</title>
-    <link rel="icon" type="image/png" href="{{ $defaultLogo }}">
+    <link rel="icon" type="image/jpeg" href="{{ $defaultLogo }}">
     <link rel="apple-touch-icon" href="{{ $defaultLogo }}">
-    <meta name="theme-color" content="#1d4ed8">
+    <meta name="theme-color" content="#2563eb">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="{{ $companyName }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     <link rel="manifest" href="{{ url('/manifest.json') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('layouts.partials.gtm')
 </head>
-<body class="font-sans antialiased bg-slate-900 min-h-screen flex m-0">
+<body class="font-sans antialiased bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white relative overflow-x-hidden">
     @include('layouts.partials.gtm-body')
 
-    <!-- ──────── LEFT PANEL ──────── -->
-    <div class="hidden lg:flex flex-col justify-between w-[55%] min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-800 to-blue-900 px-14 py-14">
-        <!-- Grid overlay -->
-        <div class="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.05)_1px,transparent_0)] bg-[size:32px_32px]"></div>
-        <!-- Glowing blobs -->
-        <div class="absolute -top-[10%] -right-[5%] w-[500px] h-[500px] rounded-full bg-[radial-gradient(circle,rgba(59,130,246,0.35)_0%,transparent_70%)] animate-pulse"></div>
-        <div class="absolute -bottom-[10%] -left-[5%] w-[400px] h-[400px] rounded-full bg-[radial-gradient(circle,rgba(99,102,241,0.25)_0%,transparent_70%)] animate-pulse" style="animation-delay: 1s;"></div>
-
-        <div class="relative z-10 flex flex-col justify-between h-full">
-            <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center shadow-lg p-1.5 overflow-hidden">
-                    <img src="{{ $companyLogo }}" alt="Logo" class="w-full h-full object-contain" onerror="this.src='{{ asset('images/laundry_main_logo.png') }}'">
-                </div>
-                <span class="text-white font-black text-lg tracking-tight">{{ $companyName }}</span>
-            </div>
-
-            <!-- Middle: Hero -->
-            <div>
-                <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 border border-white/15 mb-8 backdrop-blur-sm shadow-lg shadow-black/10">
-                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                    <span class="text-white/80 text-[13px] font-bold">System Online</span>
-                </div>
-                <h2 class="text-[58px] font-black text-white leading-[1.08] tracking-tight mb-6">
-                    {{ Str::before($companyName, ' ') }}<br>
-                    <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-400">{{ Str::after($companyName, ' ') ?: 'Management' }}</span><br>
-                    System
-                </h2>
-                <p class="text-blue-200/70 text-[17px] font-medium leading-relaxed max-w-[340px]">
-                    Complete POS, order tracking, inventory control, and customer management — all in one platform.
-                </p>
-                </p>
-            </div>
-
-            <!-- Bottom: Feature pills -->
-            <div class="grid grid-cols-3 gap-4">
-                <div class="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-5 text-center transition-transform hover:-translate-y-1 duration-300">
-                    <p class="text-xl font-black text-white mb-1">POS</p>
-                    <p class="text-[11px] font-extrabold text-blue-200/60 uppercase tracking-widest">Point of Sale</p>
-                </div>
-                <div class="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-5 text-center transition-transform hover:-translate-y-1 duration-300">
-                    <p class="text-xl font-black text-white mb-1">Track</p>
-                    <p class="text-[11px] font-extrabold text-blue-200/60 uppercase tracking-widest">Live Orders</p>
-                </div>
-                <div class="bg-white/5 border border-white/10 backdrop-blur-md rounded-2xl p-5 text-center transition-transform hover:-translate-y-1 duration-300">
-                    <p class="text-xl font-black text-white mb-1">WA</p>
-                    <p class="text-[11px] font-extrabold text-blue-200/60 uppercase tracking-widest">WhatsApp</p>
-                </div>
-            </div>
-        </div>
+    <!-- Subtle Background Accents -->
+    <div class="fixed inset-0 pointer-events-none overflow-hidden -z-10">
+        <div class="absolute -top-40 -right-40 w-96 h-96 bg-blue-100/70 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-40 -left-40 w-96 h-96 bg-indigo-100/60 rounded-full blur-3xl"></div>
+        <div class="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] opacity-60"></div>
     </div>
 
-    <!-- ──────── RIGHT PANEL: Form ──────── -->
-    <div class="flex-1 flex items-center justify-center bg-slate-900 p-10 md:p-14 w-full">
-        <div class="w-full max-w-[380px]">
-
-            <!-- Mobile brand -->
-            <div class="flex lg:hidden flex-col items-center justify-center mb-10 animate-slide-up">
-                <div class="w-24 h-24 rounded-[1.5rem] bg-slate-800 flex items-center justify-center shadow-2xl shadow-blue-900/20 mb-4 ring-8 ring-slate-900 p-2 overflow-hidden">
-                    <img src="{{ $companyLogo }}" alt="Logo" class="w-full h-full object-contain" onerror="this.src='{{ asset('images/laundry_main_logo.png') }}'">
-                </div>
-                <h1 class="font-black text-3xl text-white tracking-tight text-center">{{ $companyName }}</h1>
-                <p class="text-[11px] font-extrabold text-blue-400 uppercase tracking-widest mt-1.5">Management System</p>
-            </div>
-
-            <!-- Heading (Desktop) -->
-            <div class="mb-10 hidden lg:block animate-slide-up" style="animation-delay: 100ms;">
-                <h1 class="text-4xl font-black text-white tracking-tight mb-2">Welcome back</h1>
-                <p class="text-sm font-semibold text-slate-400">Sign in to access {{ $companyName }} dashboard</p>
-            </div>
+    <!-- Main Content Centered Container -->
+    <main class="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
+        <div class="w-full max-w-[420px] transition-all">
             
-            <!-- Install App Button -->
-            <button id="installPwaBtn" class="hidden w-full mb-8 p-1 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-lg shadow-emerald-900/30 hover:shadow-emerald-900/50 transition-all group animate-fade-in">
-                <div class="w-full bg-slate-900/95 backdrop-blur-sm rounded-[14px] px-4 py-3.5 flex items-center justify-between group-hover:bg-transparent transition-colors">
+            <!-- PWA Install Prompt Button (if supported) -->
+            <button id="installPwaBtn" class="hidden w-full mb-6 p-1 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-md hover:shadow-lg transition-all group animate-fade-in">
+                <div class="w-full bg-white rounded-[14px] px-4 py-3 flex items-center justify-between group-hover:bg-opacity-95 transition-colors">
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-emerald-900/50 flex items-center justify-center group-hover:bg-white/10 transition-colors p-1.5 overflow-hidden">
+                        <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center p-1 overflow-hidden">
                             <img src="{{ $companyLogo }}" alt="App Icon" class="w-full h-full object-contain" onerror="this.style.display='none'">
                         </div>
                         <div class="text-left">
-                            <p class="text-[13px] font-black text-white group-hover:text-white transition-colors">Install {{ Str::limit($companyName, 18) }}</p>
-                            <p class="text-[11px] font-bold text-slate-400 group-hover:text-emerald-100 transition-colors">Add to Home Screen (PWA)</p>
+                            <p class="text-xs font-black text-slate-900">Install {{ Str::limit($companyName, 18) }}</p>
+                            <p class="text-[11px] font-semibold text-slate-500">Add to Home Screen (PWA)</p>
                         </div>
                     </div>
-                    <svg class="w-5 h-5 text-emerald-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    <svg class="w-4 h-4 text-emerald-600 group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/>
+                    </svg>
                 </div>
             </button>
 
-            {{ $slot }}
+            <!-- Card -->
+            <div class="bg-white border border-slate-200/90 rounded-3xl p-7 sm:p-9 shadow-xl shadow-slate-200/50">
+                
+                <!-- Logo & Brand Header in Center -->
+                <div class="flex flex-col items-center justify-center text-center mb-7">
+                    <div class="w-20 h-20 rounded-2xl bg-white border border-slate-200/80 shadow-md p-2 flex items-center justify-center mb-3.5 hover:scale-105 transition-transform duration-300">
+                        <img src="{{ $companyLogo }}" alt="{{ $companyName }} Logo" class="w-full h-full object-contain" onerror="this.src='{{ $defaultLogo }}'">
+                    </div>
+                    <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                        {{ $companyName }}
+                    </h1>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
+                        Sign In to Your Account
+                    </p>
+                </div>
 
-            <p class="text-center text-slate-400 text-xs font-bold mt-10">
-                &copy; {{ date('Y') }} {{ $companyName }} &middot; Powered by DSRZone
-            </p>
+                {{ $slot }}
+
+            </div>
+
+            <!-- Powered By DSRZone Footer -->
+            <div class="text-center mt-6 mb-2">
+                <p class="text-xs font-semibold text-slate-400 flex items-center justify-center gap-1.5">
+                    <span>Powered by</span>
+                    <a href="https://dsrzone.com" target="_blank" rel="noopener" class="font-extrabold text-blue-600 hover:text-blue-700 transition-colors">
+                        DSRZone
+                    </a>
+                </p>
+            </div>
+
         </div>
-    </div>
+    </main>
 
-    <style>
-        /* These classes will be automatically styled by Tailwind if used inside forms */
-        input[type="email"], input[type="password"], input[type="text"] {
-            @apply w-full px-4 py-3.5 bg-slate-800 border-2 border-slate-700 rounded-xl text-sm font-semibold text-white focus:bg-slate-800 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 transition-all outline-none placeholder:text-slate-500;
-        }
-        button[type="submit"] {
-            @apply w-full py-3.5 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-black text-[15px] rounded-xl shadow-lg shadow-blue-900/50 hover:shadow-blue-900/70 hover:-translate-y-0.5 transition-all duration-300;
-        }
-    </style>
-    
     <script>
         let deferredPrompt;
         const installBtn = document.getElementById('installPwaBtn');
@@ -143,19 +104,21 @@
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.classList.remove('hidden');
+            if (installBtn) installBtn.classList.remove('hidden');
         });
 
-        installBtn.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') {
-                    installBtn.classList.add('hidden');
+        if (installBtn) {
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    if (outcome === 'accepted') {
+                        installBtn.classList.add('hidden');
+                    }
+                    deferredPrompt = null;
                 }
-                deferredPrompt = null;
-            }
-        });
+            });
+        }
         
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/sw.js').catch(err => console.error(err));
@@ -200,5 +163,3 @@
     </script>
 </body>
 </html>
-
-
