@@ -7,6 +7,7 @@ use App\Http\Controllers\CustomerSiteController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\HRController;
+use App\Http\Controllers\SalaryAdvanceAndAdjustmentController;
 use App\Http\Controllers\HRDashboardController;
 use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\OnlineBookingController;
@@ -29,6 +30,7 @@ use App\Http\Controllers\Workshop\WorkshopDispatchController;
 use App\Http\Controllers\Workshop\WorkshopBillingController;
 use App\Http\Controllers\Settings\GeneralSettingsController;
 use App\Http\Controllers\Settings\ServiceSettingsController;
+use App\Http\Controllers\Settings\ExtraAndTurnaroundSettingsController;
 use App\Http\Controllers\Settings\LogisticsSettingsController;
 use App\Http\Controllers\Settings\PackageSettingsController;
 use App\Http\Controllers\Settings\InventorySettingsController;
@@ -284,14 +286,14 @@ Route::middleware(['auth'])->group(function () {
 
 
         // Extras
-        Route::post('/settings/extras', [ServiceSettingsController::class, 'storeExtra'])->name('settings.storeExtra');
-        Route::put('/settings/extras/{extra}', [ServiceSettingsController::class, 'updateExtra'])->name('settings.updateExtra');
-        Route::delete('/settings/extras/{extra}', [ServiceSettingsController::class, 'destroyExtra'])->name('settings.destroyExtra');
+        Route::post('/settings/extras', [ExtraAndTurnaroundSettingsController::class, 'storeExtra'])->name('settings.storeExtra');
+        Route::put('/settings/extras/{extra}', [ExtraAndTurnaroundSettingsController::class, 'updateExtra'])->name('settings.updateExtra');
+        Route::delete('/settings/extras/{extra}', [ExtraAndTurnaroundSettingsController::class, 'destroyExtra'])->name('settings.destroyExtra');
 
         // Turnaround Types
-        Route::post('/settings/turnaround-types', [ServiceSettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
-        Route::put('/settings/turnaround-types/{turnaroundType}', [ServiceSettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
-        Route::delete('/settings/turnaround-types/{turnaroundType}', [ServiceSettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
+        Route::post('/settings/turnaround-types', [ExtraAndTurnaroundSettingsController::class, 'storeTurnaroundType'])->name('settings.storeTurnaroundType');
+        Route::put('/settings/turnaround-types/{turnaroundType}', [ExtraAndTurnaroundSettingsController::class, 'updateTurnaroundType'])->name('settings.updateTurnaroundType');
+        Route::delete('/settings/turnaround-types/{turnaroundType}', [ExtraAndTurnaroundSettingsController::class, 'destroyTurnaroundType'])->name('settings.destroyTurnaroundType');
 
         // Logistics / Pickups
         Route::post('/settings/pickup-time-periods', [LogisticsSettingsController::class, 'storePickupTimePeriod'])->name('settings.storePickupTimePeriod');
@@ -347,11 +349,11 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/hr/attendance/{attendance}', [HRController::class, 'updateAttendance'])->name('hr.attendance.update');
         Route::post('/hr/{staff}/leaves', [HRController::class, 'storeLeave'])->name('hr.leaves.store');
         Route::put('/hr/leaves/{leave}', [HRController::class, 'updateLeave'])->name('hr.leaves.update');
-        Route::post('/hr/{staff}/advances', [HRController::class, 'storeAdvance'])->name('hr.advances.store');
-        Route::put('/hr/advances/{advance}', [HRController::class, 'updateAdvance'])->name('hr.advances.update');
-        Route::delete('/hr/advances/{advance}', [HRController::class, 'destroyAdvance'])->name('hr.advances.destroy');
-        Route::post('/hr/{staff}/adjustments', [HRController::class, 'storeAdjustment'])->name('hr.adjustments.store');
-        Route::delete('/hr/adjustments/{adjustment}', [HRController::class, 'destroyAdjustment'])->name('hr.adjustments.destroy');
+        Route::post('/hr/{staff}/advances', [SalaryAdvanceAndAdjustmentController::class, 'storeAdvance'])->name('hr.advances.store');
+        Route::put('/hr/advances/{advance}', [SalaryAdvanceAndAdjustmentController::class, 'updateAdvance'])->name('hr.advances.update');
+        Route::delete('/hr/advances/{advance}', [SalaryAdvanceAndAdjustmentController::class, 'destroyAdvance'])->name('hr.advances.destroy');
+        Route::post('/hr/{staff}/adjustments', [SalaryAdvanceAndAdjustmentController::class, 'storeAdjustment'])->name('hr.adjustments.store');
+        Route::delete('/hr/adjustments/{adjustment}', [SalaryAdvanceAndAdjustmentController::class, 'destroyAdjustment'])->name('hr.adjustments.destroy');
         Route::get('/hr/{staff}/payslip', [StaffController::class, 'downloadPayslip'])->name('hr.payslip.download');
 
         // Branches

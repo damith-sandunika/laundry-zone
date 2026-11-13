@@ -71,3 +71,4 @@ class UpdateCompanyAction
         return $company;
     }
 }
+

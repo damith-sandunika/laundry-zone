@@ -2,35 +2,30 @@
 
 namespace App\Services\Tenancy;
 
-use App\Models\Branch;
 use App\Models\Central\PlatformSetting;
 use App\Models\Central\Tenant;
 use App\Models\Central\TenantOwner;
 use App\Models\Central\TenantSubscription;
-use App\Models\Setting;
-use App\Models\User;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use PDO;
 
 class TenantProvisioner
 {
-    /**
-     * Complete Tenant Onboarding & Database Auto-Provisioning.
-     */
+    protected TenantDatabaseProvisioner $dbProvisioner;
+
+    public function __construct(?TenantDatabaseProvisioner $dbProvisioner = null)
+    {
+        $this->dbProvisioner = $dbProvisioner ?? new TenantDatabaseProvisioner();
+    }
+
     public function provision(array $data, ?UploadedFile $logo = null): Tenant
     {
-        // 1. Sanitize subdomain and database name
         $subdomain = Str::slug($data['subdomain']);
         $prefix = PlatformSetting::get('db_prefix', env('TENANT_DB_PREFIX', 'lz_tenant_'));
         $dbName = $data['database_name'] ?? ($prefix . str_replace('-', '_', $subdomain));
         $dbName = preg_replace('/[^a-zA-Z0-9_]/', '', $dbName);
 
-        // 2. Handle logo upload
         $logoPath = null;
         if ($logo && $logo->isValid()) {
             $filename = 'tenant_' . $subdomain . '_' . time() . '.' . $logo->getClientOriginalExtension();
@@ -43,7 +38,6 @@ class TenantProvisioner
         $planPrice = (float) ($data['plan_price'] ?? PlatformSetting::get('default_base_price', '15000.00'));
         $deliveryPrice = (float) ($data['delivery_price'] ?? PlatformSetting::get('default_delivery_price', '5000.00'));
 
-        // 3. Create Tenant in Central Landlord DB
         $tenant = Tenant::create([
             'name' => $data['name'],
             'subdomain' => $subdomain,
@@ -72,9 +66,8 @@ class TenantProvisioner
             'trial_ends_at' => now()->addDays(14),
         ]);
 
-        // 4. Create Owner Record in Central DB
         $ownerPassword = $data['owner_password'] ?? 'Owner@' . rand(1000, 9999);
-        $owner = TenantOwner::create([
+        TenantOwner::create([
             'tenant_id' => $tenant->id,
             'name' => $data['owner_name'],
             'email' => $data['owner_email'],
@@ -83,7 +76,6 @@ class TenantProvisioner
             'is_active' => true,
         ]);
 
-        // 5. Generate Initial Subscription Invoice
         $deliveryFee = $isDeliveryEnabled ? $deliveryPrice : 0;
         $totalAmount = $planPrice + $deliveryFee;
 
@@ -104,179 +96,41 @@ class TenantProvisioner
             'notes' => 'Initial subscription invoice with ' . ($isDeliveryEnabled ? 'Delivery Module Included' : 'Standard Module'),
         ]);
 
-        // 6. Physically Create MySQL Database
-        $this->createDatabase($dbName, $tenant->db_host, $tenant->db_port, $tenant->db_username, $tenant->db_password);
-
-        // 7. Run Tenant Migrations
-        $this->runTenantMigrations($tenant);
-
-        // 8. Seed Tenant Owner and Default Data
-        $this->seedTenantData($tenant, [
+        $this->dbProvisioner->createDatabase($dbName, $tenant->db_host, $tenant->db_port, $tenant->db_username, $tenant->db_password);
+        $this->dbProvisioner->runTenantMigrations($tenant);
+        $this->dbProvisioner->seedTenantData($tenant, [
             'name' => $data['owner_name'],
             'email' => $data['owner_email'],
             'phone' => $data['owner_phone'] ?? $data['phone'] ?? null,
             'password' => $ownerPassword,
         ]);
+        $this->dbProvisioner->seedTenantPrintLayouts($tenant);
 
-        // 9. Seed Default Print Layouts (Thermal Bill, Receipt, Invoice A4) with Company Info
-        $this->seedTenantPrintLayouts($tenant);
-
-        // Reset connection back to landlord
         TenantManager::resetToLandlord();
 
         return $tenant;
     }
 
-    /**
-     * Execute DDL CREATE DATABASE IF NOT EXISTS.
-     */
     public function createDatabase(string $dbName, ?string $host = null, ?string $port = null, ?string $user = null, ?string $pass = null): void
     {
-        $sanitizedDb = preg_replace('/[^a-zA-Z0-9_]/', '', $dbName);
-        $host = $host ?: config('database.connections.mysql.host', '127.0.0.1');
-        $port = $port ?: config('database.connections.mysql.port', '3306');
-        $user = $user ?: config('database.connections.mysql.username', 'root');
-        $pass = $pass !== null ? $pass : config('database.connections.mysql.password', '');
-
-        $pdo = new PDO("mysql:host={$host};port={$port}", $user, $pass, [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-
-        $pdo->exec("CREATE DATABASE IF NOT EXISTS `{$sanitizedDb}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+        $this->dbProvisioner->createDatabase($dbName, $host, $port, $user, $pass);
     }
 
-    /**
-     * Run all tenant migrations against the tenant database.
-     */
     public function runTenantMigrations(Tenant $tenant): array
     {
-        @set_time_limit(300);
-        TenantManager::setTenant($tenant);
-
-        $exitCode = Artisan::call('migrate', [
-            '--database' => 'tenant',
-            '--path' => 'database/migrations',
-            '--force' => true,
-        ]);
-
-        $output = Artisan::output();
-
-        return [
-            'success' => $exitCode === 0,
-            'output' => $output,
-        ];
+        return $this->dbProvisioner->runTenantMigrations($tenant);
     }
 
-    /**
-     * Seed initial tenant data: Owner User (role: owner), Branch, Settings, and Communication templates.
-     */
     public function seedTenantData(Tenant $tenant, array $ownerData): void
     {
-        TenantManager::setTenant($tenant);
-
-        // 1. Create or update Company Super Admin user (role = 'super_admin')
-        $owner = User::firstOrNew(['email' => $ownerData['email']]);
-        $owner->name = $ownerData['name'];
-        $owner->phone = $ownerData['phone'] ?? null;
-        $owner->password = Hash::make($ownerData['password']);
-        $owner->role = 'super_admin'; // Company Super Admin
-        $owner->is_active = true;
-        $owner->branch_id = null; // Super Admin has global access across all branches
-        $owner->can_manage_global_config = true;
-        $owner->save();
-
-        // 2. Create Default Branch
-        $branch = Branch::firstOrCreate(
-            ['name' => $tenant->name . ' - Main Branch'],
-            [
-                'phone' => $tenant->phone ?? '0112345678',
-                'address' => $tenant->address ?? 'Main Street',
-                'is_active' => true,
-                'is_delivery_enabled' => $tenant->is_delivery_enabled,
-                'type' => 'branch',
-            ]
-        );
-
-        // 3. Populate default settings in tenant database
-        $settings = [
-            'company_name' => $tenant->name,
-            'company_phone' => $tenant->phone ?? '',
-            'company_address' => $tenant->address ?? '',
-            'company_email' => $tenant->email ?? '',
-            'company_logo' => $tenant->logo_path ?? '',
-            'delivery_enabled' => $tenant->is_delivery_enabled ? '1' : '0',
-            'currency' => 'LKR',
-            'currency_symbol' => 'Rs.',
-            'tax_percentage' => '0',
-            'allow_branch_admins_delete_orders' => '0',
-            'centralized_management' => '1',
-            'is_sms_enabled' => !empty($tenant->sms_api_key) ? 'true' : 'false',
-            'is_email_enabled' => !empty($tenant->mail_from_address) ? 'true' : 'false',
-            'sms_gateway' => $tenant->sms_gateway ?? 'textware',
-            'sms_mask' => $tenant->sms_mask ?? $tenant->name,
-            'sms_api_url' => $tenant->sms_api_url ?? '',
-            'sms_api_key' => $tenant->sms_api_key ?? '',
-            'mail_from_name' => $tenant->mail_from_name ?? $tenant->name,
-            'mail_from_address' => $tenant->mail_from_address ?? ($tenant->email ?? ''),
-        ];
-
-        foreach ($settings as $k => $v) {
-            Setting::set($k, $v);
-        }
+        $this->dbProvisioner->seedTenantData($tenant, $ownerData);
     }
 
-    /**
-     * Populate default print layouts for the new company.
-     */
     public function seedTenantPrintLayouts(Tenant $tenant): void
     {
-        $cName = $tenant->name ?: 'Laundry Zone';
-        $cPhone = $tenant->phone ?: '+94 11 234 5678';
-        $cAddress = $tenant->address ?: 'No 45, High Level Road, Colombo';
-        $cEmail = $tenant->email ?: 'contact@' . ($tenant->subdomain ?: 'laundryzone') . '.com';
-
-        // 1. Thermal Bill
-        $bill = \App\Models\Central\TenantPrintLayout::firstOrNew([
-            'tenant_id' => $tenant->id,
-            'type' => 'bill',
-        ]);
-        $billDefaults = \App\Models\Central\TenantPrintLayout::defaultAttributes('bill');
-        $billDefaults['header_title'] = $cName;
-        $billDefaults['custom_fields']['branch_phone'] = $cPhone;
-        $billDefaults['custom_fields']['branch_address'] = $cAddress;
-        $billDefaults['footer_text'] = "Thank you for choosing {$cName}.";
-        $bill->fill($billDefaults);
-        $bill->save();
-
-        // 2. Receipt / Job Card
-        $receipt = \App\Models\Central\TenantPrintLayout::firstOrNew([
-            'tenant_id' => $tenant->id,
-            'type' => 'receipt',
-        ]);
-        $receiptDefaults = \App\Models\Central\TenantPrintLayout::defaultAttributes('receipt');
-        $receiptDefaults['header_title'] = $cName;
-        $receiptDefaults['footer_text'] = "Quality checked by {$cName}.";
-        $receipt->fill($receiptDefaults);
-        $receipt->save();
-
-        // 3. Invoice A4
-        $invoice = \App\Models\Central\TenantPrintLayout::firstOrNew([
-            'tenant_id' => $tenant->id,
-            'type' => 'invoice',
-        ]);
-        $invDefaults = \App\Models\Central\TenantPrintLayout::defaultAttributes('invoice');
-        $invDefaults['header_title'] = $cName;
-        $invDefaults['custom_fields']['contact_phone'] = $cPhone;
-        $invDefaults['custom_fields']['contact_address'] = $cAddress;
-        $invDefaults['custom_fields']['contact_email'] = $cEmail;
-        $invDefaults['footer_text'] = "Thank you for choosing {$cName}! We appreciate your business.";
-        $invoice->fill($invDefaults);
-        $invoice->save();
+        $this->dbProvisioner->seedTenantPrintLayouts($tenant);
     }
 
-    /**
-     * Test tenant database connection and return stats.
-     */
     public function testConnection(Tenant $tenant): array
     {
         try {
@@ -312,9 +166,6 @@ class TenantProvisioner
         }
     }
 
-    /**
-     * Run migrations on all registered active tenants.
-     */
     public function migrateAllTenants(): array
     {
         $tenants = Tenant::where('status', 'active')->get();

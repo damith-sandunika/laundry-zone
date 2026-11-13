@@ -2,7 +2,12 @@
 
 namespace App\Http\Controllers\Customer;
 
+use App\Actions\Customer\ProcessCustomerPaymentAction;
 use App\Http\Controllers\Controller;
+use App\Models\DeliveryAppointment;
+use App\Models\Order;
+use App\Models\PaymentTransaction;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -11,31 +16,14 @@ class DashboardController extends Controller
     public function index()
     {
         $customer = Auth::guard('customer')->user();
-        
-        // Fetch active orders (not delivered, completed or cancelled)
-        $activeOrders = $customer->orders()
-            ->with(['branch', 'items.serviceType'])
-            ->whereNotIn('status', ['delivered', 'completed', 'cancelled'])
-            ->latest()
-            ->get();
-
-        // Fetch online bookings (appointments)
-        $appointments = $customer->deliveryAppointments()
-            ->with(['branch', 'order'])
+        $activeOrders = $customer->orders()->with(['branch', 'items.serviceType'])
+            ->whereNotIn('status', ['delivered', 'completed', 'cancelled'])->latest()->get();
+        $appointments = $customer->deliveryAppointments()->with(['branch', 'order'])
             ->whereNotIn('status', ['completed', 'cancelled', 'order_created', 'delivered'])
-            ->whereNull('order_id')
-            ->latest()
-            ->get();
+            ->whereNull('order_id')->latest()->get();
+        $orderHistory = $customer->orders()->with(['branch'])
+            ->whereIn('status', ['delivered', 'completed', 'cancelled'])->latest()->take(5)->get();
 
-        // Fetch order history (delivered, completed or cancelled)
-        $orderHistory = $customer->orders()
-            ->with(['branch'])
-            ->whereIn('status', ['delivered', 'completed', 'cancelled'])
-            ->latest()
-            ->take(5)
-            ->get();
-
-        // Calculate stats
         $totalOrders = $customer->orders()->count() + $customer->deliveryAppointments()->whereNull('order_id')->count();
         $totalSpent = $customer->orders()->sum('paid_amount');
         $activeCount = $activeOrders->count() + $appointments->count();
@@ -46,183 +34,74 @@ class DashboardController extends Controller
     public function orders()
     {
         $customer = Auth::guard('customer')->user();
-        
-        $orders = $customer->orders()
-            ->with(['branch', 'items.serviceType'])
-            ->get();
-            
-        $appointments = $customer->deliveryAppointments()
-            ->with('branch')
-            ->get();
-
+        $orders = $customer->orders()->with(['branch', 'items.serviceType'])->get();
+        $appointments = $customer->deliveryAppointments()->with('branch')->get();
         $unifiedOrders = collect();
 
         foreach ($orders as $order) {
             $unifiedOrders->push((object)[
-                'id' => $order->id,
-                'type' => 'order',
-                'order_number' => $order->order_number,
-                'created_at' => $order->created_at,
-                'items_count' => $order->items->count(),
-                'total' => $order->total,
-                'status' => $order->status,
-                'payment_status' => $order->payment_status,
-                'is_delivery' => $order->is_delivery_order,
-                'original' => $order
+                'id' => $order->id, 'type' => 'order', 'order_number' => $order->order_number,
+                'created_at' => $order->created_at, 'items_count' => $order->items->count(),
+                'total' => $order->total, 'status' => $order->status, 'payment_status' => $order->payment_status,
+                'is_delivery' => $order->is_delivery_order, 'original' => $order
             ]);
         }
 
         foreach ($appointments as $appointment) {
-            // If the appointment already has a corresponding order created, skip it to avoid duplicates.
-            // But wait, the system doesn't link order->appointment_id explicitly unless we added it?
-            // Actually, we did add delivery_appointment_id to orders table.
-            if ($orders->contains('delivery_appointment_id', $appointment->id)) {
-                continue;
-            }
-
+            if ($orders->contains('delivery_appointment_id', $appointment->id)) continue;
             $unifiedOrders->push((object)[
-                'id' => $appointment->id,
-                'type' => 'appointment',
-                'order_number' => '#' . $appointment->id,
-                'created_at' => $appointment->created_at,
-                'items_count' => null,
-                'total' => null,
-                'status' => $appointment->status,
-                'payment_status' => null,
-                'is_delivery' => true,
+                'id' => $appointment->id, 'type' => 'appointment', 'order_number' => '#' . $appointment->id,
+                'created_at' => $appointment->created_at, 'items_count' => null, 'total' => null,
+                'status' => $appointment->status, 'payment_status' => null, 'is_delivery' => true,
                 'original' => $appointment
             ]);
         }
 
-        // Sort by created_at desc
         $unifiedOrders = $unifiedOrders->sortByDesc('created_at')->values();
-
         return view('customer.dashboard.orders', compact('customer', 'unifiedOrders'));
     }
 
-    public function showOrder(\App\Models\Order $order)
+    public function showOrder(Order $order)
     {
         $customer = Auth::guard('customer')->user();
-        
-        if ($order->customer_id !== $customer->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        if ($order->customer_id !== $customer->id) abort(403);
         $order->load(['branch', 'items.serviceType', 'items.turnaroundType', 'items.extras.extra', 'deliveryAppointment']);
-        
+
         $paymentMethods = collect();
-        if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
-            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
-        }
-        if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
-            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
-        }
-        
-        $bankName = \App\Models\Setting::get('bank_name', '');
-        $bankBranch = \App\Models\Setting::get('bank_branch', '');
-        $bankAccountName = \App\Models\Setting::get('bank_account_name', '');
-        $bankAccountNumber = \App\Models\Setting::get('bank_account_number', '');
-        
-        $bankDetails = '';
-        if ($bankName || $bankAccountNumber) {
-            $bankDetails = "Bank: {$bankName}\nBranch: {$bankBranch}\nAccount Name: {$bankAccountName}\nAccount No: {$bankAccountNumber}";
-        }
+        if (Setting::get('payment_bank_transfer_active', '1') == '1') $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
+        if (Setting::get('payment_online_active', '0') == '1') $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
+
+        $bankName = Setting::get('bank_name', '');
+        $bankAccountName = Setting::get('bank_account_name', '');
+        $bankAccountNumber = Setting::get('bank_account_number', '');
+        $bankDetails = ($bankName || $bankAccountNumber) ? "Bank: {$bankName}\nAccount: {$bankAccountName}\nNo: {$bankAccountNumber}" : '';
 
         return view('customer.dashboard.show', compact('customer', 'order', 'paymentMethods', 'bankDetails'));
     }
 
-    public function showAppointment(\App\Models\DeliveryAppointment $appointment)
+    public function showAppointment(DeliveryAppointment $appointment)
     {
         $customer = Auth::guard('customer')->user();
-        
-        if ($appointment->customer_id !== $customer->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
+        if ($appointment->customer_id !== $customer->id) abort(403);
         $appointment->load(['branch']);
-        
         return view('customer.dashboard.show-appointment', compact('customer', 'appointment'));
     }
 
-    public function pay(\App\Models\Order $order)
+    public function pay(Order $order)
     {
         $customer = Auth::guard('customer')->user();
-        
-        if ($order->customer_id !== $customer->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        if ($order->payment_status === 'paid') {
-            return redirect()->route('customer.orders.show', $order)->with('error', 'This order is already paid.');
-        }
+        if ($order->customer_id !== $customer->id) abort(403);
+        if ($order->payment_status === 'paid') return redirect()->route('customer.orders.show', $order)->with('error', 'This order is already paid.');
 
         $paymentMethods = collect();
-        if (\App\Models\Setting::get('payment_bank_transfer_active', '1') == '1') {
-            $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
-        }
-        if (\App\Models\Setting::get('payment_online_active', '0') == '1') {
-            $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
-        }
-        if (\App\Models\Setting::get('payment_cod_active', '1') == '1') {
-            $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
-        }
+        if (Setting::get('payment_bank_transfer_active', '1') == '1') $paymentMethods->push((object)['id' => 'bank_transfer', 'name' => 'Bank Transfer', 'type' => 'bank_transfer']);
+        if (Setting::get('payment_online_active', '0') == '1') $paymentMethods->push((object)['id' => 'online_payment', 'name' => 'Online Payment', 'type' => 'card_transfer']);
+        if (Setting::get('payment_cod_active', '1') == '1') $paymentMethods->push((object)['id' => 'cash_on_delivery', 'name' => 'Cash on Delivery', 'type' => 'cash_on_delivery']);
 
         return view('customer.dashboard.pay', compact('customer', 'order', 'paymentMethods'));
     }
 
-    public function processPayment(Request $request, \App\Models\Order $order)
-    {
-        $customer = Auth::guard('customer')->user();
-        
-        if ($order->customer_id !== $customer->id) {
-            abort(403, 'Unauthorized action.');
-        }
-
-        $request->validate([
-            'payment_method' => 'required|string',
-            'receipt_image' => 'required_if:payment_method,Bank Transfer|image|mimes:jpeg,png,jpg|max:5120',
-        ]);
-
-        if ($request->payment_method === 'Bank Transfer' && $request->hasFile('receipt_image')) {
-            $file = $request->file('receipt_image');
-            $path = '';
-            
-            if (env('CLOUDINARY_URL')) {
-                try {
-                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
-                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'laundry_zone/receipts',
-                        'format' => 'webp',
-                        'quality' => 'auto'
-                    ]);
-                    $path = $result['secure_url'];
-                } catch (\Exception $e) {
-                    $path = $file->store('receipts', 'public');
-                }
-            } else {
-                $path = $file->store('receipts', 'public');
-            }
-
-            $order->update([
-                'receipt_path' => $path,
-                'payment_method' => 'bank_transfer',
-            ]);
-            return redirect()->route('customer.orders.show', $order)->with('success', 'Receipt uploaded successfully. We will verify and update your payment status.');
-        }
-
-        // Simulate successful card payment
-        if ($request->payment_method === 'Card') {
-            $order->update([
-                'payment_status' => 'paid',
-                'payment_method' => 'card',
-            ]);
-            return redirect()->route('customer.orders.show', $order)->with('success', 'Payment successful! Thank you.');
-        }
-
-        return back()->with('error', 'Invalid payment method selected.');
-    }
-
-    public function submitPayment(Request $request, \App\Models\Order $order)
+    public function submitPayment(Request $request, Order $order, ProcessCustomerPaymentAction $action)
     {
         $request->validate([
             'amount' => 'required|numeric|min:0.01',
@@ -230,78 +109,11 @@ class DashboardController extends Controller
             'receipt_image' => 'required_if:payment_method,bank,bank_transfer|image|mimes:jpeg,png,jpg|max:5120',
         ]);
 
-        // Prevent double submission
-        $recentPayment = \App\Models\PaymentTransaction::where('order_id', $order->id)
-            ->where('created_at', '>=', now()->subSeconds(30))
-            ->exists();
-            
-        if ($recentPayment) {
-            return redirect()->back()->with('success', 'Payment received. Please wait a moment before submitting again.');
+        if (PaymentTransaction::where('order_id', $order->id)->where('created_at', '>=', now()->subSeconds(30))->exists()) {
+            return redirect()->back()->with('success', 'Payment received. Please wait a moment.');
         }
 
-        $receiptPath = $order->receipt_path;
-        if ($request->hasFile('receipt_image')) {
-            $file = $request->file('receipt_image');
-            if (env('CLOUDINARY_URL')) {
-                try {
-                    $cloudinary = new \Cloudinary\Cloudinary(env('CLOUDINARY_URL'));
-                    $result = $cloudinary->uploadApi()->upload($file->getRealPath(), [
-                        'folder' => 'laundry_zone/receipts',
-                        'format' => 'webp',
-                        'quality' => 'auto'
-                    ]);
-                    $receiptPath = $result['secure_url'];
-                } catch (\Exception $e) {
-                    $receiptPath = $file->store('receipts', 'public');
-                }
-            } else {
-                $receiptPath = $file->store('receipts', 'public');
-            }
-        }
-
-        if ($request->payment_method === 'gateway') {
-            // Handle mock payment gateway success - set to pending for admin approval
-            $order->update([
-                'payment_method' => 'card',
-            ]);
-            
-            \App\Models\PaymentTransaction::create([
-                'order_id' => $order->id,
-                'amount' => $request->amount,
-                'payment_method' => 'card',
-                'status' => 'pending',
-                'transaction_id' => 'TXN-' . strtoupper(uniqid()),
-            ]);
-        } else {
-            // Bank transfer uploaded - mark payment_method as 'bank' so riders know not to collect COD
-            // But do NOT increment paid_amount until workshop admin approves the slip
-            $order->update([
-                'receipt_path' => $receiptPath,
-                'payment_method' => 'bank',
-            ]);
-
-            \App\Models\PaymentTransaction::create([
-                'order_id' => $order->id,
-                'amount' => $request->amount,
-                'payment_method' => 'bank',
-                'receipt_path' => $request->hasFile('receipt_image') ? $receiptPath : null,
-                'status' => 'pending', // Set to pending for approval
-            ]);
-        }
-        
-        // Reload order to get fresh paid_amount
-        $order->refresh();
-        
-        // If paid amount >= total, mark as paid. Else partial. (or unpaid if 0)
-        if ($order->paid_amount >= $order->total && $order->total > 0) {
-            $order->update(['payment_status' => 'paid']);
-        } elseif ($order->paid_amount > 0) {
-            $order->update(['payment_status' => 'partial']);
-        } else {
-            $order->update(['payment_status' => 'unpaid']);
-        }
-
+        $action->execute($order, (float) $request->amount, $request->payment_method, $request->file('receipt_image'));
         return redirect()->back()->with('success', 'Payment submitted successfully. Thank you!');
     }
 }
-

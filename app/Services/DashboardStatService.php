@@ -3,81 +3,65 @@
 namespace App\Services;
 
 use App\Models\Branch;
-use App\Models\Customer;
 use App\Models\Expense;
-use App\Models\InventoryItem;
 use App\Models\Order;
 use App\Models\PackagePayment;
 use App\Models\PaymentTransaction;
 use App\Models\RegisterSession;
-use Illuminate\Support\Collection;
+use App\Models\BankDeposit;
 
 class DashboardStatService
 {
-    /**
-     * Get shift metrics for an active session.
-     */
+    protected DashboardChartService $chartService;
+
+    public function __construct(?DashboardChartService $chartService = null)
+    {
+        $this->chartService = $chartService ?? new DashboardChartService();
+    }
+
     public function getShiftMetrics(RegisterSession $activeSession, int $branchId): array
     {
-        // Cash payments
         $cashCollected = PaymentTransaction::whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
             ->where('created_at', '>=', $activeSession->opened_at)
-            ->where('payment_method', 'cash')
-            ->sum('amount');
+            ->where('payment_method', 'cash')->sum('amount');
 
-        // Card payments
-        $cardTransactionsQuery = PaymentTransaction::whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
-            ->where('created_at', '>=', $activeSession->opened_at)
-            ->where('payment_method', 'card');
-        $cardPaymentsCount = $cardTransactionsQuery->count();
-        $cardPaymentsAmount = $cardTransactionsQuery->sum('amount');
+        $cardTx = PaymentTransaction::whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
+            ->where('created_at', '>=', $activeSession->opened_at)->where('payment_method', 'card');
+        $cardPaymentsCount = $cardTx->count();
+        $cardPaymentsAmount = $cardTx->sum('amount');
 
-        // Bank transfers
-        $bankTransactionsQuery = PaymentTransaction::whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
-            ->where('created_at', '>=', $activeSession->opened_at)
-            ->where('payment_method', 'bank');
-        $bankTransfersCount = $bankTransactionsQuery->count();
-        $bankTransfersAmount = $bankTransactionsQuery->sum('amount');
+        $bankTx = PaymentTransaction::whereHas('order', fn ($q) => $q->where('branch_id', $branchId))
+            ->where('created_at', '>=', $activeSession->opened_at)->where('payment_method', 'bank');
+        $bankTransfersCount = $bankTx->count();
+        $bankTransfersAmount = $bankTx->sum('amount');
 
-        // Direct payments (backward compatibility)
-        $directCashOrders = Order::where('branch_id', $branchId)
+        $cashCollected += Order::where('branch_id', $branchId)
             ->where('created_at', '>=', $activeSession->opened_at)
-            ->where('payment_method', 'cash')
-            ->whereDoesntHave('paymentTransactions')
-            ->sum('paid_amount');
-        $cashCollected += $directCashOrders;
+            ->where('payment_method', 'cash')->whereDoesntHave('paymentTransactions')->sum('paid_amount');
 
-        $directBankOrders = Order::where('branch_id', $branchId)
+        $bankTransfersAmount += Order::where('branch_id', $branchId)
             ->where('created_at', '>=', $activeSession->opened_at)
-            ->where('payment_method', 'bank')
-            ->whereDoesntHave('paymentTransactions')
-            ->sum('paid_amount');
-        $bankTransfersAmount += $directBankOrders;
+            ->where('payment_method', 'bank')->whereDoesntHave('paymentTransactions')->sum('paid_amount');
 
         $expensesLogged = Expense::where('branch_id', $branchId)
-            ->where('created_at', '>=', $activeSession->opened_at)
-            ->sum('amount');
+            ->where('created_at', '>=', $activeSession->opened_at)->sum('amount');
 
         $pendingPayments = Order::where('branch_id', $branchId)
             ->where('created_at', '>=', $activeSession->opened_at)
-            ->selectRaw('SUM(total - paid_amount) as pending_total')
-            ->value('pending_total') ?? 0;
+            ->selectRaw('SUM(total - paid_amount) as pending_total')->value('pending_total') ?? 0;
 
-        $bankDepositsLogged = \App\Models\BankDeposit::where('branch_id', $branchId)
-            ->where('created_at', '>=', $activeSession->opened_at)
-            ->sum('amount');
+        $bankDepositsLogged = BankDeposit::where('branch_id', $branchId)
+            ->where('created_at', '>=', $activeSession->opened_at)->sum('amount');
 
-        // Calculate delivery fee split and commissionable sales
         $salesMetrics = $this->calculateSalesMetrics($activeSession->opened_at, $branchId);
 
         $currentBalance = $activeSession->opening_cash + $cashCollected + $cardPaymentsAmount + $bankTransfersAmount - $expensesLogged - $bankDepositsLogged;
         $cashBalance = $activeSession->opening_cash + $cashCollected - $expensesLogged - $bankDepositsLogged;
-        
+
         $branchProfitPercent = $activeSession->branch->branch_profit_percentage ?? 0;
         $branchCommission = $salesMetrics['commissionableSales'] * ($branchProfitPercent / 100);
         $totalBranchRevenue = $branchCommission + $salesMetrics['totalDeliveryFees'];
         $netIncome = $totalBranchRevenue - $expensesLogged;
-        
         $totalPaymentsCollected = $cashCollected + $cardPaymentsAmount + $bankTransfersAmount;
 
         return [
@@ -101,9 +85,6 @@ class DashboardStatService
         ];
     }
 
-    /**
-     * Get overall metrics for today (used for Super Admin or when shift is closed).
-     */
     public function getTodayMetrics(?int $branchId): array
     {
         $startOfDay = now()->startOfDay();
@@ -114,7 +95,6 @@ class DashboardStatService
         }
 
         $cashCollected = (clone $txQuery)->where('payment_method', 'cash')->sum('amount');
-        
         $cardTx = (clone $txQuery)->where('payment_method', 'card');
         $cardPaymentsCount = $cardTx->count();
         $cardPaymentsAmount = $cardTx->sum('amount');
@@ -123,33 +103,37 @@ class DashboardStatService
         $bankTransfersCount = $bankTx->count();
         $bankTransfersAmount = $bankTx->sum('amount');
 
-        // Direct orders
-        $directCashQuery = Order::where('created_at', '>=', $startOfDay)
-            ->where('payment_method', 'cash')
-            ->whereDoesntHave('paymentTransactions');
-        if ($branchId) $directCashQuery->where('branch_id', $branchId);
+        $directCashQuery = Order::where('created_at', '>=', $startOfDay)->where('payment_method', 'cash')->whereDoesntHave('paymentTransactions');
+        if ($branchId) {
+            $directCashQuery->where('branch_id', $branchId);
+        }
         $cashCollected += $directCashQuery->sum('paid_amount');
 
-        $directBankQuery = Order::where('created_at', '>=', $startOfDay)
-            ->where('payment_method', 'bank')
-            ->whereDoesntHave('paymentTransactions');
-        if ($branchId) $directBankQuery->where('branch_id', $branchId);
+        $directBankQuery = Order::where('created_at', '>=', $startOfDay)->where('payment_method', 'bank')->whereDoesntHave('paymentTransactions');
+        if ($branchId) {
+            $directBankQuery->where('branch_id', $branchId);
+        }
         $bankTransfersAmount += $directBankQuery->sum('paid_amount');
 
         $expenseQuery = Expense::where('created_at', '>=', $startOfDay);
-        if ($branchId) $expenseQuery->where('branch_id', $branchId);
+        if ($branchId) {
+            $expenseQuery->where('branch_id', $branchId);
+        }
         $expensesLogged = $expenseQuery->sum('amount');
 
         $pendingQuery = Order::where('created_at', '>=', $startOfDay);
-        if ($branchId) $pendingQuery->where('branch_id', $branchId);
+        if ($branchId) {
+            $pendingQuery->where('branch_id', $branchId);
+        }
         $pendingPayments = $pendingQuery->selectRaw('SUM(total - paid_amount) as pending_total')->value('pending_total') ?? 0;
 
-        $depositQuery = \App\Models\BankDeposit::where('created_at', '>=', $startOfDay);
-        if ($branchId) $depositQuery->where('branch_id', $branchId);
+        $depositQuery = BankDeposit::where('created_at', '>=', $startOfDay);
+        if ($branchId) {
+            $depositQuery->where('branch_id', $branchId);
+        }
         $bankDepositsLogged = $depositQuery->sum('amount');
 
         $salesMetrics = $this->calculateSalesMetrics($startOfDay, $branchId);
-
         $branch = $branchId ? Branch::find($branchId) : null;
         $branchProfitPercent = $branch->branch_profit_percentage ?? 0;
         $branchCommission = $salesMetrics['commissionableSales'] * ($branchProfitPercent / 100);
@@ -211,62 +195,11 @@ class DashboardStatService
         ];
     }
 
-    /**
-     * Get chart data for the dashboard.
-     */
     public function getChartData(?int $branchId): array
     {
-        // Today: hourly breakdown (last 8 hours in 3h blocks)
-        $todayLabels = [];
-        $todayPending = [];
-        $todayDelivered = [];
-        for ($h = 0; $h < 8; $h++) {
-            $start = now()->startOfDay()->addHours($h * 3);
-            $end = $start->copy()->addHours(3);
-            $todayLabels[] = $start->format('H:i');
-            $q = Order::whereBetween('created_at', [$start, $end]);
-            if ($branchId) $q->where('branch_id', $branchId);
-            $todayPending[] = (clone $q)->where('status', 'received')->count();
-            $todayDelivered[] = (clone $q)->where('status', 'delivered')->count();
-        }
-
-        // Weekly: last 7 days
-        $weeklyLabels = [];
-        $weeklyPending = [];
-        $weeklyDelivered = [];
-        for ($d = 6; $d >= 0; $d--) {
-            $day = now()->subDays($d);
-            $weeklyLabels[] = $day->format('D');
-            $q = Order::whereDate('created_at', $day->toDateString());
-            if ($branchId) $q->where('branch_id', $branchId);
-            $weeklyPending[] = (clone $q)->whereNotIn('status', ['delivered', 'cancelled'])->count();
-            $weeklyDelivered[] = (clone $q)->where('status', 'delivered')->count();
-        }
-
-        // Monthly: last 4 weeks
-        $monthlyLabels = [];
-        $monthlyPending = [];
-        $monthlyDelivered = [];
-        for ($w = 3; $w >= 0; $w--) {
-            $start = now()->startOfWeek()->subWeeks($w);
-            $end = $start->copy()->endOfWeek();
-            $monthlyLabels[] = 'Wk '.$start->format('d/m');
-            $q = Order::whereBetween('created_at', [$start, $end]);
-            if ($branchId) $q->where('branch_id', $branchId);
-            $monthlyPending[] = (clone $q)->whereNotIn('status', ['delivered', 'cancelled'])->count();
-            $monthlyDelivered[] = (clone $q)->where('status', 'delivered')->count();
-        }
-
-        return [
-            'today' => ['labels' => $todayLabels, 'pending' => $todayPending, 'delivered' => $todayDelivered],
-            'weekly' => ['labels' => $weeklyLabels, 'pending' => $weeklyPending, 'delivered' => $weeklyDelivered],
-            'monthly' => ['labels' => $monthlyLabels, 'pending' => $monthlyPending, 'delivered' => $monthlyDelivered],
-        ];
+        return $this->chartService->getChartData($branchId);
     }
 
-    /**
-     * Get empty metrics when there is no active shift.
-     */
     public function getEmptyMetrics(): array
     {
         return [

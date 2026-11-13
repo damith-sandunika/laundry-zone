@@ -2,277 +2,73 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\NotificationLog;
 use App\Models\Order;
-
-// Valid roles: super_admin, branch_admin, workshop_admin, staff, rider
+use App\Models\PaymentSlip;
+use App\Services\NotificationAlertService;
+use Illuminate\Http\Request;
 
 class NotificationController extends Controller
 {
+    protected NotificationAlertService $alertService;
+
+    public function __construct(NotificationAlertService $alertService)
+    {
+        $this->alertService = $alertService;
+    }
+
     public function check()
     {
         $user = auth()->user();
-        if (!$user) {
-            return response()->json(['count' => 0, 'alerts' => []]);
-        }
+        if (!$user) return response()->json(['count' => 0, 'alerts' => []]);
 
         $alerts = [];
         $totalCount = 0;
         $isSuper = in_array($user->role, ['owner', 'super_admin']);
 
-        // ── WORKSHOP ADMIN ALERTS ──────────────────────────────────────────────
+        // 1. Workshop Alerts
         if (in_array($user->role, ['workshop_admin', 'super_admin', 'owner'])) {
-
-            // 1. New Customer Online Orders (payment not yet approved)
-            $newOrdersQuery = Order::where('is_online_booking', true)
-                ->where('status', 'received')
-                ->where('payment_approved', false);
-            if (!$isSuper) {
-                $newOrdersQuery->where('workshop_id', $user->branch_id);
-            }
-            $newOrders = $newOrdersQuery->limit(50)->get()->map(function($o) {
-                return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
-            })->toArray();
-            if (count($newOrders) > 0) {
-                $alerts[] = [
-                    'id'            => 'new_customer_orders',
-                    'label'         => 'New Customer Online Orders Received',
-                    'count'         => count($newOrders),
-                    'order_numbers' => $newOrders,
-                    'icon'          => 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z',
-                    'color'         => 'red',
-                    'url'           => '#',
-                ];
-                $totalCount += count($newOrders);
-            }
-
-            // 2. Ready to Start Work (payment approved)
-            $readyToStartQuery = Order::where('is_online_booking', true)
-                ->where('status', 'received')
-                ->where(function ($query) {
-                    $query->where('payment_approved', true)
-                          ->orWhereRaw('paid_amount >= requested_advance AND requested_advance > 0');
-                });
-            if (!$isSuper) {
-                $readyToStartQuery->where('workshop_id', $user->branch_id);
-            }
-            $readyToStart = $readyToStartQuery->limit(50)->get()->map(function($o) {
-                return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
-            })->toArray();
-            if (count($readyToStart) > 0) {
-                $alerts[] = [
-                    'id'            => 'ready_to_start',
-                    'label'         => 'Customer Payments Received - Ready to Start Work',
-                    'count'         => count($readyToStart),
-                    'order_numbers' => $readyToStart,
-                    'icon'          => 'M13 10V3L4 14h7v7l9-11h-7z',
-                    'color'         => 'green',
-                    'url'           => '#',
-                ];
-                $totalCount += count($readyToStart);
-            }
-
-            // 3. Incoming Dispatch (Branch → Workshop)
-            $incomingDispatchQuery = Order::where('status', 'dispatched_to_workshop');
-            if (!$isSuper) {
-                $incomingDispatchQuery->where('workshop_id', $user->branch_id);
-            }
-            $incomingDispatch = $incomingDispatchQuery->limit(50)->get()->map(function($o) {
-                return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
-            })->toArray();
-            if (count($incomingDispatch) > 0) {
-                $alerts[] = [
-                    'id'            => 'incoming_dispatch',
-                    'label'         => 'Order Transfer from Branch to Workshop',
-                    'count'         => count($incomingDispatch),
-                    'order_numbers' => $incomingDispatch,
-                    'icon'          => 'M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4',
-                    'color'         => 'purple',
-                    'url'           => '#',
-                ];
-                $totalCount += count($incomingDispatch);
-            }
+            $ws = $this->alertService->getWorkshopAlerts($user, $isSuper);
+            $alerts = array_merge($alerts, $ws['alerts']);
+            $totalCount += $ws['count'];
         }
 
-        // ── BRANCH ADMIN + STAFF + WORKSHOP ADMIN + SUPER ADMIN ALERTS ────────
-        if (in_array($user->role, ['branch_admin', 'staff', 'workshop_admin', 'super_admin', 'owner'])) {
-
-            // 4. New Customer Pickup Requests
-            $pendingPickupsQuery = \App\Models\DeliveryAppointment::with(['customer', 'order'])->where('status', 'pending');
-            if (!$isSuper) {
-                $pendingPickupsQuery->where('branch_id', $user->branch_id);
-            }
-            $pendingPickups = $pendingPickupsQuery->limit(50)->get()->map(function ($p) {
-                $numberStr = $p->order_id && $p->order ? $p->order->order_number : ('Pickup: ' . ($p->customer->name ?? $p->contact_phone ?? 'Unknown'));
-                $url = $p->order_id && $p->order ? route('orders.show', $p->order->order_number) : route('delivery.index');
-                return ['number' => $numberStr, 'url' => $url];
-            })->toArray();
-            if (count($pendingPickups) > 0) {
-                $alerts[] = [
-                    'id'            => 'new_pickup_requests',
-                    'label'         => 'New Customer Pickup Requests',
-                    'count'         => count($pendingPickups),
-                    'order_numbers' => $pendingPickups,
-                    'icon'          => 'M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0zM13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0',
-                    'color'         => 'red',
-                    'url'           => '#',
-                ];
-                $totalCount += count($pendingPickups);
-            }
-
-            // 5. Payment Slips Pending Approval (per individual transaction)
-            $pendingPaymentsQuery = \App\Models\PaymentTransaction::with('order')
-                ->where('status', 'pending')
-                ->whereHas('order', function($q) {
-                    $q->whereNotIn('status', ['delivered', 'cancelled']);
-                });
-            if (!$isSuper) {
-                $pendingPaymentsQuery->whereHas('order', function($q) use ($user) {
-                    $q->where('branch_id', $user->branch_id)
-                      ->orWhere('workshop_id', $user->branch_id);
-                });
-            }
-            $pendingPayments = $pendingPaymentsQuery->limit(50)->get()->map(function($tx) {
-                $orderNum = $tx->order->order_number ?? 'Unknown';
-                $method = ucfirst(str_replace('_', ' ', $tx->payment_method ?? 'Slip'));
-                $amount = 'Rs.' . number_format($tx->amount ?? 0, 2);
-                return [
-                    'id'     => 'tx_' . $tx->id,
-                    'number' => $orderNum . ' - ' . $method . ' ' . $amount,
-                    'url'    => $tx->order ? route('orders.show', $tx->order->order_number) : '#',
-                ];
-            })->toArray();
-            if (count($pendingPayments) > 0) {
-                $alerts[] = [
-                    'id'            => 'pending_payments',
-                    'label'         => 'Payment Slips Pending Approval',
-                    'count'         => count($pendingPayments),
-                    'order_numbers' => $pendingPayments,
-                    'icon'          => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
-                    'color'         => 'blue',
-                    'url'           => '#',
-                ];
-                $totalCount += count($pendingPayments);
-            }
-
-            // 6. Order Correction Requests (branch_admin + workshop_admin only)
-            if (in_array($user->role, ['branch_admin', 'workshop_admin', 'super_admin', 'owner'])) {
-                $pendingCorrectionsQuery = \App\Models\OrderCorrectionRequest::with('order')
-                    ->where('status', 'pending')
-                    ->has('order');
-                if (!$isSuper) {
-                    $pendingCorrectionsQuery->whereHas('order', function ($q) use ($user) {
-                        $q->where('branch_id', $user->branch_id)
-                          ->orWhere('workshop_id', $user->branch_id);
-                    });
-                }
-                $pendingCorrections = $pendingCorrectionsQuery->limit(50)->get()->map(function($cr) {
-                    return [
-                        'id'     => 'cr_' . $cr->id,
-                        'number' => ($cr->order->order_number ?? 'Unknown') . ' (' . str_replace('_', ' ', $cr->type) . ')',
-                        'url'    => $cr->order ? route('orders.show', $cr->order->order_number) : '#'
-                    ];
-                })->toArray();
-                if (count($pendingCorrections) > 0) {
-                    $alerts[] = [
-                        'id'            => 'pending_corrections',
-                        'label'         => 'Order Correction Requests',
-                        'count'         => count($pendingCorrections),
-                        'order_numbers' => $pendingCorrections,
-                        'icon'          => 'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z',
-                        'color'         => 'orange',
-                        'url'           => '#',
-                    ];
-                    $totalCount += count($pendingCorrections);
-                }
-            }
-
-            // 7. Low Stock Inventory (workshop_admin + super_admin + owner only — NOT branch_admin/staff)
-            if (in_array($user->role, ['workshop_admin', 'super_admin', 'owner'])) {
-                $lowStockQuery = \App\Models\InventoryItem::whereColumn('current_stock', '<=', 'low_stock_threshold');
-                if (!$isSuper) {
-                    $lowStockQuery->where('branch_id', $user->branch_id);
-                }
-                $lowStockItems = $lowStockQuery->limit(50)->get()->map(function($i) {
-                    return [
-                        'number' => $i->name . ' (' . $i->current_stock . '/' . $i->low_stock_threshold . ' ' . $i->unit . ')',
-                        'url'    => route('inventory.index')
-                    ];
-                })->toArray();
-                if (count($lowStockItems) > 0) {
-                    $alerts[] = [
-                        'id'            => 'low_stock',
-                        'label'         => 'Low Stock Warnings',
-                        'count'         => count($lowStockItems),
-                        'order_numbers' => $lowStockItems,
-                        'icon'          => 'M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z',
-                        'color'         => 'orange',
-                        'url'           => route('inventory.index'),
-                    ];
-                    $totalCount += count($lowStockItems);
-                }
-            }
+        // 2. Branch Alerts
+        if (in_array($user->role, ['branch_admin', 'super_admin', 'owner'])) {
+            $br = $this->alertService->getBranchAlerts($user, $isSuper);
+            $alerts = array_merge($alerts, $br['alerts']);
+            $totalCount += $br['count'];
         }
 
-        // ── BRANCH ADMIN + STAFF + OWNER: Workshop → Branch Return ────────────
-        if (in_array($user->role, ['branch_admin', 'staff', 'super_admin', 'owner'])) {
-            // 8. Incoming Return (Workshop → Branch)
-            $incomingReturnQuery = Order::where('status', 'returned_from_workshop');
-            if (!$isSuper) {
-                $incomingReturnQuery->where('branch_id', $user->branch_id);
-            }
-            $incomingReturn = $incomingReturnQuery->limit(50)->get()->map(function($o) {
-                return ['number' => $o->order_number, 'url' => route('orders.show', $o->order_number)];
-            })->toArray();
-            if (count($incomingReturn) > 0) {
+        // 3. Payment Slips (Super Admin / Accountant)
+        if ($isSuper || $user->role === 'accountant') {
+            $pendingSlips = PaymentSlip::where('status', 'pending')->count();
+            if ($pendingSlips > 0) {
                 $alerts[] = [
-                    'id'            => 'incoming_return',
-                    'label'         => 'Order Transfer from Workshop to Branch',
-                    'count'         => count($incomingReturn),
-                    'order_numbers' => $incomingReturn,
-                    'icon'          => 'M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4',
-                    'color'         => 'amber',
-                    'url'           => '#',
+                    'id' => 'pending_slips', 'label' => 'Payment Slips Awaiting Approval',
+                    'count' => $pendingSlips, 'icon' => 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z',
+                    'color' => 'amber', 'url' => route('orders.index', ['tab' => 'slips']),
                 ];
-                $totalCount += count($incomingReturn);
-            }
-        }
-
-        // ── RIDER ALERTS ───────────────────────────────────────────────────────
-        if ($user->role === 'rider') {
-            // 9. New Rider Tasks
-            $newTasks = \App\Models\DeliveryTask::with('order')
-                ->where('rider_id', $user->id)
-                ->where('status', 'assigned')
-                ->limit(50)->get()->map(function ($t) {
-                    $numberStr = $t->order_id && $t->order
-                        ? $t->order->order_number . ' (' . ucfirst($t->task_type) . ')'
-                        : ucfirst($t->task_type) . ' - ' . substr($t->pickup_location ?? 'Unknown', 0, 15) . '...';
-                    $url = $t->order_id && $t->order ? route('orders.show', $t->order->order_number) : '#';
-                    return ['number' => $numberStr, 'url' => $url];
-                })->toArray();
-            if (count($newTasks) > 0) {
-                $alerts[] = [
-                    'id'            => 'new_rider_tasks',
-                    'label'         => 'New Delivery/Pickup Tasks Assigned',
-                    'count'         => count($newTasks),
-                    'order_numbers' => $newTasks,
-                    'icon'          => 'M13 10V3L4 14h7v7l9-11h-7z',
-                    'color'         => 'indigo',
-                    'url'           => '#',
-                ];
-                $totalCount += count($newTasks);
+                $totalCount += $pendingSlips;
             }
         }
 
         return response()->json([
-            'count'  => $totalCount,
+            'count' => $totalCount,
             'alerts' => $alerts,
         ]);
     }
 
     public function markAsRead(Request $request)
     {
+        $request->validate(['alert_id' => 'required|string']);
+        $user = auth()->user();
+
+        NotificationLog::updateOrCreate(
+            ['user_id' => $user->id, 'alert_id' => $request->alert_id],
+            ['read_at' => now()]
+        );
+
         return response()->json(['success' => true]);
     }
 }

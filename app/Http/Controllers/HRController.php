@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Attendance;
 use App\Models\Leave;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -13,16 +14,16 @@ class HRController extends Controller
     public function storeAttendance(Request $request, User $staff)
     {
         $request->validate([
-            'date' => 'required|date',
+            'date'     => 'required|date',
             'clock_in' => 'nullable|date_format:H:i',
-            'status' => 'required|in:present,half_day,late,leave,paid_leave',
+            'status'   => 'required|in:present,half_day,late,leave,paid_leave',
         ]);
 
         $staff->attendances()->updateOrCreate(
             ['date' => $request->date],
             [
                 'clock_in' => $request->clock_in ?? now()->format('H:i:s'),
-                'status' => $request->status,
+                'status'   => $request->status,
             ]
         );
 
@@ -31,30 +32,21 @@ class HRController extends Controller
 
     public function updateAttendance(Request $request, Attendance $attendance)
     {
-        $request->validate([
-            'clock_out' => 'required|date_format:H:i',
-        ]);
+        $request->validate(['clock_out' => 'required|date_format:H:i']);
 
         $otMinutes = 0;
-        
-        // Calculate OT minutes if the attendance has a clock_in and user has standard_working_hours
         if ($attendance->clock_in && $attendance->user && $attendance->user->standard_working_hours > 0) {
-            $clockIn = \Carbon\Carbon::parse($attendance->clock_in);
-            $clockOut = \Carbon\Carbon::parse($request->clock_out);
-            
-            // Calculate total minutes worked
+            $clockIn = Carbon::parse($attendance->clock_in);
+            $clockOut = Carbon::parse($request->clock_out);
             $workedMinutes = $clockIn->diffInMinutes($clockOut);
-            
-            // Standard minutes
             $standardMinutes = $attendance->user->standard_working_hours * 60;
-            
             if ($workedMinutes > $standardMinutes) {
                 $otMinutes = $workedMinutes - $standardMinutes;
             }
         }
 
         $attendance->update([
-            'clock_out' => $request->clock_out,
+            'clock_out'  => $request->clock_out,
             'ot_minutes' => $otMinutes,
         ]);
 
@@ -63,44 +55,31 @@ class HRController extends Controller
 
     public function bulkUpdateAttendance(Request $request, User $staff)
     {
-        // Must be admin or HR to bulk update
         $user = auth()->user();
         if (!in_array($user->role, ['super_admin', 'branch_admin', 'workshop_admin', 'hr_manager', 'accountant_and_hr_manager'])) {
             abort(403, 'Unauthorized action.');
         }
 
-        $request->validate([
-            'attendance_data' => 'required|string',
-        ]);
-
+        $request->validate(['attendance_data' => 'required|string']);
         $data = json_decode($request->attendance_data, true);
-        if (!is_array($data)) {
-            return back()->with('error', 'Invalid attendance data format.');
-        }
+        if (!is_array($data)) return back()->with('error', 'Invalid attendance data format.');
 
         DB::transaction(function () use ($data, $staff) {
             foreach ($data as $dateStr => $dayInfo) {
                 $status = $dayInfo['status'] ?? null;
-                
-                // If status is empty, it means the user cleared it from the UI. Remove the record if it exists.
                 if (!$status) {
                     $staff->attendances()->where('date', $dateStr)->delete();
                     continue;
                 }
 
-                $clockIn = !empty($dayInfo['clock_in']) ? $dayInfo['clock_in'] : null;
-                $clockOut = !empty($dayInfo['clock_out']) ? $dayInfo['clock_out'] : null;
-                $normalMinutes = $dayInfo['normal_minutes'] ?? 0;
-                $otMinutes = $dayInfo['ot_minutes'] ?? 0;
-
                 $staff->attendances()->updateOrCreate(
                     ['date' => $dateStr],
                     [
-                        'status' => $status,
-                        'clock_in' => $clockIn,
-                        'clock_out' => $clockOut,
-                        'normal_minutes' => $normalMinutes,
-                        'ot_minutes' => $otMinutes,
+                        'status'         => $status,
+                        'clock_in'       => !empty($dayInfo['clock_in']) ? $dayInfo['clock_in'] : null,
+                        'clock_out'      => !empty($dayInfo['clock_out']) ? $dayInfo['clock_out'] : null,
+                        'normal_minutes' => $dayInfo['normal_minutes'] ?? 0,
+                        'ot_minutes'     => $dayInfo['ot_minutes'] ?? 0,
                     ]
                 );
             }
@@ -113,25 +92,24 @@ class HRController extends Controller
     {
         $request->validate([
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
-            'type' => 'required|in:casual,sick',
-            'reason' => 'required|string',
+            'end_date'   => 'required|date|after_or_equal:start_date',
+            'type'       => 'required|in:casual,sick',
+            'reason'     => 'required|string',
         ]);
 
         $status = auth()->user()->hasAdminAccess() ? 'approved' : 'pending';
 
         DB::transaction(function () use ($staff, $request, $status) {
-            $leave = $staff->leaves()->create([
-                'start_date' => $request->start_date,
-                'end_date' => $request->end_date,
-                'type' => $request->type,
-                'reason' => $request->reason,
-                'status' => $status,
+            $staff->leaves()->create([
+                'start_date'  => $request->start_date,
+                'end_date'    => $request->end_date,
+                'type'        => $request->type,
+                'reason'      => $request->reason,
+                'status'      => $status,
                 'approved_by' => $status === 'approved' ? auth()->id() : null,
             ]);
 
             if ($status === 'approved') {
-                // Create an 'absent' attendance record for today so the button goes away in the index
                 $staff->attendances()->updateOrCreate(
                     ['date' => $request->start_date],
                     ['status' => 'absent']
@@ -144,18 +122,12 @@ class HRController extends Controller
 
     public function updateLeave(Request $request, Leave $leave)
     {
-        // Only admins can approve/reject
-        if (! auth()->user()->hasAdminAccess()) {
-            abort(403);
-        }
-
-        $request->validate([
-            'status' => 'required|in:approved,rejected',
-        ]);
+        if (!auth()->user()->hasAdminAccess()) abort(403);
+        $request->validate(['status' => 'required|in:approved,rejected']);
 
         DB::transaction(function () use ($leave, $request) {
             $leave->update([
-                'status' => $request->status,
+                'status'      => $request->status,
                 'approved_by' => auth()->id(),
             ]);
 
@@ -169,124 +141,4 @@ class HRController extends Controller
 
         return back()->with('success', 'Leave status updated.');
     }
-
-    public function storeAdvance(Request $request, User $staff)
-    {
-        $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'date' => 'required|date',
-            'reason' => 'nullable|string',
-        ]);
-
-        $month = \Carbon\Carbon::parse($request->date)->month;
-        $year = \Carbon\Carbon::parse($request->date)->year;
-
-        $payroll = \App\Services\PayrollCalculator::calculate($staff, $month, $year);
-
-        if ($request->amount > $payroll->net_salary) {
-            return back()->with('error', 'Advance amount cannot exceed the currently available payable balance (Rs. ' . number_format($payroll->net_salary, 2) . ').');
-        }
-
-        $advance = $staff->salaryAdvances()->create([
-            'amount' => $request->amount,
-            'date' => $request->date,
-            'reason' => $request->reason,
-            'created_by' => auth()->id(),
-        ]);
-
-        \App\Models\SalaryAuditLog::create([
-            'auditable_type' => \App\Models\SalaryAdvance::class,
-            'auditable_id' => $advance->id,
-            'action' => 'created',
-            'new_amount' => $request->amount,
-            'reason' => $request->reason ?: 'Salary advance requested',
-            'user_id' => auth()->id(),
-        ]);
-
-        return back()->with('success', 'Salary advance recorded.');
-    }
-
-    public function updateAdvance(Request $request, \App\Models\SalaryAdvance $advance)
-    {
-        $request->validate([
-            'amount' => 'required|numeric|min:1',
-            'date' => 'required|date',
-            'reason' => 'nullable|string',
-            'edit_reason' => 'required|string|min:3',
-        ]);
-
-        $oldAmount = $advance->amount;
-
-        $advance->update([
-            'amount' => $request->amount,
-            'previous_amount' => $oldAmount,
-            'date' => $request->date,
-            'reason' => $request->filled('reason') ? $request->reason : $advance->reason,
-            'edit_reason' => $request->edit_reason,
-            'updated_by' => auth()->id(),
-        ]);
-
-        \App\Models\SalaryAuditLog::create([
-            'auditable_type' => \App\Models\SalaryAdvance::class,
-            'auditable_id' => $advance->id,
-            'action' => 'edited',
-            'old_amount' => $oldAmount,
-            'new_amount' => $request->amount,
-            'reason' => $request->edit_reason,
-            'user_id' => auth()->id(),
-        ]);
-
-        return back()->with('success', 'Salary advance updated successfully.');
-    }
-
-    public function destroyAdvance(Request $request, \App\Models\SalaryAdvance $advance)
-    {
-        $request->validate([
-            'delete_reason' => 'required|string|min:3',
-        ]);
-
-        $advance->update([
-            'delete_reason' => $request->delete_reason,
-            'deleted_by' => auth()->id(),
-        ]);
-        $advance->delete();
-
-        \App\Models\SalaryAuditLog::create([
-            'auditable_type' => \App\Models\SalaryAdvance::class,
-            'auditable_id' => $advance->id,
-            'action' => 'deleted',
-            'old_amount' => $advance->amount,
-            'reason' => $request->delete_reason,
-            'user_id' => auth()->id(),
-        ]);
-
-        return back()->with('success', 'Salary advance deleted successfully.');
-    }
-
-    public function storeAdjustment(Request $request, User $staff)
-    {
-        $request->validate([
-            'type' => 'required|in:allowance,deduction',
-            'amount' => 'required|numeric|min:0.01',
-            'date' => 'required|date',
-            'reason' => 'nullable|string',
-        ]);
-
-        $staff->salaryAdjustments()->create([
-            'type' => $request->type,
-            'amount' => $request->amount,
-            'date' => $request->date,
-            'reason' => $request->reason,
-            'created_by' => auth()->id(),
-        ]);
-
-        return back()->with('success', ucfirst($request->type) . ' recorded successfully.');
-    }
-
-    public function destroyAdjustment(\App\Models\SalaryAdjustment $adjustment)
-    {
-        $adjustment->delete();
-        return back()->with('success', 'Adjustment removed successfully.');
-    }
 }
-

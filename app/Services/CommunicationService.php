@@ -4,179 +4,58 @@ namespace App\Services;
 
 use App\Models\Setting;
 use App\Models\SmsTemplate;
+use App\Models\EmailTemplate;
 use App\Models\SmsLog;
 use App\Models\EmailLog;
 use App\Models\Order;
-use Illuminate\Support\Facades\Mail;
+use App\Models\User;
+use App\Jobs\ProcessSms;
+use App\Jobs\ProcessEmail;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class CommunicationService
 {
-    // ─── Hardcoded Email Subjects & HTML Bodies ─────────────────────────────
-
-    private function getEmailContent(string $type, array $data): array
-    {
-        $name    = $data['customer_name'];
-        $orderId = $data['order_id'];
-        $total   = $data['total'];
-        $due     = $data['amount_due'];
-        $payment = $data['payment_status'];
-
-        $templates = [
-            'pos_walkin_placed' => [
-                'subject' => "Walk-in Order Placed",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been placed successfully. We will let you know once it is completed. - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
-                ",
-            ],
-            'pos_walkin_ready' => [
-                'subject' => "Walk-in Order Ready",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Great news! Your walk-in order <strong>#{$orderId}</strong> is washed and ready to be picked up. Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
-                ",
-            ],
-            'pos_walkin_completed' => [
-                'subject' => "Walk-in Order Completed",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is fully completed and settled. Thank you for your business! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
-                    </table>
-                ",
-            ],
-            'collection_order_placed' => [
-                'subject' => "Collection Order Placed",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been placed at our collection branch and will be sent for processing.</p>
-                ",
-            ],
-            'collection_order_ready' => [
-                'subject' => "Collection Order Ready for Pickup/Delivery",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Great news! Your order <strong>#{$orderId}</strong> is completed and ready for pickup or delivery.</p>
-                ",
-            ],
-            'collection_order_completed' => [
-                'subject' => "Collection Order Completed",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> is completed and settled. Thank you for choosing " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "!</p>
-                ",
-            ],
-            'delivery_order_confirmed' => [
-                'subject' => "Delivery Order Confirmed",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> has been approved and confirmed. We will process it shortly.</p>
-                ",
-            ],
-            'delivery_order_cancelled' => [
-                'subject' => "Delivery Order Cancelled",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Unfortunately, your delivery order <strong>#{$orderId}</strong> has been cancelled. Please contact us for more information.</p>
-                ",
-            ],
-            'delivery_order_ready' => [
-                'subject' => "Delivery Order Ready for Dispatch",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> is washed and ready to be dispatched to you!</p>
-                ",
-            ],
-            'delivery_completed' => [
-                'subject' => "Delivery Order Completed",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your delivery order <strong>#{$orderId}</strong> has been successfully delivered. Thank you for using " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "!</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
-                    </table>
-                ",
-            ],
-            'bill_finalized' => [
-                'subject' => "Payment Request for Order #{$orderId}",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>The bill for your order <strong>#{$orderId}</strong> has been finalized. The total amount is <strong>{$total}</strong> and the amount due is <strong>{$due}</strong>. Please arrange the payment. Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
-                ",
-            ],
-            'payment_received' => [
-                'subject' => "Payment Received for Order #{$orderId}",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>We have successfully received and approved a payment for your order <strong>#{$orderId}</strong>.</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Order Number</td><td style='padding:8px 12px;background:#f8fafc;'>#{$orderId}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Total Amount</td><td style='padding:8px 12px;background:#f8fafc;'>{$total}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Payment Status</td><td style='padding:8px 12px;background:#f8fafc;'>{$payment}</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Amount Due</td><td style='padding:8px 12px;background:#f8fafc;'>{$due}</td></tr>
-                    </table>
-                    <p style='margin:16px 0 0;'>Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
-                ",
-            ],
-            'rider_assigned' => [
-                'subject' => "Delivery Rider Assigned for Order #{$orderId}",
-                'body'    => "
-                    <p style='font-size:16px;margin:0 0 12px;'>Hi <strong>{$name}</strong>,</p>
-                    <p style='margin:0 0 16px;'>Your order <strong>#{$orderId}</strong> has been assigned to our delivery rider.</p>
-                    <table style='width:100%;border-collapse:collapse;margin:16px 0;'>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Rider Name</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_name'] ?? '') . "</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Rider Phone</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_phone'] ?? '') . "</td></tr>
-                        <tr><td style='padding:8px 12px;background:#f1f5f9;font-weight:700;'>Vehicle Number</td><td style='padding:8px 12px;background:#f8fafc;'>" . ($data['rider_vehicle_number'] ?? 'N/A') . "</td></tr>
-                    </table>
-                    <p style='margin:16px 0 0;'>Thank you! - " . \App\Models\Setting::get('company_name', 'Laundry Zone') . "</p>
-                ",
-            ]
-        ];
-
-        return $templates[$type] ?? ['subject' => "Order #{$orderId} Update", 'body' => "<p>Hi {$name}, there is an update on order #{$orderId}.</p>"];
-    }
-
     public function sendPosWalkinPlaced(Order $order) { $this->dispatch('pos_walkin_placed', $order); }
     public function sendPosWalkinReady(Order $order) { $this->dispatch('pos_walkin_ready', $order); }
     public function sendPosWalkinCompleted(Order $order) { $this->dispatch('pos_walkin_completed', $order); }
-    
     public function sendCollectionOrderPlaced(Order $order) { $this->dispatch('collection_order_placed', $order); }
-    public function sendCollectionOrderReady(Order $order)  { $this->dispatch('collection_order_ready', $order); }
+    public function sendCollectionOrderReady(Order $order) { $this->dispatch('collection_order_ready', $order); }
     public function sendCollectionOrderCompleted(Order $order) { $this->dispatch('collection_order_completed', $order); }
-    
     public function sendDeliveryOrderConfirmed(Order $order) { $this->dispatch('delivery_order_confirmed', $order); }
     public function sendDeliveryOrderCancelled(Order $order) { $this->dispatch('delivery_order_cancelled', $order); }
     public function sendDeliveryOrderReady(Order $order) { $this->dispatch('delivery_order_ready', $order); }
-    public function sendDeliveryCompleted(Order $order)  { $this->dispatch('delivery_completed', $order); }
+    public function sendDeliveryCompleted(Order $order) { $this->dispatch('delivery_completed', $order); }
 
-    public function sendFinalizedBill(Order $order, $requestedAmount = null, $paymentLink = null) { 
-        $this->dispatch('bill_finalized', $order, ['requested_amount' => $requestedAmount, 'payment_link' => $paymentLink]); 
+    public function sendFinalizedBill(Order $order, $requestedAmount = null, $paymentLink = null)
+    {
+        $this->dispatch('bill_finalized', $order, ['requested_amount' => $requestedAmount, 'payment_link' => $paymentLink]);
     }
-    public function sendPaymentReceived(Order $order) { $this->dispatch('payment_received', $order); }
-    public function sendRiderAssigned(Order $order, \App\Models\User $rider) { $this->dispatch('rider_assigned', $order, ['rider' => $rider]); }
 
-    // ─── Master Dispatch ─────────────────────────────────────────────────────
+    public function sendPaymentReceived(Order $order)
+    {
+        $this->dispatch('payment_received', $order);
+    }
+
+    public function sendRiderAssigned(Order $order, User $rider)
+    {
+        $this->dispatch('rider_assigned', $order, ['rider' => $rider]);
+    }
 
     protected function dispatch(string $type, Order $order, array $extraData = [])
     {
-        // Cache settings for 5 minutes — prevents 2 DB queries per notification dispatch
-        $settings = \Illuminate\Support\Facades\Cache::remember('global_comm_settings', 300, function () {
-            return Setting::whereIn('key', ['is_sms_enabled', 'is_email_enabled'])
-                ->pluck('value', 'key');
+        $settings = Cache::remember('global_comm_settings', 300, function () {
+            return Setting::whereIn('key', ['is_sms_enabled', 'is_email_enabled'])->pluck('value', 'key');
         });
 
-        $isSmsEnabled      = ($settings->get('is_sms_enabled') === 'true');
-        $isEmailEnabled    = ($settings->get('is_email_enabled') === 'true');
+        $isSmsEnabled = ($settings->get('is_sms_enabled') === 'true');
+        $isEmailEnabled = ($settings->get('is_email_enabled') === 'true');
 
         $customer = $order->customer;
-        if (!$customer) return;
+        if (!$customer) {
+            return;
+        }
 
         $paymentStatusText = 'Pending';
         if ($order->paid_amount >= $order->total && $order->total > 0) {
@@ -188,44 +67,41 @@ class CommunicationService
         }
 
         $title = $customer->title ? trim($customer->title) . ' ' : '';
-        
         $requestedAmountRaw = $extraData['requested_amount'] ?? ($order->requested_advance > 0 ? $order->requested_advance : max(0, $order->total - $order->paid_amount));
-        
+
         $rider = $extraData['rider'] ?? null;
-        $riderName = $rider ? $rider->name : '';
-        $riderPhone = $rider ? $rider->phone : '';
         $riderVehicle = ($rider && $rider->profile && !empty($rider->profile->vehicle_number)) ? $rider->profile->vehicle_number : 'N/A';
 
         $data = [
-            'customer_name'  => trim($title . $customer->name),
-            'order_id'       => $order->order_number,
-            'total'          => 'Rs.' . number_format($order->total, 2),
-            'amount_due'     => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
+            'customer_name' => trim($title . $customer->name),
+            'order_id' => $order->order_number,
+            'total' => 'Rs.' . number_format($order->total, 2),
+            'amount_due' => 'Rs.' . number_format(max(0, $order->total - $order->paid_amount), 2),
             'payment_status' => $paymentStatusText,
-            'tracking_link'  => $extraData['payment_link'] ?? url("/customer/orders/{$order->order_number}"),
+            'tracking_link' => $extraData['payment_link'] ?? url("/customer/orders/{$order->order_number}"),
             'requested_amount' => 'Rs.' . number_format($requestedAmountRaw, 2),
-            'rider_name'     => $riderName,
-            'rider_phone'    => $riderPhone,
+            'rider_name' => $rider ? $rider->name : '',
+            'rider_phone' => $rider ? $rider->phone : '',
             'rider_vehicle_number' => $riderVehicle,
         ];
 
-        // Process SMS — isolated so failure doesn't block WhatsApp/Email
+        $replacements = [
+            '{customer_name}' => $data['customer_name'],
+            '{order_id}' => $data['order_id'],
+            '{total}' => $data['total'],
+            '{amount_due}' => $data['amount_due'],
+            '{payment_status}' => $data['payment_status'],
+            '{tracking_link}' => $data['tracking_link'],
+            '{requested_amount}' => $data['requested_amount'],
+            '{rider_name}' => $data['rider_name'],
+            '{rider_phone}' => $data['rider_phone'],
+            '{rider_vehicle_number}' => $data['rider_vehicle_number'],
+        ];
+
         if ($isSmsEnabled && !empty($customer->phone)) {
             try {
                 $smsTemplate = SmsTemplate::where('type', $type)->where('is_active', true)->first();
                 if ($smsTemplate) {
-                    $replacements = [
-                        '{customer_name}' => $data['customer_name'], 
-                        '{order_id}' => $data['order_id'], 
-                        '{total}' => $data['total'], 
-                        '{amount_due}' => $data['amount_due'], 
-                        '{payment_status}' => $data['payment_status'],
-                        '{tracking_link}' => $data['tracking_link'],
-                        '{requested_amount}' => $data['requested_amount'],
-                        '{rider_name}' => $data['rider_name'],
-                        '{rider_phone}' => $data['rider_phone'],
-                        '{rider_vehicle_number}' => $data['rider_vehicle_number'],
-                    ];
                     $message = str_replace(array_keys($replacements), array_values($replacements), $smsTemplate->message);
                     $this->sendSms($order, $customer->phone, $type, $message);
                 }
@@ -234,29 +110,16 @@ class CommunicationService
             }
         }
 
-        // Process Email — isolated so failure doesn't block SMS
         if ($isEmailEnabled && !empty($customer->email)) {
             try {
-                $dbTemplate = \App\Models\EmailTemplate::where('type', $type)->where('is_active', true)->first();
+                $dbTemplate = EmailTemplate::where('type', $type)->where('is_active', true)->first();
                 if ($dbTemplate && !empty($dbTemplate->body)) {
-                    $replacements = [
-                        '{customer_name}'  => $data['customer_name'],
-                        '{order_id}'       => $data['order_id'],
-                        '{total}'          => $data['total'],
-                        '{amount_due}'     => $data['amount_due'],
-                        '{payment_status}' => $data['payment_status'],
-                        '{tracking_link}'  => $data['tracking_link'],
-                        '{requested_amount}'=> $data['requested_amount'],
-                        '{rider_name}'     => $data['rider_name'],
-                        '{rider_phone}'    => $data['rider_phone'],
-                        '{rider_vehicle_number}' => $data['rider_vehicle_number'],
-                    ];
                     $subject = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->subject);
-                    $body    = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->body);
+                    $body = str_replace(array_keys($replacements), array_values($replacements), $dbTemplate->body);
                 } else {
-                    $content = $this->getEmailContent($type, $data);
+                    $content = CommunicationEmailContent::getContent($type, $data);
                     $subject = $content['subject'];
-                    $body    = $content['body'];
+                    $body = $content['body'];
                 }
                 $this->sendEmail($order, $customer->email, $type, $subject, $body);
             } catch (\Throwable $e) {
@@ -265,27 +128,22 @@ class CommunicationService
         }
     }
 
-    // ─── SMS Sender ──────────────────────────────────────────────────────────
-
     protected function sendSms(Order $order, string $phone, string $type, string $message)
     {
         $log = SmsLog::create([
             'order_id' => $order->id,
-            'phone'    => $phone,
-            'type'     => $type,
-            'message'  => $message,
-            'status'   => 'pending',
+            'phone' => $phone,
+            'type' => $type,
+            'message' => $message,
+            'status' => 'pending',
         ]);
-
-        \App\Jobs\ProcessSms::dispatch($log);
+        ProcessSms::dispatch($log);
     }
-
-    // ─── Direct SMS Sender ───────────────────────────────────────────────────
 
     public function sendDirectSMS(string $phone, string $message)
     {
-        $gateway = \App\Models\Setting::get('sms_gateway', 'mock');
-        $apiKey = \App\Models\Setting::get('sms_api_key');
+        $gateway = Setting::get('sms_gateway', 'mock');
+        $apiKey = Setting::get('sms_api_key');
 
         if ($gateway === 'mock' || !$apiKey) {
             Log::info("MOCK DIRECT SMS TO {$phone}: {$message}");
@@ -293,20 +151,18 @@ class CommunicationService
         }
 
         try {
-            // Strip any leading zeroes or + characters
             $formattedPhone = ltrim($phone, '+0');
             if (strlen($formattedPhone) == 9) {
-                $formattedPhone = '94' . $formattedPhone; // Sri Lanka format
+                $formattedPhone = '94' . $formattedPhone;
             }
 
-            // Textware or other gateway logic (as an example)
-            $response = \Illuminate\Support\Facades\Http::withHeaders([
+            $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->post('https://api.textware.lk/sms/send', [
                 'to' => $formattedPhone,
                 'message' => $message,
-                'sender' => \App\Models\Setting::get('sms_sender_id', 'LaundryZone'),
+                'sender' => Setting::get('sms_sender_id', 'LaundryZone'),
             ]);
 
             return $response->successful();
@@ -316,21 +172,16 @@ class CommunicationService
         }
     }
 
-    // ─── Email Sender ─────────────────────────────────────────────────────────
-
     protected function sendEmail(Order $order, string $email, string $type, string $subject, string $body)
     {
         $log = EmailLog::create([
             'order_id' => $order->id,
-            'email'    => $email,
-            'type'     => $type,
-            'subject'  => $subject,
-            'body'     => $body,
-            'status'   => 'pending',
+            'email' => $email,
+            'type' => $type,
+            'subject' => $subject,
+            'body' => $body,
+            'status' => 'pending',
         ]);
-
-        \App\Jobs\ProcessEmail::dispatch($log);
+        ProcessEmail::dispatch($log);
     }
 }
-
-
