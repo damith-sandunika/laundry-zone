@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\SuperAdmin;
 
+use App\Actions\SuperAdmin\DestroyCompanyAction;
+use App\Actions\SuperAdmin\UpdateCompanyAction;
 use App\Http\Controllers\Controller;
 use App\Models\Central\PlatformSetting;
 use App\Models\Central\Tenant;
-use App\Models\Central\TenantOwner;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\Tenancy\TenantManager;
 use App\Services\Tenancy\TenantProvisioner;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Validator;
 
 class CompanyController extends Controller
 {
@@ -23,36 +25,23 @@ class CompanyController extends Controller
         $this->provisioner = $provisioner;
     }
 
-    /**
-     * Display listing of companies (Tenants).
-     */
     public function index(Request $request)
     {
         TenantManager::resetToLandlord();
-
         $query = Tenant::with(['latestOwner', 'subscriptions']);
 
         if ($request->filled('search')) {
             $s = trim($request->search);
-            $query->where(function ($q) use ($s) {
-                $q->where('name', 'like', "%{$s}%")
-                    ->orWhere('subdomain', 'like', "%{$s}%")
-                    ->orWhere('custom_domain', 'like', "%{$s}%")
-                    ->orWhere('email', 'like', "%{$s}%")
-                    ->orWhere('phone', 'like', "%{$s}%");
-            });
+            $query->where(fn($q) => $q->where('name', 'like', "%{$s}%")
+                ->orWhere('subdomain', 'like', "%{$s}%")
+                ->orWhere('custom_domain', 'like', "%{$s}%")
+                ->orWhere('email', 'like', "%{$s}%")
+                ->orWhere('phone', 'like', "%{$s}%"));
         }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('delivery')) {
-            $query->where('is_delivery_enabled', $request->delivery === '1');
-        }
+        if ($request->filled('status')) $query->where('status', $request->status);
+        if ($request->filled('delivery')) $query->where('is_delivery_enabled', $request->delivery === '1');
 
         $companies = $query->latest()->paginate(15)->withQueryString();
-
         $defaultBasePrice = PlatformSetting::get('default_base_price', '15000.00');
         $defaultDeliveryPrice = PlatformSetting::get('default_delivery_price', '5000.00');
         $centralDomain = TenantManager::getCentralBaseDomain();
@@ -60,13 +49,9 @@ class CompanyController extends Controller
         return view('super_admin.companies.index', compact('companies', 'defaultBasePrice', 'defaultDeliveryPrice', 'centralDomain'));
     }
 
-    /**
-     * Show form for creating a new company.
-     */
     public function create()
     {
         TenantManager::resetToLandlord();
-
         $defaultBasePrice = PlatformSetting::get('default_base_price', '15000.00');
         $defaultDeliveryPrice = PlatformSetting::get('default_delivery_price', '5000.00');
         $centralDomain = TenantManager::getCentralBaseDomain();
@@ -75,207 +60,90 @@ class CompanyController extends Controller
         return view('super_admin.companies.create', compact('defaultBasePrice', 'defaultDeliveryPrice', 'centralDomain', 'dbPrefix'));
     }
 
-    /**
-     * Store a new company & auto-provision dedicated database.
-     */
     public function store(Request $request)
     {
         TenantManager::resetToLandlord();
-
         $rules = [
             'name' => 'required|string|max:255',
             'subdomain' => 'required|alpha_dash|max:64|unique:landlord.tenants,subdomain',
             'custom_domain' => 'nullable|string|max:255|unique:landlord.tenants,custom_domain',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:4096',
-            'address' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'is_delivery_enabled' => 'nullable|boolean',
             'plan' => 'required|string|in:Basic,Standard,Premium,Enterprise',
-            'plan_price' => 'nullable|numeric|min:0',
-            'delivery_price' => 'nullable|numeric|min:0',
             'owner_name' => 'required|string|max:255',
             'owner_email' => 'required|email|max:255',
-            'owner_phone' => 'nullable|string|max:50',
             'owner_password' => 'required|string|min:6',
-            'sms_gateway' => 'nullable|string|max:50',
-            'sms_mask' => 'nullable|string|max:50',
-            'sms_api_url' => 'nullable|string|max:255',
-            'sms_api_key' => 'nullable|string|max:500',
-            'mail_from_name' => 'nullable|string|max:100',
-            'mail_from_address' => 'nullable|email|max:255',
         ];
 
-        // 1. Interactive AJAX / JSON Flow (Progressive Provisioning)
         if ($request->expectsJson() || $request->ajax()) {
-            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), $rules);
+            $validator = Validator::make($request->all(), $rules);
             if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors(),
-                    'message' => $validator->errors()->first(),
-                ], 422);
+                return response()->json(['success' => false, 'message' => $validator->errors()->first()], 422);
             }
-
             try {
                 @set_time_limit(300);
                 $tenant = $this->provisioner->provision($request->all(), $request->file('logo'));
                 $owner = $tenant->latestOwner;
-
                 return response()->json([
                     'success' => true,
                     'message' => "Company '{$tenant->name}' has been created and provisioned successfully!",
-                    'tenant' => [
-                        'id' => $tenant->id,
-                        'name' => $tenant->name,
-                        'subdomain' => $tenant->subdomain,
-                        'database_name' => $tenant->database_name,
-                        'url' => $tenant->url,
-                        'staff_login_url' => $tenant->staff_login_url,
-                        'owner_name' => $owner?->name ?? $request->owner_name,
-                        'owner_email' => $owner?->email ?? $request->owner_email,
-                        'owner_password' => $owner?->initial_password ?? $request->owner_password,
-                    ],
+                    'tenant' => ['id' => $tenant->id, 'name' => $tenant->name, 'subdomain' => $tenant->subdomain],
                     'redirect_url' => route('super_admin.companies.index'),
                 ]);
             } catch (\Throwable $e) {
                 report($e);
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Provisioning failed: ' . $e->getMessage(),
-                ], 500);
+                return response()->json(['success' => false, 'message' => 'Provisioning failed: ' . $e->getMessage()], 500);
             }
         }
 
-        // 2. Standard Form Submit Fallback
         $request->validate($rules);
-
         try {
             $tenant = $this->provisioner->provision($request->all(), $request->file('logo'));
-
             return redirect()->route('super_admin.companies.index')
-                ->with('success', "Company '{$tenant->name}' and database '{$tenant->database_name}' have been created and provisioned successfully!");
+                ->with('success', "Company '{$tenant->name}' created successfully!");
         } catch (\Throwable $e) {
             report($e);
             return back()->withInput()->withErrors(['error' => 'Provisioning failed: ' . $e->getMessage()]);
         }
     }
 
-    /**
-     * Display company details.
-     */
     public function show(Tenant $company)
     {
         TenantManager::resetToLandlord();
-
         $company->load(['owners', 'subscriptions']);
         $dbStats = $this->provisioner->testConnection($company);
         $centralDomain = TenantManager::getCentralBaseDomain();
-
         return view('super_admin.companies.show', compact('company', 'dbStats', 'centralDomain'));
     }
 
-    /**
-     * Show form for editing company.
-     */
     public function edit(Tenant $company)
     {
         TenantManager::resetToLandlord();
-
         $company->load('latestOwner');
         $centralDomain = TenantManager::getCentralBaseDomain();
-
         return view('super_admin.companies.edit', compact('company', 'centralDomain'));
     }
 
-    /**
-     * Update company details.
-     */
-    public function update(Request $request, Tenant $company)
+    public function update(Request $request, Tenant $company, UpdateCompanyAction $action)
     {
-        TenantManager::resetToLandlord();
-
         $request->validate([
             'name' => 'required|string|max:255',
             'custom_domain' => 'nullable|string|max:255|unique:landlord.tenants,custom_domain,' . $company->id,
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,webp,svg|max:4096',
-            'address' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:255',
-            'is_delivery_enabled' => 'nullable|boolean',
             'plan' => 'required|string|in:Basic,Standard,Premium,Enterprise',
-            'plan_price' => 'nullable|numeric|min:0',
-            'delivery_price' => 'nullable|numeric|min:0',
             'status' => 'required|in:active,inactive,suspended',
-            'notes' => 'nullable|string',
-            'sms_gateway' => 'nullable|string|max:50',
-            'sms_mask' => 'nullable|string|max:50',
-            'sms_api_url' => 'nullable|string|max:255',
-            'sms_api_key' => 'nullable|string|max:500',
-            'mail_from_name' => 'nullable|string|max:100',
-            'mail_from_address' => 'nullable|email|max:255',
         ]);
 
-        $data = $request->only([
-            'name', 'custom_domain', 'address', 'phone', 'email',
-            'plan', 'plan_price', 'delivery_price', 'status', 'notes',
-            'sms_gateway', 'sms_mask', 'sms_api_url', 'sms_api_key',
-            'mail_from_name', 'mail_from_address'
-        ]);
+        $action->execute($company, $request->all(), $request->file('logo'));
 
-        $data['is_delivery_enabled'] = $request->boolean('is_delivery_enabled');
-
-        if ($request->hasFile('logo') && $request->file('logo')->isValid()) {
-            $logo = $request->file('logo');
-            $filename = 'tenant_' . $company->subdomain . '_' . time() . '.' . $logo->getClientOriginalExtension();
-            $logo->move(public_path('uploads/tenants'), $filename);
-            $data['logo_path'] = 'uploads/tenants/' . $filename;
-        }
-
-        $company->update($data);
-
-        // Sync settings into the tenant database
-        try {
-            TenantManager::setTenant($company);
-            Setting::set('company_name', $company->name);
-            Setting::set('delivery_enabled', $company->is_delivery_enabled ? '1' : '0');
-            if (!empty($company->sms_mask)) Setting::set('sms_mask', $company->sms_mask);
-            if (!empty($company->sms_gateway)) Setting::set('sms_gateway', $company->sms_gateway);
-            if (!empty($company->sms_api_url)) Setting::set('sms_api_url', $company->sms_api_url);
-            if (!empty($company->sms_api_key)) {
-                Setting::set('sms_api_key', $company->sms_api_key);
-                Setting::set('is_sms_enabled', 'true');
-            }
-            if (!empty($company->mail_from_name)) Setting::set('mail_from_name', $company->mail_from_name);
-            if (!empty($company->mail_from_address)) {
-                Setting::set('mail_from_address', $company->mail_from_address);
-                Setting::set('is_email_enabled', 'true');
-            }
-            if (!empty($data['logo_path'])) {
-                Setting::set('company_logo', $data['logo_path']);
-            }
-            \Illuminate\Support\Facades\Cache::forget('global_comm_settings');
-            TenantManager::resetToLandlord();
-        } catch (\Throwable $e) {
-            TenantManager::resetToLandlord();
-        }
-
-        return redirect()->route('super_admin.companies.index')
-            ->with('success', "Company '{$company->name}' updated successfully.");
+        return redirect()->route('super_admin.companies.index')->with('success', "Company '{$company->name}' updated successfully.");
     }
 
-    /**
-     * Toggle Delivery Module for a company.
-     */
     public function toggleDelivery(Tenant $company)
     {
         TenantManager::resetToLandlord();
-
         $newState = !$company->is_delivery_enabled;
-        $company->is_delivery_enabled = $newState;
-        $company->save();
+        $company->update(['is_delivery_enabled' => $newState]);
 
-        // Update setting in tenant database
         try {
             TenantManager::setTenant($company);
             Setting::set('delivery_enabled', $newState ? '1' : '0');
@@ -284,26 +152,17 @@ class CompanyController extends Controller
             TenantManager::resetToLandlord();
         }
 
-        $statusText = $newState ? 'enabled' : 'disabled';
-        return back()->with('success', "Delivery Module has been {$statusText} for {$company->name}. Pricing adjusted accordingly.");
+        return back()->with('success', "Delivery Module updated for {$company->name}.");
     }
 
-    /**
-     * Impersonate / Direct login as Company Owner.
-     */
     public function impersonate(Tenant $company)
     {
         TenantManager::resetToLandlord();
-
         $owner = $company->latestOwner;
-        if (!$owner) {
-            return back()->withErrors(['error' => 'No owner registered for this company.']);
-        }
+        if (!$owner) return back()->withErrors(['error' => 'No owner registered for this company.']);
 
-        // Switch to tenant DB and login as owner
         TenantManager::setTenant($company);
         $user = User::where('email', $owner->email)->first() ?? User::whereIn('role', ['owner', 'super_admin'])->first();
-
         if (!$user) {
             TenantManager::resetToLandlord();
             return back()->withErrors(['error' => 'Owner user record not found in tenant database.']);
@@ -311,71 +170,24 @@ class CompanyController extends Controller
 
         Auth::guard('web')->login($user);
         session(['active_tenant_subdomain' => $company->subdomain]);
-
-        // Redirect to tenant dashboard
-        return redirect()->route('dashboard')->with('success', "Logged in as Company Owner ({$user->name}) for {$company->name}.");
+        return redirect()->route('dashboard')->with('success', "Logged in as Company Owner ({$user->name}).");
     }
 
-    /**
-     * Toggle Suspend / Block status for a company.
-     */
     public function toggleSuspend(Tenant $company)
     {
         TenantManager::resetToLandlord();
-
         $newStatus = ($company->status === 'suspended') ? 'active' : 'suspended';
-        $company->status = $newStatus;
-        $company->save();
+        $company->update(['status' => $newStatus]);
 
-        // Clear cache so the suspension takes effect immediately
-        \Illuminate\Support\Facades\Cache::forget("tenant_resolution:{$company->custom_domain}");
-        \Illuminate\Support\Facades\Cache::forget("tenant_resolution:{$company->subdomain}.localhost");
-        \Illuminate\Support\Facades\Cache::forget("tenant_resolution:{$company->subdomain}.test");
-
-        $actionText = ($newStatus === 'suspended') ? 'suspended and blocked from accessing the system' : 'reactivated';
-        return back()->with('success', "Company '{$company->name}' has been {$actionText}.");
+        Cache::forget("tenant_resolution:{$company->custom_domain}");
+        Cache::forget("tenant_resolution:{$company->subdomain}.localhost");
+        return back()->with('success', "Company '{$company->name}' status changed to {$newStatus}.");
     }
 
-    /**
-     * Delete / Purge Company and its associated Landlord records.
-     */
-    public function destroy(Tenant $company)
+    public function destroy(Tenant $company, DestroyCompanyAction $action)
     {
-        TenantManager::resetToLandlord();
-
-        $name = $company->name;
-        $subdomain = $company->subdomain;
-
-        // Optionally drop tenant physical DB if exists
-        try {
-            $sanitizedDb = preg_replace('/[^a-zA-Z0-9_]/', '', $company->database_name);
-            $landlordDb = config('database.connections.landlord.database', 'laundry_zone_saas_central');
-            if (!empty($sanitizedDb) && $sanitizedDb !== $landlordDb) {
-                $host = $company->db_host ?: config('database.connections.mysql.host', '127.0.0.1');
-                $port = $company->db_port ?: config('database.connections.mysql.port', '3306');
-                $user = $company->db_username ?: config('database.connections.mysql.username', 'root');
-                $pass = $company->db_password !== null ? $company->db_password : config('database.connections.mysql.password', '');
-                $pdo = new \PDO("mysql:host={$host};port={$port}", $user, $pass, [\PDO::ATTR_ERRMODE => \PDO::ERRMODE_EXCEPTION]);
-                $pdo->exec("DROP DATABASE IF EXISTS `{$sanitizedDb}`;");
-            }
-        } catch (\Throwable $e) {
-            // Ignore if DB already dropped or inaccessible
-        }
-
-        // Clean up Landlord relations
-        \App\Models\Central\TenantOwner::where('tenant_id', $company->id)->delete();
-        \App\Models\Central\TenantSubscription::where('tenant_id', $company->id)->delete();
-        \App\Models\Central\TenantSmsCredit::where('tenant_id', $company->id)->delete();
-        if (class_exists(\App\Models\Central\TenantPrintLayout::class)) {
-            \App\Models\Central\TenantPrintLayout::where('tenant_id', $company->id)->delete();
-        }
-
-        // Forget caches
-        TenantManager::clearTenantCache($company);
-
-        $company->delete();
-
+        $res = $action->execute($company);
         return redirect()->route('super_admin.companies.index')
-            ->with('success', "Company '{$name}' (subdomain: {$subdomain}) and its database/records have been completely removed.");
+            ->with('success', "Company '{$res['name']}' and its database/records have been completely removed.");
     }
 }
