@@ -78,16 +78,25 @@ Route::get('/storage/receipts/{filename}', function ($filename) {
 });
 
 
-// ─── Customer Auth & Dashboard Routes ───
-Route::middleware([\App\Http\Middleware\CheckDeliveryEnabled::class])->group(function () {
-    Route::get('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'showLogin'])->name('customer.login');
-    Route::post('/customer/login', [\App\Http\Controllers\Customer\AuthController::class, 'login'])->name('customer.login.submit');
-    Route::get('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'showRegister'])->name('customer.register');
-    Route::post('/customer/register', [\App\Http\Controllers\Customer\AuthController::class, 'register'])->name('customer.register.submit');
-    Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('customer.logout');
+// ─── Customer Auth Disabled (Redirect to Staff Login) ───
+Route::get('/customer/login', function () {
+    return redirect()->route('login');
+})->name('customer.login');
+Route::get('/customer/register', function () {
+    return redirect()->route('login');
+})->name('customer.register');
+Route::post('/customer/login', function () {
+    return redirect()->route('login');
+})->name('customer.login.submit');
+Route::post('/customer/register', function () {
+    return redirect()->route('login');
+})->name('customer.register.submit');
+Route::get('/customer/forgot-password', function () {
+    return redirect()->route('login');
+})->name('customer.password.request');
 
-    // Forgot Password (OTP via Phone)
-    Route::get('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showPhoneForm'])->name('customer.password.request');
+Route::middleware([\App\Http\Middleware\CheckDeliveryEnabled::class])->group(function () {
+    Route::post('/customer/logout', [\App\Http\Controllers\Customer\AuthController::class, 'logout'])->name('customer.logout');
     Route::post('/customer/forgot-password', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'sendOtp'])->name('customer.password.email');
     Route::get('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'showOtpForm'])->name('customer.password.verifyForm');
     Route::post('/customer/verify-otp', [\App\Http\Controllers\Customer\ForgotPasswordController::class, 'verifyOtp'])->name('customer.password.verifyOtp');

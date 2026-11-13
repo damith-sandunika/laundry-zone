@@ -17,7 +17,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>{{ $companyName }} — Sign In</title>
+    <title>{{ $companyName }} — Staff Login</title>
     <link rel="icon" type="image/jpeg" href="{{ $defaultLogo }}">
     <link rel="apple-touch-icon" href="{{ $defaultLogo }}">
     <meta name="theme-color" content="#2563eb">
@@ -28,11 +28,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300..800;1,300..800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['"Plus Jakarta Sans"', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
     <link rel="manifest" href="{{ url('/manifest.json') }}">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @include('layouts.partials.gtm')
 </head>
-<body class="font-sans antialiased bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white relative overflow-x-hidden">
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-blue-600 selection:text-white relative overflow-x-hidden p-4 sm:p-6">
     @include('layouts.partials.gtm-body')
 
     <!-- Subtle Background Accents -->
@@ -42,19 +52,19 @@
         <div class="absolute inset-0 bg-[radial-gradient(#e2e8f0_1px,transparent_1px)] [background-size:24px_24px] opacity-60"></div>
     </div>
 
-    <!-- Main Content Centered Container -->
-    <main class="flex-1 flex items-center justify-center p-4 sm:p-6 md:p-8">
-        <div class="w-full max-w-[420px] transition-all">
+    <!-- Main Content Centered Container with generous width matching SuperAdmin -->
+    <main class="flex-1 flex items-center justify-center">
+        <div class="w-full max-w-md sm:max-w-lg transition-all">
             
             <!-- PWA Install Prompt Button (if supported) -->
-            <button id="installPwaBtn" class="hidden w-full mb-6 p-1 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-md hover:shadow-lg transition-all group animate-fade-in">
+            <button id="installPwaBtn" class="hidden w-full mb-6 p-1 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl shadow-md hover:shadow-lg transition-all group">
                 <div class="w-full bg-white rounded-[14px] px-4 py-3 flex items-center justify-between group-hover:bg-opacity-95 transition-colors">
                     <div class="flex items-center gap-3">
                         <div class="w-9 h-9 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center p-1 overflow-hidden">
                             <img src="{{ $companyLogo }}" alt="App Icon" class="w-full h-full object-contain" onerror="this.style.display='none'">
                         </div>
                         <div class="text-left">
-                            <p class="text-xs font-black text-slate-900">Install {{ Str::limit($companyName, 18) }}</p>
+                            <p class="text-xs font-black text-slate-900">Install {{ Str::limit($companyName, 20) }}</p>
                             <p class="text-[11px] font-semibold text-slate-500">Add to Home Screen (PWA)</p>
                         </div>
                     </div>
@@ -64,24 +74,22 @@
                 </div>
             </button>
 
-            <!-- Card -->
-            <div class="bg-white border border-slate-200/90 rounded-3xl p-7 sm:p-9 shadow-xl shadow-slate-200/50">
-                
-                <!-- Logo & Brand Header in Center -->
-                <div class="flex flex-col items-center justify-center text-center mb-7">
-                    <div class="w-20 h-20 rounded-2xl bg-white border border-slate-200/80 shadow-md p-2 flex items-center justify-center mb-3.5 hover:scale-105 transition-transform duration-300">
-                        <img src="{{ $companyLogo }}" alt="{{ $companyName }} Logo" class="w-full h-full object-contain" onerror="this.src='{{ $defaultLogo }}'">
-                    </div>
-                    <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-tight">
-                        {{ $companyName }}
-                    </h1>
-                    <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
-                        Sign In to Your Account
-                    </p>
+            <!-- Brand Identity (Centered Logo & Title matching SaaS SuperAdmin layout) -->
+            <div class="text-center mb-6">
+                <div class="inline-flex w-20 h-20 rounded-2xl bg-white border border-slate-200/90 items-center justify-center shadow-md p-2.5 mb-3.5 hover:scale-105 transition-transform duration-300">
+                    <img src="{{ $companyLogo }}" alt="{{ $companyName }} Logo" class="w-full h-full object-contain" onerror="this.src='{{ $defaultLogo }}'">
                 </div>
+                <h1 class="text-2xl font-black text-slate-900 tracking-tight leading-tight">
+                    {{ $companyName }}
+                </h1>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mt-1">
+                    Staff & Management Portal
+                </p>
+            </div>
 
+            <!-- Login Card (Generous Width & Clean Light Theme) -->
+            <div class="bg-white border border-slate-200/90 rounded-3xl p-7 sm:p-9 shadow-xl shadow-slate-200/50">
                 {{ $slot }}
-
             </div>
 
             <!-- Powered By DSRZone Footer -->
