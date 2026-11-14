@@ -34,109 +34,11 @@
             $customExtraTexts = [];
         }
     @endphp
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        @page {
-            margin: 0;
-            size: 80mm auto;
-        }
-
-        body {
-            font-family: {!! $fontFamily !!};
-            font-size: {{ $fontSize }};
-            width: {{ $paperWidth }};
-            max-width: 100%;
-            margin: 0 auto;
-            padding: 4mm 3mm;
-            color: #000;
-            background: #fff;
-        }
-
-        .center {
-            text-align: center;
-        }
-
-        .bold {
-            font-weight: 600;
-        }
-
-        .uppercase {
-            text-transform: uppercase;
-            letter-spacing: 0.03em;
-            font-size: 11px;
-        }
-
-        .divider {
-            border-top: 1px dashed #64748b;
-            margin: 8px 0;
-        }
-
-        .row {
-            display: flex;
-            justify-content: space-between;
-            padding: 3px 0;
-            gap: 4px;
-        }
-
-        .row span:first-child {
-            flex: 1;
-            text-align: left;
-            word-break: break-word;
-        }
-
-        .row span:last-child {
-            text-align: right;
-            white-space: nowrap;
-        }
-
-        .total-row {
-            font-weight: 700;
-            font-size: 14px;
-            border-top: 1.5px solid #0f172a;
-            padding-top: 6px;
-            margin-top: 6px;
-        }
-
-        .badge {
-            display: inline-block;
-            border: 1px solid #0f172a;
-            padding: 4px 10px;
-            margin-top: 6px;
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 6px;
-        }
-
-        .item-name {
-            font-weight: 600;
-            font-size: 12px;
-            display: block;
-            word-break: break-word;
-        }
-
-        .item-details {
-            font-size: 11px;
-            color: #475569;
-            padding-left: 2px;
-        }
-
-        @media print {
-            body {
-                width: {{ $paperWidth }};
-                padding: 2mm 3mm;
-                margin: 0 auto;
-            }
-
-            .no-print {
-                display: none;
-            }
-        }
-    </style>
+    @include('orders.partials.print.styles', [
+        'fontFamily' => $fontFamily,
+        'fontSize' => $fontSize,
+        'paperWidth' => $paperWidth
+    ])
 </head>
 
 <body>
@@ -187,115 +89,16 @@
         </div>
     @endif
 
-    <div class="divider"></div>
-    @foreach($order->items as $item)
-        @php
-            $unit_with_turnaround = $item->quantity > 0 ? ($item->total_price / $item->quantity) : $item->total_price;
-        @endphp
-        <div class="row" style="margin-bottom: 2px;">
-            <span class="item-name">
-                @if($item->serviceType && $item->serviceType->name !== 'Special Service')
-                    @if($item->serviceType->category)
-                        <div style="font-size: 9px; color: #475569; font-weight: 500; margin-bottom: 1px;">
-                            {{ $item->serviceType->category->parent ? $item->serviceType->category->parent->name . ' > ' : '' }}{{ $item->serviceType->category->name }}
-                        </div>
-                    @endif
-                    <div style="font-size: 13px; font-weight: 800;">{{ $item->serviceType->name }}</div>
-                @else
-                    <div style="font-size: 13px; font-weight: 800;">{{ $item->item_description }}</div>
-                @endif
-            </span>
-            <span class="bold">Rs.{{ number_format($item->unit_price * max(1, $item->quantity), 2) }}</span>
-        </div>
-        <div style="font-size: 11px; margin-bottom: 2px; color:#475569;">
-            {{ $item->quantity }} x Rs.{{ number_format($item->unit_price, 2) }}
-            @if($item->turnaroundType && !$item->turnaroundType->is_default)
-                ({{ $item->turnaroundType->name }})
-            @elseif((float) $item->custom_turnaround_percentage > 0)
-                (Express ({{ (float) $item->custom_turnaround_percentage }}%))
-            @endif
-        </div>
-        @if($item->turnaround_extra_charge > 0)
-            <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px; color:#d97706;">
-                <span>⚡ Express Surcharge</span>
-                <span class="bold">+Rs.{{ number_format($item->turnaround_extra_charge, 2) }}</span>
-            </div>
-        @endif
-        @if($item->extras->count() > 0)
-            @foreach($item->extras as $e)
-                <div class="row" style="margin-bottom: 2px; padding-left: 10px; font-size:11px;">
-                    <span>+ {{ $e->extra->name }} (x{{ $e->quantity }})</span>
-                    <span class="bold">Rs.{{ number_format($e->unit_price * $e->quantity, 2) }}</span>
-                </div>
-            @endforeach
-        @endif
-        <div style="margin-bottom: 6px;"></div>
-    @endforeach
+    @include('orders.partials.print.items_list', ['order' => $order])
 
-    <div class="divider"></div>
-
-    @if(($showDiscount && $order->discount > 0) || ($showDeliveryFee && $order->delivery_fee > 0) || $order->additional > 0)
-        <div class="row"><span>Subtotal</span><span>Rs.{{ number_format($order->subtotal, 2) }}</span></div>
-        @if($showDiscount && $order->discount > 0)
-            @php $discountPct = ($order->subtotal > 0) ? round(($order->discount / $order->subtotal) * 100, 1) : 0; @endphp
-            <div class="row"><span>Discount{{ $discountPct > 0 ? ' (' . $discountPct . '%)' : '' }}</span><span>-
-                    Rs.{{ number_format($order->discount, 2) }}</span></div>
-        @endif
-        @if($showDeliveryFee && $order->delivery_fee > 0)
-            <div class="row"><span>Delivery Fee</span><span>Rs.{{ number_format($order->delivery_fee, 2) }}</span></div>
-        @endif
-        @if($order->additional > 0)
-            <div class="row"><span>Additional Charges</span><span>Rs.{{ number_format($order->additional, 2) }}</span></div>
-        @endif
-    @endif
-
-    <div class="row total-row">
-        <span>TOTAL</span>
-        <span>{{ $order->total == 0 && $order->isPackageOrder() ? 'Package' : 'Rs.' . number_format($order->total, 2) }}</span>
-    </div>
-
-    @php
-        $refundAmount = abs($order->paymentTransactions()->where('amount', '<', 0)->sum('amount') ?? 0);
-        $totalPaidByCustomer = $order->paid_amount + $refundAmount;
-    @endphp
-
-    <div class="row" style="margin-top:4px;">
-        <span>Amount Received</span>
-        <span>Rs.{{ number_format($totalPaidByCustomer, 2) }}</span>
-    </div>
-    @if($order->total - $order->paid_amount > 0)
-        <div class="row bold">
-            <span>Balance Due</span>
-            <span>Rs.{{ number_format($order->total - $order->paid_amount, 2) }}</span>
-        </div>
-    @endif
-    @if($totalPaidByCustomer > $order->total)
-        @if($refundAmount > 0)
-            <div class="row bold" style="color: #000000ff;">
-                <span>Change Returned</span>
-                <span>Rs.{{ number_format($refundAmount, 2) }}</span>
-            </div>
-        @else
-            <div class="row bold" style="color: #000000ff;">
-                <span>Change to Return</span>
-                <span>Rs.{{ number_format($totalPaidByCustomer - $order->total, 2) }}</span>
-            </div>
-        @endif
-    @endif
-
-    <div class="divider"></div>
-
-    <div class="center" style="margin: 8px 0;">
-        <span class="badge">
-            @if($order->paid_amount >= $order->total)
-                {{ $badgeTextPaid }}
-            @elseif($order->payment_method === 'credit')
-                {{ $badgeTextCredit }}
-            @else
-                {{ $badgeTextPickup }}
-            @endif
-        </span>
-    </div>
+    @include('orders.partials.print.totals_badge', [
+        'order' => $order,
+        'showDiscount' => $showDiscount,
+        'showDeliveryFee' => $showDeliveryFee,
+        'badgeTextPaid' => $badgeTextPaid,
+        'badgeTextCredit' => $badgeTextCredit,
+        'badgeTextPickup' => $badgeTextPickup
+    ])
 
     @if(!empty($customExtraTexts))
         <div class="divider"></div>

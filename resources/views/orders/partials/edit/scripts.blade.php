@@ -1,3 +1,5 @@
+    @include('orders.partials.edit.calculations')
+    @include('orders.partials.edit.save_order')
     <script>
         function finalizeBill() {
             return {
@@ -17,7 +19,7 @@
                     $discPercent = $subtotalAmount > 0 ? round(($discAmount / $subtotalAmount) * 100, 2) : 0;
                 @endphp
                 deliveryFee: {{ (float) ($currentOrder->delivery_fee ?? 0) }},
-                discountType: 'percent', // 'percent' or 'fixed'
+                discountType: 'percent',
                 discountPercent: {{ $discPercent }},
                 discountFixed: {{ $discAmount }},
                 isSaving: false,
@@ -31,9 +33,8 @@
                 init() {
                     if (this.categories.length > 0) {
                         this.activeCategory = this.categories[0].id;
-                        // Auto-select first sub-category if it exists
                         const firstCat = this.categories[0];
-                        if (firstCat.children && firstCat.children.length > 0) {
+                        if (firstCat.children?.length > 0) {
                             this.activeSubcategory = firstCat.children[0].id;
                         }
                     }
@@ -50,9 +51,8 @@
                 },
 
                 get currentSubcategories() {
-                    if (!this.activeCategory) return [];
                     const cat = this.categories.find(c => c.id === this.activeCategory);
-                    return cat && cat.children ? cat.children : [];
+                    return cat?.children || [];
                 },
 
                 get filteredServices() {
@@ -69,7 +69,6 @@
                         }
 
                         if (this.activeSubcategory) {
-                            // Show sub-category services AND services directly under the parent category
                             validIds = [this.activeSubcategory, this.activeCategory];
                         }
 
@@ -84,7 +83,6 @@
                 },
 
                 addToCart(service) {
-                    // Intercept ServiceTypes that are actually Extras
                     if (service.name.toLowerCase().startsWith('extra:')) {
                         let extraName = service.name.substring(6).trim();
                         let extraModel = this.allExtras.find(e => e.name.toLowerCase() === extraName.toLowerCase());
@@ -146,45 +144,11 @@
                 },
 
                 getCategoryString(serviceId) {
-                    let serviceArray = this.services || this.allServices || [];
-                    let service = serviceArray.find(s => s.id === serviceId);
-                    if (!service) return '';
-                    let cId = service.service_category_id || service.category_id;
-                    for (let cat of this.categories) {
-                        if (cat.id == cId) return cat.name;
-                        if (cat.children) {
-                            for (let sub of cat.children) {
-                                if (sub.id == cId) return cat.name + ' > ' + sub.name;
-                            }
-                        }
-                    }
-                    return '';
+                    return window.finalizeBillCalculations.getCategoryString(serviceId, this.services, this.categories);
                 },
+
                 getItemTotal(item) {
-                    let base = parseFloat(item.base_price || 0) * parseFloat(item.qty || 1);
-                    let turnaroundCharge = 0;
-                    if (item.turnaround_type_id === 'custom') {
-                        turnaroundCharge = base * (parseFloat(item.custom_turnaround_percentage || 0) / 100);
-                    } else if (item.turnaround_type_id) {
-                        let tt = this.allTurnaroundTypes.find(t => t.id == item.turnaround_type_id);
-                        if (tt) {
-                            if (tt.markup_type === 'percentage') {
-                                turnaroundCharge = base * (parseFloat(tt.markup_value) / 100);
-                            } else {
-                                turnaroundCharge = parseFloat(tt.markup_value) * (parseFloat(item.qty) || 1);
-                            }
-                        }
-                    }
-                    let extrasTotal = 0;
-                    if (item.selected_extras && item.selected_extras.length > 0) {
-                        for (let ex of item.selected_extras) {
-                            let eData = this.allExtras.find(e => e.id == ex.id);
-                            if (eData) {
-                                extrasTotal += parseFloat(eData.price) * parseFloat(ex.qty || 1);
-                            }
-                        }
-                    }
-                    return base + turnaroundCharge + extrasTotal;
+                    return window.finalizeBillCalculations.getItemTotal(item, this.allTurnaroundTypes, this.allExtras);
                 },
 
                 get subtotal() {
@@ -192,14 +156,12 @@
                 },
 
                 toggleDiscountType() {
-                    if (this.discountType === 'percent') {
-                        this.discountType = 'fixed';
-                        if (this.discountPercent > 0 && this.subtotal > 0) {
+                    const isPct = this.discountType === 'percent';
+                    this.discountType = isPct ? 'fixed' : 'percent';
+                    if (this.subtotal > 0) {
+                        if (isPct && this.discountPercent > 0) {
                             this.discountFixed = Math.round(this.subtotal * (this.discountPercent / 100) * 100) / 100;
-                        }
-                    } else {
-                        this.discountType = 'percent';
-                        if (this.discountFixed > 0 && this.subtotal > 0) {
+                        } else if (!isPct && this.discountFixed > 0) {
                             this.discountPercent = Math.round((this.discountFixed / this.subtotal) * 100 * 100) / 100;
                         }
                     }
@@ -219,39 +181,17 @@
                 },
 
                 async saveOrder() {
-                    if (this.cart.length === 0) return alert("Cart is empty!");
-                    if (!this.editReason) return alert("Please provide a reason for the edit.");
                     this.isSaving = true;
-
-                    try {
-                        const res = await fetch(`/orders/${this.orderNumber}/corrections`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]").content
-                            },
-                            body: JSON.stringify({
-                                type: 'order_change',
-                                reason: this.editReason,
-                                new_data: {
-                                    cart: this.cart,
-                                    discount_type: this.discountType,
-                                    discount_percentage: this.discountType === 'percent' ? this.discountPercent : (this.subtotal > 0 ? (this.discountAmount / this.subtotal) * 100 : 0),
-                                    discount_amount: this.discountAmount,
-                                    delivery_fee: this.deliveryFee
-                                }
-                            })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            window.location.href = `/orders/view/${this.orderNumber}`;
-                        } else {
-                            alert(data.message || "Failed to submit correction request");
-                        }
-                    } catch (e) {
-                        alert("Error submitting request");
-                    }
-
+                    await window.finalizeBillApi.saveOrder(
+                        this.orderNumber,
+                        this.editReason,
+                        this.cart,
+                        this.discountType,
+                        this.discountPercent,
+                        this.discountAmount,
+                        this.subtotal,
+                        this.deliveryFee
+                    );
                     this.isSaving = false;
                 }
             }

@@ -127,3 +127,4 @@ class SalaryAdvanceAndAdjustmentController extends Controller
         return back()->with('success', 'Adjustment removed successfully.');
     }
 }
+

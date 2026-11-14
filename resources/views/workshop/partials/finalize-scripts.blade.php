@@ -28,7 +28,6 @@
                 init() {
                     if (this.categories.length > 0) {
                         this.activeCategory = this.categories[0].id;
-                        // Auto-select first sub-category if it exists
                         const firstCat = this.categories[0];
                         if (firstCat.children && firstCat.children.length > 0) {
                             this.activeSubcategory = firstCat.children[0].id;
@@ -64,12 +63,9 @@
                         if (cat && cat.children) {
                             validIds.push(...cat.children.map(c => c.id));
                         }
-
                         if (this.activeSubcategory) {
-                            // Show sub-category services AND services directly under the parent category
                             validIds = [this.activeSubcategory, this.activeCategory];
                         }
-
                         result = result.filter(s => {
                             let sId = s.service_category_id || s.category_id;
                             return validIds.map(String).includes(String(sId));
@@ -81,11 +77,9 @@
                 },
 
                 addToCart(service) {
-                    // Intercept ServiceTypes that are actually Extras
                     if (service.name.toLowerCase().startsWith('extra:')) {
                         let extraName = service.name.substring(6).trim();
                         let extraModel = this.allExtras.find(e => e.name.toLowerCase() === extraName.toLowerCase());
-
                         if (extraModel && this.cart.length > 0) {
                             let firstItem = this.cart[0];
                             if (!firstItem.selected_extras) firstItem.selected_extras = [];
@@ -130,6 +124,7 @@
                     }
                     return '';
                 },
+
                 getItemTotal(item) {
                     let base = parseFloat(item.base_price || 0) * parseFloat(item.qty || 1);
                     let turnaroundCharge = 0;
@@ -186,57 +181,7 @@
                     return Math.max({{ $minimumDeliveryCost }}, calculated);
                 },
 
-                async saveOrder(action) {
-                    if (this.cart.length === 0) return alert("Cart is empty!");
-                    this.isSaving = true;
-
-                    try {
-                        const res = await fetch(`/orders/${this.orderNumber}/update`, {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                                "X-CSRF-TOKEN": document.querySelector("meta[name=csrf-token]").content
-                            },
-                            body: JSON.stringify({
-                                cart: this.cart,
-                                discount_type: this.discountType,
-                                discount_percentage: this.discountType === 'percent' ? this.discountPercent : (this.subtotal > 0 ? (this.discountAmount / this.subtotal) * 100 : 0),
-                                discount_amount: this.discountAmount,
-                                delivery_fee: this.deliveryFee,
-                                requested_advance: this.requestedAdvance,
-                                next_action: action
-                            })
-                        });
-                        const data = await res.json();
-                        if (data.success) {
-                            if (document.referrer && document.referrer.indexOf(window.location.host) !== -1 && document.referrer.indexOf('finalize-bill') === -1) {
-                                window.location.href = document.referrer;
-                            } else {
-                                window.location.href = `/orders/view/${this.orderNumber}`;
-                            }
-                        } else {
-                            alert(data.message || "Failed to update");
-                        }
-                    } catch (e) {
-                        alert("Error saving order");
-                    }
-
-                    this.isSaving = false;
-                }
+                @include('workshop.partials.finalize_bill.save_order')
             }
         }
     </script>
-</x-app-layout>
-
-
-} catch (e) {
-alert("Error finalizing bill");
-this.isSaving = false;
-}
-}
-}
-}
-</script>
-</body>
-
-</html>

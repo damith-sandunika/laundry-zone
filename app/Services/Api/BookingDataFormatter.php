@@ -94,3 +94,4 @@ class BookingDataFormatter
         return 'laundry';
     }
 }
+
